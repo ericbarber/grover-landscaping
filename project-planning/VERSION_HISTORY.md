@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-08: Extended the simplified service thread to Property Manager and
+  Company Owner without duplicating the service lifecycle. Portfolio context
+  exposes only the authorized property, decision, customer-safe exception, and
+  reviewed result; business context exposes readiness, consequence, and the
+  accountable operator without route editing or field detail. Twenty
+  perspective/moment combinations pass three responsive viewports, and two new
+  review captures document the additions.
 - 2026-09-08: Delivered the first clean-slate simplified service-thread
   prototype across Yard Owner, Company Manager, and Crew Lead. One exact Mesa
   Court service retains customer decision, Plan 8 release, field request and

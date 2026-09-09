@@ -98,8 +98,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Post-MVP simplification design that preserves mature capability while using a
   role-filtered service thread to keep decisions, planning, field work, proof,
   handoffs, and recovery attached to one customer outcome; the validated first
-  prototype slice covers Yard Owner, Company Manager, and Crew Lead across four
-  service moments and three responsive viewports
+  two prototype slices cover Yard Owner, Property Manager, Company Owner,
+  Company Manager, and Crew Lead across four service moments and three
+  responsive viewports without duplicate lifecycles
 - Shared authenticated Home with signed-in identity, persona context, source-
   appropriate work/sync summary, persona-specific quick actions, and a direct
   action from the current priority notice

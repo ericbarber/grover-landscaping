@@ -10,6 +10,8 @@ const captureRoot = resolve(root, 'design', 'high-fidelity', 'current');
 const capture = process.argv.includes('--capture');
 const personas = {
   owner: { name: 'Yard Owner', nav: 3 },
+  property: { name: 'Property Manager', nav: 3 },
+  company: { name: 'Company Owner', nav: 4 },
   manager: { name: 'Company Manager', nav: 4 },
   lead: { name: 'Crew Lead', nav: 3 },
 };
@@ -29,7 +31,7 @@ try {
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`${pathToFileURL(prototype).href}#owner/decision`, { waitUntil: 'load' });
 
-    check(await page.locator('#persona-picker option').count() === 3, `${viewport.name}: wrong perspective count`);
+    check(await page.locator('#persona-picker option').count() === 5, `${viewport.name}: wrong perspective count`);
     check(await page.locator('#moment-picker option').count() === 4, `${viewport.name}: wrong service-moment count`);
 
     for (const [persona, contract] of Object.entries(personas)) {
@@ -65,6 +67,25 @@ try {
     check(await page.locator('#completion-dialog').evaluate((dialog) => dialog.open), `${viewport.name}: prototype completion did not open`);
     check((await page.locator('#completion-dialog').textContent()).includes('No production data was changed'), `${viewport.name}: non-persistence boundary is missing`);
     await page.getByRole('button', { name: 'Return to service' }).click();
+
+    await page.goto(`${pathToFileURL(prototype).href}#property/decision`, { waitUntil: 'load' });
+    check((await page.locator('#focus-title').textContent()) === 'Mesa Court needs one exact response', `${viewport.name}: portfolio decision lost the exact property context`);
+    check(await page.getByText('Plan 8', { exact: false }).count() === 0, `${viewport.name}: provider plan leaked into portfolio decision`);
+    check(await page.getByText('Crew Lead Leah', { exact: false }).count() === 0, `${viewport.name}: crew identity leaked into portfolio decision`);
+    await page.getByRole('button', { name: 'Review property recommendation' }).click();
+    check(await page.locator('#choice-list input[type="radio"]').count() === 3, `${viewport.name}: portfolio decision choices are missing`);
+    check(await page.locator('#confirm-action').isDisabled(), `${viewport.name}: property manager can respond without a choice`);
+    await page.getByRole('button', { name: 'Back' }).click();
+    await page.getByRole('button', { name: 'Follow handoff' }).click();
+    check(documentHash(await page.url()) === 'manager/release', `${viewport.name}: portfolio decision did not retain the provider handoff`);
+
+    await page.goto(`${pathToFileURL(prototype).href}#company/field`, { waitUntil: 'load' });
+    check((await page.locator('#focus-title').textContent()) === 'Mesa Court has one managed exception', `${viewport.name}: company owner lost the business exception summary`);
+    check(await page.getByText('Plan 8', { exact: false }).count() === 0, `${viewport.name}: exact plan leaked into company owner view`);
+    check(await page.getByText('Side gate', { exact: false }).count() === 0, `${viewport.name}: low-level field detail leaked into company owner view`);
+    check((await page.locator('#boundary-copy').textContent()).includes('route editing'), `${viewport.name}: Company Owner operating authority boundary is missing`);
+    await page.getByRole('button', { name: 'Follow handoff' }).click();
+    check(documentHash(await page.url()) === 'manager/field', `${viewport.name}: company exception did not retain the manager handoff`);
 
     await page.goto(`${pathToFileURL(prototype).href}#manager/release`, { waitUntil: 'load' });
     await page.getByRole('button', { name: 'Review service release' }).click();
@@ -117,6 +138,9 @@ try {
       await page.goto(`${pathToFileURL(prototype).href}#manager/field`, { waitUntil: 'load' });
       await page.getByRole('button', { name: 'Review field request' }).click();
       await page.screenshot({ path: resolve(captureRoot, 'simplified-service-thread-desktop-v1.png'), fullPage: true });
+      await page.getByRole('button', { name: 'Back' }).click();
+      await page.goto(`${pathToFileURL(prototype).href}#company/field`, { waitUntil: 'load' });
+      await page.screenshot({ path: resolve(captureRoot, 'simplified-service-thread-company-owner-desktop-v2.png'), fullPage: true });
     }
     if (capture && viewport.name === 'mobile') {
       await page.goto(`${pathToFileURL(prototype).href}#owner/proof`, { waitUntil: 'load' });
@@ -124,10 +148,14 @@ try {
       await page.goto(`${pathToFileURL(prototype).href}#lead/field`, { waitUntil: 'load' });
       await page.getByRole('button', { name: 'Send field request' }).click();
       await page.screenshot({ path: resolve(captureRoot, 'simplified-service-thread-field-mobile-v1.png'), fullPage: true });
+      await page.getByRole('button', { name: 'Back' }).click();
+      await page.goto(`${pathToFileURL(prototype).href}#property/decision`, { waitUntil: 'load' });
+      await page.getByRole('button', { name: 'Review property recommendation' }).click();
+      await page.screenshot({ path: resolve(captureRoot, 'simplified-service-thread-property-manager-mobile-v2.png'), fullPage: true });
     }
     await page.close();
   }
-  console.log('Simplified service-thread validation passed for 3 perspectives, 4 service moments, and 3 viewports.');
+  console.log('Simplified service-thread validation passed for 5 perspectives, 4 service moments, and 3 viewports.');
 } finally {
   await browser.close();
 }

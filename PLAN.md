@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | SX1 clean-slate service-thread prototype is validated for Yard Owner, Company Manager, and Crew Lead | Extend the same thread to Company Owner and Property Manager without duplicate lifecycle views |
+| Design | SX2 validates one service thread across Yard Owner, Property Manager, Company Owner, Company Manager, and Crew Lead | Add contextual exception and advanced-capability paths without returning to feature silos |
 
 ## Status Legend
 
@@ -137,13 +137,16 @@ Current state:
   plan versions, field work, proof, and recovery remain contextual to that
   thread. The first clean-slate slice focuses on Yard Owner, Company Manager,
   and Crew Lead without deleting mature capability.
-- SX1 is delivered in the
+- SX1 and SX2 are delivered in the
   [simplified service-thread prototype](design/prototypes/simplified-service-thread/README.md).
   The same Mesa Court service moves through decision, exact release, field work
   and manager-reviewed recovery, proof publication, and customer outcome while
   role filtering prevents provider plan data from reaching the Yard Owner and
-  customer pricing from reaching the Crew Lead. Twelve perspective/moment
-  combinations pass desktop, phone, and narrow-phone browser validation.
+  customer pricing from reaching the Crew Lead. Company Owner and Property
+  Manager enter the same lifecycle through business-readiness and portfolio-
+  exception summaries, with exact Company Manager handoffs. Twenty
+  perspective/moment combinations pass desktop, phone, and narrow-phone
+  browser validation.
 
 Next design slices:
 
@@ -185,10 +188,11 @@ Next design slices:
    boundaries are explicit. Human review and bounded family-by-family React
    adoption remain; production adoption has not started.
 8. Simplified product experience: SX0 is delivered and supersedes the prior MVP
-   framing. SX1 now validates one role-filtered service thread across Yard
-   Owner, Company Manager, and Crew Lead without feature-silo context changes.
-   SX2 extends the same model to Company Owner and Property Manager. Research
-   materials remain usable, but no participant evidence is inferred.
+   framing. SX1 and SX2 validate one role-filtered service thread across Yard
+   Owner, Property Manager, Company Owner, Company Manager, and Crew Lead
+   without feature-silo context changes or duplicate lifecycles. SX3 adds
+   contextual exception and advanced-capability paths next. Research materials
+   remain usable, but no participant evidence is inferred.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.
@@ -1096,9 +1100,10 @@ Current state:
 
 Next design work:
 
-- Build SX2 by adding Company Owner business-readiness entry and Property
-  Manager portfolio-exception entry to the same service thread. Avoid duplicate
-  owner/manager or property/service lifecycles. Use the retained session kit for
+- Build SX3 by adding Support incident entry, no-role recovery, and product-
+  gated billing readiness as contextual paths. Exercise plan conflict, field
+  connectivity, proof failure, ended access, and inconsistent authorization
+  without making them new global products. Use the retained session kit for
   later comparative review and keep capability rollout as a separate
   authorization contract.
 - Adopt the Yard Owner proposal interfaces, separate proposal conversation, and

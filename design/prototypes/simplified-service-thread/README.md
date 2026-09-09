@@ -5,9 +5,11 @@ redesign. It does not remove mature capability. It reorganizes that capability
 around one exact service thread so users no longer need separate approval,
 schedule, report, proof, and recovery products to understand one outcome.
 
-The first slice shows the same illustrative Mesa Court service through:
+The first two slices show the same illustrative Mesa Court service through:
 
 - Yard Owner customer-safe decision, service status, and delivered outcome;
+- Property Manager portfolio-scoped decisions and customer-safe exceptions;
+- Company Owner business readiness and accountable operating outcomes;
 - Company Manager decision state, exact release, field-request review, and proof
   publication; and
 - Crew Lead released work, field recovery, and completion submission.

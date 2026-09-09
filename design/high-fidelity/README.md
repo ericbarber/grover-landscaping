@@ -27,7 +27,7 @@ hosted cohort evidence, and Dispatcher/Billing backend roles remain gated.
 
 | Artifact | Review images | Purpose |
 | --- | --- | --- |
-| [`../prototypes/simplified-service-thread/index.html`](../prototypes/simplified-service-thread/index.html) | [Manager desktop](current/simplified-service-thread-desktop-v1.png) · [Yard Owner mobile](current/simplified-service-thread-owner-mobile-v1.png) · [Crew Lead mobile](current/simplified-service-thread-field-mobile-v1.png) | Clean-slate post-MVP redesign showing one exact service through customer decision, manager plan/release and recovery, Crew Lead field work, reviewed proof, and the customer outcome without separate feature silos |
+| [`../prototypes/simplified-service-thread/index.html`](../prototypes/simplified-service-thread/index.html) | [Manager desktop](current/simplified-service-thread-desktop-v1.png) · [Company Owner desktop](current/simplified-service-thread-company-owner-desktop-v2.png) · [Yard Owner mobile](current/simplified-service-thread-owner-mobile-v1.png) · [Property Manager mobile](current/simplified-service-thread-property-manager-mobile-v2.png) · [Crew Lead mobile](current/simplified-service-thread-field-mobile-v1.png) | Clean-slate post-MVP redesign showing one exact service through customer and portfolio decisions, owner readiness, manager plan/recovery, Crew Lead field work, reviewed proof, and outcome without separate feature silos |
 
 This artifact is active design direction. It preserves mature capability and
 role filtering while testing a simpler service-thread mental model; it is not

@@ -300,7 +300,7 @@ Delivered evidence:
 
 ### SX2 — Owner and portfolio extension
 
-State: next.
+State: delivered as validated design direction; production adoption not started.
 
 - Add Company Owner business-readiness entry and role overlap with Company
   Manager.
@@ -311,9 +311,22 @@ State: next.
 Exit: owner-level and portfolio-level breadth changes the queue and authorized
 detail, not the core workflow.
 
+Delivered evidence:
+
+- Company Owner receives business readiness, accountable operating ownership,
+  contained consequence, and outcome without plan-editing or field controls.
+- Property Manager receives exact authorized-property decisions, customer-safe
+  progress, and reviewed outcome without provider-private route or crew detail.
+- Both perspectives retain the Mesa Court lifecycle and hand off to the exact
+  Company Manager moment instead of creating parallel owner or portfolio
+  records.
+- Twenty perspective/moment combinations pass desktop, mobile, and narrow-phone
+  validation; Company Owner desktop and Property Manager mobile captures are
+  published in the design gallery.
+
 ### SX3 — Exceptions and advanced capability
 
-State: planned.
+State: next.
 
 - Add Support incident entry, no-role recovery, and product-gated billing
   readiness as contextual paths.

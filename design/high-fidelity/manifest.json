@@ -7,6 +7,13 @@
     "preview": "current/simplified-service-thread-desktop-v1.png"
   },
   {
+    "id": "simplified-service-thread-company-owner-desktop-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#company/field",
+    "preview": "current/simplified-service-thread-company-owner-desktop-v2.png"
+  },
+  {
     "id": "simplified-service-thread-owner-mobile-v1",
     "area": "current",
     "status": "validated-design-direction",
@@ -19,6 +26,13 @@
     "status": "validated-design-direction",
     "source": "../prototypes/simplified-service-thread/index.html#lead/field",
     "preview": "current/simplified-service-thread-field-mobile-v1.png"
+  },
+  {
+    "id": "simplified-service-thread-property-manager-mobile-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#property/decision",
+    "preview": "current/simplified-service-thread-property-manager-mobile-v2.png"
   },
   {
     "id": "minimalist-administration-journey-desktop-v2",

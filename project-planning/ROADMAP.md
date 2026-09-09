@@ -81,11 +81,11 @@ data. The ten-persona journey set remains broad future design evidence.
 The MVP framing is superseded by a post-MVP simplification track. Mature product
 capability remains, but the new design uses a role-filtered service thread so
 customer decisions, plan versions, field work, proof, and recovery stay attached
-to one outcome instead of separate feature silos. The first clean-slate slice
-now validates Yard Owner, Company Manager, and Crew Lead across decision,
-release, field work/recovery, and proof. Company Owner and Property Manager are
-the next extension; Dispatcher and Crew Member remain available for later
-specialization rather than defining the core thread.
+to one outcome instead of separate feature silos. The first two clean-slate
+slices now validate Yard Owner, Property Manager, Company Owner, Company
+Manager, and Crew Lead across decision, release, field work/recovery, and proof.
+Contextual exception paths are next; Dispatcher and Crew Member remain available
+for later specialization rather than defining the core thread.
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access
