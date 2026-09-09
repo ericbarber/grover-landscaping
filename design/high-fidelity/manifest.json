@@ -1,5 +1,26 @@
 [
   {
+    "id": "minimalist-administration-journey-desktop-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#billing-admin/attention/handoffs",
+    "preview": "current/minimalist-administration-journey-desktop-v2.png"
+  },
+  {
+    "id": "minimalist-administration-journey-mobile-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#support/attention/access",
+    "preview": "current/minimalist-administration-journey-mobile-v2.png"
+  },
+  {
+    "id": "minimalist-access-fallback-mobile-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#general/attention/home",
+    "preview": "current/minimalist-access-fallback-mobile-v2.png"
+  },
+  {
     "id": "minimalist-operations-journey-desktop-v2",
     "area": "current",
     "status": "validated-design-direction",

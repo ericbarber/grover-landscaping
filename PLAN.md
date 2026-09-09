@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Customer, field, and operations families now have connected task-first journeys with explicit customer, crew, and office authority boundaries | Deepen Billing Administrator, Support Administrator, and no-role fallback journeys while human review proceeds |
+| Design | All ten minimalist persona journeys are connected or deliberately single-destination, responsive, and authority-bounded | Conduct human workflow review, then adopt only approved family slices into React |
 
 ## Status Legend
 
@@ -113,6 +113,12 @@ Current state:
   exact Schedule versions, customer impact, and Recovery; Dispatcher
   publishability continues through crew fit and a new-plan response without
   adding field execution authority or an implemented backend role.
+- The administrative refinement slice connects Billing Administrator
+  completion readiness to exact Account gaps and traceable Handoffs without
+  financial actions. Support ownership continues through minimized Activity to
+  a purpose-bound, expiring Access request. The no-role fallback stays within
+  one protected-data-free Home destination with explicit invitation/account
+  recovery choices.
 
 Next design slices:
 
@@ -148,11 +154,11 @@ Next design slices:
    place, service, and delivered-care moments. Authenticated task destinations,
    operational headings, loading/failure states, decisions, queues, and monetary
    values now explicitly use the interface family.
-7. Minimalist persona experiences: baseline plus connected customer, field,
-   and operations families are delivered as validated design direction across
-   all three scenarios. Next, deepen Billing Administrator, Support
-   Administrator, and no-role fallback destinations without widening their
-   product or protected-data boundaries. Production adoption has not started.
+7. Minimalist persona experiences: all ten persona journeys are now connected
+   or deliberately single-destination design direction validated across all
+   three scenarios. Customer, field, operations, administration, and no-role
+   boundaries are explicit. Human review and bounded family-by-family React
+   adoption remain; production adoption has not started.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.
@@ -1060,11 +1066,10 @@ Current state:
 
 Next design work:
 
-- Conduct customer, field, and operations task-comprehension review against the
-  connected minimalist journeys while the next prototype slice deepens Billing
-  Administrator, Support Administrator, and the no-role fallback. Adopt only
-  approved family patterns into React and keep capability rollout as the
-  separate authorization contract.
+- Conduct customer, field, operations, administration, and access-fallback
+  task-comprehension review against the completed minimalist journey set.
+  Adopt only approved family patterns into React and keep capability rollout as
+  the separate authorization contract.
 - Adopt the Yard Owner proposal interfaces, separate proposal conversation, and
   explicit activation boundary before widening the provider-discovery surface.
 - Continue production visual convergence through the authenticated application

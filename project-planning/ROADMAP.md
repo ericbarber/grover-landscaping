@@ -73,7 +73,12 @@ separation are validated.
 The operations depth slice now connects Company Owner business readiness,
 Company Manager service risk and exact plan versions, and Dispatcher
 publishability and crew fit without collapsing their authority or implying a
-production Dispatcher role. Administration is the next prototype depth slice.
+production Dispatcher role.
+The final administration depth slice connects Billing completion readiness to
+exact Account gaps and Handoffs, requires owned incident context before Support
+Activity and temporary Access, and keeps the no-role fallback free of protected
+data. The ten-persona journey set is ready for human review and bounded
+family-by-family adoption decisions.
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access

@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-08: Completed minimalist journey depth across all ten personas by
+  connecting Billing readiness to exact Account gaps and traceable Handoffs,
+  requiring owned incident context before minimized Support Activity and
+  purpose-bound temporary Access, and keeping the no-role fallback within one
+  protected-data-free recovery destination. Billing financial-product gates,
+  Support scope checks, required choices, and responsive clearance are
+  browser-validated.
 - 2026-09-08: Connected the minimalist provider-operations prototype while
   preserving distinct decision horizons. Company Owner business readiness now
   continues into Team, Operations, and Customers; Company Manager service risk

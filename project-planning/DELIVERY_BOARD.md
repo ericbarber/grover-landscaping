@@ -16,7 +16,7 @@ for account access or live-service evidence.
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
 | Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
-| Design review | Customer, field, and operations minimalist journeys connected | Customer confidence, field authority, and distinct owner/manager/dispatcher decision horizons now use exact task flows | Deepen Billing/Support/no-role administrative journeys; run human review in parallel |
+| Design review | All minimalist persona journey-depth slices delivered | Ten task-first experiences now use connected or deliberately single-destination flows with explicit authority boundaries | Conduct human workflow review, then adopt approved family slices |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -388,10 +388,31 @@ Exit evidence:
   choices, connected hashes, focus return, responsive clearance, plan-version
   language, and owner/manager/dispatcher authority separation.
 
-Next prototype slice:
+Following slice: completed by UX10.
 
-- Deepen Billing Administrator, Support Administrator, and no-role fallback
-  journeys while retaining product gates and protected-data boundaries.
+### UX10 — Minimalist administration and access depth
+
+State: delivered as design direction; production adoption not started.
+
+Deliver:
+
+- Connect Billing Administrator completion readiness to exact Account gaps and
+  traceable Handoffs without invoice, payment, tax, or ledger controls.
+- Require Support incident ownership and exact tenant/purpose checks before
+  minimized Activity and a purpose-bound, expiring Access request.
+- Keep the no-role Team Member in one protected-data-free Home destination with
+  explicit invitation and account-recovery choices.
+
+Exit evidence:
+
+- Browser validation covers required choices, connected hashes, exact
+  administrative content, Billing product gates, Support scope checks, no-role
+  protected-data boundaries, and responsive action clearance.
+
+Next design gate:
+
+- Conduct human workflow and content review across all five persona families,
+  then define bounded React adoption slices only for approved patterns.
 
 ## Later, not active
 

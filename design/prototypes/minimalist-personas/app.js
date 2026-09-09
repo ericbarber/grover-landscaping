@@ -201,6 +201,29 @@ const operationsViews = {
   },
 };
 
+const administrativeViews = {
+  'billing-admin': {
+    accounts: viewStates('Account readiness', 'Only records blocking completion readiness',
+      { title: 'Juniper Row billing contact is incomplete', status: 'Needs owner', copy: 'The exact account gap appears without invoice, payment, tax, or ledger controls.', facts: ['Juniper Row · Active service', 'Billing contact missing', 'Company Manager owns account follow-up'], action: 'Review account record', optionsLabel: 'Account handoff', options: ['Ask Company Manager to confirm the contact', 'Return the record for account correction'], confirmLabel: 'Preview account handoff', nextView: 'handoffs', nextLabel: 'Continue to handoffs' },
+      { title: 'All service accounts have current contacts', status: 'Ready', copy: 'Only completion-readiness contact state is shown; financial operations stay absent.', facts: ['26 active accounts', '26 current contacts', '0 readiness blockers'], action: 'Review ready accounts', nextView: 'readiness', nextLabel: 'Return to readiness' },
+      { title: 'No service accounts are available', status: 'No records', copy: 'No account or financial data is invented when the authorized scope is empty.', facts: ['0 authorized accounts', '0 completion records', 'No invoice state'], action: 'Return to readiness', nextView: 'readiness', nextLabel: 'Open readiness' }),
+    handoffs: viewStates('Exception handoffs', 'Traceable requests, not financial actions',
+      { title: 'Mesa Court proof confirmation is waiting', status: 'Manager review', copy: 'The handoff retains the exact visit, missing evidence, recipient role, and current state.', facts: ['Visit · September 3', 'Delivered report unconfirmed', 'Company Manager has not responded'], action: 'Review handoff', optionsLabel: 'Next handoff state', options: ['Send the bounded request to Company Manager', 'Return the record for evidence correction', 'Keep it waiting without billing-ready status'], confirmLabel: 'Preview handoff state', nextView: 'readiness', nextLabel: 'Return to readiness' },
+      { title: 'No readiness handoff is waiting', status: 'Clear', copy: 'Completed handoffs remain traceable without implying that an invoice was created.', facts: ['0 open handoffs', '2 resolved this month', 'No financial write'], action: 'Review resolved handoffs', nextView: 'readiness', nextLabel: 'Return to readiness' },
+      { title: 'No handoff history exists', status: 'Clear', copy: 'The empty state does not manufacture account or completion work.', facts: ['0 open requests', '0 resolved requests', 'No billing workflow started'], action: 'Return to readiness', nextView: 'readiness', nextLabel: 'Open readiness' }),
+  },
+  support: {
+    activity: viewStates('Incident activity', 'Minimized history for the owned incident',
+      { title: 'Delivery failure has one immutable timeline', status: 'Owned by Sage', copy: 'Only events needed to recover this exact incident appear after ownership is established.', facts: ['Tenant · Grover Yard Care', 'Automatic retries exhausted', 'Original event retained'], action: 'Review retry timeline', nextView: 'access', nextLabel: 'Review recovery access' },
+      { title: 'Owned incidents have current audit trails', status: 'Current', copy: 'The activity view stays scoped to assigned incidents and accountable actions.', facts: ['2 owned incidents', 'No missing audit events', 'No cross-tenant browsing'], action: 'Review latest activity', nextView: 'incidents', nextLabel: 'Return to incidents' },
+      { title: 'No incident activity is in scope', status: 'Clear', copy: 'No tenant history loads without a current incident and purpose.', facts: ['0 active incidents', '0 tenant records opened', 'Audit boundary active'], action: 'Return to incidents', nextView: 'incidents', nextLabel: 'Open incidents' }),
+    access: viewStates('Temporary access', 'Purpose-bound access only',
+      { title: 'Recovery requires a 30-minute tenant scope', status: 'Not granted', copy: 'The tenant, purpose, expiry, and audit consequence stay visible before access can be requested.', facts: ['Tenant · Grover Yard Care', 'Purpose · Delivery retry evidence', 'Expires 30 minutes after grant'], action: 'Review temporary access', optionType: 'checkbox', optionsLabel: 'Access boundary check', options: ['Exact tenant and incident confirmed', 'Purpose and 30-minute expiry understood'], confirmLabel: 'Preview access request', nextView: 'incidents', nextLabel: 'Return to incident' },
+      { title: 'Current support access is purpose-bound', status: '18 minutes remain', copy: 'Only the owned incident context is available and every action remains audited.', facts: ['One exact tenant', 'Delivery evidence only', 'Automatic expiry active'], action: 'Review access receipt', nextView: 'incidents', nextLabel: 'Return to incidents' },
+      { title: 'No temporary access is active', status: 'Protected', copy: 'Tenant data stays closed when no owned incident requires access.', facts: ['0 active grants', '0 tenant sessions', 'No protected data loaded'], action: 'Return to incidents', nextView: 'incidents', nextLabel: 'Open incidents' }),
+  },
+};
+
 function viewStates(label, queueTitle, attention, ready, empty) {
   const normalize = (item) => ({
     label,
@@ -209,10 +232,10 @@ function viewStates(label, queueTitle, attention, ready, empty) {
     copy: item.copy,
     facts: item.facts,
     action: item.action ?? `Review ${label.toLowerCase()}`,
-    steps: item.steps ?? [`Confirm the exact ${label.toLowerCase()} context.`, 'Review the current owner and consequence.', 'Return to the primary operations priority.'],
+    steps: item.steps ?? [`Confirm the exact ${label.toLowerCase()} context.`, 'Review the current owner and consequence.', 'Return to the primary task.'],
     queueTitle,
     queue: item.queue ?? item.facts.slice(0, 2).map((fact, index) => [index === 0 ? label : 'Context', fact]),
-    ...(item.options ? { optionsLabel: item.optionsLabel, options: item.options, confirmLabel: item.confirmLabel } : {}),
+    ...(item.options ? { optionType: item.optionType, optionsLabel: item.optionsLabel, options: item.options, confirmLabel: item.confirmLabel } : {}),
     ...(item.nextView ? { nextView: item.nextView, nextLabel: item.nextLabel } : {}),
   });
   return { attention: normalize(attention), ready: normalize(ready), empty: normalize(empty) };
@@ -274,7 +297,7 @@ const personaViews = {
   },
 };
 
-Object.assign(personaViews, operationsViews);
+Object.assign(personaViews, operationsViews, administrativeViews);
 
 const personaConnections = {
   owner: { today: { attention: { nextView: 'visits', nextLabel: 'Continue to visits', optionType: 'checkbox', optionsLabel: 'Preparation check', options: ['Side gate will be unlocked', 'Pets will be inside'], confirmLabel: 'Confirm preparation' } } },
@@ -284,6 +307,15 @@ const personaConnections = {
   'company-owner': { home: { attention: { nextView: 'team', nextLabel: 'Continue to team access', optionsLabel: 'Owner response', options: ['Review the pending Crew Lead invitation', 'Assign another active lead to tomorrow’s route'], confirmLabel: 'Preview owner action' } } },
   'company-manager': { today: { attention: { nextView: 'schedule', nextLabel: 'Continue to schedule', optionsLabel: 'Coordination path', options: ['Balance the route before publishing', 'Keep the route and revise customer windows', 'Return the plan to draft'], confirmLabel: 'Review plan correction' } } },
   dispatcher: { plan: { attention: { nextView: 'crews', nextLabel: 'Review crew fit', optionsLabel: 'Proposed assignment', options: ['Assign Cactus Way to West crew', 'Leave unassigned and return to draft'], confirmLabel: 'Preview assignment' } } },
+  'billing-admin': { readiness: { attention: { nextView: 'handoffs', nextLabel: 'Continue to handoff', optionsLabel: 'Missing evidence', options: ['Delivered report confirmation', 'Completion record correction'], confirmLabel: 'Preview confirmation request' } } },
+  support: { incidents: { attention: { nextView: 'activity', nextLabel: 'Continue to incident activity', optionType: 'checkbox', optionsLabel: 'Ownership check', options: ['Exact tenant and incident confirmed', 'Recovery purpose accepted'], confirmLabel: 'Preview ownership' } } },
+  general: {
+    home: {
+      attention: { optionsLabel: 'Access issue', options: ['No invitation appears for this account', 'The invitation belongs to another account'], confirmLabel: 'Preview access guidance' },
+      ready: { optionsLabel: 'Invitation response', options: ['Accept the Crew Member invitation', 'Decline the invitation'], confirmLabel: 'Preview invitation response' },
+      empty: { optionsLabel: 'Safe next step', options: ['Ask the organization administrator to invite this account', 'Sign out and use the intended account'], confirmLabel: 'Preview recovery path' },
+    },
+  },
 };
 
 const icons = { today: '⌂', visits: '▤', proof: '✓', overview: '⌂', properties: '▦', approvals: '✓', route: '⌁', jobs: '▤', recovery: '↻', work: '✓', saved: '↻', home: '⌂', operations: '▦', customers: '◇', team: '◎', schedule: '▦', plan: '▦', crews: '◎', changes: '↻', readiness: '✓', accounts: '◇', handoffs: '↗', incidents: '!', activity: '▤', access: '◇' };

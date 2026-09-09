@@ -111,6 +111,12 @@ Deliver bounded Billing Administrator, Support Administrator, and no-role
 fallback views. Billing remains a completion-readiness workflow; Support
 requires exact tenant context; the fallback exposes no protected data.
 
+Delivered detail: Billing completion readiness connects exact Account gaps to
+traceable Handoffs without financial actions. Support ownership connects the
+incident's minimized Activity to a purpose-bound, 30-minute Access request. The
+no-role fallback offers explicit invitation/account recovery choices within a
+single safe destination and never loads workspace data.
+
 Exit: administrative tasks are actionable without implying unsupported revenue
 or broad support authority.
 
@@ -132,7 +138,7 @@ references.
 | M1 — Customer confidence | Connected destination prototype validated | Yard Owner and Property Manager task-comprehension review |
 | M2 — Field focus | Connected destination prototype validated | Crew Lead/Crew Member outdoor and physical-device review |
 | M3 — Provider operations | Connected destination prototype validated | Owner/Manager/Dispatcher workflow review; Dispatcher role remains product-gated |
-| M4 — Administrative focus | Validated | Billing/Support workflow review; Billing role remains product-gated |
+| M4 — Administrative focus | Connected destination prototype validated | Billing/Support workflow review; Billing role remains product-gated |
 | M5 — States and convergence | Automated browser evidence complete | Moderated users, physical devices, and assistive-technology sessions |
 
 Repository validation covers all ten personas, all three scenarios, every

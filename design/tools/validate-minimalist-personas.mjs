@@ -187,6 +187,62 @@ try {
     await page.locator(`${fieldNav} [data-view="changes"]`).click();
     check((await page.locator('#focus-title').textContent()) === 'Cactus Way access changed', `${viewport.name}: Dispatcher Changes reused generic content`);
 
+    await page.selectOption('#persona-picker', 'billing-admin');
+    await page.selectOption('#scenario-picker', 'attention');
+    await page.getByRole('button', { name: 'Request confirmation' }).click();
+    check(await page.locator('#detail-option-list input[type="radio"]').count() === 2, `${viewport.name}: Billing evidence choices are missing`);
+    check(await page.locator('#complete-action').isDisabled(), `${viewport.name}: Billing handoff can proceed without missing-evidence context`);
+    await page.locator('#detail-option-list input').first().check();
+    await page.locator('#complete-action').click();
+    await page.locator('#reset-action').click();
+    check(new URL(page.url()).hash === '#billing-admin/attention/handoffs', `${viewport.name}: Billing journey did not continue to Handoffs`);
+    check((await page.locator('#focus-title').textContent()) === 'Mesa Court proof confirmation is waiting', `${viewport.name}: Billing Handoffs reused generic content`);
+    await page.getByRole('button', { name: 'Review handoff' }).click();
+    check(await page.locator('#detail-option-list input[type="radio"]').count() === 3, `${viewport.name}: Billing handoff states are missing`);
+    await page.locator('#close-detail').click();
+    await page.locator(`${fieldNav} [data-view="accounts"]`).click();
+    check((await page.locator('#focus-title').textContent()) === 'Juniper Row billing contact is incomplete', `${viewport.name}: Billing Accounts reused generic content`);
+    check(await page.getByText('Invoice creation', { exact: false }).count() === 1, `${viewport.name}: Billing product boundary is missing`);
+
+    await page.selectOption('#persona-picker', 'support');
+    await page.selectOption('#scenario-picker', 'attention');
+    await page.getByRole('button', { name: 'Take ownership' }).click();
+    check(await page.locator('#detail-option-list input[type="checkbox"]').count() === 2, `${viewport.name}: Support ownership checks are missing`);
+    check(await page.locator('#complete-action').isDisabled(), `${viewport.name}: Support can take ownership without exact context`);
+    for (const input of await page.locator('#detail-option-list input').all()) await input.check();
+    await page.locator('#complete-action').click();
+    await page.locator('#reset-action').click();
+    check(new URL(page.url()).hash === '#support/attention/activity', `${viewport.name}: Support journey did not continue to Activity`);
+    check((await page.locator('#focus-title').textContent()) === 'Delivery failure has one immutable timeline', `${viewport.name}: Support Activity reused generic content`);
+    await page.locator(`${fieldNav} [data-view="access"]`).click();
+    check((await page.locator('#focus-title').textContent()) === 'Recovery requires a 30-minute tenant scope', `${viewport.name}: Support Access reused generic content`);
+    await page.getByRole('button', { name: 'Review temporary access' }).click();
+    check(await page.locator('#detail-option-list input[type="checkbox"]').count() === 2, `${viewport.name}: Support access boundary checks are missing`);
+    check(await page.locator('#complete-action').isDisabled(), `${viewport.name}: Support access can proceed without boundary confirmation`);
+    await page.locator('#detail-option-list input').first().check();
+    check(await page.locator('#complete-action').isDisabled(), `${viewport.name}: Support access can proceed with partial boundary confirmation`);
+    await page.locator('#close-detail').click();
+
+    await page.selectOption('#persona-picker', 'general');
+    await page.selectOption('#scenario-picker', 'attention');
+    await page.getByRole('button', { name: 'Check invitation' }).click();
+    check(await page.locator('#detail-option-list input[type="radio"]').count() === 2, `${viewport.name}: no-role recovery choices are missing`);
+    check(await page.locator('#complete-action').isDisabled(), `${viewport.name}: no-role recovery can proceed without a choice`);
+    await page.locator('#detail-option-list input').first().check();
+    await page.locator('#complete-action').click();
+    check((await page.locator('#completion-copy').textContent()).includes('No production data was changed'), `${viewport.name}: no-role prototype boundary is missing`);
+    await page.locator('#reset-action').click();
+    check(new URL(page.url()).hash === '#general/attention/home', `${viewport.name}: no-role journey exposed another destination`);
+    check(await page.getByText('never load', { exact: false }).count() === 1, `${viewport.name}: no-role protected-data boundary is missing`);
+    await page.selectOption('#scenario-picker', 'ready');
+    await page.getByRole('button', { name: 'Review invitation' }).click();
+    check(await page.locator('#detail-option-list input[type="radio"]').count() === 2, `${viewport.name}: invitation response choices are missing`);
+    await page.locator('#close-detail').click();
+    await page.selectOption('#scenario-picker', 'empty');
+    await page.getByRole('button', { name: 'View guidance' }).click();
+    check(await page.locator('#detail-option-list input[type="radio"]').count() === 2, `${viewport.name}: no-invitation recovery choices are missing`);
+    await page.locator('#close-detail').click();
+
     if (viewport.name === 'desktop') {
       check(await page.locator('.desktop-rail').isVisible(), 'desktop: rail hidden');
       check(!(await page.locator('.mobile-nav').isVisible()), 'desktop: mobile navigation visible');
@@ -221,6 +277,9 @@ try {
       await page.goto(`${pathToFileURL(prototypePath).href}#company-manager/attention/schedule`, { waitUntil: 'load' });
       await page.getByRole('button', { name: 'Review balancing move' }).click();
       await page.screenshot({ path: resolve(captureRoot, 'minimalist-operations-journey-desktop-v2.png'), fullPage: true });
+      await page.goto(`${pathToFileURL(prototypePath).href}#billing-admin/attention/handoffs`, { waitUntil: 'load' });
+      await page.getByRole('button', { name: 'Review handoff' }).click();
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-administration-journey-desktop-v2.png'), fullPage: true });
     }
     if (capture && viewport.name === 'mobile') {
       await page.goto(`${pathToFileURL(prototypePath).href}#crew-member/attention/work`, { waitUntil: 'load' });
@@ -236,6 +295,12 @@ try {
       await page.goto(`${pathToFileURL(prototypePath).href}#dispatcher/attention/changes`, { waitUntil: 'load' });
       await page.getByRole('button', { name: 'Review plan change' }).click();
       await page.screenshot({ path: resolve(captureRoot, 'minimalist-operations-journey-mobile-v2.png'), fullPage: true });
+      await page.goto(`${pathToFileURL(prototypePath).href}#support/attention/access`, { waitUntil: 'load' });
+      await page.getByRole('button', { name: 'Review temporary access' }).click();
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-administration-journey-mobile-v2.png'), fullPage: true });
+      await page.goto(`${pathToFileURL(prototypePath).href}#general/attention/home`, { waitUntil: 'load' });
+      await page.getByRole('button', { name: 'Check invitation' }).click();
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-access-fallback-mobile-v2.png'), fullPage: true });
     }
     await page.close();
   }

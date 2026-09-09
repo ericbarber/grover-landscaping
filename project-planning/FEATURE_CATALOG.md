@@ -91,6 +91,10 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Connected minimalist operations journeys separating Company Owner business
   readiness, Company Manager service risk and exact plan versions, and
   Dispatcher publishability and crew fit without adding field authority
+- Connected minimalist administrative journeys linking Billing readiness,
+  Account gaps, and traceable Handoffs plus owned Support incidents, minimized
+  Activity, and purpose-bound Access; the no-role fallback exposes recovery but
+  no protected workspace data
 - Shared authenticated Home with signed-in identity, persona context, source-
   appropriate work/sync summary, persona-specific quick actions, and a direct
   action from the current priority notice

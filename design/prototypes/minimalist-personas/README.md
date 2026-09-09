@@ -33,6 +33,13 @@ version, customer impact, and Recovery; Dispatcher moves from plan
 publishability into crew fit and a new-plan response. Dispatcher remains a
 design-only role and no illustrative choice changes production data.
 
+The administrative family is equally bounded. Billing Administrator moves
+from an incomplete completion record into exact Account readiness and a
+traceable Handoff without invoice or payment controls. Support Administrator
+must own an incident before reviewing its minimized Activity and purpose-bound,
+expiring Access. The no-role Team Member has one protected-data-free Home path
+for invitation or account recovery and never receives a partial workspace.
+
 The experience follows the
 [minimalist persona plan](../../review/minimalist-persona-prototype-plan.md).
 
