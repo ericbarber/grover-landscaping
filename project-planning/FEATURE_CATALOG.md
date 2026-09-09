@@ -114,6 +114,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   decision, plan, field, offline, proof, Support, access, readiness,
   appreciation, and external-review events with classification, ownership,
   retained truth, relative bands, invariants, and an explicit completion rule
+- Shared typed `ServiceLifecycleProgress` React primitive extracted from the
+  already-adopted Yard Owner progress rail, preserving its four-stage status
+  mapping and accessible current/completed semantics without enabling the new
+  service-thread composition
 - Shared authenticated Home with signed-in identity, persona context, source-
   appropriate work/sync summary, persona-specific quick actions, and a direct
   action from the current priority notice

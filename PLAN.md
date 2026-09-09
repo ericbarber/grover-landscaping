@@ -161,6 +161,11 @@ Current state:
   setup through scope, release, field work, proof, customer outcome, recovery,
   and recurring service. Conditional, later-specialized, and product-gated
   events are attached without making them completion requirements.
+- Reversible production groundwork now extracts the already-adopted Yard Owner
+  four-stage progress rail into a typed `ServiceLifecycleProgress` component.
+  Its order, current/completed semantics, customer status mapping, and rendered
+  behavior remain unchanged; this is shared code preparation, not adoption of
+  the untested service-thread composition.
 
 Next design slices:
 

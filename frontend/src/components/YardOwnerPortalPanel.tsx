@@ -19,6 +19,7 @@ import {
 import { WorkspaceIcon } from './WorkspaceIcon';
 import { WorkspaceStatusNotice } from './WorkspaceStatus';
 import { CustomerVisitRecommendationsPanel } from './CustomerVisitRecommendationsPanel';
+import { ServiceLifecycleProgress } from './ServiceLifecycleProgress';
 
 type PortalDestination = 'home' | 'visits' | 'proof' | 'account';
 
@@ -91,27 +92,7 @@ function preparationLabel(status: CustomerVisitStatus): string {
 }
 
 function ServiceProgress({ status }: { status: CustomerVisitStatus }) {
-  const currentIndex = serviceProgressIndex(status);
-  return (
-    <ol aria-label="Service progress" className="mt-5 grid grid-cols-4 gap-2">
-      {serviceProgressSteps.map((step, index) => {
-        const isDone = index < currentIndex;
-        const isCurrent = index === currentIndex;
-        return (
-          <li
-            aria-current={isCurrent ? 'step' : undefined}
-            className={`border-t-2 pt-2 text-center text-[0.68rem] font-black ${isDone || isCurrent ? 'border-emerald-700 text-emerald-900' : 'border-slate-200 text-slate-500'}`}
-            key={step.id}
-          >
-            <span className={`mx-auto mb-1 grid h-7 w-7 place-items-center rounded-full ${isDone ? 'bg-emerald-700 text-white' : isCurrent ? 'bg-forest text-white' : 'bg-slate-100 text-slate-500'}`}>
-              {isDone ? <WorkspaceIcon className="h-4 w-4" name="check" /> : index + 1}
-            </span>
-            {step.label}
-          </li>
-        );
-      })}
-    </ol>
-  );
+  return <ServiceLifecycleProgress currentIndex={serviceProgressIndex(status)} steps={serviceProgressSteps} />;
 }
 
 function ServiceStatusDetail({ visit }: { visit: CustomerPortalVisitSummary }) {

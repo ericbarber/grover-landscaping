@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-09: Extracted the existing Yard Owner service progress rail into a
+  typed shared React lifecycle component. Four dedicated tests protect ordered
+  labels, exactly one current step, completed markers, accessible naming, and
+  out-of-range safety while existing portal tests retain current behavior. No
+  new service-thread UI, API, capability, or authorization was enabled.
 - 2026-09-09: Published the complete yard-care event timeline with 54 ordered
   events spanning first-service relationship setup, recurring need, exact scope
   and decision, plan release, field/offline recovery, provider proof review,

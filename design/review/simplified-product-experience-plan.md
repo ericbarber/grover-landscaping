@@ -387,12 +387,20 @@ Prepared evidence:
 
 ### SX5 — Visual system and production adoption
 
-State: planned.
+State: technical groundwork begun; design adoption remains gated on SX4
+participant evidence.
 
 - Apply the mature Grover visual system after workflow validation.
 - Define narrow React adoption slices by service-thread stage and persona.
 - Map each slice to real APIs, authorization, persistence, telemetry, and
   regression evidence.
+
+Groundwork delivered:
+
+- The existing production Yard Owner four-stage progress rail is now a shared,
+  typed `ServiceLifecycleProgress` component with dedicated semantic regression
+  tests. No new stage, API, capability, authorization, or prototype composition
+  has been enabled.
 
 Exit: the new design can replace existing composition without a big-bang
 rewrite or unsupported product promise.

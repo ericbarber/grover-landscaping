@@ -440,7 +440,9 @@ Following design phase: UX12.
 
 State: SX0 experience reset plus SX1 core, SX2 owner/portfolio, SX3 contextual
 exceptions, and the SX4 comparison package delivered; participant evidence
-next.
+next. The current Yard Owner progress rail has been extracted into a shared
+typed component as reversible groundwork; service-thread production adoption
+has not started.
 
 Deliver:
 
