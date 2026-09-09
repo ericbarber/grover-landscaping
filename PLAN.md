@@ -125,6 +125,11 @@ Current state:
   deleting their future design evidence. Company Manager absorbs planning
   coordination, Crew Lead owns field delivery, and the next phase replaces
   persona hypotheses with direct user and operating evidence.
+- The [WF1 workflow session guide](design/review/minimal-product-workflow-session-guide.md)
+  is ready for participant sessions. It defines research questions, participant
+  contexts, FigJam frames, neutral interview prompts, anonymous evidence IDs,
+  task scenarios, synthesis confidence, privacy handling, and an explicit exit
+  checklist. No user evidence is claimed before those sessions occur.
 
 Next design slices:
 
@@ -166,10 +171,11 @@ Next design slices:
    boundaries are explicit. Human review and bounded family-by-family React
    adoption remain; production adoption has not started.
 8. Minimal-product workflow discovery: WF0 scope and evidence framing are
-   delivered. Dispatcher and Crew Member are explicitly deferred; the primary
-   service loop uses Yard Owner, Company Owner/Manager, and Crew Lead, with
-   Property Manager as an alternate customer path and Support/no-role as
-   exception boundaries. WF1 evidence-led persona discovery is next.
+   delivered and the WF1 facilitation kit is ready. Dispatcher and Crew Member
+   are explicitly deferred; the primary service loop uses Yard Owner, Company
+   Owner/Manager, and Crew Lead, with Property Manager as an alternate customer
+   path and Support/no-role as exception boundaries. Actual participant
+   sessions and synthesis are next; no research evidence is inferred.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.

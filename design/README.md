@@ -245,7 +245,9 @@ renderer or a design-tool account to see a proposed screen.
 2. Start the active workflow-design track with the
    [minimal-product user workflow](review/minimal-product-user-workflow.md).
    It defers Dispatcher and Crew Member, maps the core customer-to-service-to-
-   proof handoffs, and distinguishes evidence from design hypotheses.
+   proof handoffs, and distinguishes evidence from design hypotheses. Use the
+   [WF1 session guide](review/minimal-product-workflow-session-guide.md) to run
+   consistent interviews and FigJam workshops.
 3. Review the broader task-first
    [minimalist persona experiences](prototypes/minimalist-personas/index.html)
    to compare each role's first answer, primary action, short queue, and omitted

@@ -16,7 +16,7 @@ for account access or live-service evidence.
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
 | Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
-| Design review | WF0 minimal-product workflow scope delivered | Dispatcher and Crew Member are deferred; Manager owns planning and Crew Lead owns field delivery | WF1 evidence-led persona discovery and current-path mapping |
+| Design review | WF0 scope and WF1 facilitation kit delivered | Dispatcher and Crew Member are deferred; the session protocol is ready without claiming user evidence | Run WF1 participant sessions and synthesize current paths |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -415,7 +415,8 @@ Next design gate:
 
 ### UX11 — Minimal-product workflow discovery
 
-State: WF0 scope and evidence frame delivered; WF1 discovery next.
+State: WF0 scope and evidence frame delivered; WF1 facilitation kit ready and
+participant evidence pending.
 
 Deliver:
 
@@ -436,7 +437,8 @@ Exit evidence:
 
 Next design phase:
 
-- WF1 focused discovery for customer, provider-office, and Crew Lead needs.
+- Run WF1 focused discovery for customer, provider-office, and Crew Lead needs,
+  then synthesize current paths from anonymous evidence IDs.
 
 ## Later, not active
 

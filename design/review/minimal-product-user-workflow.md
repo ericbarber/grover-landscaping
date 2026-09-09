@@ -213,6 +213,11 @@ Use FigJam for facilitated discovery and Figma for linked screen references.
 After each session, normalize accepted paths into Mermaid diagrams here so the
 reviewed workflow remains versioned with the product.
 
+Use the companion
+[workflow session guide](minimal-product-workflow-session-guide.md) for the
+board structure, interview prompts, evidence identifiers, task scenarios,
+synthesis method, and WF1 exit checklist.
+
 Use one visual language throughout the board:
 
 - green: user action;
@@ -243,7 +248,7 @@ in the minimum product and why.
 
 ### WF1 — Core persona discovery
 
-State: next.
+State: facilitation kit ready; participant evidence pending.
 
 - Conduct focused sessions for Yard Owner/Property Manager, Company
   Owner/Manager, and Crew Lead.
@@ -339,4 +344,3 @@ Open evidence questions:
    separately gated concern/support workflow?
 7. What observable threshold should trigger introducing Dispatcher or Crew
    Member as distinct product roles?
-

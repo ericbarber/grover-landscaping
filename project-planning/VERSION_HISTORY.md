@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-08: Prepared the WF1 professional workflow-research kit without
+  claiming participant evidence. The FigJam board specification, persona
+  interview prompts, neutral follow-ups, privacy protocol, anonymous evidence
+  IDs, workflow task scenarios, synthesis confidence scale, and completion
+  checklist are ready for Yard Owner/Property Manager, Company Owner/Manager,
+  and Crew Lead sessions.
 - 2026-09-08: Established a separate minimal-product workflow design rather
   than treating the completed ten-persona prototype as the MVP requirement.
   Dispatcher and Crew Member are deferred while Company Manager owns planning
