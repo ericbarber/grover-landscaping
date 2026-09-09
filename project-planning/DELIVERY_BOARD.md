@@ -16,7 +16,7 @@ for account access or live-service evidence.
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
 | Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
-| Design review | All minimalist persona journey-depth slices delivered | Ten task-first experiences now use connected or deliberately single-destination flows with explicit authority boundaries | Conduct human workflow review, then adopt approved family slices |
+| Design review | WF0 minimal-product workflow scope delivered | Dispatcher and Crew Member are deferred; Manager owns planning and Crew Lead owns field delivery | WF1 evidence-led persona discovery and current-path mapping |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -411,8 +411,32 @@ Exit evidence:
 
 Next design gate:
 
-- Conduct human workflow and content review across all five persona families,
-  then define bounded React adoption slices only for approved patterns.
+- Continue through the narrower minimal-product workflow track in UX11.
+
+### UX11 — Minimal-product workflow discovery
+
+State: WF0 scope and evidence frame delivered; WF1 discovery next.
+
+Deliver:
+
+- Maintain a separate workflow source of truth rather than treating all ten
+  persona prototypes as minimum-product requirements.
+- Defer Dispatcher and Crew Member while Company Manager owns planning and Crew
+  Lead owns field delivery.
+- Map the primary customer-to-service-to-proof lifecycle, critical handoffs,
+  failure states, and alternate/exception paths.
+- Replace hypotheses with observed evidence before revising screen paths.
+
+Exit evidence:
+
+- Every MVP step has an actor, entry condition, required information, outcome,
+  safe failure path, and evidence label.
+- No minimum-product step silently depends on Dispatcher or Crew Member.
+- Revised prototypes and React adoption begin only after workflow review.
+
+Next design phase:
+
+- WF1 focused discovery for customer, provider-office, and Crew Lead needs.
 
 ## Later, not active
 

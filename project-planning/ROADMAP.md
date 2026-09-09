@@ -77,8 +77,12 @@ production Dispatcher role.
 The final administration depth slice connects Billing completion readiness to
 exact Account gaps and Handoffs, requires owned incident context before Support
 Activity and temporary Access, and keeps the no-role fallback free of protected
-data. The ten-persona journey set is ready for human review and bounded
-family-by-family adoption decisions.
+data. The ten-persona journey set remains broad future design evidence.
+A separate minimal-product workflow track now defers Dispatcher and Crew Member:
+Company Manager absorbs planning coordination and Crew Lead owns field delivery
+until observed scale or attribution needs justify splitting those roles. WF1
+persona discovery and current-path mapping precede any workflow-led prototype
+revision or family-by-family adoption decision.
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access

@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-08: Established a separate minimal-product workflow design rather
+  than treating the completed ten-persona prototype as the MVP requirement.
+  Dispatcher and Crew Member are deferred while Company Manager owns planning
+  coordination and Crew Lead owns field delivery. The new workflow maps the
+  primary service lifecycle, responsibility lanes, critical handoffs, state
+  coverage, persona hypotheses, professional session format, and five phased
+  discovery-to-adoption gates.
 - 2026-09-08: Completed minimalist journey depth across all ten personas by
   connecting Billing readiness to exact Account gaps and traceable Handoffs,
   requiring owned incident context before minimized Support Activity and

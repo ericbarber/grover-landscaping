@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | All ten minimalist persona journeys are connected or deliberately single-destination, responsive, and authority-bounded | Conduct human workflow review, then adopt only approved family slices into React |
+| Design | The ten-persona exploration is complete; a separate minimal-product workflow now defers Dispatcher and Crew Member | Run evidence-led discovery for customer, owner/manager, and Crew Lead paths |
 
 ## Status Legend
 
@@ -119,6 +119,12 @@ Current state:
   a purpose-bound, expiring Access request. The no-role fallback stays within
   one protected-data-free Home destination with explicit invitation/account
   recovery choices.
+- The [minimal-product user workflow](design/review/minimal-product-user-workflow.md)
+  now separates workflow discovery from the broader persona prototype.
+  Dispatcher and Crew Member are deferred from the minimum product without
+  deleting their future design evidence. Company Manager absorbs planning
+  coordination, Crew Lead owns field delivery, and the next phase replaces
+  persona hypotheses with direct user and operating evidence.
 
 Next design slices:
 
@@ -159,6 +165,11 @@ Next design slices:
    three scenarios. Customer, field, operations, administration, and no-role
    boundaries are explicit. Human review and bounded family-by-family React
    adoption remain; production adoption has not started.
+8. Minimal-product workflow discovery: WF0 scope and evidence framing are
+   delivered. Dispatcher and Crew Member are explicitly deferred; the primary
+   service loop uses Yard Owner, Company Owner/Manager, and Crew Lead, with
+   Property Manager as an alternate customer path and Support/no-role as
+   exception boundaries. WF1 evidence-led persona discovery is next.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.
@@ -1066,10 +1077,12 @@ Current state:
 
 Next design work:
 
-- Conduct customer, field, operations, administration, and access-fallback
-  task-comprehension review against the completed minimalist journey set.
-  Adopt only approved family patterns into React and keep capability rollout as
-  the separate authorization contract.
+- Run WF1 interviews and facilitated workflow sessions for Yard Owner/Property
+  Manager, Company Owner/Manager, and Crew Lead. Use the completed minimalist
+  journeys as hypotheses, not requirements; do not include Dispatcher or Crew
+  Member in the minimum-product path. Adopt only evidence-backed patterns into
+  later React slices and keep capability rollout as a separate authorization
+  contract.
 - Adopt the Yard Owner proposal interfaces, separate proposal conversation, and
   explicit activation boundary before widening the provider-discovery surface.
 - Continue production visual convergence through the authenticated application

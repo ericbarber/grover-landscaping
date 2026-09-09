@@ -11,6 +11,16 @@ answer **when capabilities may be enabled**.
 The prototype is design direction, not a production or authorization claim.
 Production APIs remain authoritative and product-gated functions stay absent.
 
+## Minimal-product adoption scope
+
+This ten-persona exploration remains useful future design evidence, but it no
+longer defines the minimum end-to-end product workflow. The separate
+[minimal-product user workflow](minimal-product-user-workflow.md) defers
+Dispatcher and Crew Member, assigns planning coordination to Company Manager,
+and assigns the field workflow to Crew Lead. Those two future persona
+prototypes remain available for later scale thresholds and are not current MVP
+adoption requirements.
+
 ## Minimalist experience rules
 
 Every persona prototype must follow the same constraints:
