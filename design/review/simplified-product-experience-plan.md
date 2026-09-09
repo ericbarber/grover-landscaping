@@ -276,7 +276,7 @@ non-goals, and a clean artifact boundary.
 
 ### SX1 — Core service-thread prototype
 
-State: next.
+State: delivered as validated design direction.
 
 - Build a clean-slate prototype for Yard Owner, Company Manager, and Crew Lead.
 - Demonstrate the same service moving through customer decision, plan/release,
@@ -286,9 +286,21 @@ State: next.
 Exit: the complete service story can be followed without switching among
 separate approval, schedule, report, proof, and recovery products.
 
+Delivered evidence:
+
+- One exact Mesa Court service is available across Yard Owner, Company Manager,
+  and Crew Lead perspectives and decision, release, field, and proof moments.
+- Reviewers can follow explicit handoffs while each role retains filtered
+  information and authority.
+- Required radio or checkbox decisions, non-persistence confirmation, focus
+  return, stable URLs, responsive navigation, overflow, and mobile action
+  clearance pass automated browser validation.
+- Desktop manager recovery plus mobile Yard Owner outcome and Crew Lead field-
+  request captures are published in the design gallery.
+
 ### SX2 — Owner and portfolio extension
 
-State: planned.
+State: next.
 
 - Add Company Owner business-readiness entry and role overlap with Company
   Manager.

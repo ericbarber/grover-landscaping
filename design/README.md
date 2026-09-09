@@ -245,7 +245,9 @@ renderer or a design-tool account to see a proposed screen.
 2. Start the active post-MVP redesign with the
    [simplified product experience plan](review/simplified-product-experience-plan.md).
    It preserves mature capability while organizing work around one
-   role-filtered service thread. Use the
+   role-filtered service thread. Review the clean-slate
+   [service-thread prototype](prototypes/simplified-service-thread/index.html),
+   then use the
    [WF1 session guide](review/minimal-product-workflow-session-guide.md) to run
    consistent interviews and FigJam workshops; its earlier MVP framing is
    superseded.

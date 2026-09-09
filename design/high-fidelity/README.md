@@ -23,7 +23,17 @@ roles: server projection, cohort persistence/administration, cumulative
 composition, manager continuity, and protected smoke are implemented. It is not
 hosted cohort evidence, and Dispatcher/Billing backend roles remain gated.
 
-## Minimalist persona experience direction
+## Simplified product experience direction
+
+| Artifact | Review images | Purpose |
+| --- | --- | --- |
+| [`../prototypes/simplified-service-thread/index.html`](../prototypes/simplified-service-thread/index.html) | [Manager desktop](current/simplified-service-thread-desktop-v1.png) · [Yard Owner mobile](current/simplified-service-thread-owner-mobile-v1.png) · [Crew Lead mobile](current/simplified-service-thread-field-mobile-v1.png) | Clean-slate post-MVP redesign showing one exact service through customer decision, manager plan/release and recovery, Crew Lead field work, reviewed proof, and the customer outcome without separate feature silos |
+
+This artifact is active design direction. It preserves mature capability and
+role filtering while testing a simpler service-thread mental model; it is not
+production adoption or a backend contract.
+
+## Prior minimalist persona direction
 
 | Artifact | Review images | Purpose |
 | --- | --- | --- |

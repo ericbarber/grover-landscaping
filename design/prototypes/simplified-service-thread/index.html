@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Clean-slate Grover service-thread experience prototype">
+  <title>Grover simplified service thread</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../shared/grover-foundation.css">
+</head>
+<body data-prototype="simplified-service-thread">
+  <a class="skip-link" href="#workspace">Skip to service</a>
+  <section class="review-bar" aria-label="Prototype review controls">
+    <div>
+      <strong>SIMPLIFIED PRODUCT EXPERIENCE</strong>
+      <span>One service, filtered by role. Illustrative actions do not persist.</span>
+    </div>
+    <label>Perspective
+      <select id="persona-picker">
+        <option value="owner">Yard Owner</option>
+        <option value="manager">Company Manager</option>
+        <option value="lead">Crew Lead</option>
+      </select>
+    </label>
+    <label>Service moment
+      <select id="moment-picker">
+        <option value="decision">Decision</option>
+        <option value="release">Plan and release</option>
+        <option value="field">Field work</option>
+        <option value="proof">Reviewed proof</option>
+      </select>
+    </label>
+    <button id="follow-handoff" type="button">Follow handoff</button>
+  </section>
+
+  <header class="mobile-header">
+    <a class="brand" href="#owner/decision" aria-label="Grover simplified service thread"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M26 5C14 7 7 13 6 25c8-1 15-6 20-20Z"/><path d="M8 23 22 9"/></svg><span>Grover</span></a>
+    <span id="mobile-initials" class="avatar">JR</span>
+  </header>
+
+  <div class="app-shell">
+    <aside class="desktop-rail">
+      <a class="brand" href="#owner/decision" aria-label="Grover simplified service thread"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M26 5C14 7 7 13 6 25c8-1 15-6 20-20Z"/><path d="M8 23 22 9"/></svg><span>Grover</span></a>
+      <div class="role-context">
+        <span id="family-label">CUSTOMER</span>
+        <strong id="role-label">Yard Owner</strong>
+      </div>
+      <nav id="desktop-nav" aria-label="Primary"></nav>
+      <div class="rail-account">
+        <span id="identity-label">Jamie R.</span>
+        <span id="desktop-initials" class="avatar">JR</span>
+      </div>
+    </aside>
+
+    <main id="workspace" tabindex="-1">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <span id="collection-label">Services</span><i aria-hidden="true">/</i><strong>Mesa Court</strong><i aria-hidden="true">/</i><span>September 8</span>
+      </nav>
+
+      <section class="thread-heading" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">ONE SERVICE THREAD · ROUTINE CARE</p>
+          <h1 id="page-title">Mesa Court</h1>
+          <p id="thread-summary">The complete service story stays together while detail and authority change by role.</p>
+        </div>
+        <div class="owner-block">
+          <span>NEXT OWNER</span>
+          <strong id="next-owner">You</strong>
+          <small id="next-update">Review the exact recommendation.</small>
+        </div>
+      </section>
+
+      <ol id="stage-list" class="stage-list" aria-label="Service progress"></ol>
+
+      <div class="content-grid">
+        <section class="focus-card" aria-labelledby="focus-title">
+          <div class="focus-meta"><span id="focus-stage">Decision</span><strong id="focus-status">Your decision</strong></div>
+          <h2 id="focus-title">Review the exact care plan</h2>
+          <p id="focus-copy"></p>
+          <div id="fact-list" class="fact-list"></div>
+          <div class="focus-actions">
+            <button id="primary-action" class="primary" type="button">Review recommendation</button>
+            <button id="explain-action" class="secondary" type="button" aria-expanded="false">Why this is next</button>
+          </div>
+          <div id="explanation" class="explanation" hidden></div>
+        </section>
+
+        <aside class="context-card" aria-labelledby="context-title">
+          <p class="eyebrow">ONLY WHAT SUPPORTS THE NEXT STEP</p>
+          <h2 id="context-title">Service essentials</h2>
+          <dl id="essential-list"></dl>
+        </aside>
+      </div>
+
+      <section class="timeline-card" aria-labelledby="timeline-title">
+        <div>
+          <p class="eyebrow">ONE CONTINUOUS RECORD</p>
+          <h2 id="timeline-title">Service timeline</h2>
+        </div>
+        <ol id="timeline-list"></ol>
+      </section>
+
+      <section class="boundary-card" aria-labelledby="boundary-title">
+        <div><p class="eyebrow">ROLE FILTER</p><h2 id="boundary-title">What stays outside this view</h2></div>
+        <p id="boundary-copy"></p>
+      </section>
+    </main>
+  </div>
+
+  <nav id="mobile-nav" class="mobile-nav" aria-label="Primary"></nav>
+
+  <dialog id="action-dialog" aria-labelledby="dialog-title">
+    <form method="dialog">
+      <header>
+        <div><p class="eyebrow">SERVICE THREAD ACTION</p><h2 id="dialog-title"></h2></div>
+        <button id="close-dialog" class="icon-button" value="cancel" aria-label="Close action">×</button>
+      </header>
+      <p id="dialog-copy"></p>
+      <div id="dialog-context" class="dialog-context"></div>
+      <fieldset id="choice-fieldset">
+        <legend id="choice-label">Choose a response</legend>
+        <div id="choice-list"></div>
+      </fieldset>
+      <footer>
+        <button id="confirm-action" class="primary" value="default" disabled>Preview action</button>
+        <button id="cancel-action" class="secondary" value="cancel">Back</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="completion-dialog" aria-labelledby="completion-title">
+    <div class="completion-mark" aria-hidden="true">✓</div>
+    <h2 id="completion-title">Interaction reviewed</h2>
+    <p>No production data was changed. The service thread retains the exact context and next owner.</p>
+    <button id="return-action" class="primary" type="button">Return to service</button>
+  </dialog>
+
+  <div id="announcer" class="sr-only" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

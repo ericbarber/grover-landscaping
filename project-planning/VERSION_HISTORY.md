@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-08: Delivered the first clean-slate simplified service-thread
+  prototype across Yard Owner, Company Manager, and Crew Lead. One exact Mesa
+  Court service retains customer decision, Plan 8 release, field request and
+  manager review, proof publication, and customer outcome while filtering role
+  detail and authority. Twelve perspective/moment combinations pass desktop,
+  mobile, and narrow-phone validation with required decisions, focus return,
+  stable URLs, overflow, action clearance, and shared-foundation checks.
 - 2026-09-08: Corrected the design reset from MVP scoping to a post-MVP product
   simplification. The active direction preserves mature capability but replaces
   feature-silo journeys with one role-filtered service thread containing the

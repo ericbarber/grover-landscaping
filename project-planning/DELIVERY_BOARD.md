@@ -16,7 +16,7 @@ for account access or live-service evidence.
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
 | Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
-| Design review | SX0 post-MVP simplification contract delivered | Mature capability is reorganized around one role-filtered service thread rather than feature silos | SX1 clean-slate customer, manager, and Crew Lead prototype |
+| Design review | SX1 core service-thread prototype delivered | Yard Owner, Company Manager, and Crew Lead follow one role-filtered service through decision, release, field recovery, and proof | SX2 Company Owner and Property Manager extension |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -438,7 +438,7 @@ Following design phase: UX12.
 
 ### UX12 — Simplified post-MVP product experience
 
-State: SX0 experience reset delivered; SX1 prototype next.
+State: SX0 experience reset and SX1 core prototype delivered; SX2 next.
 
 Deliver:
 
@@ -461,7 +461,8 @@ Exit evidence:
 
 Next design phase:
 
-- SX1 core service-thread prototype.
+- SX2 Company Owner business-readiness and Property Manager portfolio entry into
+  the same service-thread model.
 
 ## Later, not active
 

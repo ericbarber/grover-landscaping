@@ -1,5 +1,26 @@
 [
   {
+    "id": "simplified-service-thread-desktop-v1",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#manager/field",
+    "preview": "current/simplified-service-thread-desktop-v1.png"
+  },
+  {
+    "id": "simplified-service-thread-owner-mobile-v1",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#owner/proof",
+    "preview": "current/simplified-service-thread-owner-mobile-v1.png"
+  },
+  {
+    "id": "simplified-service-thread-field-mobile-v1",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#lead/field",
+    "preview": "current/simplified-service-thread-field-mobile-v1.png"
+  },
+  {
     "id": "minimalist-administration-journey-desktop-v2",
     "area": "current",
     "status": "validated-design-direction",

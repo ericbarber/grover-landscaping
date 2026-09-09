@@ -17,6 +17,7 @@ const prototypes = [
   { name: 'Frontend truth and recovery', path: 'prototypes/frontend-truth-recovery/index.html', hash: '#crew/synced', nav: '.app-rail' },
   { name: 'Functional-unit rollout', path: 'prototypes/yard-owner-minimal-rollout/index.html', hash: '#overview/map', nav: '.desktop-rail' },
   { name: 'Minimalist persona experiences', path: 'prototypes/minimalist-personas/index.html', hash: '#owner/attention/today', nav: '.desktop-rail' },
+  { name: 'Simplified service thread', path: 'prototypes/simplified-service-thread/index.html', hash: '#manager/field', nav: '.desktop-rail' },
 ];
 
 const expectedTokens = {
