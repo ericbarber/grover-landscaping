@@ -78,11 +78,12 @@ The final administration depth slice connects Billing completion readiness to
 exact Account gaps and Handoffs, requires owned incident context before Support
 Activity and temporary Access, and keeps the no-role fallback free of protected
 data. The ten-persona journey set remains broad future design evidence.
-A separate minimal-product workflow track now defers Dispatcher and Crew Member:
-Company Manager absorbs planning coordination and Crew Lead owns field delivery
-until observed scale or attribution needs justify splitting those roles. WF1
-persona discovery and current-path mapping precede any workflow-led prototype
-revision or family-by-family adoption decision.
+The MVP framing is superseded by a post-MVP simplification track. Mature product
+capability remains, but the new design uses a role-filtered service thread so
+customer decisions, plan versions, field work, proof, and recovery stay attached
+to one outcome instead of separate feature silos. The first clean-slate slice
+covers Yard Owner, Company Manager, and Crew Lead; Dispatcher and Crew Member
+remain available for later specialization rather than defining that slice.
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access

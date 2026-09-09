@@ -1,8 +1,15 @@
 # Minimal Product Workflow Session Guide
 
-Status: facilitation kit ready; participant sessions pending  
-Workflow phase: WF1 — Core persona discovery  
+Status: retained research kit for the simplified-product redesign
+
+Workflow phase: WF1 — Core persona discovery
+
 Last updated: 2026-09-08
+
+> Product-stage framing is superseded by the
+> [Simplified Product Experience Plan](simplified-product-experience-plan.md).
+> Use this guide's neutral questions, evidence protocol, and facilitation
+> structure for the post-MVP redesign rather than an MVP scope exercise.
 
 ## Purpose
 
@@ -413,4 +420,3 @@ data-integrity consequence.
 
 WF1 is not complete merely because the board exists. Completion requires actual
 participant evidence and synthesis.
-

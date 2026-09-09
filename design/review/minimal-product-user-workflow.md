@@ -1,8 +1,15 @@
 # Minimal Product User Workflow
 
-Status: active design discovery  
-Decision owner: product/design  
+Status: superseded as active product framing; retained research input
+
+Decision owner: product/design
+
 Last updated: 2026-09-08
+
+> Superseded on 2026-09-08 by the post-MVP
+> [Simplified Product Experience Plan](simplified-product-experience-plan.md).
+> Retain the persona hypotheses, handoff questions, and evidence model below as
+> research input; do not use “minimal product” as the current product stage.
 
 ## Purpose
 

@@ -16,7 +16,7 @@ for account access or live-service evidence.
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
 | Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
-| Design review | WF0 scope and WF1 facilitation kit delivered | Dispatcher and Crew Member are deferred; the session protocol is ready without claiming user evidence | Run WF1 participant sessions and synthesize current paths |
+| Design review | SX0 post-MVP simplification contract delivered | Mature capability is reorganized around one role-filtered service thread rather than feature silos | SX1 clean-slate customer, manager, and Crew Lead prototype |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -413,10 +413,9 @@ Next design gate:
 
 - Continue through the narrower minimal-product workflow track in UX11.
 
-### UX11 — Minimal-product workflow discovery
+### UX11 — Workflow research preparation
 
-State: WF0 scope and evidence frame delivered; WF1 facilitation kit ready and
-participant evidence pending.
+State: retained as research input; MVP product-stage framing superseded by UX12.
 
 Deliver:
 
@@ -435,10 +434,34 @@ Exit evidence:
 - No minimum-product step silently depends on Dispatcher or Crew Member.
 - Revised prototypes and React adoption begin only after workflow review.
 
+Following design phase: UX12.
+
+### UX12 — Simplified post-MVP product experience
+
+State: SX0 experience reset delivered; SX1 prototype next.
+
+Deliver:
+
+- Preserve mature capability while replacing feature-silo navigation with one
+  role-filtered service-thread model.
+- Let queues find work and keep decisions, plan versions, field activity,
+  reviewed proof, and recovery inside the affected thread.
+- Build the first clean-slate prototype for Yard Owner, Company Manager, and
+  Crew Lead without using Dispatcher or Crew Member in the initial slice.
+- Retain the workflow-research kit for evidence-led comparison rather than MVP
+  scope selection.
+
+Exit evidence:
+
+- One illustrative service can move from customer decision through manager
+  release, Crew Lead execution/recovery, reviewed proof, and customer outcome
+  without separate approval, schedule, report, proof, and recovery products.
+- Responsive validation protects role filtering, stable URLs, focus, overflow,
+  required decisions, and action clearance.
+
 Next design phase:
 
-- Run WF1 focused discovery for customer, provider-office, and Crew Lead needs,
-  then synthesize current paths from anonymous evidence IDs.
+- SX1 core service-thread prototype.
 
 ## Later, not active
 

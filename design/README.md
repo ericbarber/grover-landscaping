@@ -242,17 +242,18 @@ renderer or a design-tool account to see a proposed screen.
    Use the [artifact-status inventory](ARTIFACT_STATUS.md) when deciding whether
    a particular prototype or image is a mirror, adopted behavior, direction, or
    historical input.
-2. Start the active workflow-design track with the
-   [minimal-product user workflow](review/minimal-product-user-workflow.md).
-   It defers Dispatcher and Crew Member, maps the core customer-to-service-to-
-   proof handoffs, and distinguishes evidence from design hypotheses. Use the
+2. Start the active post-MVP redesign with the
+   [simplified product experience plan](review/simplified-product-experience-plan.md).
+   It preserves mature capability while organizing work around one
+   role-filtered service thread. Use the
    [WF1 session guide](review/minimal-product-workflow-session-guide.md) to run
-   consistent interviews and FigJam workshops.
+   consistent interviews and FigJam workshops; its earlier MVP framing is
+   superseded.
 3. Review the broader task-first
    [minimalist persona experiences](prototypes/minimalist-personas/index.html)
    to compare each role's first answer, primary action, short queue, and omitted
-   scope. This ten-persona design-direction artifact is future evidence, not the
-   minimum-product workflow or rollout enablement contract.
+   scope. This ten-persona design-direction artifact is reference evidence, not
+   the clean-slate simplification design or rollout enablement contract.
 4. Start functional rollout review with the shared
    [Yard Owner and Crew Lead prototype](prototypes/yard-owner-minimal-rollout/index.html),
    then compare the [customer unit gates](review/yard-owner-minimal-rollout-plan.md)

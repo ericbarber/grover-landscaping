@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-08: Corrected the design reset from MVP scoping to a post-MVP product
+  simplification. The active direction preserves mature capability but replaces
+  feature-silo journeys with one role-filtered service thread containing the
+  exact decision, plan, field work, reviewed proof, handoff, and recovery. The
+  prior workflow and session kit remain research input; SX1 now targets a new
+  Yard Owner, Company Manager, and Crew Lead prototype.
 - 2026-09-08: Prepared the WF1 professional workflow-research kit without
   claiming participant evidence. The FigJam board specification, persona
   interview prompts, neutral follow-ups, privacy protocol, anonymous evidence

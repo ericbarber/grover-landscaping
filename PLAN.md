@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | The ten-persona exploration is complete; a separate minimal-product workflow now defers Dispatcher and Crew Member | Run evidence-led discovery for customer, owner/manager, and Crew Lead paths |
+| Design | SX0 post-MVP simplification contract is delivered around one role-filtered service thread | Build the clean-slate Yard Owner, Company Manager, and Crew Lead service-thread prototype |
 
 ## Status Legend
 
@@ -130,6 +130,13 @@ Current state:
   contexts, FigJam frames, neutral interview prompts, anonymous evidence IDs,
   task scenarios, synthesis confidence, privacy handling, and an explicit exit
   checklist. No user evidence is claimed before those sessions occur.
+- The [simplified product experience plan](design/review/simplified-product-experience-plan.md)
+  supersedes the MVP framing while retaining those research materials. Grover
+  is treated as a post-MVP product whose accumulated capability needs a simpler
+  mental model: queues find an exact service thread, and customer decisions,
+  plan versions, field work, proof, and recovery remain contextual to that
+  thread. SX1 builds a clean-slate Yard Owner, Company Manager, and Crew Lead
+  prototype without deleting mature capability.
 
 Next design slices:
 
@@ -170,12 +177,11 @@ Next design slices:
    three scenarios. Customer, field, operations, administration, and no-role
    boundaries are explicit. Human review and bounded family-by-family React
    adoption remain; production adoption has not started.
-8. Minimal-product workflow discovery: WF0 scope and evidence framing are
-   delivered and the WF1 facilitation kit is ready. Dispatcher and Crew Member
-   are explicitly deferred; the primary service loop uses Yard Owner, Company
-   Owner/Manager, and Crew Lead, with Property Manager as an alternate customer
-   path and Support/no-role as exception boundaries. Actual participant
-   sessions and synthesis are next; no research evidence is inferred.
+8. Simplified product experience: SX0 is delivered and supersedes the prior MVP
+   framing. The new post-MVP design organizes mature capability around one
+   role-filtered service thread and fewer top-level destinations. SX1 is next:
+   a clean-slate Yard Owner, Company Manager, and Crew Lead prototype. Research
+   materials remain usable, but no participant evidence is inferred.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.
@@ -1083,12 +1089,11 @@ Current state:
 
 Next design work:
 
-- Run WF1 interviews and facilitated workflow sessions for Yard Owner/Property
-  Manager, Company Owner/Manager, and Crew Lead. Use the completed minimalist
-  journeys as hypotheses, not requirements; do not include Dispatcher or Crew
-  Member in the minimum-product path. Adopt only evidence-backed patterns into
-  later React slices and keep capability rollout as a separate authorization
-  contract.
+- Build SX1 as a new service-thread prototype rather than simplifying the old
+  persona screens in place. Demonstrate the same service through Yard Owner,
+  Company Manager, and Crew Lead views with one happy path and one field-change
+  recovery loop. Use the retained session kit for later comparative review and
+  keep capability rollout as a separate authorization contract.
 - Adopt the Yard Owner proposal interfaces, separate proposal conversation, and
   explicit activation boundary before widening the provider-discovery surface.
 - Continue production visual convergence through the authenticated application

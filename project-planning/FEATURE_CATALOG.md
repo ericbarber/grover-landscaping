@@ -95,10 +95,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   Account gaps, and traceable Handoffs plus owned Support incidents, minimized
   Activity, and purpose-bound Access; the no-role fallback exposes recovery but
   no protected workspace data
-- Separate minimal-product workflow design that defers Dispatcher and Crew
-  Member, assigns planning coordination to Company Manager and field delivery
-  to Crew Lead, and tracks persona hypotheses, lifecycle handoffs, recovery
-  states, and evidence gates before prototype or React adoption
+- Post-MVP simplification design that preserves mature capability while using a
+  role-filtered service thread to keep decisions, planning, field work, proof,
+  handoffs, and recovery attached to one customer outcome; the first prototype
+  slice covers Yard Owner, Company Manager, and Crew Lead
 - Shared authenticated Home with signed-in identity, persona context, source-
   appropriate work/sync summary, persona-specific quick actions, and a direct
   action from the current priority notice
