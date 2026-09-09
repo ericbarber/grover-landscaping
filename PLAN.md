@@ -156,6 +156,11 @@ Current state:
   is ready with matched current/new tasks, counterbalanced sequence, exact
   observation fields, severity/stop rules, adoption gates, and a session-note
   template. Participant evidence has not yet been collected.
+- The [yard-care completion timeline](design/review/yard-care-completion-event-timeline.md)
+  now orders 54 considered events from access and first-service relationship
+  setup through scope, release, field work, proof, customer outcome, recovery,
+  and recurring service. Conditional, later-specialized, and product-gated
+  events are attached without making them completion requirements.
 
 Next design slices:
 

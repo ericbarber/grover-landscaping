@@ -189,6 +189,12 @@ sequenceDiagram
     System-->>Customer: Show delivered outcome in the same service thread
 ```
 
+The [yard-care completion event timeline](yard-care-completion-event-timeline.md)
+expands this sequence into 54 ordered events covering first-service setup,
+recurring care, exact decisions and versions, planning, field/offline recovery,
+provider proof review, customer outcome, Support, access failures, product-gated
+readiness, appreciation, and external review destinations.
+
 ## Navigation reduction rules
 
 1. A top-level destination must represent a recurring user intention, not an

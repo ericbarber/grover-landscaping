@@ -22,6 +22,10 @@ synthesis rules in the retained
 [simplified product experience plan](simplified-product-experience-plan.md)
 defines the design contract under review.
 
+Use the [yard-care completion event timeline](yard-care-completion-event-timeline.md)
+to assign every observation to the exact expected or conditional event under
+review. Do not require product-gated follow-ons to complete a core task.
+
 ## Artifacts under comparison
 
 | Condition | Primary artifact | Fallback | Evidence boundary |

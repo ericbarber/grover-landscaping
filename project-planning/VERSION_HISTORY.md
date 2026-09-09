@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-09: Published the complete yard-care event timeline with 54 ordered
+  events spanning first-service relationship setup, recurring need, exact scope
+  and decision, plan release, field/offline recovery, provider proof review,
+  customer outcome, Support and access exceptions, gated readiness,
+  appreciation, and external review destinations. Relative bands are explicitly
+  assumptions, and 12 invariants define completion without inventing SLAs.
 - 2026-09-09: Prepared the SX4 current-product versus service-thread study.
   Five core and four exception tasks now have matched outcome prompts,
   counterbalanced sequence, observable completion/context/authority fields,

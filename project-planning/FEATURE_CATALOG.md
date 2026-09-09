@@ -110,6 +110,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   facts, counterbalanced order, core and exception outcome prompts, observable
   context-change and authority measures, critical stop rules, decision gates,
   and an anonymous session-note template; participant evidence remains pending
+- Complete yard-care event timeline ordering 54 first-service, recurring,
+  decision, plan, field, offline, proof, Support, access, readiness,
+  appreciation, and external-review events with classification, ownership,
+  retained truth, relative bands, invariants, and an explicit completion rule
 - Shared authenticated Home with signed-in identity, persona context, source-
   appropriate work/sync summary, persona-specific quick actions, and a direct
   action from the current priority notice

@@ -89,8 +89,11 @@ proof correction, minimized Support, product-gated completion readiness, ended
 access, and inconsistent authorization without creating new feature silos.
 The SX4 study package now specifies matched, counterbalanced current/new tasks,
 observation fields, safety/privacy stop rules, and adoption gates. Comparative
-participant sessions and synthesis are next; Dispatcher and Crew Member remain
-available for later specialization rather than defining the core thread.
+participant sessions and synthesis are next. Its companion 54-event timeline
+orders first-service setup, recurring service, decisions, release, field and
+offline work, proof, customer outcome, recovery, and gated follow-ons while
+keeping Dispatcher and Crew Member as later specialization rather than new
+lifecycles.
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access

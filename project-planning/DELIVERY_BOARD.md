@@ -16,7 +16,7 @@ for account access or live-service evidence.
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
 | Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
-| Design review | SX4 comparison package ready | Matched, counterbalanced tasks and adoption gates cover five core perspectives plus contextual exceptions | Conduct participant sessions and synthesize evidence |
+| Design review | SX4 comparison and 54-event lifecycle packages ready | One ordered service timeline plus matched, counterbalanced tasks cover five core perspectives and contextual exceptions | Conduct participant sessions and synthesize evidence |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
