@@ -84,8 +84,11 @@ customer decisions, plan versions, field work, proof, and recovery stay attached
 to one outcome instead of separate feature silos. The first two clean-slate
 slices now validate Yard Owner, Property Manager, Company Owner, Company
 Manager, and Crew Lead across decision, release, field work/recovery, and proof.
-Contextual exception paths are next; Dispatcher and Crew Member remain available
-for later specialization rather than defining the core thread.
+Seven contextual paths now exercise plan conflict, device-held offline work,
+proof correction, minimized Support, product-gated completion readiness, ended
+access, and inconsistent authorization without creating new feature silos.
+Comparative participant sessions are next; Dispatcher and Crew Member remain
+available for later specialization rather than defining the core thread.
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access

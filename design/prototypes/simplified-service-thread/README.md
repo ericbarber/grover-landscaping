@@ -18,6 +18,19 @@ Use the review controls to change perspective and service moment or follow a
 handoff between roles. Role-specific information and authority remain filtered.
 Prototype confirmations do not persist or change production data.
 
+The Review path control exercises seven contextual paths without turning them
+into new product silos:
+
+- exact plan conflict, device-held offline work, and proof correction;
+- an owned, minimized Support incident and product-gated completion readiness;
+  and
+- access-ended and authorization-mismatch recovery with protected service or
+  property data absent from the document.
+
+Support and completion-readiness paths return to the exact accountable service
+moment. The no-role and inconsistent-authorization paths fail closed before a
+service lifecycle is rendered.
+
 The active design contract is the
 [Simplified Product Experience Plan](../../review/simplified-product-experience-plan.md).
 

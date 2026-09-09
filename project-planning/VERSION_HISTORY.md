@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-09: Added seven contextual paths to the simplified service-thread
+  design: plan conflict, field connectivity loss, proof correction, minimized
+  owned Support, product-gated completion readiness, ended access, and
+  authorization mismatch. Operational exceptions retain the affected record;
+  Support and readiness return to the exact manager moment; access failures
+  keep protected records out of the document. All paths pass three responsive
+  viewports with new Support, offline, and access-recovery captures.
 - 2026-09-08: Extended the simplified service thread to Property Manager and
   Company Owner without duplicating the service lifecycle. Portfolio context
   exposes only the authorized property, decision, customer-safe exception, and

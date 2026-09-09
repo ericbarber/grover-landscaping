@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | SX2 validates one service thread across Yard Owner, Property Manager, Company Owner, Company Manager, and Crew Lead | Add contextual exception and advanced-capability paths without returning to feature silos |
+| Design | SX3 validates the five-role service thread plus seven contextual exception/recovery paths | Run comparative workflow sessions before production adoption planning |
 
 ## Status Legend
 
@@ -147,6 +147,11 @@ Current state:
   exception summaries, with exact Company Manager handoffs. Twenty
   perspective/moment combinations pass desktop, phone, and narrow-phone
   browser validation.
+- SX3 adds plan-conflict, offline-field, proof-correction, owned Support,
+  product-gated completion-readiness, ended-access, and authorization-mismatch
+  paths. Operational exceptions retain the exact service context; Support and
+  readiness return to its accountable manager moment; access failures keep
+  protected service and property data out of the document.
 
 Next design slices:
 
@@ -190,9 +195,10 @@ Next design slices:
 8. Simplified product experience: SX0 is delivered and supersedes the prior MVP
    framing. SX1 and SX2 validate one role-filtered service thread across Yard
    Owner, Property Manager, Company Owner, Company Manager, and Crew Lead
-   without feature-silo context changes or duplicate lifecycles. SX3 adds
-   contextual exception and advanced-capability paths next. Research materials
-   remain usable, but no participant evidence is inferred.
+   without feature-silo context changes or duplicate lifecycles. SX3 validates
+   seven contextual exception, recovery, Support, and product-gated readiness
+   paths without widening authority. SX4 comparative sessions are next;
+   research materials remain usable, but no participant evidence is inferred.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.
@@ -1100,12 +1106,11 @@ Current state:
 
 Next design work:
 
-- Build SX3 by adding Support incident entry, no-role recovery, and product-
-  gated billing readiness as contextual paths. Exercise plan conflict, field
-  connectivity, proof failure, ended access, and inconsistent authorization
-  without making them new global products. Use the retained session kit for
-  later comparative review and keep capability rollout as a separate
-  authorization contract.
+- Run SX4 comparative current-product and service-thread sessions using the
+  retained session kit. Measure comprehension, context changes, wrong turns,
+  completion, recovery, and perceived authority; revise the design from
+  observed evidence before defining React adoption. Keep capability rollout as
+  a separate authorization contract.
 - Adopt the Yard Owner proposal interfaces, separate proposal conversation, and
   explicit activation boundary before widening the provider-discovery surface.
 - Continue production visual convergence through the authenticated application
@@ -2690,7 +2695,7 @@ The `features/` folder now defines four major user tracks. Treat these as produc
 
 | Feature file | Primary audience | Current plan coverage | Planning decision |
 | --- | --- | --- | --- |
-| `features/yard-crew.md` | Crew leads, crew members, dispatchers, account managers, billing admins, customers | Strong near-term coverage through crew route, proof-of-completion, amendments, bids, offline sync, quality review, labor/material, and billing-readiness phases | Keep as the first field workflow track because it matches the implemented MVP foundation |
+| `features/yard-crew.md` | Crew leads, crew members, dispatchers, account managers, billing admins, customers | Strong near-term coverage through crew route, proof-of-completion, amendments, bids, offline sync, quality review, labor/material, and billing-readiness phases | Keep as the first field workflow track because it matches the implemented mature product foundation |
 | `features/yard-care-company.md` | Multi-crew yard-care companies: operations managers, dispatchers, branch managers, fleet/equipment, account managers, finance users | Partial coverage through manager command center, route capacity, service catalog, contracts, billing readiness, analytics, and scale phases | Expand Phase 3 and Phase 5 around branch, territory, equipment, inventory, and cross-crew operations |
 | `features/self-service.md` | Homeowners maintaining their own yards | Limited coverage in the current customer portal plan | Add a separate homeowner self-service phase because adaptive yard planning is a different product mode from provider-managed service delivery |
 | `features/property-managment.md` | Property management organizations coordinating multiple independent yard-care vendors | Partial coverage through portfolios, vendor-safe links, evidence, bids, and invoices, but not enough vendor governance | Add a separate multi-vendor property management phase after core tenant, evidence, service catalog, billing, and portal foundations exist |

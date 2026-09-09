@@ -22,6 +22,9 @@
         <option value="company">Company Owner</option>
         <option value="manager">Company Manager</option>
         <option value="lead">Crew Lead</option>
+        <option value="support">Support Administrator · contextual</option>
+        <option value="billing">Billing Administrator · gated</option>
+        <option value="general">No active role · recovery</option>
       </select>
     </label>
     <label>Service moment
@@ -30,6 +33,18 @@
         <option value="release">Plan and release</option>
         <option value="field">Field work</option>
         <option value="proof">Reviewed proof</option>
+      </select>
+    </label>
+    <label>Review path
+      <select id="path-picker">
+        <option value="standard">Standard service</option>
+        <option value="plan-conflict">Plan conflict</option>
+        <option value="field-offline">Field connection interrupted</option>
+        <option value="proof-correction">Proof needs correction</option>
+        <option value="support-incident">Support incident</option>
+        <option value="billing-readiness">Completion readiness</option>
+        <option value="access-ended">Access ended</option>
+        <option value="authorization-mismatch">Authorization mismatch</option>
       </select>
     </label>
     <button id="follow-handoff" type="button">Follow handoff</button>
@@ -56,12 +71,12 @@
 
     <main id="workspace" tabindex="-1">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <span id="collection-label">Services</span><i aria-hidden="true">/</i><strong>Mesa Court</strong><i aria-hidden="true">/</i><span>September 8</span>
+        <span id="collection-label">Services</span><i aria-hidden="true">/</i><strong id="breadcrumb-record">Mesa Court</strong><i aria-hidden="true">/</i><span id="breadcrumb-date">September 8</span>
       </nav>
 
       <section class="thread-heading" aria-labelledby="page-title">
         <div>
-          <p class="eyebrow">ONE SERVICE THREAD · ROUTINE CARE</p>
+          <p id="thread-label" class="eyebrow">ONE SERVICE THREAD · ROUTINE CARE</p>
           <h1 id="page-title">Mesa Court</h1>
           <p id="thread-summary">The complete service story stays together while detail and authority change by role.</p>
         </div>
@@ -88,7 +103,7 @@
         </section>
 
         <aside class="context-card" aria-labelledby="context-title">
-          <p class="eyebrow">ONLY WHAT SUPPORTS THE NEXT STEP</p>
+          <p id="context-label" class="eyebrow">ONLY WHAT SUPPORTS THE NEXT STEP</p>
           <h2 id="context-title">Service essentials</h2>
           <dl id="essential-list"></dl>
         </aside>

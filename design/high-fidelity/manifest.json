@@ -35,6 +35,27 @@
     "preview": "current/simplified-service-thread-property-manager-mobile-v2.png"
   },
   {
+    "id": "simplified-service-thread-support-desktop-v3",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#manager/field/support-incident",
+    "preview": "current/simplified-service-thread-support-desktop-v3.png"
+  },
+  {
+    "id": "simplified-service-thread-offline-mobile-v3",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#lead/field/field-offline",
+    "preview": "current/simplified-service-thread-offline-mobile-v3.png"
+  },
+  {
+    "id": "simplified-service-thread-access-mobile-v3",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#owner/decision/access-ended",
+    "preview": "current/simplified-service-thread-access-mobile-v3.png"
+  },
+  {
     "id": "minimalist-administration-journey-desktop-v2",
     "area": "current",
     "status": "validated-design-direction",

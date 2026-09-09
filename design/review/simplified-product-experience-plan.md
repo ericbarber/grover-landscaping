@@ -326,7 +326,7 @@ Delivered evidence:
 
 ### SX3 — Exceptions and advanced capability
 
-State: next.
+State: delivered as validated design direction; production adoption not started.
 
 - Add Support incident entry, no-role recovery, and product-gated billing
   readiness as contextual paths.
@@ -337,9 +337,28 @@ State: next.
 Exit: advanced capability remains discoverable without returning to global
 feature silos or widening authority.
 
+Delivered evidence:
+
+- Plan conflict retains Plan 8 until an exact reviewed resolution; connection
+  interruption retains released scope and device-held progress; proof failure
+  holds customer delivery without undoing field completion.
+- Support begins with an owned incident, minimized service reference, and no
+  standing access. Product-gated completion readiness exposes no invoice,
+  payment, refund, ledger, or accounting action.
+- Ended access renders a one-destination Team Member recovery view with no
+  service data in the document. Inconsistent property authorization withholds
+  the record and lifecycle rather than presenting a false empty state.
+- Support and readiness return to the exact accountable Company Manager moment.
+  A future Dispatcher specialization would attach at reviewed plan conflict;
+  Crew Member attribution would attach within device-held field recovery. Both
+  remain unnecessary to the core service-thread composition.
+- Eight review paths pass desktop, mobile, and narrow-phone validation alongside
+  the five core perspectives. Support desktop, offline mobile, and ended-access
+  mobile captures are published in the design gallery.
+
 ### SX4 — Evidence-led refinement
 
-State: planned.
+State: next; requires moderated participant sessions.
 
 - Run current-product and new-design task sessions with the same outcome
   prompts.
@@ -376,10 +395,13 @@ rewrite or unsupported product promise.
 ## Immediate deliverables
 
 1. A new dependency-free `simplified-service-thread` working prototype.
-2. Yard Owner, Company Manager, and Crew Lead views of one exact illustrative
-   service.
+2. Yard Owner, Property Manager, Company Owner, Company Manager, and Crew Lead
+   views of one exact illustrative service.
 3. A shared lifecycle timeline and visible next-owner pattern.
 4. One manager-reviewed field-change recovery loop.
 5. Responsive desktop and phone captures.
-6. Browser checks for navigation reduction, stable URLs, role filtering,
-   required decisions, focus, overflow, and mobile action clearance.
+6. Contextual plan-conflict, offline, proof-correction, Support, completion-
+   readiness, ended-access, and authorization-mismatch paths.
+7. Browser checks for navigation reduction, stable URLs, role filtering,
+   required decisions, focus, protected-data absence, overflow, and mobile
+   action clearance.

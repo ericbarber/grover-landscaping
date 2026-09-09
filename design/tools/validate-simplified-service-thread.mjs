@@ -31,8 +31,9 @@ try {
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`${pathToFileURL(prototype).href}#owner/decision`, { waitUntil: 'load' });
 
-    check(await page.locator('#persona-picker option').count() === 5, `${viewport.name}: wrong perspective count`);
+    check(await page.locator('#persona-picker option').count() === 8, `${viewport.name}: wrong perspective and contextual-entry count`);
     check(await page.locator('#moment-picker option').count() === 4, `${viewport.name}: wrong service-moment count`);
+    check(await page.locator('#path-picker option').count() === 8, `${viewport.name}: wrong review-path count`);
 
     for (const [persona, contract] of Object.entries(personas)) {
       await page.selectOption('#persona-picker', persona);
@@ -86,6 +87,57 @@ try {
     check((await page.locator('#boundary-copy').textContent()).includes('route editing'), `${viewport.name}: Company Owner operating authority boundary is missing`);
     await page.getByRole('button', { name: 'Follow handoff' }).click();
     check(documentHash(await page.url()) === 'manager/field', `${viewport.name}: company exception did not retain the manager handoff`);
+
+    await page.selectOption('#path-picker', 'plan-conflict');
+    check(documentHash(await page.url()) === 'manager/release/plan-conflict', `${viewport.name}: plan conflict URL lost its exact context`);
+    check((await page.locator('#focus-title').textContent()) === 'Plan 9 conflicts with accepted access', `${viewport.name}: plan conflict is not explicit`);
+    check((await page.locator('#fact-list').textContent()).includes('Plan 8 remains published'), `${viewport.name}: plan conflict implies a silent replacement`);
+    await page.getByRole('button', { name: 'Resolve plan conflict' }).click();
+    check(await page.locator('#choice-list input[type="radio"]').count() === 3, `${viewport.name}: plan conflict choices are missing`);
+    await page.getByRole('button', { name: 'Back' }).click();
+
+    await page.selectOption('#path-picker', 'field-offline');
+    check(documentHash(await page.url()) === 'lead/field/field-offline', `${viewport.name}: offline field URL lost its exact context`);
+    check((await page.locator('#focus-status').textContent()) === 'Saved on device', `${viewport.name}: offline persistence state is missing`);
+    check(await page.getByText('$145', { exact: false }).count() === 0, `${viewport.name}: customer pricing leaked into offline field recovery`);
+    await page.getByRole('button', { name: 'Review offline recovery' }).click();
+    check(await page.locator('#choice-list input[type="checkbox"]').count() === 3, `${viewport.name}: offline recovery checks are missing`);
+    await page.getByRole('button', { name: 'Back' }).click();
+
+    await page.selectOption('#path-picker', 'proof-correction');
+    check((await page.locator('#focus-title').textContent()) === 'One photo needs correction before proof can publish', `${viewport.name}: proof correction is not explicit`);
+    check((await page.locator('#fact-list').textContent()).includes('Customer delivery has not occurred'), `${viewport.name}: failed proof implies delivery`);
+
+    await page.selectOption('#path-picker', 'support-incident');
+    check(await page.locator('#persona-picker').inputValue() === 'support', `${viewport.name}: support entry is mislabeled as a core persona`);
+    check(await page.locator('body').getAttribute('data-persona') === 'support', `${viewport.name}: support role filter is mislabeled in the document state`);
+    check((await page.locator('#role-label').textContent()) === 'Support Administrator', `${viewport.name}: support path widened the manager role instead of showing contextual authority`);
+    check((await page.locator('#page-title').textContent()) === 'Incident 204', `${viewport.name}: support path exposed the service identity`);
+    check(await page.getByText('Mesa Court', { exact: false }).count() === 0, `${viewport.name}: protected property identity leaked into support incident`);
+    check(await page.locator('#desktop-nav .nav-button').count() === 2, `${viewport.name}: support path is not narrowly scoped`);
+    await page.getByRole('button', { name: 'Follow handoff' }).click();
+    check(documentHash(await page.url()) === 'manager/field', `${viewport.name}: support incident did not return to the exact accountable service moment`);
+
+    await page.selectOption('#path-picker', 'billing-readiness');
+    check(await page.locator('#persona-picker').inputValue() === 'billing', `${viewport.name}: billing entry is mislabeled as a core persona`);
+    check((await page.locator('#thread-label').textContent()).includes('PRODUCT-GATED'), `${viewport.name}: billing readiness is not visibly product-gated`);
+    check(await page.getByRole('button', { name: /invoice|payment/i }).count() === 0, `${viewport.name}: billing readiness invented a financial action`);
+    await page.getByRole('button', { name: 'Follow handoff' }).click();
+    check(documentHash(await page.url()) === 'manager/proof', `${viewport.name}: billing readiness did not return to exact completion review`);
+
+    await page.selectOption('#path-picker', 'access-ended');
+    check(await page.locator('#persona-picker').inputValue() === 'general', `${viewport.name}: ended access implies an active workspace role`);
+    check((await page.locator('#role-label').textContent()) === 'Team Member', `${viewport.name}: ended access guessed a workspace role`);
+    check((await page.locator('#page-title').textContent()) === 'Workspace access', `${viewport.name}: ended access did not become a recovery destination`);
+    check(await page.getByText('Mesa Court', { exact: false }).count() === 0, `${viewport.name}: protected service data remained in ended-access DOM`);
+    check(await page.locator('#stage-list').isHidden(), `${viewport.name}: service lifecycle remained visible after access ended`);
+    check(await page.locator('.timeline-card').isHidden(), `${viewport.name}: service timeline remained visible after access ended`);
+    check(await page.locator('#follow-handoff').isHidden(), `${viewport.name}: ended access retained a protected handoff`);
+
+    await page.selectOption('#path-picker', 'authorization-mismatch');
+    check((await page.locator('#page-title').textContent()) === 'Authorization review', `${viewport.name}: authorization mismatch is not fail-closed`);
+    check(await page.getByText('Mesa Court', { exact: false }).count() === 0, `${viewport.name}: mismatched property data remained in the DOM`);
+    check((await page.locator('#fact-list').textContent()).includes('No property details loaded'), `${viewport.name}: authorization recovery does not explain withheld data`);
 
     await page.goto(`${pathToFileURL(prototype).href}#manager/release`, { waitUntil: 'load' });
     await page.getByRole('button', { name: 'Review service release' }).click();
@@ -141,6 +193,9 @@ try {
       await page.getByRole('button', { name: 'Back' }).click();
       await page.goto(`${pathToFileURL(prototype).href}#company/field`, { waitUntil: 'load' });
       await page.screenshot({ path: resolve(captureRoot, 'simplified-service-thread-company-owner-desktop-v2.png'), fullPage: true });
+      await page.selectOption('#path-picker', 'support-incident');
+      await page.getByRole('button', { name: 'Review incident response' }).click();
+      await page.screenshot({ path: resolve(captureRoot, 'simplified-service-thread-support-desktop-v3.png'), fullPage: true });
     }
     if (capture && viewport.name === 'mobile') {
       await page.goto(`${pathToFileURL(prototype).href}#owner/proof`, { waitUntil: 'load' });
@@ -152,10 +207,17 @@ try {
       await page.goto(`${pathToFileURL(prototype).href}#property/decision`, { waitUntil: 'load' });
       await page.getByRole('button', { name: 'Review property recommendation' }).click();
       await page.screenshot({ path: resolve(captureRoot, 'simplified-service-thread-property-manager-mobile-v2.png'), fullPage: true });
+      await page.getByRole('button', { name: 'Back' }).click();
+      await page.selectOption('#path-picker', 'field-offline');
+      await page.getByRole('button', { name: 'Review offline recovery' }).click();
+      await page.screenshot({ path: resolve(captureRoot, 'simplified-service-thread-offline-mobile-v3.png'), fullPage: true });
+      await page.getByRole('button', { name: 'Back' }).click();
+      await page.selectOption('#path-picker', 'access-ended');
+      await page.screenshot({ path: resolve(captureRoot, 'simplified-service-thread-access-mobile-v3.png'), fullPage: true });
     }
     await page.close();
   }
-  console.log('Simplified service-thread validation passed for 5 perspectives, 4 service moments, and 3 viewports.');
+  console.log('Simplified service-thread validation passed for 5 core perspectives, 4 service moments, 8 review paths, and 3 viewports.');
 } finally {
   await browser.close();
 }

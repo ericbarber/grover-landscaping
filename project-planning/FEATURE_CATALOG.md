@@ -101,6 +101,11 @@ boundary; inclusion here alone does not mean a feature shipped.
   two prototype slices cover Yard Owner, Property Manager, Company Owner,
   Company Manager, and Crew Lead across four service moments and three
   responsive viewports without duplicate lifecycles
+- Contextual service-thread exception design for exact plan conflict, device-
+  held offline work, held proof correction, minimized owned Support incidents,
+  product-gated completion readiness, ended access, and inconsistent property
+  authorization; access failures keep protected records absent and Support or
+  readiness returns to the accountable service moment
 - Shared authenticated Home with signed-in identity, persona context, source-
   appropriate work/sync summary, persona-specific quick actions, and a direct
   action from the current priority notice

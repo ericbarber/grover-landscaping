@@ -241,6 +241,127 @@ const personas = {
   },
 };
 
+const reviewPaths = {
+  'plan-conflict': {
+    personaKey: 'manager', moment: 'release',
+    focus: {
+      stage: 'Plan', status: 'Conflict to resolve', title: 'Plan 9 conflicts with accepted access',
+      copy: 'The proposed route change cannot silently replace the customer-accepted access instruction or published field plan.',
+      owner: 'You', update: 'Plan 8 remains published until an exact resolution.',
+      facts: ['Plan 8 remains published', 'Plan 9 proposes front access', 'Customer window still achievable'],
+      essentials: [['Conflict', 'Accepted side gate · proposed front access'], ['Field state', 'Crew remains on Plan 8'], ['Customer impact', 'No change published']],
+      action: 'Resolve plan conflict', choiceLabel: 'Reviewed resolution', options: ['Ask the customer about front access', 'Keep Plan 8 and revise the route', 'Hold Mesa Court without changing either plan'], confirm: 'Preview conflict resolution',
+    },
+    timeline: [['Sep 7', 'Plan 8 published', 'Accepted access and North route retained'], ['Sep 8 · 8:38', 'Plan 9 proposed', 'Front access conflicts with accepted instruction'], ['Now', 'Conflict held for review', 'No plan or customer promise changed']],
+  },
+  'field-offline': {
+    personaKey: 'lead', moment: 'field',
+    focus: {
+      stage: 'Field work', status: 'Saved on device', title: 'Connection dropped; keep working from Plan 8',
+      copy: 'Released scope and completed progress remain available on this device. Reconnection may sync the record; it does not authorize a new plan.',
+      owner: 'You', update: 'Continue safely, then review the sync result before leaving.',
+      facts: ['Plan 8 available offline', '4 of 6 tasks saved', '2 photos held on this device'],
+      essentials: [['Last confirmed sync', '8:31 AM'], ['Customer contact', 'Office only'], ['Plan authority', 'Company Manager']],
+      action: 'Review offline recovery', choiceType: 'checkbox', choiceLabel: 'Offline recovery check', options: ['Released Plan 8 is available', 'Saved progress and photos are visible', 'No route or access change is being made'], confirm: 'Preview offline continuation',
+    },
+    timeline: [['Sep 8 · 8:26', 'Stop started from Plan 8', 'Confirmed server state'], ['Sep 8 · 8:31', 'Last sync completed', 'Four tasks and one photo confirmed'], ['Now', 'Connection interrupted', 'Later progress remains on this device']],
+  },
+  'proof-correction': {
+    personaKey: 'manager', moment: 'proof',
+    focus: {
+      stage: 'Proof', status: 'Delivery held', title: 'One photo needs correction before proof can publish',
+      copy: 'The service is complete, but the customer-safe package remains held inside this thread until the exact evidence gap is corrected.',
+      owner: 'Crew Lead', update: 'Request one replacement photo; do not publish partial proof.',
+      facts: ['6 tasks remain complete', '2 of 3 photos pass review', 'Customer delivery has not occurred'],
+      essentials: [['Correction', 'Replace blurred back-yard photo'], ['Field record', 'Completion retained'], ['Customer state', 'No incomplete proof visible']],
+      action: 'Request proof correction', choiceLabel: 'Correction handoff', options: ['Request one replacement back-yard photo', 'Return the package for full field review', 'Hold delivery and add an internal question'], confirm: 'Preview correction request',
+    },
+    timeline: [['Sep 8 · 9:18', 'Completion submitted', 'Checklist and three photos retained'], ['Sep 8 · 9:23', 'Provider review found one gap', 'Blurred back-yard photo'], ['Now', 'Customer delivery held', 'Completion remains intact while correction is requested']],
+  },
+  'support-incident': {
+    personaKey: 'manager', pickerPersona: 'support', moment: 'field', next: ['manager', 'field'],
+    persona: {
+      name: 'Support Administrator', identity: 'Sam P.', initials: 'SP', family: 'CONTEXTUAL SUPPORT', collection: 'Incidents',
+      nav: [['incidents', 'Incidents', '◇'], ['account', 'Account', '○']], active: 'incidents',
+      boundary: 'Customer-private conversation, exact property access, field controls, full photos, unrelated tenant activity, and unapproved standing access remain outside this incident.',
+      why: 'Support begins with an owned incident and a minimized service reference. Any deeper access must be purpose-bound, expiring, and auditable.',
+    },
+    pageTitle: 'Incident 204', record: 'Incident 204', date: 'Opened 8:41 AM', threadLabel: 'CONTEXTUAL SUPPORT PATH · SERVICE REFERENCE SRV-1048',
+    contextLabel: 'MINIMIZED INCIDENT CONTEXT', contextTitle: 'Incident essentials',
+    threadSummary: 'Support sees a minimized incident attached to one service, not a copy of the customer or provider workspace.',
+    focus: {
+      stage: 'Field work', status: 'Owned incident', title: 'A field update is not reaching the manager',
+      copy: 'The incident carries the affected service reference, last confirmed event, and accountable product owner without loading private service detail.',
+      owner: 'You', update: 'Confirm delivery state before requesting any temporary access.',
+      facts: ['Service reference SRV-1048', 'Last event accepted at 8:31 AM', 'Manager has not received the 8:41 update'],
+      essentials: [['Tenant', 'Grover Yard Care'], ['Incident owner', 'Sam P.'], ['Access state', 'No temporary access granted']],
+      action: 'Review incident response', choiceLabel: 'Bounded support response', options: ['Retry the exact event delivery', 'Ask the manager to refresh service state', 'Request purpose-bound temporary access'], confirm: 'Preview incident response',
+    },
+    timeline: [['8:31 AM', 'Last service event accepted', 'Reference SRV-1048'], ['8:41 AM', 'Field update queued', 'Manager receipt not confirmed'], ['Now', 'Incident assigned', 'No protected workspace opened']],
+  },
+  'billing-readiness': {
+    personaKey: 'manager', pickerPersona: 'billing', moment: 'proof', next: ['manager', 'proof'],
+    persona: {
+      name: 'Billing Administrator', identity: 'Bailey C.', initials: 'BC', family: 'COMPLETION READINESS', collection: 'Handoffs',
+      nav: [['readiness', 'Readiness', '⌂'], ['accounts', 'Accounts', '◇'], ['handoffs', 'Handoffs', '▦']], active: 'handoffs',
+      boundary: 'Invoices, payments, refunds, ledger actions, customer-private notes, field controls, and unsupported accounting authority remain outside this readiness path.',
+      why: 'Billing readiness is a contextual operating handoff from reviewed completion. It does not imply an implemented invoice or payment product.',
+    },
+    pageTitle: 'Completion 1048', record: 'Completion 1048', date: 'September 8', threadLabel: 'PRODUCT-GATED PATH · COMPLETION READINESS',
+    contextLabel: 'ONLY COMPLETION READINESS', contextTitle: 'Readiness essentials',
+    threadSummary: 'A bounded readiness view links back to reviewed service completion without inventing financial controls.',
+    focus: {
+      stage: 'Proof', status: 'One readiness gap', title: 'Completion is reviewed; one account reference is missing',
+      copy: 'The delivered service remains complete. This path records only the evidence gap and accountable handoff needed for a future approved billing product.',
+      owner: 'Company Manager', update: 'Add the existing account reference or document why it is unavailable.',
+      facts: ['Service completion reviewed', 'Customer proof delivered', 'No invoice or payment action available'],
+      essentials: [['Missing item', 'Account reference'], ['Service result', 'Complete and unchanged'], ['Product state', 'Billing remains gated']],
+      action: 'Review readiness handoff', choiceLabel: 'Operating handoff', options: ['Request the account reference', 'Document that no reference is required', 'Return to completion review'], confirm: 'Preview readiness handoff',
+    },
+    timeline: [['9:18 AM', 'Field completion recorded', 'Six tasks retained'], ['9:34 AM', 'Customer proof delivered', 'Provider review complete'], ['Now', 'Readiness gap recorded', 'No financial record created']],
+  },
+  'access-ended': {
+    personaKey: 'owner', pickerPersona: 'general', moment: 'decision', hideLifecycle: true, hideTimeline: true, noHandoff: true,
+    timeline: [],
+    persona: {
+      name: 'Team Member', identity: 'Jordan S.', initials: 'JS', family: 'ACCESS RECOVERY', collection: 'Account',
+      nav: [['account', 'Account', '○']], active: 'account',
+      boundary: 'Properties, customers, service records, schedules, field work, proof, and organization activity are not loaded without active workspace access.',
+      why: 'Ended access must become a useful, protected recovery destination. It cannot fall back to stale workspace data or a guessed role.',
+    },
+    pageTitle: 'Workspace access', record: 'Access', date: 'No active workspace', threadLabel: 'PROTECTED RECOVERY · NO WORKSPACE DATA',
+    contextLabel: 'ACCOUNT RECOVERY', contextTitle: 'Recovery essentials',
+    threadSummary: 'The account remains available while protected workspace information stays unloaded.',
+    focus: {
+      stage: 'Access', status: 'Access ended', title: 'Your workspace access is no longer active',
+      copy: 'This can happen when an invitation expires or an administrator ends membership. No service information has been loaded.',
+      owner: 'Workspace administrator', update: 'Use a current invitation or ask the administrator to review membership.',
+      facts: ['Signed-in account retained', 'Protected data not loaded', 'No role has been assumed'],
+      essentials: [['Account', 'jordan@example.com'], ['Workspace', 'Not available'], ['Safe next step', 'Review invitation or membership']],
+      action: 'Review access recovery', choiceLabel: 'Recovery path', options: ['Use a newer invitation', 'Refresh workspace access', 'Sign out of this account'], confirm: 'Preview access recovery',
+    },
+  },
+  'authorization-mismatch': {
+    personaKey: 'property', moment: 'decision', hideLifecycle: true, hideTimeline: true, noHandoff: true,
+    timeline: [],
+    pageTitle: 'Authorization review', record: 'Properties', date: 'Access check required', threadLabel: 'FAIL-CLOSED ACCESS · NO PROPERTY DATA',
+    contextLabel: 'ACCESS REVIEW', contextTitle: 'Authorization essentials',
+    threadSummary: 'The portfolio shell stays available, but the requested property is withheld until authorization is consistent.',
+    persona: {
+      boundary: 'The requested property, service status, recommendations, proof, provider detail, and other portfolio records stay unloaded while authorization is inconsistent.',
+      why: 'A server/client scope mismatch is an access problem, not an empty portfolio or a reason to reveal stale property data.',
+    },
+    focus: {
+      stage: 'Access', status: 'Authorization mismatch', title: 'This property cannot be shown yet',
+      copy: 'The current role and property scope do not agree. The page fails closed and preserves only a safe route back to authorized properties.',
+      owner: 'Workspace administrator', update: 'Review property scope before returning to this record.',
+      facts: ['No property details loaded', 'No service status inferred', 'Authorized portfolio remains available'],
+      essentials: [['Requested record', 'Withheld'], ['Current role', 'Property Manager'], ['Safe next step', 'Return to authorized properties']],
+      action: 'Review authorization recovery', choiceLabel: 'Recovery path', options: ['Return to authorized properties', 'Refresh current access', 'Request an administrator review'], confirm: 'Preview authorization recovery',
+    },
+  },
+};
+
 const handoffs = {
   'owner/decision': ['manager', 'release'],
   'owner/release': ['manager', 'release'],
@@ -266,31 +387,51 @@ const handoffs = {
 
 const personaPicker = document.querySelector('#persona-picker');
 const momentPicker = document.querySelector('#moment-picker');
+const pathPicker = document.querySelector('#path-picker');
 const actionDialog = document.querySelector('#action-dialog');
 const completionDialog = document.querySelector('#completion-dialog');
 const workspace = document.querySelector('#workspace');
-let state = { persona: 'owner', moment: 'decision' };
+let state = { persona: 'owner', moment: 'decision', path: 'standard' };
 let lastTrigger = null;
+const contextualPersonaPaths = { support: 'support-incident', billing: 'billing-readiness', general: 'access-ended' };
+
+function viewForState() {
+  const path = reviewPaths[state.path];
+  const basePersona = personas[state.persona];
+  return {
+    path,
+    persona: path?.persona ? { ...basePersona, ...path.persona } : basePersona,
+    focus: path?.focus ?? basePersona.moments[state.moment],
+    timeline: path?.timeline ?? basePersona.timeline[state.moment],
+  };
+}
 
 function navMarkup(persona) {
   return persona.nav.map(([id, label, icon]) => `<button class="nav-button" type="button" data-nav="${id}" ${id === persona.active ? 'aria-current="page"' : ''}><span class="nav-icon" aria-hidden="true">${icon}</span><span>${label}</span></button>`).join('');
 }
 
 function render(announce = true) {
-  const persona = personas[state.persona];
-  const focus = persona.moments[state.moment];
+  const { path, persona, focus, timeline } = viewForState();
   const current = momentIndex[state.moment];
-  document.body.dataset.persona = state.persona;
+  document.body.dataset.persona = path?.pickerPersona ?? state.persona;
   document.body.dataset.moment = state.moment;
-  personaPicker.value = state.persona;
+  document.body.dataset.path = state.path;
+  personaPicker.value = path?.pickerPersona ?? state.persona;
   momentPicker.value = state.moment;
+  pathPicker.value = state.path;
   document.querySelector('#family-label').textContent = persona.family;
   document.querySelector('#role-label').textContent = persona.name;
   document.querySelector('#identity-label').textContent = persona.identity;
   document.querySelector('#desktop-initials').textContent = persona.initials;
   document.querySelector('#mobile-initials').textContent = persona.initials;
   document.querySelector('#collection-label').textContent = persona.collection;
-  document.querySelector('#thread-summary').textContent = `${persona.name} sees one authorized perspective on the same service outcome.`;
+  document.querySelector('#breadcrumb-record').textContent = path?.record ?? 'Mesa Court';
+  document.querySelector('#breadcrumb-date').textContent = path?.date ?? 'September 8';
+  document.querySelector('#thread-label').textContent = path?.threadLabel ?? 'ONE SERVICE THREAD · ROUTINE CARE';
+  document.querySelector('#context-label').textContent = path?.contextLabel ?? 'ONLY WHAT SUPPORTS THE NEXT STEP';
+  document.querySelector('#context-title').textContent = path?.contextTitle ?? 'Service essentials';
+  document.querySelector('#page-title').textContent = path?.pageTitle ?? 'Mesa Court';
+  document.querySelector('#thread-summary').textContent = path?.threadSummary ?? `${persona.name} sees one authorized perspective on the same service outcome.`;
   document.querySelector('#next-owner').textContent = focus.owner;
   document.querySelector('#next-update').textContent = focus.update;
   document.querySelector('#focus-stage').textContent = focus.stage;
@@ -303,13 +444,17 @@ function render(announce = true) {
   document.querySelector('#explain-action').setAttribute('aria-expanded', 'false');
   document.querySelector('#explanation').hidden = true;
   document.querySelector('#essential-list').innerHTML = focus.essentials.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('');
-  document.querySelector('#timeline-list').innerHTML = persona.timeline[state.moment].map(([time, title, copy]) => `<li><time>${time}</time><div><strong>${title}</strong><p>${copy}</p></div></li>`).join('');
+  document.querySelector('#timeline-list').innerHTML = timeline?.map(([time, title, copy]) => `<li><time>${time}</time><div><strong>${title}</strong><p>${copy}</p></div></li>`).join('') ?? '';
   document.querySelector('#boundary-copy').textContent = persona.boundary;
   document.querySelector('#stage-list').innerHTML = stages.map((stage, index) => `<li class="${index < current ? 'done' : ''} ${index === current ? 'current' : ''}" ${index === current ? 'aria-current="step"' : ''}><small>0${index + 1}</small><strong>${stage.label}</strong><span class="sr-only">${stage.detail}</span></li>`).join('');
   document.querySelector('#desktop-nav').innerHTML = navMarkup(persona);
   document.querySelector('#mobile-nav').innerHTML = navMarkup(persona);
+  document.querySelector('#stage-list').hidden = Boolean(path?.hideLifecycle);
+  document.querySelector('.timeline-card').hidden = Boolean(path?.hideTimeline);
+  document.querySelector('#follow-handoff').hidden = Boolean(path?.noHandoff);
   document.title = `${persona.name} · ${focus.stage} · Grover service thread`;
-  history.replaceState(null, '', `#${state.persona}/${state.moment}`);
+  const pathSuffix = state.path === 'standard' ? '' : `/${state.path}`;
+  history.replaceState(null, '', `#${state.persona}/${state.moment}${pathSuffix}`);
   bindNavigation();
   if (announce) document.querySelector('#announcer').textContent = `${persona.name}, ${focus.stage}: ${focus.title}`;
 }
@@ -328,8 +473,7 @@ function bindNavigation() {
 }
 
 function openAction() {
-  const persona = personas[state.persona];
-  const task = persona.moments[state.moment];
+  const { focus: task } = viewForState();
   lastTrigger = document.querySelector('#primary-action');
   document.querySelector('#dialog-title').textContent = task.action;
   document.querySelector('#dialog-copy').textContent = task.copy;
@@ -359,20 +503,40 @@ function openAction() {
 }
 
 personaPicker.addEventListener('change', () => {
-  state.persona = personaPicker.value;
+  const contextualPath = contextualPersonaPaths[personaPicker.value];
+  if (contextualPath) {
+    const path = reviewPaths[contextualPath];
+    state = { persona: path.personaKey, moment: path.moment, path: contextualPath };
+  } else {
+    state.persona = personaPicker.value;
+    state.path = 'standard';
+  }
   render();
   workspace.focus({ preventScroll: true });
 });
 
 momentPicker.addEventListener('change', () => {
   state.moment = momentPicker.value;
+  state.path = 'standard';
+  render();
+  workspace.focus({ preventScroll: true });
+});
+
+pathPicker.addEventListener('change', () => {
+  state.path = pathPicker.value;
+  const path = reviewPaths[state.path];
+  if (path) {
+    state.persona = path.personaKey;
+    state.moment = path.moment;
+  }
   render();
   workspace.focus({ preventScroll: true });
 });
 
 document.querySelector('#follow-handoff').addEventListener('click', () => {
-  const [persona, moment] = handoffs[`${state.persona}/${state.moment}`];
-  state = { persona, moment };
+  const path = reviewPaths[state.path];
+  const [persona, moment] = path?.next ?? handoffs[`${state.persona}/${state.moment}`];
+  state = { persona, moment, path: 'standard' };
   render();
   workspace.focus({ preventScroll: true });
 });
@@ -397,10 +561,12 @@ document.querySelector('#return-action').addEventListener('click', () => {
 });
 
 function restoreFromHash() {
-  const [personaKey, momentKey] = location.hash.slice(1).split('/');
+  const [personaKey, momentKey, pathKey] = location.hash.slice(1).split('/');
+  const path = reviewPaths[pathKey];
   state = {
-    persona: personas[personaKey] ? personaKey : 'owner',
-    moment: Object.hasOwn(momentIndex, momentKey) ? momentKey : 'decision',
+    persona: path?.personaKey ?? (personas[personaKey] ? personaKey : 'owner'),
+    moment: path?.moment ?? (Object.hasOwn(momentIndex, momentKey) ? momentKey : 'decision'),
+    path: path ? pathKey : 'standard',
   };
   render(false);
 }
