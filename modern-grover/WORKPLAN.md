@@ -80,10 +80,11 @@ withholds a rejected after-photo record, requests correction, and requires an
 exact-version check before simulated delivery. The Yard Owner outcome shows
 only the reviewed package and separates a future care idea from completed
 work. No actual photo is supplied. All six moments pass 320, 390, and 1440px
-state, privacy, focus, and overflow checks. Next, reconcile these moments with
-current-app route/API authority and seed matched records before participant
-comparison. Property Manager and Company Owner task perspectives also remain
-to test. React adoption waits for task evidence and API/authorization mapping.
+state, privacy, focus, and overflow checks. The current-app route/API authority
+review is recorded in the [fixture map](FIXTURE_READINESS.md), and separate
+Property Manager and Company Owner task perspectives are available for study.
+Matched records, role delegation decisions, and participant evidence remain
+before React adoption.
 
 The separate Property Manager and Company Owner task concepts now cover an
 authorized two-property scan, a versioned access-guidance response, company
@@ -110,6 +111,10 @@ an older June 15 Crew Lead route with two stops, and zero open manager
 exceptions. These are local-review baseline counts, not evidence that the
 matched Canyon View/Sage Lane records exist. The next fixture work must use
 isolated synthetic identities and a tested reset path before writes.
+Property Manager delegation is now tracked as [MG-D6](PRODUCT_DECISIONS.md);
+the local environment has an active shared review API and database but no
+dedicated study database configuration in this shell. The next writable
+fixture slice waits for an isolated target and its reset verification.
 
 The existing [SX4 study](../design/review/simplified-product-experience-comparative-study.md)
 and [modern comparison guide](../design/review/modern-website-comparison-guide.md)

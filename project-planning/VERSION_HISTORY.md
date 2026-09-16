@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-16: Added Modern Grover decision MG-D6 for Property Manager portal
+  delegation authority, scope, and revocation after confirming the current
+  activation issues only an owner grant. A manager fixture and equivalent
+  completion task remain gated on this decision and a supported API contract.
 - 2026-09-16: Specified the isolated Modern Grover seed contract after tracing
   the backend owner acquisition persistence fixture. It requires a dedicated
   study database, manifest-owned reset, immutable proposal v1→v3 progression,

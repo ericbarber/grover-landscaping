@@ -91,6 +91,10 @@ The [isolated fixture seed contract](modern-grover/fixtures/SEED_CONTRACT.md)
 now defines supported owner transitions, reset ownership, and date/role gates.
 It is planning only: a dedicated study database, seeder, and matched records
 are not yet available.
+The Property Manager grant authority and scope are an open
+[MG-D6 product decision](modern-grover/PRODUCT_DECISIONS.md). The current
+activation path cannot issue that role's grant, so this comparison task stays
+out of completion scoring until the decision and API contract are delivered.
 
 ### Current frontend design continuity
 
