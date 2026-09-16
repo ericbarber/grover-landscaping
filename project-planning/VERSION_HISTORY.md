@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-16: Connected a simulated Yard Owner proposal decision to the new
+  Modern Grover manager study. Proposal v3 shows exact scope, $420 total,
+  planning consequence, and next owner without provider-private plan detail.
+  Revision, stale version, failed read, and recovery branches were checked at
+  320, 390, and 1440px. The cross-page link is a study control, not a real
+  authorization or persisted acceptance.
 - 2026-09-16: Started Modern Grover M2 in its independent directory with an
   interactive Company Manager service decision concept. The synthetic Canyon
   View flow connects accepted proposal v3, draft Plan 8, crew fit, correction,

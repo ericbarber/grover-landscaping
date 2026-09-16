@@ -77,8 +77,39 @@ try {
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     if (overflow > 1) throw new Error(`${width}px horizontal overflow: ${overflow}px`);
+    const customerResponse = await page.goto(new URL('customer.html', baseUrl).toString(), { waitUntil: 'domcontentloaded' });
+    if (customerResponse?.status() !== 200) throw new Error(`${width}px customer page returned ${customerResponse?.status()}`);
+    await page.getByRole('heading', { name: 'One-time cleanup and pruning' }).waitFor();
+    if (await page.getByText('Draft Plan 8').count() || await page.getByText('Crew fit and access').count()) {
+      throw new Error(`${width}px customer view exposed provider plan details`);
+    }
+    await page.getByRole('button', { name: 'Ask for a revision' }).click();
+    await page.getByText('Provider proposal owner revises the offer').waitFor();
+    await page.getByRole('button', { name: 'Reset' }).click();
+    await page.getByRole('button', { name: 'Review acceptance of v3' }).click();
+    await page.getByRole('heading', { name: 'Accept proposal v3 for $420?' }).waitFor();
+    await page.getByRole('button', { name: 'Stale proposal' }).click();
+    await page.getByRole('heading', { name: 'Proposal v2 is no longer current.' }).waitFor();
+    if (await page.getByRole('button', { name: 'Accept proposal v2' }).count()) {
+      throw new Error(`${width}px allowed stale customer acceptance`);
+    }
+    await page.getByRole('button', { name: 'Load current proposal v3' }).click();
+    await page.getByRole('button', { name: 'Review acceptance of v3' }).click();
+    await page.getByRole('button', { name: 'Accept proposal v3', exact: true }).click();
+    await page.getByText('Company Manager plans the service').waitFor();
+    await page.getByText('No date or payment was confirmed.', { exact: false }).waitFor();
+    await page.getByRole('button', { name: 'Reset' }).click();
+    await page.getByRole('button', { name: 'Failed read' }).click();
+    await page.getByRole('heading', { name: 'The current proposal could not be loaded.' }).waitFor();
+    if (await page.getByText('$420').count() || await page.getByRole('button', { name: /Accept proposal/ }).count()) {
+      throw new Error(`${width}px customer read failure exposed decision details`);
+    }
+    await page.getByRole('button', { name: 'Retry proposal read' }).click();
+    await page.getByRole('button', { name: 'Review acceptance of v3' }).waitFor();
+    const customerOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (customerOverflow > 1) throw new Error(`${width}px customer horizontal overflow: ${customerOverflow}px`);
     if (errors.length) throw new Error(`${width}px browser errors: ${errors.join('; ')}`);
-    console.log(`${width}px: manager decision, correction, stale version, failed read, and layout passed`);
+    console.log(`${width}px: customer and manager decisions, correction, stale versions, failed reads, and layout passed`);
     await page.close();
   }
 } finally {

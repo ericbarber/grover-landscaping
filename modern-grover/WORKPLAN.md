@@ -15,7 +15,7 @@ starting evidence. Earlier designs remain comparison inputs.
 | --- | --- | --- | --- |
 | M0 · Isolate the track | Give Modern Grover its own plan, decision register, review, and blueprint; classify older attempts as inputs. | One discoverable directory and no competing active review source. | Delivered |
 | M1 · Establish product truth | Audit public claims against delivered capabilities; trace current public entry, first run, decision, plan, field, proof, and recovery through real routes and data; settle the open choices in [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md). | Capability/claim matrix, current-state journey map, explicit audience and role-context decisions, and matched synthetic fixtures. | In progress |
-| M2 · Prototype one complete service | Build a new, clearly simulated prototype under this directory. Connect customer decision, exact manager release, Crew Lead offline/exception, manager proof review, and customer outcome. Include stale version, unavailable read, and safe recovery. | Each role can finish its assigned task and explain the next owner; phone and desktop interaction, focus, privacy, and state checks pass. | In progress · Company Manager decision slice delivered |
+| M2 · Prototype one complete service | Build a new, clearly simulated prototype under this directory. Connect customer decision, exact manager release, Crew Lead offline/exception, manager proof review, and customer outcome. Include stale version, unavailable read, and safe recovery. | Each role can finish its assigned task and explain the next owner; phone and desktop interaction, focus, privacy, and state checks pass. | In progress · customer and manager decision slices delivered |
 | M3 · Observe people at work | Compare equivalent current-app and new-flow tasks from normal entry. Test public path choice separately from authenticated work. Use representative Yard Owners, Property Managers, Company Owners, Company Managers, and Crew Leads. | Anonymous task observations with wrong turns, context changes, authority/version accuracy, recovery, and confidence; critical misunderstandings revised and retested. | Planned; participants needed |
 | M4 · Adopt bounded slices | Translate approved task compositions into React/API changes, beginning with the highest-value handoff. | Exact authorization, data, failure, offline, telemetry, browser regression, and rollback evidence for each slice. | Later; depends on M3 |
 
@@ -51,17 +51,21 @@ and stop count. The [journey trace](CURRENT_JOURNEYS.md) records the before and
 after local-review evidence. This fixes the two observed Home contradictions;
 it does not seed matched service records or validate the new composition.
 
-The first **new-prototype** slice is a [Company Manager service decision flow](prototype/README.md).
+The first **new-prototype** slices are the linked
+[Yard Owner and Company Manager decisions](prototype/README.md).
 
 It starts at a short Today queue and opens the exact service. The service view
 should show customer
 impact, accepted scope, draft and released plan versions, crew fit, next owner,
-and a contextual release or correction action. The delivered interactive slice
-includes a version conflict and failed-read recovery. It passed 320, 390, and
-1440px browser state/overflow checks. It does not read an account or release a
-real plan. Next, connect the customer decision and Crew Lead handoff using the
-same synthetic record and explicit source boundaries. React adoption waits for
-task evidence and API/authorization mapping.
+and a contextual release or correction action. The customer view presents the
+exact proposal version, scope, $420 total, acceptance consequence, revision
+request, stale version, and failed read without provider-private plan details.
+The manager view includes a version conflict and failed-read recovery. Both
+passed 320, 390, and 1440px browser state/overflow checks. They do not read an
+account or persist a decision. Next, connect the released Plan 8 to a Crew
+Lead field interruption, local save, office exception, and recovery using the
+same synthetic record. React adoption waits for task evidence and
+API/authorization mapping.
 
 The existing [SX4 study](../design/review/simplified-product-experience-comparative-study.md)
 and [modern comparison guide](../design/review/modern-website-comparison-guide.md)

@@ -19,7 +19,7 @@ is available at `/modern-grover/`. It is served separately from `/design/`.
 | [Public claim inventory](CLAIM_INVENTORY.md) | First-pass copy-to-capability audit and wording to test | Source audit; product copy unapproved |
 | [Current journey trace](CURRENT_JOURNEYS.md) | Phone review of normal entry paths and fixture continuity | Local-review observation; matched records pending |
 | [Matched fixture specification](MATCHED_FIXTURES.md) | Two equivalent synthetic services for fair comparison | Specified; not seeded |
-| [Manager service prototype](prototype/README.md) | First new M2 decision slice, with simulated release and recovery | Interactive concept; no real write or participant result |
+| [Customer and manager prototype](prototype/README.md) | First M2 decision handoff, with simulated release and recovery | Interactive concept; no real write or participant result |
 | [Critical workflow review](review/application-workflow-critical-review-2026-09-16.md) | Evidence, design risks, and proposed rework | Expert/local-browser review; no participant results |
 | [Experience blueprint](review/application-experience-blueprint.md) | First-pass cross-role service and handoff map | Hypothesis for testing |
 
