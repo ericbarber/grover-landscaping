@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-16: Created a separate local `grover_modern_study` PostgreSQL
+  database for Modern Grover fixture work. The current migrator completed
+  twice; all 124 migrations succeeded. Owner properties, portal grants, and
+  operational exceptions are empty. A June 15 sample day plan comes from an
+  existing migration and is explicitly outside the future fixture namespace.
+  The shared review API/database was not used for fixture writes. A separate
+  study API, seeder, and manifest reset remain open.
 - 2026-09-16: Added independent Modern Grover personas for Yard Owner,
   Property Manager, Company Owner, Company Manager, and Crew Lead, with
   secondary/recovery perspectives for five more roles. Each first-wave

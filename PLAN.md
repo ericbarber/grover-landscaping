@@ -89,8 +89,10 @@ Property Manager, a past two-stop Crew Lead route, and no open manager
 exceptions. It makes fixture gaps reproducible without changing shared data.
 The [isolated fixture seed contract](modern-grover/fixtures/SEED_CONTRACT.md)
 now defines supported owner transitions, reset ownership, and date/role gates.
-It is planning only: a dedicated study database, seeder, and matched records
-are not yet available.
+The [separate local study database](modern-grover/fixtures/LOCAL_STUDY_ENV.md)
+is now created and migrated. It contains only migration baseline records,
+including a historical June route; a separate study API, seeder, reset, and
+matched records are not yet available.
 The Property Manager grant authority and scope are an open
 [MG-D6 product decision](modern-grover/PRODUCT_DECISIONS.md). The current
 activation path cannot issue that role's grant, so this comparison task stays

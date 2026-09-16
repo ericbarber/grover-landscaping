@@ -1,7 +1,9 @@
 # Isolated matched-record seed contract
 
-Status: implementation contract for a future seeder; no database has been
-created or mutated by this document. Use the [matched facts](../MATCHED_FIXTURES.md)
+Status: implementation contract for a future seeder. A separate local study
+database has now been created and migrated, as recorded in
+[LOCAL_STUDY_ENV.md](LOCAL_STUDY_ENV.md); no Modern Grover fixture records have
+been written. Use the [matched facts](../MATCHED_FIXTURES.md)
 and [authority map](../FIXTURE_READINESS.md) as the task source. The
 [read-only probe](README.md) reports the current local-review baseline.
 
@@ -11,6 +13,9 @@ and [authority map](../FIXTURE_READINESS.md) as the task source. The
   study records. The current private review database contains unrelated sample
   work. Seed and reset must refuse to run if the target is the shared review
   database or if the API is outside `local_review` mode.
+- The fresh local study database includes a migration-owned June 15 sample
+  day plan and stops. Reserve a distinct namespace and leave that baseline
+  intact on reset; an empty database is not the precondition.
 - Give Canyon View and Sage Lane distinct synthetic owner users, property
   IDs, provider invitations, idempotency-key namespaces, and record IDs.
   Avoid real addresses, contacts, gate codes, photos, and payment data.
