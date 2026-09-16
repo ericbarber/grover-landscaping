@@ -95,6 +95,11 @@ The Property Manager grant authority and scope are an open
 [MG-D6 product decision](modern-grover/PRODUCT_DECISIONS.md). The current
 activation path cannot issue that role's grant, so this comparison task stays
 out of completion scoring until the decision and API contract are delivered.
+The [Modern Grover formative protocol](modern-grover/research/SESSION_PROTOCOL.md)
+and [session notes template](modern-grover/research/SESSION_NOTES_TEMPLATE.md)
+now define neutral public and role tasks, comparison eligibility, and evidence
+capture. They are ready for preparation, but no participant sessions or
+matched task-completion comparison have occurred.
 
 ### Current frontend design continuity
 

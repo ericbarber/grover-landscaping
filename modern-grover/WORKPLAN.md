@@ -16,7 +16,7 @@ starting evidence. Earlier designs remain comparison inputs.
 | M0 · Isolate the track | Give Modern Grover its own plan, decision register, review, and blueprint; classify older attempts as inputs. | One discoverable directory and no competing active review source. | Delivered |
 | M1 · Establish product truth | Audit public claims against delivered capabilities; trace current public entry, first run, decision, plan, field, proof, and recovery through real routes and data; settle the open choices in [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md). | Capability/claim matrix, current-state journey map, explicit audience and role-context decisions, and matched synthetic fixtures. | In progress |
 | M2 · Prototype one complete service | Build a new, clearly simulated prototype under this directory. Connect customer decision, exact manager release, Crew Lead offline/exception, manager proof review, and customer outcome. Include stale version, unavailable read, and safe recovery. | Each role can finish its assigned task and explain the next owner; phone and desktop interaction, focus, privacy, and state checks pass. | Core six-moment thread plus separate Property Manager and Company Owner tasks delivered as simulations; cross-page state and visual proof absent |
-| M3 · Observe people at work | Compare equivalent current-app and new-flow tasks from normal entry. Test public path choice separately from authenticated work. Use representative Yard Owners, Property Managers, Company Owners, Company Managers, and Crew Leads. | Anonymous task observations with wrong turns, context changes, authority/version accuracy, recovery, and confidence; critical misunderstandings revised and retested. | Planned; participants needed |
+| M3 · Observe people at work | Compare equivalent current-app and new-flow tasks from normal entry. Test public path choice separately from authenticated work. Use representative Yard Owners, Property Managers, Company Owners, Company Managers, and Crew Leads. | Anonymous task observations with wrong turns, context changes, authority/version accuracy, recovery, and confidence; critical misunderstandings revised and retested. | Protocol and blank notes prepared; participants and matched fixtures needed |
 | M4 · Adopt bounded slices | Translate approved task compositions into React/API changes, beginning with the highest-value handoff. | Exact authorization, data, failure, offline, telemetry, browser regression, and rollback evidence for each slice. | Later; depends on M3 |
 
 ## Immediate planning work
@@ -115,6 +115,14 @@ Property Manager delegation is now tracked as [MG-D6](PRODUCT_DECISIONS.md);
 the local environment has an active shared review API and database but no
 dedicated study database configuration in this shell. The next writable
 fixture slice waits for an isolated target and its reset verification.
+
+The [independent session protocol](research/SESSION_PROTOCOL.md) and
+[blank notes template](research/SESSION_NOTES_TEMPLATE.md) are ready for a
+formative round. Public path and claim comprehension can be observed now.
+Role tasks remain directional until matched records meet the fixture gate;
+Property Manager delegation, Plan 8/9 revision, and Crew Lead access transfer
+remain explicitly noncomparable completion tasks. No participant has been
+observed in this track.
 
 The existing [SX4 study](../design/review/simplified-product-experience-comparative-study.md)
 and [modern comparison guide](../design/review/modern-website-comparison-guide.md)

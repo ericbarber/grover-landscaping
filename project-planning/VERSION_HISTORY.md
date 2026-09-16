@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-16: Prepared an independent Modern Grover formative session protocol
+  and anonymous notes template. The script separates public claim/path
+  comprehension from authenticated work, records normal entry and recovery,
+  and marks role tasks directional until matched snapshots exist. Property
+  Manager delegation, Plan 8/9 revision, and Crew Lead access transfer cannot
+  be scored as equivalent current-app completion. No participant result is
+  claimed.
 - 2026-09-16: Added Modern Grover decision MG-D6 for Property Manager portal
   delegation authority, scope, and revocation after confirming the current
   activation issues only an owner grant. A manager fixture and equivalent
