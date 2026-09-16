@@ -2,11 +2,13 @@
 
 Status: simulated M2 slices; no real account, API read, write, scheduling,
 notification, or participant result. Open `/modern-grover/prototype/customer.html`
-for Yard Owner or `/modern-grover/prototype/` for Company Manager on the
-private review server. State resets when each page reloads.
+for Yard Owner, `/modern-grover/prototype/` for Company Manager, or
+`/modern-grover/prototype/field.html` for Crew Lead on the private review
+server. State resets when each page reloads.
 
 These are the first new Modern Grover compositions in the independent track.
-The [Yard Owner decision](customer.html) and [Company Manager decision](index.html)
+The [Yard Owner decision](customer.html), [Company Manager decision](index.html),
+and [Crew Lead field task](field.html)
 use the Canyon View synthetic record from [MATCHED_FIXTURES.md](../MATCHED_FIXTURES.md).
 The customer reviews proposal v3 for $420. Acceptance requests planning and
 does not schedule or charge. The manager study starts at the subsequent
@@ -14,8 +16,12 @@ does not schedule or charge. The manager study starts at the subsequent
 context; the current draft is Plan 8, linked to accepted proposal v3. Plan 9
 appears after a simulated correction or version conflict. The link between
 pages is a study control; it does not grant a customer provider access or
-persist a real decision. Field progress and proof review are subsequent M2
-slices. The scenario buttons load independent task moments rather than a
+persist a real decision. The field study starts from released Plan 8 on a fixed
+September 16, 2026 study day. It simulates an access question, one checklist
+change, offline tab-held state, a sent request, a Plan 9 conflict, and a failed
+read. Tab-held state is lost on reload; this page does not test durable offline
+storage. Manager review of the field exception and proof review are subsequent
+M2 slices. Scenario buttons load independent task moments rather than a
 continuous persisted timeline.
 
 ## Review tasks
@@ -34,6 +40,12 @@ continuous persisted timeline.
    Plan 9, and repeat the fit decision rather than reusing the Plan 8 approval.
 5. Inject a failed read. Verify protected service details and release actions
    disappear until a successful retry.
+6. As Crew Lead, open released Plan 8, go offline, record a synthetic access
+   question, and hold one walkway check in the tab. Identify which changes
+   the office has not received. Retry a failed read without losing this tab's
+   simulated local state. Inject Plan 9 and verify replay stops for manager
+   review; in a fresh scenario, reconnect without conflict and state the next
+   owner. No customer price or private office controls should appear.
 
 Record task completion, first wrong turn, whether the participant states the
 correct version and next owner, and whether the recovery explains what did

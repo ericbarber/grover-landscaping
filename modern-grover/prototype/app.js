@@ -140,6 +140,7 @@ function renderService() {
                   : '<button class="button button-primary" type="button" data-action="open-fit">Resolve crew fit</button>'}
             </div>
           </section>
+          ${state.released ? '<p class="study-link-note">Study control: <a href="field.html">inspect the Crew Lead side</a>. This changes review perspective; it is not a role grant.</p>' : ''}
           ${state.panel === 'fit' ? renderFitPanel() : state.panel === 'release' ? renderReleasePanel() : ''}
         `}
       </div>

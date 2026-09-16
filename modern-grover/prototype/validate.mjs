@@ -42,6 +42,9 @@ try {
     await page.getByRole('heading', { name: 'Release the exact accepted service?' }).waitFor();
     await page.getByRole('button', { name: 'Release Plan 8', exact: true }).click();
     await page.getByText('Crew Lead owns field execution').waitFor();
+    if (!await page.getByRole('link', { name: 'inspect the Crew Lead side' }).count()) {
+      throw new Error(`${width}px missing the released plan's field study link`);
+    }
     await page.getByRole('button', { name: 'All decisions' }).click();
     await page.getByText('No decisions waiting').waitFor();
 
@@ -108,8 +111,59 @@ try {
     await page.getByRole('button', { name: 'Review acceptance of v3' }).waitFor();
     const customerOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     if (customerOverflow > 1) throw new Error(`${width}px customer horizontal overflow: ${customerOverflow}px`);
+
+    const fieldResponse = await page.goto(new URL('field.html', baseUrl).toString(), { waitUntil: 'domcontentloaded' });
+    if (fieldResponse?.status() !== 200) throw new Error(`${width}px field page returned ${fieldResponse?.status()}`);
+    await page.getByRole('heading', { name: 'Canyon View' }).waitFor();
+    if (await page.getByText('$420').count()) throw new Error(`${width}px field view exposed customer price`);
+    await page.getByRole('button', { name: 'Go offline' }).click();
+    await page.getByRole('button', { name: 'Report access issue' }).click();
+    if (await page.evaluate(() => document.activeElement?.id) !== 'issue-title') {
+      throw new Error(`${width}px did not focus the field question`);
+    }
+    await page.getByLabel('Short field note').fill('Gate code <draft> does not work.');
+    await page.getByRole('button', { name: 'Hold question in this tab' }).click();
+    await page.getByText('Held in this tab · not sent').first().waitFor();
+    await page.getByText('Gate code <draft> does not work.').waitFor();
+    if (await page.locator('.field-note-preview draft').count()) {
+      throw new Error(`${width}px rendered field note as markup`);
+    }
+    await page.getByRole('button', { name: 'Save walkway check' }).click();
+    await page.getByText('2 held in tab').waitFor();
+    await page.getByRole('button', { name: 'Failed read' }).click();
+    await page.getByRole('heading', { name: 'The current route could not be loaded.' }).waitFor();
+    if (await page.getByText('Gate code <draft> does not work.').count()) {
+      throw new Error(`${width}px field read failure exposed the saved note`);
+    }
+    await page.getByRole('button', { name: 'Retry route read' }).click();
+    await page.getByText('2 held in tab').waitFor();
+    await page.getByRole('button', { name: 'Plan changed' }).click();
+    await page.getByRole('heading', { name: 'Plan 9 was released while this tab held Plan 8 changes.' }).waitFor();
+    if (await page.evaluate(() => document.activeElement?.id) !== 'field-conflict-title') {
+      throw new Error(`${width}px did not focus the field conflict`);
+    }
+    if (await page.getByRole('button', { name: 'Load released Plan 9' }).count()) {
+      throw new Error(`${width}px discarded device-held changes on version conflict`);
+    }
+    await page.getByText('2 held in tab').waitFor();
+
+    await page.getByRole('button', { name: 'Reset' }).click();
+    await page.getByRole('button', { name: 'Go offline' }).click();
+    await page.getByRole('button', { name: 'Report access issue' }).click();
+    await page.getByLabel('Short field note').fill('Gate code needs office check.');
+    await page.getByRole('button', { name: 'Hold question in this tab' }).click();
+    await page.getByRole('button', { name: 'Save walkway check' }).click();
+    await page.getByRole('button', { name: 'Reconnect and sync' }).click();
+    await page.getByText('Company Manager reviews the access question').waitFor();
+    await page.getByText('No local changes').waitFor();
+    await page.getByRole('button', { name: 'Reset' }).click();
+    await page.getByRole('button', { name: 'Plan changed' }).click();
+    await page.getByRole('button', { name: 'Load released Plan 9' }).click();
+    await page.getByText('Released Plan 9').first().waitFor();
+    const fieldOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (fieldOverflow > 1) throw new Error(`${width}px field horizontal overflow: ${fieldOverflow}px`);
     if (errors.length) throw new Error(`${width}px browser errors: ${errors.join('; ')}`);
-    console.log(`${width}px: customer and manager decisions, correction, stale versions, failed reads, and layout passed`);
+    console.log(`${width}px: customer, manager, and field handoffs, offline, conflicts, failed reads, and layout passed`);
     await page.close();
   }
 } finally {

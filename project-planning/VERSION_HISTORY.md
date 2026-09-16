@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-16: Added a simulated Crew Lead task to the independent Modern
+  Grover service flow. Released Plan 8 shows the assigned Canyon View stop,
+  access question, and safe checklist work without customer price. Offline
+  actions remain in the prototype tab until a simulated reconnect; a Plan 9
+  conflict stops replay and retains the local changes for manager review.
+  Failed-read retry and 320/390/1440px browser checks passed. Durable offline
+  storage, manager exception review, and real writes are not claimed.
 - 2026-09-16: Connected a simulated Yard Owner proposal decision to the new
   Modern Grover manager study. Proposal v3 shows exact scope, $420 total,
   planning consequence, and next owner without provider-private plan detail.
