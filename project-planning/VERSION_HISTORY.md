@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-16: Specified two equivalent synthetic cross-role service records for
+  Modern Grover comparison. The fixtures preserve exact proposal/plan versions,
+  customer/field privacy, current service day, offline state, proof review, and
+  reset/replay requirements; they are not seeded or participant evidence.
 - 2026-09-16: Traced the current local-review Home-to-work paths for five Modern
   Grover perspectives at phone width. The record distinguishes sample-fixture
   limits from design findings and identifies Yard Owner access and Crew Lead

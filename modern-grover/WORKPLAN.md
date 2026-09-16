@@ -35,8 +35,9 @@ starting evidence. Earlier designs remain comparison inputs.
    risk, and participant observation separate.
 3. Prepare two equivalent synthetic service records for comparative review.
    Record the exact commit, viewport, role/scope, connection state, and missing
-   external service. A realistic current-state fixture is needed before
-   comparing it with a polished prototype.
+   external service. The [matched fixture specification](MATCHED_FIXTURES.md)
+   defines equivalent facts and authority boundaries; seeding, route/API
+   verification, and reset behavior remain development work before comparison.
 4. Decide the public starting audience and role-entry model in
    [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md). Do not adopt a new homepage or
    role shell from the earlier preview before these choices are explicit.

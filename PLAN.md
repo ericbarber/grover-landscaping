@@ -52,6 +52,11 @@ destinations. Build a new simulated cross-role service flow in this track, run
 matched participant tasks, and adopt only bounded, approved React/API slices.
 No new production UI is approved.
 
+The [matched synthetic fixture specification](modern-grover/MATCHED_FIXTURES.md)
+now defines two equivalent cross-role services for fair current/new tasks.
+Those records are not seeded. Exact route/API mapping, access checks, fixture
+reset, and participant sessions remain open.
+
 ### Current frontend design continuity
 
 Goal: keep current-state evidence separate from future design direction, then
