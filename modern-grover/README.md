@@ -19,6 +19,7 @@ is available at `/modern-grover/`. It is served separately from `/design/`.
 | [Public claim inventory](CLAIM_INVENTORY.md) | First-pass copy-to-capability audit and wording to test | Source audit; product copy unapproved |
 | [Current journey trace](CURRENT_JOURNEYS.md) | Phone review of normal entry paths and fixture continuity | Local-review observation; matched records pending |
 | [Matched fixture specification](MATCHED_FIXTURES.md) | Two equivalent synthetic services for fair comparison | Specified; not seeded |
+| [Current-app fixture and authority map](FIXTURE_READINESS.md) | Route, permission, data-chain, and comparison prerequisites | Source review; direct fixture checks pending |
 | [Service handoff prototype](prototype/README.md) | M2 customer, manager, field, office, proof, and outcome task moments | Interactive concept; no real write or participant result |
 | [Critical workflow review](review/application-workflow-critical-review-2026-09-16.md) | Evidence, design risks, and proposed rework | Expert/local-browser review; no participant results |
 | [Experience blueprint](review/application-experience-blueprint.md) | First-pass cross-role service and handoff map | Hypothesis for testing |
@@ -36,8 +37,8 @@ without evidence and an explicit decision here.
 For every proposed change, distinguish **current app**, **prior prototype**,
 **new hypothesis**, **observed user evidence**, and **approved development
 slice**. A polished preview, local fixture, or team preference is not user
-validation. The new working prototype, when scoped, belongs under this
-directory so its review history stays distinct from the previous candidates.
+validation. The new working prototype lives under this directory so its review
+history stays distinct from the previous candidates.
 
 No authentication, authority, persistence, privacy, offline, or payment
 behavior is changed by this planning track. Production adoption requires an

@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Prior concepts remain review inputs; Modern Grover M1 remains open and a six-moment M2 service thread is simulated | Map current-app authority and seed matched fixtures, resolve entry choices, extend owner/portfolio tasks, then run participant sessions |
+| Design | Prior concepts remain review inputs; Modern Grover M1 remains open and a six-moment M2 service thread is simulated | Extend owner/portfolio tasks, wire authorized portfolio data, prepare matched fixtures, resolve entry choices, then run participant sessions |
 
 ## Status Legend
 
@@ -56,7 +56,8 @@ customer consequence, crew fit, exact-version release, field access questions,
 tab-held offline state, manager access verification, revised Plan 9 release,
 proof correction, reviewed customer outcome, stale versions, and failed-read
 recovery. The six task moments have no shared persistence or real photo. Next,
-map current-app authority and seed matched synthetic fixtures, resolve the
+prepare matched synthetic fixtures using the
+[current-app authority map](modern-grover/FIXTURE_READINESS.md), resolve the
 open audience/role choices, and extend Company Owner and Property Manager
 perspectives before participant comparison or bounded React/API adoption.
 The continuity repair is a truth correction to the existing UI; the proposed
@@ -65,8 +66,10 @@ new composition is not approved for production adoption.
 The [matched synthetic fixture specification](modern-grover/MATCHED_FIXTURES.md)
 now defines two equivalent cross-role services for fair current/new tasks.
 Those records are not seeded. The prototype uses one specified synthetic task
-moment, not a current-app fixture. Exact route/API mapping, access checks,
-fixture reset, and participant sessions remain open.
+moment, not a current-app fixture. The route/API and authority map is now
+recorded; it identifies current-app gaps in plan revision, field-to-office
+access questions, and Portfolio preview data. Direct access checks, fixture
+reset, and participant sessions remain open.
 
 ### Current frontend design continuity
 

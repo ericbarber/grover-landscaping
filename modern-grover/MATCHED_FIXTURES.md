@@ -56,5 +56,7 @@ separately from completion.
    document reset/replay behavior. The new prototype remains visibly simulated.
 
 Implementing the records in the current app is separate development work. The
-[workplan](WORKPLAN.md) requires an exact route/API and fixture readiness review
+[current-app fixture and authority map](FIXTURE_READINESS.md) identifies the
+supported route/API chain, source-backed gaps, and a safe snapshot sequence.
+The [workplan](WORKPLAN.md) requires matched records and reset verification
 before participant sessions.

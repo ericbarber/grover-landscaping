@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-16: Mapped Modern Grover's current-app proposal, portal grant,
+  release/job/route, exception, proof, and portfolio paths to the matched task
+  moments. The source review identifies the prerequisite record chain and
+  authorization checks, plus three noncomparable transitions: Plan 8/9 is not
+  a persisted route version, Crew Lead access questions do not enter the
+  manager exception API, and Property Manager Portfolio still receives preview
+  properties and visits. No matched records or participant results are claimed.
 - 2026-09-16: Completed the six core simulated Modern Grover task moments with
   manager proof correction and Yard Owner outcome pages. Rejected package 1
   remains private; corrected package 2 requires exact-version review before

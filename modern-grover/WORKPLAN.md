@@ -37,8 +37,10 @@ starting evidence. Earlier designs remain comparison inputs.
 3. Prepare two equivalent synthetic service records for comparative review.
    Record the exact commit, viewport, role/scope, connection state, and missing
    external service. The [matched fixture specification](MATCHED_FIXTURES.md)
-   defines equivalent facts and authority boundaries; seeding, route/API
-   verification, and reset behavior remain development work before comparison.
+   defines equivalent facts and authority boundaries. The
+   [current-app fixture and authority map](FIXTURE_READINESS.md) now records
+   route/API prerequisites and noncomparable tasks; seeding, direct authorization
+   checks, and reset behavior remain development work before comparison.
 4. Decide the public starting audience and role-entry model in
    [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md). Do not adopt a new homepage or
    role shell from the earlier preview before these choices are explicit.
@@ -80,6 +82,14 @@ state, privacy, focus, and overflow checks. Next, reconcile these moments with
 current-app route/API authority and seed matched records before participant
 comparison. Property Manager and Company Owner task perspectives also remain
 to test. React adoption waits for task evidence and API/authorization mapping.
+
+The first source review found that the current route has no Plan 8/9 version
+field, Crew Lead access questions do not enter the manager exception path, and
+the Property Manager Portfolio still receives preview properties and visits.
+These moments cannot be scored as matched task completion by seeding records
+alone. Next safe slice: extend the simulated Property Manager and Company Owner
+perspectives, then wire an authorized portfolio read and prepare repeatable
+proposal/portal fixture copies before a participant comparison.
 
 The existing [SX4 study](../design/review/simplified-product-experience-comparative-study.md)
 and [modern comparison guide](../design/review/modern-website-comparison-guide.md)
