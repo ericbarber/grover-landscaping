@@ -4,7 +4,7 @@ Status: first-pass local-review browser trace, not production parity or user
 research. Reviewed 2026-09-16 at 390 × 844 at commit `322dc86` on branch
 `codex-review-feature` with
 the PostgreSQL-backed local-review service and its sample identities. The
-diagnostic identity selector is not hosted product UI. No write action was
+  diagnostic identity selector is not hosted product UI. No write action was
 performed. The current fixture does not contain one equivalent service record
 across all five roles, so this trace cannot yet score an end-to-end task.
 
@@ -50,3 +50,20 @@ stops are no longer called current/up next or given remaining time. Component
 tests and the frontend build pass. The first-pass table above remains the
 before-state evidence; this is a local-review regression check, not a matched
 task or participant result.
+
+## Property Manager protected-read repair
+
+The first-pass Property Manager row above is also before-state evidence. The
+current `/app` Home and Portfolio now use the protected customer visit
+collection for that role. Portfolio lists only returned property names and
+customer-safe visit summaries. It withholds property and action details during
+loading, access denial, inconsistent access, and unavailable reads. In the
+390px local review on 2026-09-16, the current Property Manager identity had no
+active portal grant: Home reported inactive portfolio access; Portfolio showed
+the same protected state with retry and Return Home; the former sample
+properties were absent. A mocked two-property API read at phone and desktop
+width verified list/search/detail, then an access-ended response removed both
+properties. Component tests and the frontend build pass. The older preview
+Portfolio's Proof and Approvals tabs are not asserted as live capabilities in
+this read. A real matched Property Manager task still needs a valid grant,
+service visit, and customer-safe question/decision record.

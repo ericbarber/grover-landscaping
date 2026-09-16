@@ -277,12 +277,42 @@ test('mobile Home keeps its final action clear of fixed navigation', async ({ pa
   );
 });
 
-test('property manager enters the connected portfolio command center on phone and desktop', async ({ page }) => {
+test('property manager portfolio uses protected visits and withholds them after access ends', async ({ page }) => {
   await page.addInitScript(() => {
     window.sessionStorage.setItem('grover.local-reviewer-id', 'property-manager');
   });
+  let accessActive = true;
+  await page.route('http://localhost:8080/customer-portal/visits', (route) => {
+    if (!accessActive) {
+      return route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'customer_portal_access_required', message: 'No active access.' }),
+      });
+    }
+    return route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        properties: [
+          { organization_id: 'org_demo_landscaping', account_id: 'account_1', property_id: 'canyon', property_display_name: 'Canyon View' },
+          { organization_id: 'org_demo_landscaping', account_id: 'account_1', property_id: 'sage', property_display_name: 'Sage Lane' },
+        ],
+        visits: [{
+          organization_id: 'org_demo_landscaping', account_id: 'account_1', property_id: 'canyon',
+          customer_visit_reference: 'visit_canyon', service_date: '2026-09-16',
+          window_start_epoch_seconds: 1789563600, window_end_epoch_seconds: 1789570800,
+          time_zone: 'America/Phoenix', service_title: 'One-time cleanup and pruning',
+          service_scope: ['Cleanup', 'Pruning'], status: 'confirmed',
+          preparation_message: 'Prepare the approved entrance.',
+          next_update_message: 'The provider will send an arrival update.',
+          delivered_proof_available: false,
+        }],
+      }),
+    });
+  });
 
   for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
+    accessActive = true;
     await page.setViewportSize(viewport);
     await page.goto('/app');
 
@@ -293,22 +323,24 @@ test('property manager enters the connected portfolio command center on phone an
 
     const portfolio = page.locator('[data-property-manager-portfolio]');
     await expect(portfolio).toBeVisible();
-    await expect(portfolio.getByText('Local review data boundary', { exact: true })).toBeVisible();
-    await expect(portfolio.getByRole('navigation', { name: 'Property portfolio' })).toBeVisible();
-    await expect(portfolio.getByRole('heading', { name: 'Start with what needs attention.' })).toBeVisible();
-    await expect(portfolio.getByText('Provider routes, crew notes, cost basis, margins', { exact: false })).toBeVisible();
-    await expect(portfolio.getByRole('heading', { name: /Welcome back/ })).toHaveCount(0);
+    await expect(portfolio.getByRole('heading', { name: 'Your authorized properties' })).toBeVisible();
+    await expect(portfolio.getByRole('button', { name: /Canyon View/ })).toBeVisible();
+    await expect(portfolio.getByRole('button', { name: /Sage Lane/ })).toBeVisible();
+    await expect(portfolio.getByText('Roosevelt Courtyard')).toHaveCount(0);
+    await portfolio.getByRole('button', { name: /Canyon View/ }).click();
+    await expect(portfolio.getByRole('heading', { name: 'One-time cleanup and pruning' })).toBeVisible();
+    await portfolio.getByLabel('Find a property').fill('Sage');
+    await expect(portfolio.getByRole('button', { name: /Canyon View/ })).toHaveCount(0);
+    await expect(portfolio.getByRole('button', { name: /Sage Lane/ })).toBeVisible();
 
-    await portfolio.getByRole('button', { name: 'Properties', exact: true }).click();
-    await expect(portfolio.getByRole('heading', { name: 'Every property, one accountable view.' })).toBeVisible();
-    await portfolio.getByLabel('Search portfolio properties').fill('Backyard');
-    await expect(portfolio.getByRole('heading', { name: 'Backyard Renovation Area' })).toBeVisible();
-    await expect(portfolio.getByRole('heading', { name: 'Sample Customer Home' })).toHaveCount(0);
-
-    await portfolio.getByRole('button', { name: 'Proof', exact: true }).click();
-    await expect(portfolio.getByRole('heading', { name: 'Proof ready for review.' })).toBeVisible();
-    await portfolio.getByRole('button', { name: 'Approvals', exact: true }).click();
-    await expect(portfolio.getByRole('heading', { name: 'Recommendations and recorded decisions.' })).toBeVisible();
+    accessActive = false;
+    await page.reload();
+    await expect(page.getByText('Property portfolio access is not active').first()).toBeVisible();
+    await workspaceNavigation.getByRole('button', { name: 'Portfolio', exact: true }).click();
+    await expect(portfolio.getByText('Property portfolio access is not active.')).toBeVisible();
+    await expect(portfolio.getByText('Canyon View')).toHaveCount(0);
+    await expect(portfolio.getByText('Sage Lane')).toHaveCount(0);
+    await expect(portfolio.getByRole('button', { name: 'Retry protected read' })).toBeVisible();
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(1);

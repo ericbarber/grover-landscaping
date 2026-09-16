@@ -1,5 +1,15 @@
 # Version History
 
+- 2026-09-16: Replaced Property Manager Home and Portfolio preview visits with
+  the protected customer visit collection. The workspace now lists only
+  granted property names and customer-safe visits, and withholds property
+  details and progress on denial, inconsistent access, or failed reads. The
+  local reviewer shows inactive access rather than two false sample services.
+  Unit, build, and mocked phone/desktop access-ended browser checks passed;
+  no matched grant or participant result exists yet. Preview-only Proof and
+  Approvals are no longer presented as live Portfolio tabs. Source inspection
+  also found no supported Property Manager grant-issuance write: activation
+  creates an owner grant and allows one portal grant per activation.
 - 2026-09-16: Added independent Property Manager and Company Owner task pages
   to the Modern Grover prototype. The portfolio concept finds one access
   question among two scoped properties, checks the exact request, and hands

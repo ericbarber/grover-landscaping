@@ -129,6 +129,22 @@ describe('workspace home actions', () => {
     expect(markup).not.toContain('You’re clear for now');
   });
 
+  it('withholds Property Manager progress when the protected portfolio read fails', () => {
+    const routeOverview = { source: 'loading' as const, totalStops: 0, completedStops: 0 };
+    expect(homeContinuityStatus('property-manager', 'access_required', routeOverview)).toMatchObject({
+      title: 'Property portfolio access is not active', progressAvailable: false,
+    });
+    const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
+      assignedJobCount: 0, completedJobCount: 0, hasSelectedJob: false,
+      hasWorkspaceRole: true, onOpen: () => undefined, pendingChangeCount: 0,
+      persona: workspacePersonasForRoles(['PropertyManager'])[0],
+      portalReadState: 'access_required', signedInName: 'Property Manager',
+    }));
+    expect(markup).toContain('Property portfolio access is not active');
+    expect(markup).toContain('Status unverified');
+    expect(markup).not.toContain('You’re clear for now');
+  });
+
   it('uses the loaded route date and stop count instead of assigned-job count', () => {
     const routeOverview = {
       source: 'api' as const, serviceDate: '2026-06-15', totalStops: 2, completedStops: 0,

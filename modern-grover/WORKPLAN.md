@@ -87,12 +87,17 @@ The separate Property Manager and Company Owner task concepts now cover an
 authorized two-property scan, a versioned access-guidance response, company
 risk, assignment to an accountable manager, changed state, failed reads, and
 ended property access. These are simulated task moments with no shared state
-or current-app data. The first source review found that the current route has no Plan 8/9 version
-field, Crew Lead access questions do not enter the manager exception path, and
-the Property Manager Portfolio still receives preview properties and visits.
-These moments cannot be scored as matched task completion by seeding records
-alone. Next safe slice: wire an authorized portfolio read and prepare repeatable
-proposal/portal fixture copies before a participant comparison.
+or current-app data. The first source review found that the current route has
+no Plan 8/9 version field and Crew Lead access questions do not enter the
+manager exception path. Property Manager Portfolio and Home now read the
+protected visit collection; the local reviewer has no valid grant, so sample
+properties are withheld. The earlier preview-only Proof and Approvals tabs
+are not claimed in this protected workspace. These moments cannot be scored
+as matched task completion by seeding records alone. The activation path only
+issues a Property Owner portal grant; Property Manager delegation/issuance
+needs an explicit contract before that role's matched fixture. Next safe
+slice: prepare repeatable Yard Owner proposal/portal fixture copies and verify
+their grant, scope, and normal entry before a participant comparison.
 
 The existing [SX4 study](../design/review/simplified-product-experience-comparative-study.md)
 and [modern comparison guide](../design/review/modern-website-comparison-guide.md)

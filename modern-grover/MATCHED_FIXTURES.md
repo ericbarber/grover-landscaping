@@ -4,8 +4,9 @@ Status: synthetic fixture specification; no records have been seeded and no
 participant result is claimed. Use only non-production identities and data.
 
 The [current journey trace](CURRENT_JOURNEYS.md) cannot compare complete tasks:
-Yard Owner access is inactive, Property Manager has no waiting decision, and
-Crew Lead Home points to a past route. Prepare two equivalent services before
+Yard Owner and Property Manager protected access are inactive in local review,
+Property Manager has no waiting decision, and Crew Lead's published route is
+past. Prepare two equivalent services before
 running current-app versus new-flow sessions. Record the app commit, fixture
 revision, displayed as-of date, viewport, device, and network condition for
 every session.
@@ -58,5 +59,7 @@ separately from completion.
 Implementing the records in the current app is separate development work. The
 [current-app fixture and authority map](FIXTURE_READINESS.md) identifies the
 supported route/API chain, source-backed gaps, and a safe snapshot sequence.
+The current activation write cannot issue a Property Manager portal grant;
+that role's fixture needs a supported delegation contract first.
 The [workplan](WORKPLAN.md) requires matched records and reset verification
 before participant sessions.

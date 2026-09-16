@@ -156,6 +156,16 @@ export function homeContinuityStatus(
     const [title, detail] = states[portalReadState];
     return { title, detail, tone: portalReadState === 'loading' ? 'ready' : 'attention', progressAvailable: false };
   }
+  if (personaId === 'property-manager' && portalReadState !== 'ready') {
+    const states = {
+      loading: ['Checking your properties', 'Portfolio service summaries will appear after account access is checked.'],
+      access_required: ['Property portfolio access is not active', 'Review property access before relying on a service summary.'],
+      inconsistent: ['Property access needs review', 'Your property grant and membership could not be reconciled.'],
+      unavailable: ['Portfolio visits could not be loaded', 'Retry Portfolio when the service is available.'],
+    } as const;
+    const [title, detail] = states[portalReadState];
+    return { title, detail, tone: portalReadState === 'loading' ? 'ready' : 'attention', progressAvailable: false };
+  }
   if (personaId !== 'crew-lead' && personaId !== 'crew-member') return null;
   if (routeOverview.source === 'loading') {
     return { title: 'Checking your route', detail: 'The crew plan is loading.', tone: 'ready', progressAvailable: false };

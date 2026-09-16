@@ -17,7 +17,7 @@ is available at `/modern-grover/`. It is served separately from `/design/`.
 | [Workplan](WORKPLAN.md) | Planning and development sequence, phase exits, and immediate work | Active |
 | [Product decisions](PRODUCT_DECISIONS.md) | Questions that require a product choice before public or role adoption | Open decisions |
 | [Public claim inventory](CLAIM_INVENTORY.md) | First-pass copy-to-capability audit and wording to test | Source audit; product copy unapproved |
-| [Current journey trace](CURRENT_JOURNEYS.md) | Phone review of normal entry paths and fixture continuity | Local-review observation; matched records pending |
+| [Current journey trace](CURRENT_JOURNEYS.md) | Phone review of normal entry paths and protected-read repairs | Local-review observation; matched records pending |
 | [Matched fixture specification](MATCHED_FIXTURES.md) | Two equivalent synthetic services for fair comparison | Specified; not seeded |
 | [Current-app fixture and authority map](FIXTURE_READINESS.md) | Route, permission, data-chain, and comparison prerequisites | Source review; direct fixture checks pending |
 | [Service handoff prototype](prototype/README.md) | M2 customer, manager, field, office, proof, outcome, portfolio, and owner task moments | Interactive concept; no real write or participant result |

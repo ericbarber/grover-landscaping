@@ -1,7 +1,8 @@
 # Current-app fixture and authority map
 
-Status: source-verified planning record at `4811179` on 2026-09-16. No
-matched record has been seeded, no protected write was made for this review,
+Status: source-verified planning record, updated after the protected Property
+Manager Portfolio read on 2026-09-16. No matched record has been seeded, no
+protected write was made for this review,
 and no participant comparison is claimed. The [matched facts](MATCHED_FIXTURES.md)
 describe task moments, not one record that can be in every lifecycle state at
 once.
@@ -16,7 +17,7 @@ once.
 | Crew Lead works and recovers | `GET /crews/{crew_id}/day-plan/today`, stop status, job checklist, photos, and day-plan amendments; Route and Job surfaces | Crew route read requires an authorized organization role. The route query picks a published plan for today first, then latest past, then earliest future. The field UI currently requests the seeded `crew_1001` ID. Offline queueing exists for stop progress and amendments; photo/checklist queues have separate paths. | The June 15 sample route is past on the study date. Seed a current published route and verify crew assignment, protected reads, local storage, replay, and conflicts on the actual study device. Amendment types are add/remove stop or add service; they do not express the prototype's access clarification. |
 | Manager resolves field access | `GET/POST /operational-exceptions`, `PUT /operational-exceptions/{id}`; Manage → Exceptions. Day-plan amendment review is a separate route. | Exception list/write requires an active owner/manager schedule role. An exception may reference a route, job, property, crew, or stop and can be assigned, started, resolved, or reopened with an expected update timestamp. | An access exception and assigned manager can be represented for office review. Crew Lead cannot create it through this endpoint, and the exception is not a versioned Plan 8/9 release. The prototype's cross-role handoff is not comparable as one completed current-app task. |
 | Manager reviews and delivers proof | `GET /completion-reports`, `POST /completion-reports/{id}/review`, `.../request-changes`, `.../resubmit`, `.../deliver`; Manage → Reports | Report lifecycle, eligible reviewer/deliverer role, job evidence, and a delivered snapshot. Customer `GET /customer-portal/visits/{reference}/proof` returns only delivered proof; pending proof has a distinct response. | Real lifecycle exists, but no matched evidence package or image has been prepared. The prototype's “package 1/2” exact-version labels are study language; verify the current report's persisted status and snapshot before scoring a task. |
-| Property Manager scans portfolio | `/app` Portfolio uses `PropertyManagerPortfolioPanel`; backend has `GET /accounts/{id}/customer-property-portfolio`, property report history, and portal grants | At least two authorized properties and one customer-safe exception/decision, scoped by active property-manager membership/grant. | Current Portfolio props include hardcoded preview properties, portfolios, links, and visits. Adding database rows alone will not create a matched property-manager task on this screen. UI data-source integration is required first. |
+| Property Manager scans portfolio | `/app` Portfolio now uses `PropertyManagerAuthorizedPortfolioPanel` with `GET /customer-portal/visits`; Home uses the same protected read. Backend also has separate account-portfolio and property report-history routes. | At least two properties returned by a valid property-manager portal grant and matching membership/scope; one customer-safe visit question. | The preview property/visit props are no longer shown in this workspace. The local identity receives `customer_portal_access_required`. The supported activation write creates only a Property Owner membership/grant, and `activation_id` is unique per portal grant; no Property Manager grant-issuance route was found. This task is not yet comparable. The protected collection also lacks grouping, addresses, proof history, and a provider-originated access request. |
 | Company Owner finds accountable operator | `/app` Home → Manage; operational exceptions and manager schedule routes use the owner's organization authority | One company-level exception with a named accountable manager and a linked resource | The exception record can hold an assignee, but Home currently leads with field job totals. A normal-entry owner task needs a source-backed business queue or must be scored only as a navigation study. |
 
 The route and permission statements above come from `backend/src/main.rs`,
@@ -57,8 +58,10 @@ path exists.
    `sent` by SQL.
 3. Progress separate copies through activation, confirmed first visit, service
    release, job, day-plan stop, and authorized portal visit. Check each role's
-   normal `/app` entry and direct API read. If the UI still uses preview data,
-   mark that surface unavailable for matched completion.
+   normal `/app` entry and direct API read. A supported Property Manager
+   delegation/issuance contract is needed before a manager fixture can be
+   treated as production-equivalent. Do not use a direct SQL grant as proof
+   that the intended access workflow exists.
 4. Prepare distinct field, exception, proof-review, and delivered-outcome
    snapshots through supported transitions. Verify proof is hidden before
    delivery and that failed reads never become confident empty states.
@@ -69,10 +72,15 @@ path exists.
 
 ## Next bounded development
 
-First wire Property Manager Portfolio to its authorized source or explicitly
-exclude it from matched completion, then prepare the smallest proposal and
-portal fixture copies. Separately decide whether the proposed plan revision
-and Crew Lead access-question handoff warrant new product/API contracts. These
-decisions are prerequisites for claiming a full current-app versus prototype
-completion comparison; they do not block simulated design review of those
-moments.
+Property Manager Portfolio now reads the authorized visit collection and
+withholds sample records on denial or failure. Next prepare the smallest
+Yard Owner proposal and portal fixture copies through supported writes.
+Specify and approve how a Property Manager receives and loses property or
+account access before building a manager grant fixture. The previous
+preview-only Proof and Approvals tabs are not presented as live
+capabilities in this protected view; source-backed equivalents require their
+own contract and verification. Separately decide whether the proposed plan
+revision and Crew Lead access-question handoff warrant new product/API
+contracts. These decisions are prerequisites for claiming a full current-app
+versus prototype completion comparison; they do not block simulated design
+review of those moments.

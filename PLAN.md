@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Prior concepts remain review inputs; Modern Grover M1 remains open and eight M2 task moments are simulated | Wire authorized portfolio data, prepare matched fixtures, resolve entry choices, then run participant sessions |
+| Design | Prior concepts remain review inputs; Modern Grover M1 remains open and eight M2 task moments are simulated | Prepare matched proposal/portal fixtures, resolve entry choices, then run participant sessions |
 
 ## Status Legend
 
@@ -48,8 +48,14 @@ five phone entry paths and local-review Home/destination state mismatches.
 The bounded current-app Home continuity repair is delivered in local review:
 Yard Owner Home now reflects the protected portal read, while Crew Lead Home
 uses the loaded route date and stop count rather than assigned-job totals.
-The route header also shows the loaded service date. Next, prepare consistent
-service fixtures and resolve the open audience and role-context choices. The
+The route header also shows the loaded service date. Property Manager Home and
+Portfolio now use the protected customer visit collection; inactive or failed
+access withholds the former preview properties and progress. The local reviewer
+has no valid portal grant, so an authorized two-property task still requires
+fixtures. Next, prepare consistent service fixtures and resolve the open
+audience and role-context choices. The current activation write issues only a
+Property Owner portal grant; a supported Property Manager delegation contract
+is needed before that role's matched task can be scored. The
 [linked Yard Owner, Company Manager, and Crew Lead prototypes](modern-grover/prototype/README.md)
 are interactive and clearly simulated: they cover proposal acceptance,
 customer consequence, crew fit, exact-version release, field access questions,
@@ -58,9 +64,10 @@ proof correction, reviewed customer outcome, stale versions, and failed-read
 recovery. The six task moments have no shared persistence or real photo. Next,
 prepare matched synthetic fixtures using the
 [current-app authority map](modern-grover/FIXTURE_READINESS.md), resolve the
-open audience/role choices, and connect Company Owner and Property Manager
-tasks to authorized current-app data before participant comparison or bounded
-React/API adoption. Two additional role perspectives are now simulated:
+open audience/role choices, and connect Company Owner accountability and
+Property Manager decisions to authorized current-app records before participant
+comparison or bounded React/API adoption. Two additional role perspectives are
+now simulated:
 Property Manager scans two properties and responds to an access question;
 Company Owner assigns an accountable manager to the business risk. Their
 actions do not persist or transfer across pages.
@@ -71,9 +78,10 @@ The [matched synthetic fixture specification](modern-grover/MATCHED_FIXTURES.md)
 now defines two equivalent cross-role services for fair current/new tasks.
 Those records are not seeded. The prototype uses one specified synthetic task
 moment, not a current-app fixture. The route/API and authority map is now
-recorded; it identifies current-app gaps in plan revision, field-to-office
-access questions, and Portfolio preview data. Direct access checks, fixture
-reset, and participant sessions remain open.
+recorded; it identifies current-app gaps in plan revision and field-to-office
+access questions. Portfolio's protected data-source repair is delivered, while
+the old preview-only Proof and Approvals tabs are not claimed as live. Matched
+grants/records, fixture reset, and participant sessions remain open.
 
 ### Current frontend design continuity
 

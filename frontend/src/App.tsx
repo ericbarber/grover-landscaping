@@ -123,10 +123,7 @@ import {
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
-import {
-  PropertyManagerPortfolioPanel,
-  propertyManagerPortfolioCapabilities,
-} from './components/PropertyManagerPortfolioPanel';
+import { PropertyManagerAuthorizedPortfolioPanel } from './components/PropertyManagerAuthorizedPortfolioPanel';
 import { YardOwnerPortalPanel } from './components/YardOwnerPortalPanel';
 import { providerEntryModeFromSearch } from './domain/providerEntryRoute';
 import { DayPlanPanel } from './components/DayPlanPanel';
@@ -331,37 +328,6 @@ const customerPortalPreviewWorkSummaries: CustomerPortalWorkSummary[] = [
     status: 'scheduled',
     reportReady: false,
     bidReviewRequired: false,
-  },
-];
-
-const customerPortalPreviewVisits: CustomerPortalVisitSummary[] = [
-  {
-    id: 'visit_1001',
-    customerId: 'customer_1001',
-    organizationId: 'org_demo_landscaping',
-    propertyId: 'property_1001',
-    scheduledDate: '2026-08-27',
-    arrivalWindow: '8:00–10:00 AM',
-    serviceTitle: 'Weekly yard care',
-    scope: ['Mow and edge the lawn', 'Clear hard surfaces', 'Check irrigation coverage'],
-    status: 'confirmed',
-    preparationMessage: 'Please unlock the side gate and keep pets inside during the arrival window.',
-    nextUpdateMessage: 'We will update this visit when your care team is on the way.',
-    deliveredProofAvailable: false,
-  },
-  {
-    id: 'visit_1002',
-    customerId: 'customer_1001',
-    organizationId: 'org_demo_landscaping',
-    propertyId: 'property_1002',
-    scheduledDate: '2026-09-05',
-    arrivalWindow: '10:00 AM–12:00 PM',
-    serviceTitle: 'Seasonal tree care',
-    scope: ['Inspect the renovation area', 'Trim approved limbs', 'Remove green waste'],
-    status: 'confirmed',
-    preparationMessage: 'Keep the backyard work area clear during the arrival window.',
-    nextUpdateMessage: 'We will confirm when the care team begins traveling to this property.',
-    deliveredProofAvailable: false,
   },
 ];
 
@@ -1412,14 +1378,9 @@ export function App() {
     activePersona.id,
     managedPersonaUnit,
   );
-  const propertyManagerPortfolioControls = propertyManagerPortfolioCapabilities(
-    activePersona.id === 'property-manager' ? managedPersonaUnit : undefined,
-  );
   const homeCustomerVisits = activePersona.id === 'yard-owner'
-    ? customerPortalVisits
-    : activePersona.id === 'property-manager'
-      ? customerPortalPreviewVisits
-      : null;
+    || activePersona.id === 'property-manager'
+    ? customerPortalVisits : null;
   const homeAssignedWorkCount = homeCustomerVisits?.length ?? jobs.length;
   const homeCompletedWorkCount = homeCustomerVisits
     ? homeCustomerVisits.filter((visit) => (
@@ -1879,7 +1840,7 @@ export function App() {
   }, [managerActivity]);
 
   useEffect(() => {
-    if (activePersona.id !== 'yard-owner' || !auth.userId) {
+    if ((activePersona.id !== 'yard-owner' && activePersona.id !== 'property-manager') || !auth.userId) {
       setCustomerPortalProperties([]);
       setCustomerPortalVisits([]);
       setCustomerPortalVisitError(null);
@@ -1925,9 +1886,7 @@ export function App() {
   useEffect(() => {
     let isMounted = true;
 
-    const canLoadHistory = activePersona.id === 'property-manager'
-      ? propertyManagerPortfolioControls.deliveredProof
-      : canLoadCustomerPortalPreview;
+    const canLoadHistory = activePersona.id !== 'property-manager' && canLoadCustomerPortalPreview;
     if (activePersona.id === 'yard-owner' || !canLoadHistory) {
       setPropertyCompletionReports({});
       setIsLoadingPropertyCompletionReports(false);
@@ -1983,8 +1942,6 @@ export function App() {
   }, [
     activePersona.id,
     canLoadCustomerPortalPreview,
-    customerPortalProperties,
-    propertyManagerPortfolioControls.deliveredProof,
   ]);
 
   useEffect(() => {
@@ -2023,9 +1980,7 @@ export function App() {
   useEffect(() => {
     let isMounted = true;
 
-    const canLoadBids = activePersona.id === 'property-manager'
-      ? propertyManagerPortfolioControls.questionsAndDecisions
-      : canLoadCustomerPortalPreview;
+    const canLoadBids = activePersona.id !== 'property-manager' && canLoadCustomerPortalPreview;
     if (activePersona.id === 'yard-owner' || !canLoadBids) {
       setCustomerProjectBids([]);
       setIsLoadingCustomerProjectBids(false);
@@ -2064,7 +2019,6 @@ export function App() {
   }, [
     activePersona.id,
     canLoadCustomerPortalPreview,
-    propertyManagerPortfolioControls.questionsAndDecisions,
   ]);
 
   useEffect(() => {
@@ -3591,20 +3545,13 @@ export function App() {
 
           <div className={workspaceSurfaces.customerCare && mobileView === 'customer' ? 'space-y-6' : 'hidden'} id="customer-workspace">
             {activePersona.id === 'property-manager' ? (
-              <PropertyManagerPortfolioPanel
-                customer={customerPortalPreviewCustomer}
+              <PropertyManagerAuthorizedPortfolioPanel
                 rolloutUnit={managedPersonaUnit}
-                portfolios={customerPortalPreviewPortfolios}
-                properties={customerPortalPreviewProperties}
-                links={customerPortalPreviewPortfolioLinks}
-                visits={customerPortalPreviewVisits}
-                completionReportsByProperty={propertyCompletionReports}
-                isLoadingReportHistory={isLoadingPropertyCompletionReports}
-                hasReportHistoryError={hasPropertyCompletionReportHistoryError}
-                projectBids={customerProjectBids}
-                isLoadingProjectBids={isLoadingCustomerProjectBids}
-                hasProjectBidHistoryError={hasCustomerProjectBidHistoryError}
-                providerDisplayName="Grover Demo Landscaping"
+                properties={customerPortalProperties}
+                visits={customerPortalVisits}
+                readState={portalHomeReadState}
+                onRetry={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
+                onReturnHome={() => changeMobileView('home', true)}
               />
             ) : (
               <YardOwnerPortalPanel
