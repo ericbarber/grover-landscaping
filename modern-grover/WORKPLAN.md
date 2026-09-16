@@ -1,6 +1,6 @@
 # Modern Grover workplan
 
-Status: active planning; no new production UI approved
+Status: M1 current-state and fixture work active; no new composition approved
 
 The goal is a clear public-to-service experience that lets each authorized
 person identify the exact service, current state, allowed action, and next owner
@@ -14,7 +14,7 @@ starting evidence. Earlier designs remain comparison inputs.
 | Phase | Work | Exit evidence | Status |
 | --- | --- | --- | --- |
 | M0 · Isolate the track | Give Modern Grover its own plan, decision register, review, and blueprint; classify older attempts as inputs. | One discoverable directory and no competing active review source. | Delivered |
-| M1 · Establish product truth | Audit public claims against delivered capabilities; trace current public entry, first run, decision, plan, field, proof, and recovery through real routes and data; settle the open choices in [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md). | Capability/claim matrix, current-state journey map, explicit audience and role-context decisions, and matched synthetic fixtures. | Next |
+| M1 · Establish product truth | Audit public claims against delivered capabilities; trace current public entry, first run, decision, plan, field, proof, and recovery through real routes and data; settle the open choices in [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md). | Capability/claim matrix, current-state journey map, explicit audience and role-context decisions, and matched synthetic fixtures. | In progress |
 | M2 · Prototype one complete service | Build a new, clearly simulated prototype under this directory. Connect customer decision, exact manager release, Crew Lead offline/exception, manager proof review, and customer outcome. Include stale version, unavailable read, and safe recovery. | Each role can finish its assigned task and explain the next owner; phone and desktop interaction, focus, privacy, and state checks pass. | Planned |
 | M3 · Observe people at work | Compare equivalent current-app and new-flow tasks from normal entry. Test public path choice separately from authenticated work. Use representative Yard Owners, Property Managers, Company Owners, Company Managers, and Crew Leads. | Anonymous task observations with wrong turns, context changes, authority/version accuracy, recovery, and confidence; critical misunderstandings revised and retested. | Planned; participants needed |
 | M4 · Adopt bounded slices | Translate approved task compositions into React/API changes, beginning with the highest-value handoff. | Exact authorization, data, failure, offline, telemetry, browser regression, and rollback evidence for each slice. | Later; depends on M3 |
@@ -30,8 +30,9 @@ starting evidence. Earlier designs remain comparison inputs.
 2. Record the current route and action path for five core tasks, using the
    [blueprint](review/application-experience-blueprint.md) as the handoff index.
    A [first-pass local-review trace](CURRENT_JOURNEYS.md) records the five
-   entry paths and two Home/destination contradictions. Matched service records
-   and complete task paths remain to prepare. Keep source facts, inferred UX
+   entry paths and two Home/destination contradictions, now corrected in the
+   current app. Matched service records and complete task paths remain to
+   prepare. Keep source facts, inferred UX
    risk, and participant observation separate.
 3. Prepare two equivalent synthetic service records for comparative review.
    Record the exact commit, viewport, role/scope, connection state, and missing
@@ -44,13 +45,11 @@ starting evidence. Earlier designs remain comparison inputs.
 
 ## Development after the current-state contract is confirmed
 
-First fix the real app's cross-screen truth where the source data permits it.
-Yard Owner Home must not call an inactive portal “clear for now,” and Crew Lead
-Home must not promote a past, read-only route as today's work. The
-[local-review trace](CURRENT_JOURNEYS.md) gives the reproduction; implementation
-requires an explicit Home source, access/date behavior, and browser regression.
-This bounded continuity repair can precede the broader redesign once those
-contracts are verified.
+The bounded current-app continuity repair is delivered. Yard Owner Home uses
+the protected visit-read outcome, and Crew Lead Home uses the route's own date
+and stop count. The [journey trace](CURRENT_JOURNEYS.md) records the before and
+after local-review evidence. This fixes the two observed Home contradictions;
+it does not seed matched service records or validate the new composition.
 
 The first **new-prototype** slice is a Company Manager service decision flow.
 

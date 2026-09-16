@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-16: Reconciled current Home summaries with protected Yard Owner portal
+  reads and loaded Crew Lead route dates/stops. Access errors no longer appear
+  as an empty, clear schedule; historical routes are labeled read only across
+  Home and Route, with stop/time copy tied to the route date. Component tests,
+  production frontend build, and 390px/320px local-review browser checks
+  passed. The diagnostic reviewer selector also fits at 320px. No new Modern
+  Grover composition was adopted.
 - 2026-09-16: Specified two equivalent synthetic cross-role service records for
   Modern Grover comparison. The fixtures preserve exact proposal/plan versions,
   customer/field privacy, current service day, offline state, proof review, and

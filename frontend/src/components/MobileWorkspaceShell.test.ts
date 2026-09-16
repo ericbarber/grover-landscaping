@@ -23,12 +23,16 @@ describe('mobileWorkspaceContext', () => {
       detail: 'Today’s route and field work',
     });
   });
-  it('keeps route sync and workload context visible', () => {
+  it('shows route context without assuming assigned jobs are current stops', () => {
     expect(mobileWorkspaceContext({ ...baseInput, view: 'route' })).toEqual({
-      eyebrow: 'Today',
+      eyebrow: 'Route',
       title: 'Crew route',
-      detail: '3 assigned jobs · Synced',
+      detail: 'Review the crew plan',
     });
+    expect(mobileWorkspaceContext({
+      ...baseInput, view: 'route',
+      routeOverview: { source: 'api', serviceDate: '2026-06-15', totalStops: 2, completedStops: 0 },
+    })).toMatchObject({ eyebrow: 'Past route', detail: expect.stringContaining('June 15, 2026') });
     expect(mobileWorkspaceContext({
       ...baseInput,
       view: 'route',

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { WorkspacePersona, WorkspacePersonaId } from '../domain/workspacePersona';
+import { classifyRouteDate, type CrewRouteOverview } from '../domain/dayPlans';
 import { GroverBrand } from './GroverBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
 
@@ -12,6 +13,7 @@ interface MobileWorkspaceContextInput {
   selectedPropertyAddress?: string;
   selectedJobStatus?: string;
   pendingChangeCount: number;
+  routeOverview?: CrewRouteOverview;
   personaDescription: string;
   personaLabel: string;
 }
@@ -43,11 +45,18 @@ export function mobileWorkspaceContext(
       };
     case 'route':
       return {
-        eyebrow: 'Today',
+        eyebrow: input.routeOverview?.serviceDate
+          ? classifyRouteDate(input.routeOverview.serviceDate).label
+          : 'Route',
         title: 'Crew route',
         detail: input.pendingChangeCount > 0
           ? `${input.pendingChangeCount} change${input.pendingChangeCount === 1 ? '' : 's'} waiting to sync`
-          : `${input.assignedJobCount} assigned job${input.assignedJobCount === 1 ? '' : 's'} · Synced`,
+          : input.routeOverview?.source === 'loading' ? 'Loading crew plan'
+            : input.routeOverview?.source === 'missing' ? 'No published plan'
+              : input.routeOverview?.source === 'unavailable' ? 'Plan unavailable'
+                : input.routeOverview?.serviceDate
+                  ? classifyRouteDate(input.routeOverview.serviceDate).dateLabel
+                  : 'Review the crew plan',
       };
     case 'jobs':
       return {

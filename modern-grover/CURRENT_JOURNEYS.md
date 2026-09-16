@@ -39,10 +39,14 @@ comparison inputs only.
 
 ## Immediate development candidate
 
-After confirming the current data contracts, make Home summaries reflect the
-same protected access and service-day truth as their destination screens. For
-Yard Owner, access inactive must not become “clear for now.” For Crew Lead, a
-past route must not become today's assigned route merely because job counts are
-nonzero. This is a bounded continuity candidate, not approval to change
-production behavior before the fixture, API, and authorization mapping is
-reviewed.
+The bounded continuity repair is delivered after confirming the existing
+customer visit-read error and crew day-plan response. In the 390 × 844
+PostgreSQL-backed local review on 2026-09-16, Yard Owner Home now reports
+“Customer portal access is not active,” suppresses unverified progress, and
+leads to My yard. Crew Lead Home now shows `0 of 2` stops on the June 15 plan,
+labels it “Past route” and read only, and directs the user to check with a
+manager for a current plan. The Route header uses the service date; historical
+stops are no longer called current/up next or given remaining time. Component
+tests and the frontend build pass. The first-pass table above remains the
+before-state evidence; this is a local-review regression check, not a matched
+task or participant result.

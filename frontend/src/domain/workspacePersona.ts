@@ -74,7 +74,7 @@ const personaDefinitions: Record<WorkspacePersonaId, WorkspacePersona> = {
   'crew-lead': {
     id: 'crew-lead',
     label: 'Crew lead',
-    description: 'Today’s route, crew progress, field work, and exceptions',
+    description: 'Crew route, stop progress, field work, and exceptions',
     defaultView: 'home',
     navigation: fieldNavigation,
   },

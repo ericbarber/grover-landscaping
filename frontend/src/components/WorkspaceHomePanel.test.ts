@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { workspacePersonasForRoles } from '../domain/workspacePersona';
 import {
   homeGreeting,
+  homeContinuityStatus,
   homePriorityStatus,
   personaHomeHeadline,
   personaHomePromise,
   personaProgressLanguage,
   workspaceHomeActions,
+  WorkspaceHomePanel,
 } from './WorkspaceHomePanel';
 
 describe('workspace home actions', () => {
@@ -107,5 +111,39 @@ describe('workspace home actions', () => {
       itemSingular: 'visit',
       pendingChangeCount: 0,
     }).title).toBe('2 visits remaining');
+  });
+
+  it('does not turn denied portal access into an empty, clear schedule', () => {
+    const routeOverview = { source: 'loading' as const, totalStops: 0, completedStops: 0 };
+    expect(homeContinuityStatus('yard-owner', 'access_required', routeOverview)).toMatchObject({
+      title: 'Customer portal access is not active', progressAvailable: false,
+    });
+    const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
+      assignedJobCount: 0, completedJobCount: 0, hasSelectedJob: false,
+      hasWorkspaceRole: true, onOpen: () => undefined, pendingChangeCount: 0,
+      persona: workspacePersonasForRoles(['PropertyOwner'])[0],
+      portalReadState: 'access_required', signedInName: 'Yard Owner',
+    }));
+    expect(markup).toContain('Customer portal access is not active');
+    expect(markup).toContain('Status unverified');
+    expect(markup).not.toContain('You’re clear for now');
+  });
+
+  it('uses the loaded route date and stop count instead of assigned-job count', () => {
+    const routeOverview = {
+      source: 'api' as const, serviceDate: '2026-06-15', totalStops: 2, completedStops: 0,
+    };
+    expect(homeContinuityStatus('crew-lead', 'ready', routeOverview)).toMatchObject({
+      tone: 'attention', progressAvailable: true,
+    });
+    const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
+      assignedJobCount: 3, completedJobCount: 0, hasSelectedJob: false,
+      hasWorkspaceRole: true, onOpen: () => undefined, pendingChangeCount: 0,
+      persona: workspacePersonasForRoles(['CrewLead'])[0], routeOverview,
+      signedInName: 'Crew Lead',
+    }));
+    expect(markup).toContain('Past route');
+    expect(markup).toContain('0 of 2');
+    expect(markup).not.toContain('3 stops');
   });
 });

@@ -45,12 +45,15 @@ M0 separation is delivered. M1 is in progress: a
 supported, ambiguous, and gated promises. A
 [first-pass current journey trace](modern-grover/CURRENT_JOURNEYS.md) records
 five phone entry paths and local-review Home/destination state mismatches.
-Next, prepare consistent service fixtures and resolve the open audience and
-role-context choices. A bounded current-app continuity fix should then make
-Yard Owner and Crew Lead Home agree with protected access and service-day
-destinations. Build a new simulated cross-role service flow in this track, run
+The bounded current-app Home continuity repair is delivered in local review:
+Yard Owner Home now reflects the protected portal read, while Crew Lead Home
+uses the loaded route date and stop count rather than assigned-job totals.
+The route header also shows the loaded service date. Next, prepare consistent
+service fixtures and resolve the open audience and role-context choices. Build
+a new simulated cross-role service flow in this track, run
 matched participant tasks, and adopt only bounded, approved React/API slices.
-No new production UI is approved.
+The continuity repair is a truth correction to the existing UI; the proposed
+new composition is not approved for production adoption.
 
 The [matched synthetic fixture specification](modern-grover/MATCHED_FIXTURES.md)
 now defines two equivalent cross-role services for fair current/new tasks.

@@ -187,11 +187,11 @@ export function AuthGate({ children }: { children: ReactNode }) {
           ) : null}
         </div>
         {auth.authMode === 'local_review' ? (
-          <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-sky-200">
-            Review as
+          <label className="flex w-full min-w-0 items-center gap-2 text-xs font-bold uppercase tracking-wide text-sky-200 sm:w-auto">
+            <span className="shrink-0">Review as</span>
             <select
               aria-label="Local reviewer account"
-              className="min-h-9 rounded-lg border border-slate-600 bg-slate-900 px-3 text-sm font-semibold normal-case tracking-normal text-white"
+              className="min-h-9 min-w-0 flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 text-sm font-semibold normal-case tracking-normal text-white"
               onChange={(event) => auth.selectLocalReviewer(event.target.value)}
               value={auth.activeLocalReviewerId ?? ''}
             >

@@ -1,4 +1,5 @@
 import type { WorkspacePersona } from '../domain/workspacePersona';
+import { classifyRouteDate, type CrewRouteOverview } from '../domain/dayPlans';
 import type { MobileWorkspaceView } from './MobileWorkspaceShell';
 import { GroverBrand } from './GroverBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
@@ -6,7 +7,7 @@ import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
 
 const viewDescriptions: Record<MobileWorkspaceView, string> = {
   home: 'Your signed-in workspace summary',
-  route: 'Continue today’s route and stop progress',
+  route: 'Review the crew route and its service date',
   jobs: 'Review assigned customers and field work',
   job: 'Continue the selected job workflow',
   manager: 'Open operations and administration tools',
@@ -138,6 +139,60 @@ export function homePriorityStatus({
   };
 }
 
+export type PortalHomeReadState = 'loading' | 'ready' | 'access_required' | 'inconsistent' | 'unavailable';
+
+export function homeContinuityStatus(
+  personaId: WorkspacePersona['id'],
+  portalReadState: PortalHomeReadState,
+  routeOverview: CrewRouteOverview,
+): { title: string; detail: string; tone: 'attention' | 'ready' | 'complete'; progressAvailable: boolean } | null {
+  if (personaId === 'yard-owner' && portalReadState !== 'ready') {
+    const states = {
+      loading: ['Checking your visits', 'Your service summary will appear after account access is checked.'],
+      access_required: ['Customer portal access is not active', 'Review account access before relying on a visit summary.'],
+      inconsistent: ['Portal access needs review', 'Your account and property access could not be reconciled. Review account access.'],
+      unavailable: ['Visits could not be loaded', 'Retry My yard when the service is available.'],
+    } as const;
+    const [title, detail] = states[portalReadState];
+    return { title, detail, tone: portalReadState === 'loading' ? 'ready' : 'attention', progressAvailable: false };
+  }
+  if (personaId !== 'crew-lead' && personaId !== 'crew-member') return null;
+  if (routeOverview.source === 'loading') {
+    return { title: 'Checking your route', detail: 'The crew plan is loading.', tone: 'ready', progressAvailable: false };
+  }
+  if (routeOverview.source === 'missing') {
+    return { title: 'No published route is available', detail: 'Ask a manager to publish a plan for this crew.', tone: 'attention', progressAvailable: false };
+  }
+  if (routeOverview.source === 'unavailable') {
+    return { title: 'Route could not be loaded', detail: 'Retry Route when the service is available.', tone: 'attention', progressAvailable: false };
+  }
+  const routeDate = classifyRouteDate(routeOverview.serviceDate ?? '');
+  if (routeDate.kind === 'today') {
+    if (routeOverview.source === 'local') {
+      return { title: 'Local route preview', detail: 'The published crew plan could not be verified. Check with a manager before starting stops.', tone: 'attention', progressAvailable: true };
+    }
+    if (routeOverview.totalStops === 0) {
+      return { title: 'No stops on today’s plan', detail: 'Check with a manager before assuming no field work is assigned.', tone: 'ready', progressAvailable: true };
+    }
+    if (routeOverview.completedStops >= routeOverview.totalStops) {
+      return { title: 'Today’s route stops are finished', detail: 'Open Route to confirm final sync and proof.', tone: 'complete', progressAvailable: true };
+    }
+    const remaining = routeOverview.totalStops - routeOverview.completedStops;
+    return { title: `${remaining} ${remaining === 1 ? 'stop' : 'stops'} on today’s plan`, detail: 'Open Route to review stop progress and sync status.', tone: 'ready', progressAvailable: true };
+  }
+  const detail = routeDate.kind === 'past'
+    ? 'This plan is read only. Ask a manager for a current plan before starting stops.'
+    : routeDate.kind === 'upcoming'
+      ? 'Stop progress opens on the service day.'
+      : 'Confirm the service date with a manager before starting stops.';
+  return {
+    title: `${routeDate.label} · ${routeDate.dateLabel}`,
+    detail: routeOverview.source === 'local' ? `${detail} This is a local preview.` : detail,
+    tone: 'attention',
+    progressAvailable: true,
+  };
+}
+
 export function WorkspaceHomePanel({
   assignedJobCount,
   completedJobCount,
@@ -146,6 +201,8 @@ export function WorkspaceHomePanel({
   onOpen,
   pendingChangeCount,
   persona,
+  portalReadState = 'ready',
+  routeOverview = { source: 'loading', totalStops: 0, completedStops: 0 },
   signedInName,
 }: {
   assignedJobCount: number;
@@ -155,6 +212,8 @@ export function WorkspaceHomePanel({
   onOpen: (view: MobileWorkspaceView) => void;
   pendingChangeCount: number;
   persona: WorkspacePersona;
+  portalReadState?: PortalHomeReadState;
+  routeOverview?: CrewRouteOverview;
   signedInName: string;
 }) {
   if (!hasWorkspaceRole) {
@@ -183,18 +242,28 @@ export function WorkspaceHomePanel({
   const primaryAction = actions[0];
   const secondaryActions = actions.slice(1);
   const now = new Date();
-  const progress = assignedJobCount > 0
-    ? Math.min(100, Math.round((completedJobCount / assignedJobCount) * 100))
+  const isCrew = persona.id === 'crew-lead' || persona.id === 'crew-member';
+  const displayedTotal = isCrew ? routeOverview.totalStops : assignedJobCount;
+  const displayedCompleted = isCrew ? routeOverview.completedStops : completedJobCount;
+  const continuityStatus = homeContinuityStatus(persona.id, portalReadState, routeOverview);
+  const progressAvailable = continuityStatus?.progressAvailable ?? true;
+  const progress = progressAvailable && displayedTotal > 0
+    ? Math.min(100, Math.round((displayedCompleted / displayedTotal) * 100))
     : 0;
   const firstName = signedInName.split(/[\s@]/)[0] || signedInName;
   const progressLanguage = personaProgressLanguage(persona);
   const priorityStatus = homePriorityStatus({
-    assignedJobCount,
-    completedJobCount,
+    assignedJobCount: displayedTotal,
+    completedJobCount: displayedCompleted,
     itemPlural: progressLanguage.itemPlural,
     itemSingular: progressLanguage.itemSingular,
     pendingChangeCount,
   });
+  const visibleStatus = pendingChangeCount > 0 ? priorityStatus : continuityStatus ?? priorityStatus;
+  const routeIsCurrent = !isCrew || classifyRouteDate(routeOverview.serviceDate ?? '').kind === 'today';
+  const actionDescription = isCrew && !routeIsCurrent
+    ? 'Check the route date and ask a manager for a current plan.'
+    : primaryAction?.description;
   const alertAction = pendingChangeCount > 0
     ? actions.find((action) => action.view === 'jobs') ?? primaryAction
     : primaryAction;
@@ -248,37 +317,49 @@ export function WorkspaceHomePanel({
               {progressLanguage.eyebrow}
             </p>
             <p className="mt-1 text-2xl font-black text-slate-950">
-              {completedJobCount} of {assignedJobCount}
+              {progressAvailable ? `${displayedCompleted} of ${displayedTotal}` : 'Not available'}
             </p>
-            <p className="mt-0.5 text-xs font-semibold text-slate-500">
-              {progressLanguage.completed}
-            </p>
+            {progressAvailable ? (
+              <p className="mt-0.5 text-xs font-semibold text-slate-500">
+                {progressLanguage.completed}
+              </p>
+            ) : null}
           </div>
-          <p className="text-lg font-black text-emerald-800">{progress}%</p>
+          {progressAvailable ? <p className="text-lg font-black text-emerald-800">{progress}%</p> : null}
         </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-[width]"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+        {progressAvailable ? (
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-[width]"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        ) : null}
         <div className="mt-3 flex items-center justify-between text-xs">
           <span className="font-semibold text-slate-600">
-            {assignedJobCount} {progressLanguage.total}
+            {progressAvailable
+              ? isCrew ? `${displayedTotal} on this plan` : `${displayedTotal} ${progressLanguage.total}`
+              : 'Awaiting a verified read'}
           </span>
-          <WorkspaceStatusBadge tone={pendingChangeCount > 0 ? 'warning' : 'success'}>
-            {pendingChangeCount > 0 ? `${pendingChangeCount} waiting to sync` : 'Everything synced'}
+          <WorkspaceStatusBadge tone={pendingChangeCount > 0 || !progressAvailable || (isCrew && !routeIsCurrent) ? 'warning' : 'success'}>
+            {pendingChangeCount > 0
+              ? `${pendingChangeCount} waiting to sync`
+              : !progressAvailable ? 'Status unverified'
+                : isCrew && routeOverview.source === 'local' ? 'Local preview'
+                  : isCrew && !routeIsCurrent ? 'Read only'
+                    : isCrew ? 'Route loaded'
+                      : persona.id === 'yard-owner' ? 'Visits loaded' : 'Everything synced'}
           </WorkspaceStatusBadge>
         </div>
       </article>
 
       <WorkspaceStatusNotice
         className="lg:col-span-4"
-        detail={priorityStatus.detail}
-        title={priorityStatus.title}
-        tone={priorityStatus.tone === 'attention'
+        detail={visibleStatus.detail}
+        title={visibleStatus.title}
+        tone={visibleStatus.tone === 'attention'
           ? 'warning'
-          : priorityStatus.tone === 'complete'
+          : visibleStatus.tone === 'complete'
             ? 'success'
             : 'info'}
       >
@@ -305,7 +386,7 @@ export function WorkspaceHomePanel({
             </span>
             <span className="mt-1 block text-xl font-black">{primaryAction.label}</span>
             <span className="mt-1 block text-xs leading-5 text-emerald-100">
-              {primaryAction.description}
+              {actionDescription}
             </span>
           </span>
           <span

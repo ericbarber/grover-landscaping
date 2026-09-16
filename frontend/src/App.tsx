@@ -52,6 +52,7 @@ import {
 import { fetchAccountProjectBids } from './api/projectBidsClient';
 import { fetchCustomerPortalVisits } from './api/customerPortalClient';
 import { useAuth } from './auth/AuthProvider';
+import type { CrewRouteOverview } from './domain/dayPlans';
 import {
   enqueueChecklistMutation,
   enqueueJobLifecycleMutation,
@@ -1320,6 +1321,15 @@ export function App() {
     'access_required' | 'inconsistent' | 'unavailable' | null
   >(null);
   const [customerPortalVisitRefreshSignal, setCustomerPortalVisitRefreshSignal] = useState(0);
+  const [portalHomeReadState, setPortalHomeReadState] = useState<
+    'loading' | 'ready' | 'access_required' | 'inconsistent' | 'unavailable'
+  >('loading');
+  const [crewRouteOverview, setCrewRouteOverview] = useState<CrewRouteOverview>({
+    source: 'loading', totalStops: 0, completedStops: 0,
+  });
+  const handleCrewRouteOverviewChange = useCallback((overview: CrewRouteOverview) => {
+    setCrewRouteOverview(overview);
+  }, []);
   const [isLoadingPropertyCompletionReports, setIsLoadingPropertyCompletionReports] = useState(false);
   const [hasPropertyCompletionReportHistoryError, setHasPropertyCompletionReportHistoryError] = useState(false);
   const [customerProjectBids, setCustomerProjectBids] = useState<ProjectBid[]>([]);
@@ -1874,30 +1884,34 @@ export function App() {
       setCustomerPortalVisits([]);
       setCustomerPortalVisitError(null);
       setIsLoadingCustomerPortalVisits(false);
+      setPortalHomeReadState('loading');
       return;
     }
 
     let isMounted = true;
     setIsLoadingCustomerPortalVisits(true);
     setCustomerPortalVisitError(null);
+    setPortalHomeReadState('loading');
     void fetchCustomerPortalVisits()
       .then((collection) => {
         if (!isMounted) return;
         setCustomerPortalProperties(collection.properties);
         setCustomerPortalVisits(collection.visits);
+        setPortalHomeReadState('ready');
       })
       .catch((error: unknown) => {
         if (!isMounted) return;
         setCustomerPortalProperties([]);
         setCustomerPortalVisits([]);
-        setCustomerPortalVisitError(
+        const readError =
           error instanceof ApiRequestError && error.code === 'customer_portal_access_required'
             ? 'access_required'
             : error instanceof ApiRequestError
                 && error.code === 'customer_portal_access_inconsistent'
               ? 'inconsistent'
-              : 'unavailable',
-        );
+              : 'unavailable';
+        setCustomerPortalVisitError(readError);
+        setPortalHomeReadState(readError);
       })
       .finally(() => {
         if (isMounted) setIsLoadingCustomerPortalVisits(false);
@@ -3211,6 +3225,7 @@ export function App() {
           + offlineChecklistMutations.length
           + offlinePhotoMutations.length
         }
+        routeOverview={crewRouteOverview}
         personaDescription={activePersona.description}
         personaLabel={activePersona.label}
         signedInName={auth.displayName || 'Signed-in user'}
@@ -3241,6 +3256,8 @@ export function App() {
                 + offlinePhotoMutations.length
               }
               persona={activePersona}
+              portalReadState={portalHomeReadState}
+              routeOverview={crewRouteOverview}
               signedInName={auth.displayName || 'Signed-in user'}
             />
           </div>
@@ -3249,6 +3266,7 @@ export function App() {
               actorId={auth.userId}
               jobDetailsEnabled={fieldControls.jobDetails}
               onSelectJob={selectJobForReview}
+              onOverviewChange={handleCrewRouteOverviewChange}
               refreshSignal={dayPlanRefreshSignal}
               routeChangesEnabled={fieldControls.routeChanges}
               stopProgressEnabled={fieldControls.stopProgress}
