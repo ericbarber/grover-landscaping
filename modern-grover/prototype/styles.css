@@ -154,6 +154,21 @@ h1 { max-width: 18ch; margin: .5rem 0 .6rem; color: var(--deep); font-size: clam
 .field-error { margin: .55rem 0 0; color: #9a3a25 !important; font-size: .78rem !important; font-weight: 800; }
 .field-main > .handoff-card { margin-top: 1rem; }
 .field-main > .handoff-card .status-tag { flex: none; }
+.proof-stale { max-width: none; margin: 0; }
+.proof-stale h3 { margin: .4rem 0 .6rem; color: var(--deep); font-size: 1.55rem; }
+.proof-evidence-note { margin-top: .8rem !important; }
+.outcome-metadata { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.2rem; padding-top: .9rem; border-top: 1px solid var(--line); color: #3f5748; font-size: .82rem; }
+.outcome-metadata span { color: var(--muted); font-weight: 800; }
+.outcome-proof-button { margin-top: 1rem; }
+.outcome-proof-detail { margin-top: 1rem; padding: .9rem; border-left: 3px solid #72a279; background: white; color: #34533d; font-size: .8rem; line-height: 1.5; }
+.outcome-proof-detail p { margin: .3rem 0 0; }
+.outcome-recommendation { margin-top: 1rem; padding: 1.4rem; border: 1px solid #d9ccb4; border-radius: .9rem; background: #fffbf2; }
+.outcome-recommendation h3 { margin: .5rem 0 .65rem; color: var(--deep); font-size: 1.6rem; }
+.outcome-recommendation > p:not(.step-label), .outcome-idea p { max-width: 43rem; color: #586253; font-size: .86rem; line-height: 1.55; }
+.outcome-recommendation .button { margin: .4rem .4rem 0 0; }
+.outcome-recommendation .status-tag { max-width: 100%; white-space: normal; }
+.outcome-idea { padding-top: .8rem; border-top: 1px solid #e4d8bf; }
+.outcome-idea strong { color: var(--deep); font-size: .9rem; }
 footer { display: flex; justify-content: space-between; gap: 1rem; max-width: 84rem; margin: 0 auto; padding: 1.5rem 2rem 3rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .78rem; }
 footer p { margin: 0; }
 footer a { flex: none; font-weight: 850; }
@@ -193,6 +208,8 @@ footer a { flex: none; font-weight: 850; }
   .field-day-status, .field-task-grid { grid-template-columns: 1fr; }
   .field-day .button { width: 100%; }
   .field-main > .handoff-card .status-tag { white-space: normal; }
+  .outcome-metadata { flex-direction: column; gap: .25rem; }
+  .outcome-recommendation .button { width: 100%; margin-right: 0; }
   footer { flex-direction: column; padding: 1.3rem 1rem 2rem; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

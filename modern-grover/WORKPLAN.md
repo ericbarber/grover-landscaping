@@ -15,7 +15,7 @@ starting evidence. Earlier designs remain comparison inputs.
 | --- | --- | --- | --- |
 | M0 · Isolate the track | Give Modern Grover its own plan, decision register, review, and blueprint; classify older attempts as inputs. | One discoverable directory and no competing active review source. | Delivered |
 | M1 · Establish product truth | Audit public claims against delivered capabilities; trace current public entry, first run, decision, plan, field, proof, and recovery through real routes and data; settle the open choices in [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md). | Capability/claim matrix, current-state journey map, explicit audience and role-context decisions, and matched synthetic fixtures. | In progress |
-| M2 · Prototype one complete service | Build a new, clearly simulated prototype under this directory. Connect customer decision, exact manager release, Crew Lead offline/exception, manager proof review, and customer outcome. Include stale version, unavailable read, and safe recovery. | Each role can finish its assigned task and explain the next owner; phone and desktop interaction, focus, privacy, and state checks pass. | In progress · decision, field, and manager exception slices delivered |
+| M2 · Prototype one complete service | Build a new, clearly simulated prototype under this directory. Connect customer decision, exact manager release, Crew Lead offline/exception, manager proof review, and customer outcome. Include stale version, unavailable read, and safe recovery. | Each role can finish its assigned task and explain the next owner; phone and desktop interaction, focus, privacy, and state checks pass. | Core six-moment thread delivered as a simulation; cross-page state and visual proof absent |
 | M3 · Observe people at work | Compare equivalent current-app and new-flow tasks from normal entry. Test public path choice separately from authenticated work. Use representative Yard Owners, Property Managers, Company Owners, Company Managers, and Crew Leads. | Anonymous task observations with wrong turns, context changes, authority/version accuracy, recovery, and confidence; critical misunderstandings revised and retested. | Planned; participants needed |
 | M4 · Adopt bounded slices | Translate approved task compositions into React/API changes, beginning with the highest-value handoff. | Exact authorization, data, failure, offline, telemetry, browser regression, and rollback evidence for each slice. | Later; depends on M3 |
 
@@ -51,8 +51,9 @@ and stop count. The [journey trace](CURRENT_JOURNEYS.md) records the before and
 after local-review evidence. This fixes the two observed Home contradictions;
 it does not seed matched service records or validate the new composition.
 
-The first **new-prototype** slices are the linked
-[Yard Owner, Company Manager, Crew Lead, and office return tasks](prototype/README.md).
+The new [six-moment prototype thread](prototype/README.md) covers Yard Owner
+decision, Company Manager release, Crew Lead work, manager office return,
+manager proof review, and Yard Owner result.
 
 It starts at a short Today queue and opens the exact service. The service view
 should show customer
@@ -70,9 +71,15 @@ not durable offline storage. The manager's office return view reviews the
 exact Plan 8 field question, sends a hold instruction, keeps verification with
 the manager, and releases a revised Plan 9 only after a simulated verified
 access step. The field note does not carry between pages; this is a matched
-synthetic moment, not a persisted cross-role record. Next, add proof review,
-correction, and customer-safe outcome. React adoption waits for task evidence
-and API/authorization mapping.
+synthetic moment, not a persisted cross-role record. Manager proof review now
+withholds a rejected after-photo record, requests correction, and requires an
+exact-version check before simulated delivery. The Yard Owner outcome shows
+only the reviewed package and separates a future care idea from completed
+work. No actual photo is supplied. All six moments pass 320, 390, and 1440px
+state, privacy, focus, and overflow checks. Next, reconcile these moments with
+current-app route/API authority and seed matched records before participant
+comparison. Property Manager and Company Owner task perspectives also remain
+to test. React adoption waits for task evidence and API/authorization mapping.
 
 The existing [SX4 study](../design/review/simplified-product-experience-comparative-study.md)
 and [modern comparison guide](../design/review/modern-website-comparison-guide.md)

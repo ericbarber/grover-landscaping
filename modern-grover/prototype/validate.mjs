@@ -9,6 +9,15 @@ try {
     const page = await browser.newPage({ viewport: { width, height: 844 } });
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
+    const reviewResponse = await page.goto(new URL('../', baseUrl).toString(), { waitUntil: 'domcontentloaded' });
+    if (reviewResponse?.status() !== 200) throw new Error(`${width}px review page returned ${reviewResponse?.status()}`);
+    for (const linkName of ['Yard Owner proposal decision', 'Manager service prototype', 'Crew Lead field task', 'Manager field exception', 'Manager proof review', 'Yard Owner result']) {
+      if (!await page.getByRole('link', { name: linkName }).count()) {
+        throw new Error(`${width}px review page missing ${linkName}`);
+      }
+    }
+    const reviewOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (reviewOverflow > 1) throw new Error(`${width}px review page overflow: ${reviewOverflow}px`);
     const response = await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
     if (response?.status() !== 200) throw new Error(`${width}px page returned ${response?.status()}`);
 
@@ -189,6 +198,9 @@ try {
     if (!await page.getByRole('link', { name: 'inspect the Crew Lead side' }).count()) {
       throw new Error(`${width}px missing the revised field study link`);
     }
+    if (!await page.getByRole('link', { name: 'jump to the later proof review moment' }).count()) {
+      throw new Error(`${width}px missing the later proof study link`);
+    }
     await page.getByRole('button', { name: 'Failed read' }).click();
     await page.getByRole('heading', { name: 'The current field request could not be loaded.' }).waitFor();
     if (await page.getByText('Proposal v3 · unchanged').count()) {
@@ -198,8 +210,71 @@ try {
     await page.getByText('Crew Lead reviews released Plan 9').waitFor();
     const exceptionOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     if (exceptionOverflow > 1) throw new Error(`${width}px exception horizontal overflow: ${exceptionOverflow}px`);
+
+    const proofResponse = await page.goto(new URL('proof.html', baseUrl).toString(), { waitUntil: 'domcontentloaded' });
+    if (proofResponse?.status() !== 200) throw new Error(`${width}px proof page returned ${proofResponse?.status()}`);
+    await page.getByRole('heading', { name: 'Work waiting for proof review' }).waitFor();
+    const proofQueueOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (proofQueueOverflow > 1) throw new Error(`${width}px proof queue overflow: ${proofQueueOverflow}px`);
+    await page.getByRole('button', { name: 'Open Canyon View proof package' }).click();
+    await page.getByText('Rejected: the record does not show the completed pruning area.').waitFor();
+    if (await page.getByRole('button', { name: /Deliver package/ }).count()) {
+      throw new Error(`${width}px allowed delivery of rejected proof`);
+    }
+    await page.getByRole('button', { name: 'Review correction request' }).click();
+    await page.getByRole('button', { name: 'Request correction' }).click();
+    await page.getByText('Crew Lead supplies a clearer after photo').waitFor();
+    await page.getByRole('button', { name: 'Corrected evidence' }).click();
+    await page.getByRole('button', { name: 'Review package 2 delivery' }).click();
+    await page.getByRole('heading', { name: 'Deliver the reviewed result?' }).waitFor();
+    await page.getByRole('button', { name: 'Deliver package 2' }).click();
+    await page.getByText('Yard Owner reviews the delivered result').waitFor();
+    if (!await page.getByRole('link', { name: 'inspect the Yard Owner result' }).count()) {
+      throw new Error(`${width}px missing the customer outcome study link`);
+    }
+    await page.getByRole('button', { name: 'Reset' }).click();
+    await page.getByRole('button', { name: 'Corrected evidence' }).click();
+    await page.getByRole('button', { name: 'Review package 2 delivery' }).click();
+    await page.getByRole('button', { name: 'Newer package' }).click();
+    await page.getByRole('heading', { name: 'Package 2 is no longer current.' }).waitFor();
+    if (await page.getByRole('button', { name: 'Deliver package 2' }).count()) {
+      throw new Error(`${width}px allowed stale proof delivery`);
+    }
+    await page.getByRole('button', { name: 'Load package 3' }).click();
+    await page.getByRole('button', { name: 'Review package 3 delivery' }).waitFor();
+    await page.getByRole('button', { name: 'Failed read' }).click();
+    await page.getByRole('heading', { name: 'The current completion package could not be loaded.' }).waitFor();
+    if (await page.locator('main').getByText('After-photo record').count()) {
+      throw new Error(`${width}px exposed proof details during failed read`);
+    }
+    await page.getByRole('button', { name: 'Retry proof read' }).click();
+    await page.getByRole('button', { name: 'Review package 3 delivery' }).waitFor();
+    const proofOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (proofOverflow > 1) throw new Error(`${width}px proof horizontal overflow: ${proofOverflow}px`);
+
+    const outcomeResponse = await page.goto(new URL('outcome.html', baseUrl).toString(), { waitUntil: 'domcontentloaded' });
+    if (outcomeResponse?.status() !== 200) throw new Error(`${width}px outcome page returned ${outcomeResponse?.status()}`);
+    await page.getByRole('heading', { name: 'Cleanup and pruning completed' }).waitFor();
+    const customerText = await page.locator('main').innerText();
+    if (/rejected|Crew Lead|Plan 8|Plan 9|invoice|payment/i.test(customerText)) {
+      throw new Error(`${width}px customer outcome exposed private or gated detail`);
+    }
+    await page.getByRole('button', { name: 'Review proof details' }).click();
+    await page.getByText('No actual photo is available here').waitFor();
+    await page.getByRole('button', { name: 'Review next care idea' }).click();
+    await page.getByRole('button', { name: 'Request proposal' }).click();
+    await page.getByText('Provider prepares a separate proposal').waitFor();
+    await page.getByRole('button', { name: 'Failed read' }).click();
+    await page.getByRole('heading', { name: 'Your reviewed result could not be loaded.' }).waitFor();
+    if (await page.getByText('Cleanup and pruning completed').count()) {
+      throw new Error(`${width}px exposed customer result during failed read`);
+    }
+    await page.getByRole('button', { name: 'Retry result read' }).click();
+    await page.getByText('Provider prepares a separate proposal').waitFor();
+    const outcomeOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (outcomeOverflow > 1) throw new Error(`${width}px outcome horizontal overflow: ${outcomeOverflow}px`);
     if (errors.length) throw new Error(`${width}px browser errors: ${errors.join('; ')}`);
-    console.log(`${width}px: customer, manager, field, and office return flows passed`);
+    console.log(`${width}px: service decisions, field, office, proof, and customer outcome passed`);
     await page.close();
   }
 } finally {

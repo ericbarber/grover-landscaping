@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-09-16: Completed the six core simulated Modern Grover task moments with
+  manager proof correction and Yard Owner outcome pages. Rejected package 1
+  remains private; corrected package 2 requires exact-version review before
+  simulated delivery. A newer package blocks stale delivery. The customer
+  result shows reviewed metadata, keeps a seasonal care idea separate, and
+  hides protected detail during failed reads. Browser tasks pass at 320, 390,
+  and 1440px. No real photo, cross-page persistence, API write, or participant
+  result is claimed.
 - 2026-09-16: Added the simulated manager return path for Canyon View's field
   access question. The office queue opens the exact Plan 8 request, sends a
   hold instruction, keeps access verification with Company Manager, and

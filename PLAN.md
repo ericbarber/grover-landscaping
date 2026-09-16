@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Prior concepts remain review inputs; Modern Grover M1 is active and M2 decision/field/office tasks are simulated | Complete proof review and customer outcome, prepare matched current-app fixtures, resolve entry choices, then run participant tasks |
+| Design | Prior concepts remain review inputs; Modern Grover M1 remains open and a six-moment M2 service thread is simulated | Map current-app authority and seed matched fixtures, resolve entry choices, extend owner/portfolio tasks, then run participant sessions |
 
 ## Status Legend
 
@@ -54,9 +54,11 @@ service fixtures and resolve the open audience and role-context choices. The
 are interactive and clearly simulated: they cover proposal acceptance,
 customer consequence, crew fit, exact-version release, field access questions,
 tab-held offline state, manager access verification, revised Plan 9 release,
-stale versions, and failed-read recovery. Continue M2 through proof correction
-and customer outcome. Then
-run matched participant tasks and adopt only bounded, approved React/API slices.
+proof correction, reviewed customer outcome, stale versions, and failed-read
+recovery. The six task moments have no shared persistence or real photo. Next,
+map current-app authority and seed matched synthetic fixtures, resolve the
+open audience/role choices, and extend Company Owner and Property Manager
+perspectives before participant comparison or bounded React/API adoption.
 The continuity repair is a truth correction to the existing UI; the proposed
 new composition is not approved for production adoption.
 

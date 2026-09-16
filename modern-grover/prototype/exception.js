@@ -121,7 +121,7 @@ function renderExceptionDetail() {
                 : `<span class="status-tag ${stage === 'released' ? 'status-tag-good' : 'status-tag-attention'}">${stage === 'released' ? 'Release simulated' : 'Verification pending'}</span>`}
           </div>
         </section>
-        ${stage === 'released' ? '<p class="study-link-note">Study control: <a href="field.html">inspect the Crew Lead side</a> and use the Plan changed scenario. This is not a real role switch.</p>' : ''}
+        ${stage === 'released' ? '<p class="study-link-note">Study controls: <a href="field.html">inspect the Crew Lead side</a> with the Plan changed scenario, or <a href="proof.html">jump to the later proof review moment</a> after field completion. These are not real role switches or persisted handoffs.</p>' : ''}
         ${exceptionState.panel === 'hold' ? renderHoldConfirmation() : exceptionState.panel === 'release' ? renderRevisedRelease() : ''}
       </div>
     </div>
