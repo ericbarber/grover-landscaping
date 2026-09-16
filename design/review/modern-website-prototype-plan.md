@@ -1,9 +1,12 @@
 # Modern Grover website and application prototype plan
 
-Status: planning and first-wave design direction, 2026-09-16
+Status: prior prototype plan, retained as design input, 2026-09-16. The active
+planning and review are in the independent
+[Modern Grover track](../../modern-grover/README.md).
 
 The [styled browser view](../prototypes/modern-grover/plan.html) presents this
-plan on phones; this Markdown document remains the review source.
+plan on phones; this Markdown document remains the source for that earlier
+prototype, not the new track's workplan.
 
 ## Intent
 

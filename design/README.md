@@ -17,6 +17,10 @@ Open [`index.html`](index.html) in a browser to review the complete visual set.
 The individual SVG files can also be opened directly in a browser, Figma, or an
 SVG-capable editor.
 
+The independent [Modern Grover planning track](../modern-grover/README.md)
+owns the current workflow review and workplan. Artifacts in this directory are
+earlier candidates or implementation evidence for that track.
+
 ## VPN review URL
 
 When the local Vite development server is running, the complete gallery is
@@ -57,8 +61,6 @@ design/
 │   └── yard-owner-portal/              # Validated customer confidence journey
 ├── review/
 │   ├── checklist.md                   # Questions for each design review
-│   ├── application-workflow-critical-review-2026-09-16.md # Current workflow friction and evidence plan
-│   ├── application-experience-blueprint.md # Shared service and cross-role handoff map
 │   ├── current-frontend-design-audit-2026-09-03.md # Current UI parity and findings
 │   ├── frontend-truth-recovery-design.md # Adopted protected-read and route-state contract
 │   ├── minimalist-persona-prototype-plan.md # Task-first persona journey plan
@@ -240,15 +242,13 @@ renderer or a design-tool account to see a proposed screen.
 
 ## Current review order
 
-For the new website concept, start with the
-[modern prototype plan](review/modern-website-prototype-plan.md), its
-[separate persona profiles](personas/README.md), and the
-[working public and role preview](prototypes/modern-grover/index.html).
-The [styled plan](prototypes/modern-grover/plan.html) is available for phone
-review. This is design direction pending participant comparison and is not a
-current production mirror. Use the
-[comparison guide](review/modern-website-comparison-guide.md) for the first
-public-path and five-role review sessions.
+For the active Modern Grover work, start with its
+[independent workplan](../modern-grover/WORKPLAN.md) and
+[critical review](../modern-grover/review/application-workflow-critical-review-2026-09-16.md).
+The [earlier website prototype](prototypes/modern-grover/index.html), its
+[styled plan](prototypes/modern-grover/plan.html), and
+[persona profiles](personas/README.md) are comparison inputs, not the new
+track's approved target or a current production mirror.
 
 1. Start with the
    [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) to see

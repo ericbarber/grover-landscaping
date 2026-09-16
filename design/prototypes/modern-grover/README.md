@@ -1,9 +1,12 @@
 # Modern Grover website and workspace preview
 
+Status: prior design candidate. The active planning and review are in the
+independent [Modern Grover track](../../../modern-grover/README.md).
+
 Open [index.html](index.html) directly or visit `/design/prototypes/modern-grover/`
 on the local Vite review server. The prototype is static and dependency-free.
 The [styled plan](plan.html) is the phone-friendly browser view of the
-[canonical Markdown plan](../../review/modern-website-prototype-plan.md).
+[source plan for this candidate](../../review/modern-website-prototype-plan.md).
 
 Review routes:
 
@@ -22,8 +25,8 @@ from this first-wave preview.
 The [personas](../../personas/README.md) explain the intended review. This is a
 design direction, separate from the current React app and from the existing
 [service-thread prototype](../simplified-service-thread/README.md).
-Use the [comparison guide](../../review/modern-website-comparison-guide.md)
-to collect participant evidence before a production adoption proposal.
+The [earlier comparison guide](../../review/modern-website-comparison-guide.md)
+is research input for the new track, not participant evidence or approval.
 
 Validate the five perspectives, three states, styled plan, keyboard interaction,
 and desktop and phone layouts with:

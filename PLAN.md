@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | SX4 study and modern website concept are ready for review; ten persona profiles are recorded | Compare the current app, service thread, and new website-to-workspace framing in participant sessions |
+| Design | Prior concepts remain review inputs; the independent Modern Grover track owns the new workflow review and plan | Reconcile public claims and role entry, prepare matched service records, then run participant tasks |
 
 ## Status Legend
 
@@ -28,33 +28,23 @@ infer execution order from section position.
 
 ## In Progress
 
-### Modern website and application concept
+### Modern Grover independent planning and review
 
-The [modern website prototype plan](design/review/modern-website-prototype-plan.md)
-starts a new design-review track for the existing application. Ten
-[persona profiles](design/personas/README.md) define first answers, tasks,
-authority boundaries, and research prompts in a separate directory. The
-[working concept](design/prototypes/modern-grover/README.md) now links a public
-home, distinct customer/provider paths, and five role-filtered workspace
-previews. Browser checks cover direct routes, three review states, privacy,
-focus return, and 1440/390/320px layouts. This is illustrative design direction;
-the existing React app and production access contracts remain authoritative.
-The [comparison guide](design/review/modern-website-comparison-guide.md) now
-defines matched public and role-comprehension tasks without claiming participant
-evidence. A [styled plan page](design/prototypes/modern-grover/plan.html) now
-renders the design plan alongside the prototype for phone review. Next: run
-moderated sessions against the current frontend and
-service-thread direction before proposing React adoption.
+The [Modern Grover track](modern-grover/README.md) owns the active
+[workplan](modern-grover/WORKPLAN.md), [product decisions](modern-grover/PRODUCT_DECISIONS.md),
+[critical workflow review](modern-grover/review/application-workflow-critical-review-2026-09-16.md),
+and [cross-role blueprint](modern-grover/review/application-experience-blueprint.md).
+Earlier website, persona, and service-thread designs remain comparison inputs;
+none is the approved target for this track. The prior
+[website and role preview](design/prototypes/modern-grover/README.md) remains a
+validated illustrative concept with no React adoption or participant result.
+The current React app and production access contracts remain authoritative.
 
-The [September 16 critical workflow review](design/review/application-workflow-critical-review-2026-09-16.md)
-records current manager-navigation friction, public-promise and product-boundary
-drift, entry-path hypotheses, and the modern concept's inability to validate
-consequential actions. A [first-pass service blueprint](design/review/application-experience-blueprint.md)
-maps the customer, office, and field handoffs and their failure branches. It directs
-the prepared SX4/MW sessions toward observed task outcomes. This is expert
-review and local-browser evidence, not participant validation. Next: reconcile
-the public capability promise, prepare matched service records, then run the
-prepared sessions before React adoption.
+M0 separation is delivered. M1 is next: audit public claims against delivered
+capability, trace current service and entry paths with exact fixtures, and
+resolve the open audience and role-context choices. Then build a new simulated
+cross-role service flow in this track, run matched participant tasks, and adopt
+only bounded, approved React/API slices. No new production UI is approved.
 
 ### Current frontend design continuity
 

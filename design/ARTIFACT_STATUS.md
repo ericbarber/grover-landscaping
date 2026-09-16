@@ -22,7 +22,7 @@ counts, people, dates, providers, or customer claims are production facts.
 
 | Artifact family | Primary classification | Exact boundary |
 | --- | --- | --- |
-| `prototypes/modern-grover/` | Design direction | Responsive public home, customer/provider paths, and five role-filtered workspace previews connect the existing product story. Three review states use illustrative data and non-persistent actions. Participant comparison and production adoption remain pending. |
+| `prototypes/modern-grover/` | Historical input | Earlier responsive public home, customer/provider paths, and five role-filtered workspace previews. Three review states use illustrative data and non-persistent actions. The independent `modern-grover/` track owns new planning and review; no production adoption followed this candidate. |
 | `prototypes/simplified-service-thread/` | Design direction | Active post-MVP clean-slate redesign for five core perspectives plus seven contextual exception/recovery paths. One exact illustrative service retains decision, plan, field work, proof, handoff, and recovery context with role-filtered detail; access failures render no protected record. Actions are non-persistent and production adoption has not started. |
 | `prototypes/minimalist-personas/` | Historical input | Ten personas retain useful task-first and authority-boundary evidence, but the active post-MVP simplification starts from a clean service-thread model rather than editing these compositions. Actions are non-persistent and do not add roles or product authority. |
 | `prototypes/current-frontend-review/` | Current mirror | September 3, 2026 baseline only. Manager continuity and shell compression delivered afterward are intentionally absent. |

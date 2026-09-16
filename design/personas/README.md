@@ -1,8 +1,10 @@
 # Grover application personas
 
-Status: design hypotheses for review, 2026-09-16. These are task and authority
-profiles, not interview findings or new production roles. Validate the needs and
-language in moderated sessions before using them as adoption evidence.
+Status: prior design hypotheses for review, 2026-09-16. These are task and
+authority profiles, not interview findings or new production roles. The active
+[Modern Grover track](../../modern-grover/README.md) uses them as input only.
+Validate the needs and language in moderated sessions before using them as
+adoption evidence.
 
 The modern website prototype starts with the five roles in the core service
 loop. The remaining profiles preserve specialized and recovery paths. A person

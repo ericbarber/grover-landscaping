@@ -41,11 +41,11 @@ behavior must be checked at each transition before a design is adopted.
 | Review proof | Company Manager: “Is the evidence correct and safe to deliver?” | Manager reviews/corrects the completion package and publishes customer-safe proof. | Completed field work, evidence status, corrections, delivery state; draft evidence stays private. | Photo processing failure, missing evidence, report correction, failed delivery. |
 | Understand outcome | Yard Owner or Property Manager: “What was done, and what needs me next?” | Customer sees reviewed proof, may ask a contextual question or respond to a recommendation; provider owns the next update. | Delivered report, property/service identity, next decision, response expectation. | Unavailable protected read, ended access, concern, unanswered question. |
 
-This map compresses the [54-event lifecycle](yard-care-completion-event-timeline.md)
+This map compresses the [54-event lifecycle](../../design/review/yard-care-completion-event-timeline.md)
 for a review conversation. Its failure branches are drawn from the
-[simplified service-thread proposal](simplified-product-experience-plan.md),
-[SX4 tasks](simplified-product-experience-comparative-study.md), and
-[owner connection design](yard-owner-entry-provider-connection-plan.md). The
+[simplified service-thread proposal](../../design/review/simplified-product-experience-plan.md),
+[SX4 tasks](../../design/review/simplified-product-experience-comparative-study.md), and
+[owner connection design](../../design/review/yard-owner-entry-provider-connection-plan.md). The
 [delivery plan](../../PLAN.md) remains the status source for what is live,
 locally reviewable, prototype only, planned, or product gated.
 
@@ -72,10 +72,10 @@ price; customers see no provider-private route or crew data.
 
 | Evidence already prepared | What it establishes | What remains unknown |
 | --- | --- | --- |
-| [Dated current frontend audit](current-frontend-design-audit-2026-09-03.md) and local-review app | Rendered navigation and representative states; several earlier continuity fixes are delivered. | Whether real users understand the exact next action and handoff without help. |
-| [Simplified service-thread prototype](../prototypes/simplified-service-thread/README.md) | A connected, role-filtered composition for decision, release, field work, proof, and exceptions. | Whether it improves task completion, context retention, or recovery against the current app. |
-| [Modern website concept](../prototypes/modern-grover/README.md) and [personas](../personas/README.md) | Public narrative, responsive visual direction, and explicit role hypotheses. | Correct entry path, truthful promise, real task behavior, and representative role language. |
-| [SX4 study](simplified-product-experience-comparative-study.md) and [modern comparison guide](modern-website-comparison-guide.md) | Matched tasks, observation fields, stop rules, and adoption gates. | Participant observations; none have been collected. |
+| [Dated current frontend audit](../../design/review/current-frontend-design-audit-2026-09-03.md) and local-review app | Rendered navigation and representative states; several earlier continuity fixes are delivered. | Whether real users understand the exact next action and handoff without help. |
+| [Simplified service-thread prototype](../../design/prototypes/simplified-service-thread/README.md) | A connected, role-filtered composition for decision, release, field work, proof, and exceptions. | Whether it improves task completion, context retention, or recovery against the current app. |
+| [Modern website concept](../../design/prototypes/modern-grover/README.md) and [personas](../../design/personas/README.md) | Public narrative, responsive visual direction, and explicit role hypotheses. | Correct entry path, truthful promise, real task behavior, and representative role language. |
+| [SX4 study](../../design/review/simplified-product-experience-comparative-study.md) and [modern comparison guide](../../design/review/modern-website-comparison-guide.md) | Matched tasks, observation fields, stop rules, and adoption gates. | Participant observations; none have been collected. |
 
 ## Review sequence
 

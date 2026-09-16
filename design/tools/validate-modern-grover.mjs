@@ -53,7 +53,7 @@ try {
       )) <= 1,
       `${viewport.name}: home overflows`,
     );
-    await page.getByRole("link", { name: /Read the plan/ }).click();
+    await page.getByRole("link", { name: /Read earlier plan/ }).click();
     check(
       new URL(page.url()).pathname.endsWith("/modern-grover/plan.html"),
       `${viewport.name}: review link did not open the styled plan`,

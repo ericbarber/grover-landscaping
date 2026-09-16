@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite';
 
 const designReviewRoot = fileURLToPath(new URL('../design/', import.meta.url));
+const modernGroverReviewRoot = fileURLToPath(new URL('../modern-grover/', import.meta.url));
 
 const designContentTypes: Record<string, string> = {
   '.css': 'text/css; charset=utf-8',
@@ -23,34 +24,40 @@ function designReviewPlugin(): Plugin {
     name: 'grover-design-review',
     apply: 'serve',
     configureServer(server) {
-      const resolvedDesignReviewRoot = realpathSync(designReviewRoot);
-      const designReviewRootPrefix = `${resolvedDesignReviewRoot}${sep}`;
+      const reviewRoots = [
+        { route: '/design', root: realpathSync(designReviewRoot) },
+        { route: '/modern-grover', root: realpathSync(modernGroverReviewRoot) },
+      ];
 
       server.middlewares.use((request, response, next) => {
         const requestPath = request.url?.split('?', 1)[0];
-        if (requestPath !== '/design' && !requestPath?.startsWith('/design/')) {
+        const review = reviewRoots.find(
+          ({ route }) => requestPath === route || requestPath?.startsWith(`${route}/`),
+        );
+        if (!review) {
           next();
           return;
         }
 
-        if (requestPath === '/design') {
+        if (requestPath === review.route) {
           response.statusCode = 308;
-          response.setHeader('Location', '/design/');
+          response.setHeader('Location', `${review.route}/`);
           response.end();
           return;
         }
 
         let decodedPath: string;
         try {
-          decodedPath = decodeURIComponent(requestPath.slice('/design/'.length));
+          decodedPath = decodeURIComponent(requestPath.slice(review.route.length + 1));
         } catch {
           response.statusCode = 400;
           response.end('Invalid design review path.');
           return;
         }
 
-        let filePath = resolve(resolvedDesignReviewRoot, decodedPath || 'index.html');
-        if (filePath !== resolvedDesignReviewRoot && !filePath.startsWith(designReviewRootPrefix)) {
+        const reviewRootPrefix = `${review.root}${sep}`;
+        let filePath = resolve(review.root, decodedPath || 'index.html');
+        if (filePath !== review.root && !filePath.startsWith(reviewRootPrefix)) {
           response.statusCode = 403;
           response.end('Design review path is outside the allowed directory.');
           return;
@@ -59,7 +66,7 @@ function designReviewPlugin(): Plugin {
         try {
           if (statSync(filePath).isDirectory()) filePath = join(filePath, 'index.html');
           filePath = realpathSync(filePath);
-          if (!filePath.startsWith(designReviewRootPrefix)) {
+          if (!filePath.startsWith(reviewRootPrefix)) {
             response.statusCode = 403;
             response.end('Design review path is outside the allowed directory.');
             return;
@@ -77,7 +84,10 @@ function designReviewPlugin(): Plugin {
 
         response.statusCode = 200;
         response.setHeader('Cache-Control', 'no-store');
-        response.setHeader('Content-Type', designContentTypes[extname(filePath).toLowerCase()] ?? 'application/octet-stream');
+        response.setHeader(
+          'Content-Type',
+          designContentTypes[extname(filePath).toLowerCase()] ?? 'application/octet-stream',
+        );
         response.setHeader('X-Content-Type-Options', 'nosniff');
         createReadStream(filePath).pipe(response);
       });

@@ -17,7 +17,7 @@ The modern concept uses fixed illustrative data and does not save actions. No
 participant sessions or healthy production deployment were available for this
 review. Findings below distinguish direct observations from risks to validate.
 
-The [September 3 frontend audit](current-frontend-design-audit-2026-09-03.md)
+The [September 3 frontend audit](../../design/review/current-frontend-design-audit-2026-09-03.md)
 already identified date/state truth, Yard Owner recovery, manager continuity,
 shell height, and artifact-parity problems. Subsequent delivery work addressed
 those specific issues. This review focuses on the remaining end-to-end workflow
@@ -41,11 +41,11 @@ main workflow uncertainty intact.
 | --- | --- | --- | --- |
 | P1 · observed | **A manager reaches work through a tool directory.** In the live Company Manager fixture, Home recommends “Manage,” Manage shows six categories, Schedule then shows a second choice of Day plans or Workload. The manager's first screen also emphasizes `0 of 3 jobs complete` and Route/Jobs/Job shortcuts. See [workspace persona navigation](../../frontend/src/domain/workspacePersona.ts), [Home shortcuts](../../frontend/src/components/WorkspaceHomePanel.tsx), and [manager menu](../../frontend/src/components/ManagerWorkspaceMenu.tsx). | A user must know the software's categories before finding the affected service or office decision. A manager may read field output as their own primary task. | Start Company Manager at a short Today queue ordered by customer/service consequence. Open an exact service with plan version, customer impact, next owner, and contextual Schedule/Reports/Recovery actions. Keep global tools for exceptional administration. Validate with ST-04. |
 | P1 · observed, adoption risk | **The public promise and product boundary diverge.** The current public default is Landscaping company and says billing and revenue stay connected and describes “completed revenue”; [landing copy](../../frontend/src/components/PublicLandingPage.tsx) and [default persona](../../frontend/src/components/PublicLandingPage.tsx) show this. [PLAN.md](../../PLAN.md) still gates billing, invoices, and payments. The modern concept instead opens with a broad care story and two audience paths. | A buyer may infer that invoicing or payment is available, while the new concept does not yet establish which audience should enter first. Trust is at risk before sign-up. | Decide the first buyer/user and make a capability-verified promise matrix. Separate delivered completion evidence and billing readiness from invoice/payment capability. Test the entry choice with MW-01/MW-02 before using the concept as the live site. |
-| P1 · observed in concept | **The prototype stops before the consequential action.** Each role has one fixed Mesa Court state; “Inspect task” opens a dialog explaining what production would require. The [prototype script](../prototypes/modern-grover/app.js) does not model response, release, saved field work, proof correction, or handoff completion. | Reviewers can approve attractive layout while missing whether the next step is safe, reversible, and understandable. | Give one service thread real branching in the prototype: Yard Owner decision → manager release → Crew Lead progress/offline request → manager proof review → Yard Owner outcome. Include version conflict and failed read. Keep actions explicitly simulated. Compare task outcomes, not preference. |
+| P1 · observed in concept | **The prototype stops before the consequential action.** Each role has one fixed Mesa Court state; “Inspect task” opens a dialog explaining what production would require. The [prototype script](../../design/prototypes/modern-grover/app.js) does not model response, release, saved field work, proof correction, or handoff completion. | Reviewers can approve attractive layout while missing whether the next step is safe, reversible, and understandable. | Give one service thread real branching in the prototype: Yard Owner decision → manager release → Crew Lead progress/offline request → manager proof review → Yard Owner outcome. Include version conflict and failed read. Keep actions explicitly simulated. Compare task outcomes, not preference. |
 | P1 · hypothesis | **Entry paths may hide important identities.** The modern site has customer/provider paths; Property Manager is grouped with Yard Owner and provider opens a Company Manager preview. The production [provider entry](../../frontend/src/components/ProviderEntryPage.tsx) distinguishes owner-operator, company owner, invited team member, and known-owner connection. | A property manager or one-person provider may choose a plausible but wrong path or expect an account they cannot create. | Test the four real entry intents from the public home. Promote Property Manager or owner-operator only if observed wrong turns justify it. Keep invitation-specific entry attached to its token and scope. |
-| P2 · observed in concept | **“On track” and unavailable states lose accountability.** The [prototype script](../prototypes/modern-grover/app.js) replaces the exact next owner with “the responsible team”; the unavailable dialog refers to a support path without naming a supported route. | A calm state can still leave a user unsure when to check back or who will act. In an outage, an unspecified support promise may create a dead end. | Show the exact responsible role and expected next update when the source provides them; otherwise state that timing/owner cannot be confirmed. Link recovery only to a real authorized destination. Test MW-08 and the SX4 access/authorization tasks. |
+| P2 · observed in concept | **“On track” and unavailable states lose accountability.** The [prototype script](../../design/prototypes/modern-grover/app.js) replaces the exact next owner with “the responsible team”; the unavailable dialog refers to a support path without naming a supported route. | A calm state can still leave a user unsure when to check back or who will act. In an outage, an unspecified support promise may create a dead end. | Show the exact responsible role and expected next update when the source provides them; otherwise state that timing/owner cannot be confirmed. Link recovery only to a real authorized destination. Test MW-08 and the SX4 access/authorization tasks. |
 | P2 · observed, limited to local review | **The phone's first useful action is late.** At 390 × 844 the Company Manager Home stacks diagnostic identity chrome, a large hero, delivery count, sync status, and a reminder before the recommended Manage action. The diagnostic strip accounts for some of the height; the production effect is unverified. | A field or office user may need to scroll before seeing the reason to open the app. | Measure a hosted-equivalent viewport without local-review chrome. If the action still falls below the first viewport, put current work and a single next action before the editorial hero; test at 320/390 px, browser chrome, and 200% text. |
-| P1 · evidence gap | **Persona and prototype confidence exceeds user evidence.** The [personas](../personas/README.md) are explicitly hypotheses; the [modern comparison guide](modern-website-comparison-guide.md) and [SX4 study](simplified-product-experience-comparative-study.md) are ready but contain no participant observations. | Design choices may follow team expectations, sample-data polish, or a visual preference vote. | Run matched current-app versus service-thread tasks with representative users. Keep the website entry test separate from authenticated task completion. Record wrong turns, time to orientation, authority/version accuracy, recovery, and confidence. |
+| P1 · evidence gap | **Persona and prototype confidence exceeds user evidence.** The [personas](../../design/personas/README.md) are explicitly hypotheses; the [modern comparison guide](../../design/review/modern-website-comparison-guide.md) and [SX4 study](../../design/review/simplified-product-experience-comparative-study.md) are ready but contain no participant observations. | Design choices may follow team expectations, sample-data polish, or a visual preference vote. | Run matched current-app versus service-thread tasks with representative users. Keep the website entry test separate from authenticated task completion. Record wrong turns, time to orientation, authority/version accuracy, recovery, and confidence. |
 
 P1 means resolve before adopting the affected composition into production. P2
 means validate and fix in the next related design slice. These are design
@@ -60,7 +60,7 @@ priorities, not claims about production incident severity.
 - The modern concept has a coherent visual language and clearly marks sample
   content; its responsive and accessibility checks are useful implementation
   groundwork.
-- The [simplified service-thread design](simplified-product-experience-plan.md)
+- The [simplified service-thread design](../../design/review/simplified-product-experience-plan.md)
   already defines a plausible shared information model. Treat it as a testable
   proposal, not as a proven replacement.
 
@@ -77,7 +77,7 @@ For each transition, record the same eight facts: actor, their first question,
 exact record/version, authoritative source, action allowed, next owner, expected
 update, and failure/recovery route. Mark whether each fact is **implemented**,
 **prototype only**, **planned**, or **unknown**. Use the existing
-[54-event timeline](yard-care-completion-event-timeline.md) as the event index;
+[54-event timeline](../../design/review/yard-care-completion-event-timeline.md) as the event index;
 the new map should compress it into an understandable cross-role service
 blueprint rather than duplicate its detail.
 
@@ -90,10 +90,10 @@ blueprint rather than duplicate its detail.
    exception, Company Owner blocker/handoff, Company Manager plan conflict and
    proof correction, and Crew Lead interrupted stop. Include first-run access
    and an unavailable read. Draw handoffs and failure branches, not just screens.
-3. **Run the prepared [SX4 study](simplified-product-experience-comparative-study.md).**
+3. **Run the prepared [SX4 study](../../design/review/simplified-product-experience-comparative-study.md).**
    Start each task at the normal entry, counterbalance order, and use at least
    two people per core perspective as that guide specifies. Run
-   [MW-01/MW-02](modern-website-comparison-guide.md) separately for public path
+   [MW-01/MW-02](../../design/review/modern-website-comparison-guide.md) separately for public path
    selection. Include a real phone and intermittent connectivity for Crew Lead.
 4. **Synthesize by task and event.** For every issue, keep a timestamped
    observation, participant statement, or code/fixture artifact distinct from

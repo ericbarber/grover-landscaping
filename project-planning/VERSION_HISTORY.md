@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-16: Isolated the new Modern Grover planning and review in its own
+  top-level track. The prior website, persona, and service-thread artifacts are
+  now explicit inputs rather than an approved target. A track workplan and open
+  product-decision register identify capability truth, entry, role context,
+  matched fixtures, a new cross-role prototype, participant study, and bounded
+  adoption as the next sequence; production UI is unchanged.
 - 2026-09-16: Reviewed the current local-review workflow and modern Grover
   concept against the service-thread direction. The critical review prioritizes
   manager task discovery, public capability claims, prototype task depth,

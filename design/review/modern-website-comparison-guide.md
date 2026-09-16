@@ -1,6 +1,8 @@
 # Modern website comparison guide
 
-Status: session guide ready; no participant evidence collected
+Status: prior candidate session guide; no participant evidence collected. The
+active Modern Grover [workplan](../../modern-grover/WORKPLAN.md) treats this
+guide as research input, not a completed comparison or adoption decision.
 
 Date: 2026-09-16
 

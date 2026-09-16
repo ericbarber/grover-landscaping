@@ -99,12 +99,13 @@ progress rail into a shared typed lifecycle component with semantic tests. This
 does not adopt the proposed service-thread composition before participant
 evidence.
 
-The modern website concept is a separate design-review track for the existing
-application. Ten task and authority profiles now live in `design/personas/`,
-and a responsive public home plus customer/provider paths lead to five
-role-filtered workspace previews. This concept is illustrative; participant
-comparison with the current frontend and service-thread direction precedes any
-production adoption.
+Modern Grover now has an independent planning and review home in
+[`../modern-grover/`](../modern-grover/README.md). The prior public website,
+ten persona hypotheses, and five role-filtered workspace previews in `design/`
+remain comparison inputs, not the new track's approved target. Its M1 work
+reconciles public claims, audience entry, role context, and matched service
+fixtures before a new cross-role workflow prototype and participant study.
+Production adoption still requires bounded task and API evidence.
 
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
