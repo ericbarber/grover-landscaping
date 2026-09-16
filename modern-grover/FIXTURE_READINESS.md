@@ -29,6 +29,8 @@ observation. PostgreSQL command-line tools were unavailable in this review
 environment, so database counts were not independently rechecked here.
 The [read-only local-review probe](fixtures/README.md) provides reproducible
 API-level counts and states without exposing record details.
+The [isolated seed contract](fixtures/SEED_CONTRACT.md) records the transition
+and reset gates needed before writing matched study data.
 
 ## Record chain and comparison boundary
 

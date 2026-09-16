@@ -21,6 +21,7 @@ is available at `/modern-grover/`. It is served separately from `/design/`.
 | [Matched fixture specification](MATCHED_FIXTURES.md) | Two equivalent synthetic services for fair comparison | Specified; not seeded |
 | [Current-app fixture and authority map](FIXTURE_READINESS.md) | Route, permission, data-chain, and comparison prerequisites | Source review; direct fixture checks pending |
 | [Local-review fixture probe](fixtures/README.md) | Read-only statuses and counts from the private review API | Available; records not seeded |
+| [Isolated seed contract](fixtures/SEED_CONTRACT.md) | Transition order, reset ownership, and date/role gates for matched records | Specified; no seeder or records yet |
 | [Service handoff prototype](prototype/README.md) | M2 customer, manager, field, office, proof, outcome, portfolio, and owner task moments | Interactive concept; no real write or participant result |
 | [Critical workflow review](review/application-workflow-critical-review-2026-09-16.md) | Evidence, design risks, and proposed rework | Expert/local-browser review; no participant results |
 | [Experience blueprint](review/application-experience-blueprint.md) | First-pass cross-role service and handoff map | Hypothesis for testing |

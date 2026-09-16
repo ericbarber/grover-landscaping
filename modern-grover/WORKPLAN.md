@@ -100,6 +100,9 @@ issues a Property Owner portal grant; Property Manager delegation/issuance
 needs an explicit contract before that role's matched fixture. Next safe
 slice: prepare repeatable Yard Owner proposal/portal fixture copies and verify
 their grant, scope, and normal entry before a participant comparison.
+The [isolated seed contract](fixtures/SEED_CONTRACT.md) now fixes the target
+database boundary, transition order, reset ownership, and acceptance checks.
+Its implementation and isolated database validation remain open.
 
 The first read-only fixture probe on the September 16 as-of date found zero
 Yard Owner acquisition properties, 403 portal reads for both customer roles,

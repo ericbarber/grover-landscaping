@@ -87,6 +87,10 @@ records the private review baseline for the study date: no Yard Owner
 acquisition properties, protected portal reads denied for Yard Owner and
 Property Manager, a past two-stop Crew Lead route, and no open manager
 exceptions. It makes fixture gaps reproducible without changing shared data.
+The [isolated fixture seed contract](modern-grover/fixtures/SEED_CONTRACT.md)
+now defines supported owner transitions, reset ownership, and date/role gates.
+It is planning only: a dedicated study database, seeder, and matched records
+are not yet available.
 
 ### Current frontend design continuity
 

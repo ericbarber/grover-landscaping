@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-16: Specified the isolated Modern Grover seed contract after tracing
+  the backend owner acquisition persistence fixture. It requires a dedicated
+  study database, manifest-owned reset, immutable proposal v1→v3 progression,
+  exact acceptance/activation/visit/service-release checks, a current route
+  date, and delivered-only proof. It marks Property Manager grant issuance,
+  Crew Lead access handoff, and Plan 8/9 revision as unsupported comparisons.
+  No seeder or matched data was created.
 - 2026-09-16: Added a read-only Modern Grover fixture probe. It verifies
   local-review mode, then reports protected portal status, owner acquisition
   counts, Crew Lead route date/stops, and open manager exceptions without
