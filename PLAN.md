@@ -90,9 +90,10 @@ exceptions. It makes fixture gaps reproducible without changing shared data.
 The [isolated fixture seed contract](modern-grover/fixtures/SEED_CONTRACT.md)
 now defines supported owner transitions, reset ownership, and date/role gates.
 The [separate local study database](modern-grover/fixtures/LOCAL_STUDY_ENV.md)
-is now created and migrated. It contains only migration baseline records,
-including a historical June route; a separate study API, seeder, reset, and
-matched records are not yet available.
+is now created and migrated, with its own active local-review API on port 8081.
+It contains only migration baseline records, including a historical June
+route; a seeder, reset, and matched records are not yet available. The phone
+review app still uses the shared API on port 8080.
 The Property Manager grant authority and scope are an open
 [MG-D6 product decision](modern-grover/PRODUCT_DECISIONS.md). The current
 activation path cannot issue that role's grant, so this comparison task stays

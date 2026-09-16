@@ -104,8 +104,9 @@ their grant, scope, and normal entry before a participant comparison.
 The [isolated seed contract](fixtures/SEED_CONTRACT.md) now fixes the target
 database boundary, transition order, reset ownership, and acceptance checks.
 The [local study database](fixtures/LOCAL_STUDY_ENV.md) has been created and
-migrated twice with 124 successful migrations. A separate study API, seeder,
-reset, and matched-record validation remain open.
+migrated twice with 124 successful migrations. A separate local-review study
+API now runs on port 8081 and reports the expected baseline through the
+read-only probe. Seeder, reset, and matched-record validation remain open.
 
 The first read-only fixture probe on the September 16 as-of date found zero
 Yard Owner acquisition properties, 403 portal reads for both customer roles,
@@ -115,9 +116,9 @@ matched Canyon View/Sage Lane records exist. The next fixture work must use
 isolated synthetic identities and a tested reset path before writes.
 Property Manager delegation is now tracked as [MG-D6](PRODUCT_DECISIONS.md);
 the local environment has an active shared review API and a separate migrated
-study database, but no dedicated study API or fixture reset path. The next
-writable fixture slice must start through that separate process, verify its
-target identity, and prove manifest-owned reset before any participant use.
+study database/API, but no fixture reset path. The next writable fixture slice
+must verify the study target identity and prove manifest-owned reset before
+any participant use.
 The fresh migrations add a June 15 sample route, which remains baseline data
 and cannot be mistaken for a matched current-day record.
 

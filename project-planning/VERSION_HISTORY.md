@@ -1,12 +1,18 @@
 # Version History
 
+- 2026-09-16: Started and enabled a separate `grover-modern-study-api` user
+  service against the isolated study database on port 8081. Its process
+  identity and `local_review` mode were verified without exposing credentials;
+  the endpoint returns 200 through Tailscale. The read-only probe confirms no
+  customer fixture yet and the historical migration route. The phone review
+  app remains on the shared port-8080 API; no study frontend or seeder exists.
 - 2026-09-16: Created a separate local `grover_modern_study` PostgreSQL
   database for Modern Grover fixture work. The current migrator completed
   twice; all 124 migrations succeeded. Owner properties, portal grants, and
   operational exceptions are empty. A June 15 sample day plan comes from an
   existing migration and is explicitly outside the future fixture namespace.
   The shared review API/database was not used for fixture writes. A separate
-  study API, seeder, and manifest reset remain open.
+  study API, seeder, and manifest reset remained open at this point.
 - 2026-09-16: Added independent Modern Grover personas for Yard Owner,
   Property Manager, Company Owner, Company Manager, and Crew Lead, with
   secondary/recovery perspectives for five more roles. Each first-wave
