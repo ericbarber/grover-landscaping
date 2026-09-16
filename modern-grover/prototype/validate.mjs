@@ -11,7 +11,7 @@ try {
     page.on('pageerror', (error) => errors.push(error.message));
     const reviewResponse = await page.goto(new URL('../', baseUrl).toString(), { waitUntil: 'domcontentloaded' });
     if (reviewResponse?.status() !== 200) throw new Error(`${width}px review page returned ${reviewResponse?.status()}`);
-    for (const linkName of ['Yard Owner proposal decision', 'Manager service prototype', 'Crew Lead field task', 'Manager field exception', 'Manager proof review', 'Yard Owner result']) {
+    for (const linkName of ['Yard Owner proposal decision', 'Manager service prototype', 'Crew Lead field task', 'Manager field exception', 'Manager proof review', 'Yard Owner result', 'Property Manager portfolio', 'Company Owner risk']) {
       if (!await page.getByRole('link', { name: linkName }).count()) {
         throw new Error(`${width}px review page missing ${linkName}`);
       }
@@ -273,8 +273,69 @@ try {
     await page.getByText('Provider prepares a separate proposal').waitFor();
     const outcomeOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     if (outcomeOverflow > 1) throw new Error(`${width}px outcome horizontal overflow: ${outcomeOverflow}px`);
+
+    const portfolioResponse = await page.goto(new URL('portfolio.html', baseUrl).toString(), { waitUntil: 'domcontentloaded' });
+    if (portfolioResponse?.status() !== 200) throw new Error(`${width}px portfolio page returned ${portfolioResponse?.status()}`);
+    await page.getByRole('heading', { name: 'Your properties today' }).waitFor();
+    await page.locator('main').getByText('Sage Lane', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Open Canyon View access request' }).click();
+    await page.getByRole('heading', { name: 'Confirm approved access guidance' }).waitFor();
+    if (await page.evaluate(() => document.activeElement?.id) !== 'portfolio-title') throw new Error(`${width}px portfolio detail focus missing`);
+    if (/Plan 8|Plan 9|\$420|Avery/i.test(await page.locator('main').innerText())) {
+      throw new Error(`${width}px portfolio exposed private route information`);
+    }
+    await page.getByRole('button', { name: 'Confirm north entrance' }).click();
+    await page.getByRole('heading', { name: 'Send approved north entrance guidance?' }).waitFor();
+    await page.getByRole('button', { name: 'New request' }).click();
+    await page.getByRole('heading', { name: 'Request 2 is no longer current.' }).waitFor();
+    if (await page.getByRole('button', { name: 'Send property guidance' }).count()) throw new Error(`${width}px stale portfolio response remained actionable`);
+    await page.getByRole('button', { name: 'Load current request 3' }).click();
+    await page.getByRole('button', { name: 'Confirm north entrance' }).click();
+    await page.getByRole('button', { name: 'Send property guidance' }).click();
+    await page.getByText('Company Manager verifies and updates the crew').waitFor();
+    await page.getByRole('button', { name: 'Reset' }).click();
+    await page.getByRole('button', { name: 'Open Canyon View access request' }).click();
+    await page.getByRole('button', { name: 'Cannot confirm entrance' }).click();
+    await page.getByRole('heading', { name: 'Tell the office the entrance is unconfirmed?' }).waitFor();
+    await page.getByRole('button', { name: 'Flag entrance unconfirmed' }).click();
+    await page.getByText('Company Manager seeks verified access').waitFor();
+    await page.getByRole('button', { name: 'Failed read' }).click();
+    await page.getByRole('heading', { name: 'The current portfolio could not be loaded.' }).waitFor();
+    if (await page.locator('main').getByText('Canyon View').count()) throw new Error(`${width}px failed portfolio read exposed property`);
+    await page.getByRole('button', { name: 'Retry portfolio read' }).click();
+    await page.getByText('Company Manager seeks verified access').waitFor();
+    await page.getByRole('button', { name: 'Access ended' }).click();
+    await page.getByRole('heading', { name: 'Your property access is no longer active.' }).waitFor();
+    if (await page.locator('main').getByText('Canyon View').count() || await page.getByRole('button', { name: 'Confirm north entrance' }).count()) throw new Error(`${width}px ended access exposed portfolio`);
+    const portfolioOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (portfolioOverflow > 1) throw new Error(`${width}px portfolio horizontal overflow: ${portfolioOverflow}px`);
+
+    const ownerResponse = await page.goto(new URL('owner.html', baseUrl).toString(), { waitUntil: 'domcontentloaded' });
+    if (ownerResponse?.status() !== 200) throw new Error(`${width}px company owner page returned ${ownerResponse?.status()}`);
+    await page.getByRole('heading', { name: 'What needs an accountable operator' }).waitFor();
+    await page.getByRole('button', { name: 'Open Canyon View company risk' }).click();
+    await page.getByRole('heading', { name: 'Accepted work is waiting on access' }).waitFor();
+    await page.getByRole('button', { name: 'Review assignment' }).click();
+    await page.getByRole('heading', { name: 'Assign Avery to this risk?' }).waitFor();
+    await page.getByRole('button', { name: 'Status changed' }).click();
+    await page.getByRole('heading', { name: 'This risk already has an operator.' }).waitFor();
+    if (await page.getByRole('button', { name: 'Assign Avery' }).count()) throw new Error(`${width}px stale owner assignment remained actionable`);
+    await page.getByRole('button', { name: 'Load current assignment' }).click();
+    await page.getByRole('heading', { name: 'Avery · Company Manager' }).waitFor();
+    await page.getByRole('button', { name: 'Reset' }).click();
+    await page.getByRole('button', { name: 'Open Canyon View company risk' }).click();
+    await page.getByRole('button', { name: 'Review assignment' }).click();
+    await page.getByRole('button', { name: 'Assign Avery', exact: true }).click();
+    await page.getByText('No route was released or operator notified.').waitFor();
+    await page.getByRole('button', { name: 'Failed read' }).click();
+    await page.getByRole('heading', { name: 'The current company work could not be loaded.' }).waitFor();
+    if (await page.locator('main').getByText('Canyon View').count()) throw new Error(`${width}px failed company read exposed service`);
+    await page.getByRole('button', { name: 'Retry company read' }).click();
+    await page.getByRole('heading', { name: 'Avery · Company Manager' }).waitFor();
+    const ownerOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (ownerOverflow > 1) throw new Error(`${width}px company owner horizontal overflow: ${ownerOverflow}px`);
     if (errors.length) throw new Error(`${width}px browser errors: ${errors.join('; ')}`);
-    console.log(`${width}px: service decisions, field, office, proof, and customer outcome passed`);
+    console.log(`${width}px: service, field, proof, portfolio, and company tasks passed`);
     await page.close();
   }
 } finally {

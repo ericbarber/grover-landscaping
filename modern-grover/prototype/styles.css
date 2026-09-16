@@ -56,6 +56,12 @@ h1 { max-width: 18ch; margin: .5rem 0 .6rem; color: var(--deep); font-size: clam
 .service-row-bottom { margin-top: 1rem; color: #755328; font-weight: 850; }
 .service-row-bottom span { margin: 0 .4rem; }
 .queue-footnote { margin: 1.3rem 0 0; color: var(--muted); font-size: .74rem; }
+.portfolio-secondary { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .35rem 1rem; margin-top: .8rem; padding: 1rem 1.2rem; border: 1px solid var(--line); border-radius: .85rem; color: var(--deep); font-size: .84rem; }
+.portfolio-secondary span { color: var(--muted); }
+.portfolio-back { width: 100%; min-height: 2.75rem; margin-top: 1rem; padding: .55rem .75rem; border: 1px solid #91b49c; border-radius: .65rem; background: #e8d1a5; color: var(--deep); font-weight: 850; text-align: left; }
+.portfolio-back:hover { background: #f2dfb8; }
+.portfolio-warning { max-width: none; margin: 0 0 1rem; }
+.portfolio-warning h3 { margin: .4rem 0 .6rem; color: var(--deep); font-size: 1.55rem; }
 .service-layout { display: grid; grid-template-columns: minmax(12rem, .28fr) minmax(0, 1fr); align-items: start; gap: 1.25rem; }
 .queue-sidebar { padding: 1.3rem; }
 .back-button { display: inline-flex; align-items: center; gap: .6rem; min-height: 2.75rem; margin: .7rem 0 1.1rem; padding: 0; border: 0; background: transparent; color: var(--forest); font-weight: 850; }
@@ -79,6 +85,7 @@ h1 { max-width: 18ch; margin: .5rem 0 .6rem; color: var(--deep); font-size: clam
 .handoff-card h3 { max-width: 25ch; margin: .4rem 0 .45rem; font-size: 1.6rem; }
 .handoff-card p { max-width: 33rem; margin: 0; color: #dce8df; font-size: .84rem; line-height: 1.5; }
 .handoff-actions { flex: none; }
+.portfolio-actions { display: grid; gap: .5rem; width: min(100%, 14rem); }
 .button { display: inline-flex; align-items: center; justify-content: center; min-height: 2.9rem; padding: .65rem 1rem; border: 1px solid transparent; border-radius: .65rem; font-size: .82rem; font-weight: 900; text-decoration: none; }
 .button-primary { background: #e5c990; color: #1b3025; }
 .button-primary:hover { background: #f2dcae; }

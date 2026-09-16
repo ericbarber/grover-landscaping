@@ -1,14 +1,15 @@
-# Customer and manager service decisions
+# Modern Grover service task prototypes
 
 Status: simulated M2 service thread; no real account, API read, write,
 scheduling, notification, or participant result. Start with the
 [Yard Owner decision](customer.html), [Company Manager release](index.html),
 [Crew Lead field task](field.html), [manager exception](exception.html),
-[manager proof review](proof.html), or [Yard Owner outcome](outcome.html).
+[manager proof review](proof.html), [Yard Owner outcome](outcome.html),
+[Property Manager portfolio](portfolio.html), or [Company Owner risk](owner.html).
 State resets when each page reloads.
 
 These are the first new Modern Grover compositions in the independent track.
-These six pages use the Canyon View synthetic record from
+The core six-page service thread uses the Canyon View synthetic record from
 [MATCHED_FIXTURES.md](../MATCHED_FIXTURES.md).
 The customer reviews proposal v3 for $420. Acceptance requests planning and
 does not schedule or charge. The manager study starts at the subsequent
@@ -31,6 +32,17 @@ outcome page starts at the delivered package 2 moment and keeps the optional
 seasonal care idea separate from completed work. No real image is supplied, so
 the prototype cannot test visual proof quality. Scenario buttons load
 independent task moments rather than a continuous persisted timeline.
+
+The portfolio page shows two synthetic authorized properties and one access
+question. The manager can confirm the listed entrance or flag it unconfirmed;
+either response stays with Company Manager for verification. It does not
+resume work or expose a gate code. The Company Owner
+page shows the business impact and assigns synthetic manager Avery to verify
+access and update the field. Neither page transfers state to the office page,
+nor does it use the current app's preview portfolio as evidence. Both pages
+include changed-request/status and failed-read recovery; the portfolio also
+shows ended access. The [fixture authority map](../FIXTURE_READINESS.md)
+records where the current app cannot yet run an equivalent task.
 
 ## Review tasks
 
@@ -66,6 +78,15 @@ independent task moments rather than a continuous persisted timeline.
    Open the optional seasonal care idea; request a separate proposal and
    explain why it does not reopen or charge the completed service. Retry an
    unavailable result without treating it as undone work.
+10. As Property Manager, scan two properties, open Canyon View's exact access
+    request, review the response consequence, and send simulated property
+    guidance or flag the entrance unconfirmed. Repeat with a changed request,
+    failed read, and ended access.
+    State who verifies guidance before affected work resumes.
+11. As Company Owner, find the company risk, assign Avery as accountable
+    operator, and explain who verifies access, guides the crew, and updates the
+    customer. Repeat after a status change and a failed read. Do not interpret
+    assignment as route release.
 
 Record task completion, first wrong turn, whether the participant states the
 correct version and next owner, and whether the recovery explains what did

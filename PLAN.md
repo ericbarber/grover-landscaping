@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Prior concepts remain review inputs; Modern Grover M1 remains open and a six-moment M2 service thread is simulated | Extend owner/portfolio tasks, wire authorized portfolio data, prepare matched fixtures, resolve entry choices, then run participant sessions |
+| Design | Prior concepts remain review inputs; Modern Grover M1 remains open and eight M2 task moments are simulated | Wire authorized portfolio data, prepare matched fixtures, resolve entry choices, then run participant sessions |
 
 ## Status Legend
 
@@ -58,8 +58,12 @@ proof correction, reviewed customer outcome, stale versions, and failed-read
 recovery. The six task moments have no shared persistence or real photo. Next,
 prepare matched synthetic fixtures using the
 [current-app authority map](modern-grover/FIXTURE_READINESS.md), resolve the
-open audience/role choices, and extend Company Owner and Property Manager
-perspectives before participant comparison or bounded React/API adoption.
+open audience/role choices, and connect Company Owner and Property Manager
+tasks to authorized current-app data before participant comparison or bounded
+React/API adoption. Two additional role perspectives are now simulated:
+Property Manager scans two properties and responds to an access question;
+Company Owner assigns an accountable manager to the business risk. Their
+actions do not persist or transfer across pages.
 The continuity repair is a truth correction to the existing UI; the proposed
 new composition is not approved for production adoption.
 

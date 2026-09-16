@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-16: Added independent Property Manager and Company Owner task pages
+  to the Modern Grover prototype. The portfolio concept finds one access
+  question among two scoped properties, checks the exact request, and hands
+  guidance to the manager for verification. The company view names an
+  accountable operator for the service risk. Changed state, unavailable read,
+  and ended-access branches keep protected information and actions hidden.
+  All actions remain simulated; no shared state or current-app fixture exists.
 - 2026-09-16: Mapped Modern Grover's current-app proposal, portal grant,
   release/job/route, exception, proof, and portfolio paths to the matched task
   moments. The source review identifies the prerequisite record chain and
