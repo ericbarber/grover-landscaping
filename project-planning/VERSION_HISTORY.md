@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-16: Reviewed the current local-review workflow and modern Grover
+  concept against the service-thread direction. The critical review prioritizes
+  manager task discovery, public capability claims, prototype task depth,
+  audience entry, and next-owner clarity; it defines a cross-role service
+  blueprint and evidence sequence. Findings are expert/browser observations and
+  hypotheses, not participant results or production adoption approval.
 - 2026-09-16: Added a responsive HTML plan page to the modern Grover prototype
   and routed its review link there. The Markdown plan remains canonical;
   desktop, phone, and narrow-phone browser checks verify the styled page and

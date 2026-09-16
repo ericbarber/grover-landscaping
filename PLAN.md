@@ -46,6 +46,15 @@ renders the design plan alongside the prototype for phone review. Next: run
 moderated sessions against the current frontend and
 service-thread direction before proposing React adoption.
 
+The [September 16 critical workflow review](design/review/application-workflow-critical-review-2026-09-16.md)
+records current manager-navigation friction, public-promise and product-boundary
+drift, entry-path hypotheses, and the modern concept's inability to validate
+consequential actions. It defines a cross-role service blueprint and directs
+the prepared SX4/MW sessions toward observed task outcomes. This is expert
+review and local-browser evidence, not participant validation. Next: reconcile
+the public capability promise, map one exact service through five roles, then
+run the prepared sessions before React adoption.
+
 ### Current frontend design continuity
 
 Goal: keep current-state evidence separate from future design direction, then
