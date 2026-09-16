@@ -21,6 +21,8 @@ The [plan](../../review/modern-website-prototype-plan.md) and
 [personas](../../personas/README.md) explain the intended review. This is a
 design direction, separate from the current React app and from the existing
 [service-thread prototype](../simplified-service-thread/README.md).
+Use the [comparison guide](../../review/modern-website-comparison-guide.md)
+to collect participant evidence before a production adoption proposal.
 
 Validate the five perspectives, three states, keyboard interaction, and desktop
 and phone layouts with:

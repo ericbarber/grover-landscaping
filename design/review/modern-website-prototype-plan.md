@@ -46,11 +46,12 @@ cannot answer an actual persona question.
    dependency-free, responsive public concept now connects customer/provider
    paths to five role-filtered workspace previews. Attention, on-track, and
    unavailable states and an explicit sample-only review control are validated.
-3. **Review and refinement — next.** Compare the public concept with the current
-   public frontend and the existing service-thread design. Run task-based
-   interviews from the SX4 guide; test comprehension of the customer/provider
-   paths, each role's first answer, next owner, and privacy boundaries. Record
-   observed problems and revise the prototype before proposing React adoption.
+3. **Review and refinement — guide ready, sessions next.** The
+   [comparison guide](modern-website-comparison-guide.md) defines matched
+   public-path and role-comprehension tasks against the current frontend and
+   existing service-thread design. Run the sessions with the SX4 evidence
+   protocol; record observed problems and revise the prototype before proposing
+   React adoption. No participant result has been collected yet.
 4. **Production adoption — later.** Only after review, split approved public
    composition and authenticated workspace changes into bounded React/API
    slices with authorization, state, accessibility, and browser regression.

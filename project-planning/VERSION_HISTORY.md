@@ -5,8 +5,9 @@
   provider paths connect to five role-filtered workspace previews with
   attention, on-track, and unavailable states. Browser validation covers direct
   routes, privacy boundaries, focus return, and 1440/390/320px layouts. The
-  concept is illustrative and awaits participant comparison before React
-  adoption.
+  concept is illustrative. A matched public-path and role-comprehension guide
+  prepares participant comparison before React adoption; no user findings are
+  claimed.
 - 2026-09-09: Extracted the existing Yard Owner service progress rail into a
   typed shared React lifecycle component. Four dedicated tests protect ordered
   labels, exactly one current step, completed markers, accessible naming, and
