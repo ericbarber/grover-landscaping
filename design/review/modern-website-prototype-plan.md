@@ -42,9 +42,10 @@ cannot answer an actual persona question.
 1. **Persona and page contract — delivered.** Record all ten role profiles,
    first answers, tasks, authority boundaries, and open research prompts in a
    separate directory. Record the page map and prototype constraints here.
-2. **Working website and preview — in progress.** Build a dependency-free,
-   responsive public concept with customer/provider paths and five role-filtered
-   workspace previews. A review control must make sample-only status explicit.
+2. **Working website and preview — delivered as design direction.** A
+   dependency-free, responsive public concept now connects customer/provider
+   paths to five role-filtered workspace previews. Attention, on-track, and
+   unavailable states and an explicit sample-only review control are validated.
 3. **Review and refinement — next.** Compare the public concept with the current
    public frontend and the existing service-thread design. Run task-based
    interviews from the SX4 guide; test comprehension of the customer/provider

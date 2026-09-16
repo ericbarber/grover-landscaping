@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | SX4 study is ready; modern website planning and ten persona profiles are recorded | Build the first responsive public/role-preview concept, then compare it in participant sessions |
+| Design | SX4 study and modern website concept are ready for review; ten persona profiles are recorded | Compare the current app, service thread, and new website-to-workspace framing in participant sessions |
 
 ## Status Legend
 
@@ -32,13 +32,15 @@ infer execution order from section position.
 
 The [modern website prototype plan](design/review/modern-website-prototype-plan.md)
 starts a new design-review track for the existing application. Ten
-[persona profiles](design/personas/README.md) now define first answers, tasks,
-authority boundaries, and research prompts in a separate directory. A public
-website concept and five-role workspace preview are in progress. This work is
-illustrative design direction; the existing React app and production access
-contracts remain authoritative. Next: validate the responsive prototype and
-compare it with the current frontend and service-thread direction in moderated
-sessions before proposing React adoption.
+[persona profiles](design/personas/README.md) define first answers, tasks,
+authority boundaries, and research prompts in a separate directory. The
+[working concept](design/prototypes/modern-grover/README.md) now links a public
+home, distinct customer/provider paths, and five role-filtered workspace
+previews. Browser checks cover direct routes, three review states, privacy,
+focus return, and 1440/390/320px layouts. This is illustrative design direction;
+the existing React app and production access contracts remain authoritative.
+Next: compare it with the current frontend and service-thread direction in
+moderated sessions before proposing React adoption.
 
 ### Current frontend design continuity
 

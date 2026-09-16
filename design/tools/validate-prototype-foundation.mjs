@@ -18,6 +18,7 @@ const prototypes = [
   { name: 'Functional-unit rollout', path: 'prototypes/yard-owner-minimal-rollout/index.html', hash: '#overview/map', nav: '.desktop-rail' },
   { name: 'Minimalist persona experiences', path: 'prototypes/minimalist-personas/index.html', hash: '#owner/attention/today', nav: '.desktop-rail' },
   { name: 'Simplified service thread', path: 'prototypes/simplified-service-thread/index.html', hash: '#manager/field', nav: '.desktop-rail' },
+  { name: 'Modern Grover website', path: 'prototypes/modern-grover/index.html', hash: '#workspace/manager', nav: '.workspace-rail' },
 ];
 
 const expectedTokens = {

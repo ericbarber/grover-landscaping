@@ -36,18 +36,19 @@ not copied into the production frontend build.
 design/
 ├── assets/                            # Original imagery and generation briefs
 ├── components/                        # Reusable UI catalog and state coverage
-├── personas/                           # Ten task and authority profiles for modern UI review
 ├── foundations/                       # Color, type, spacing, icons, and imagery
 │   └── navigation.md                  # Public, acquisition, and portal shell contract
 ├── high-fidelity/                     # Approved-direction visual concepts
 ├── index.html                         # Browsable visual gallery
 ├── information-architecture.md        # Page model and navigation boundaries
+├── personas/                           # Ten task and authority profiles for modern UI review
 ├── README.md                          # Workflow and ownership
 ├── prototypes/
 │   ├── public-homepage/                # Responsive working V2 design
 │   ├── current-frontend-review/        # Dated production-parity review mirror
 │   ├── frontend-truth-recovery/        # Adopted owner/crew continuity states
 │   ├── minimalist-personas/            # Ten task-first persona experiences
+│   ├── modern-grover/                   # Public website and five-role app preview
 │   ├── property-manager-portfolio/     # Connected portfolio command center
 │   ├── shared/                         # Canonical tokens and shell primitives
 │   ├── yard-crew-acquisition/           # Provider entry, opportunity, assessment, and support
@@ -238,9 +239,11 @@ renderer or a design-tool account to see a proposed screen.
 ## Current review order
 
 For the new website concept, start with the
-[modern prototype plan](review/modern-website-prototype-plan.md) and its
-[separate persona profiles](personas/README.md). The working public and role
-preview follows as the next design slice.
+[modern prototype plan](review/modern-website-prototype-plan.md), its
+[separate persona profiles](personas/README.md), and the
+[working public and role preview](prototypes/modern-grover/index.html).
+This is design direction pending participant comparison and is not a current
+production mirror.
 
 1. Start with the
    [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) to see

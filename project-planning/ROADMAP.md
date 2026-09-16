@@ -98,6 +98,14 @@ Reversible production groundwork now extracts the existing Yard Owner four-step
 progress rail into a shared typed lifecycle component with semantic tests. This
 does not adopt the proposed service-thread composition before participant
 evidence.
+
+The modern website concept is a separate design-review track for the existing
+application. Ten task and authority profiles now live in `design/personas/`,
+and a responsive public home plus customer/provider paths lead to five
+role-filtered workspace previews. This concept is illustrative; participant
+comparison with the current frontend and service-thread direction precedes any
+production adoption.
+
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access
