@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-16: Traced the current local-review Home-to-work paths for five Modern
+  Grover perspectives at phone width. The record distinguishes sample-fixture
+  limits from design findings and identifies Yard Owner access and Crew Lead
+  route-date contradictions between Home and destination. Matched service
+  fixtures are still needed before a comparative task study.
 - 2026-09-16: Began Modern Grover M1 with a source-based public claim inventory.
   It separates locally implemented private-yard, portfolio, offline, and proof
   capability from gated marketplace, billing, invoice, and payment promises;

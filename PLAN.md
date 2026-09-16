@@ -42,11 +42,15 @@ The current React app and production access contracts remain authoritative.
 
 M0 separation is delivered. M1 is in progress: a
 [first-pass public claim inventory](modern-grover/CLAIM_INVENTORY.md) now marks
-supported, ambiguous, and gated promises. Next, trace current service and entry
-paths with exact fixtures and resolve the open audience and role-context
-choices. Then build a new simulated
-cross-role service flow in this track, run matched participant tasks, and adopt
-only bounded, approved React/API slices. No new production UI is approved.
+supported, ambiguous, and gated promises. A
+[first-pass current journey trace](modern-grover/CURRENT_JOURNEYS.md) records
+five phone entry paths and local-review Home/destination state mismatches.
+Next, prepare consistent service fixtures and resolve the open audience and
+role-context choices. A bounded current-app continuity fix should then make
+Yard Owner and Crew Lead Home agree with protected access and service-day
+destinations. Build a new simulated cross-role service flow in this track, run
+matched participant tasks, and adopt only bounded, approved React/API slices.
+No new production UI is approved.
 
 ### Current frontend design continuity
 

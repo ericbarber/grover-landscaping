@@ -29,7 +29,10 @@ starting evidence. Earlier designs remain comparison inputs.
    approval and hosted verification remain open.
 2. Record the current route and action path for five core tasks, using the
    [blueprint](review/application-experience-blueprint.md) as the handoff index.
-   Keep source facts, inferred UX risk, and participant observation separate.
+   A [first-pass local-review trace](CURRENT_JOURNEYS.md) records the five
+   entry paths and two Home/destination contradictions. Matched service records
+   and complete task paths remain to prepare. Keep source facts, inferred UX
+   risk, and participant observation separate.
 3. Prepare two equivalent synthetic service records for comparative review.
    Record the exact commit, viewport, role/scope, connection state, and missing
    external service. A realistic current-state fixture is needed before
@@ -38,10 +41,20 @@ starting evidence. Earlier designs remain comparison inputs.
    [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md). Do not adopt a new homepage or
    role shell from the earlier preview before these choices are explicit.
 
-## First development slice after M1
+## Development after the current-state contract is confirmed
 
-Build a new **Company Manager service decision** flow that starts at a short
-Today queue and opens the exact service. The service view should show customer
+First fix the real app's cross-screen truth where the source data permits it.
+Yard Owner Home must not call an inactive portal “clear for now,” and Crew Lead
+Home must not promote a past, read-only route as today's work. The
+[local-review trace](CURRENT_JOURNEYS.md) gives the reproduction; implementation
+requires an explicit Home source, access/date behavior, and browser regression.
+This bounded continuity repair can precede the broader redesign once those
+contracts are verified.
+
+The first **new-prototype** slice is a Company Manager service decision flow.
+
+It starts at a short Today queue and opens the exact service. The service view
+should show customer
 impact, accepted scope, draft and released plan versions, crew fit, next owner,
 and a contextual release or correction action. It should include one conflict
 and one failed-read recovery. This is a simulated UX slice first; React adoption
