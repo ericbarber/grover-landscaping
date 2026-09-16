@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-16: Added a read-only Modern Grover fixture probe. It verifies
+  local-review mode, then reports protected portal status, owner acquisition
+  counts, Crew Lead route date/stops, and open manager exceptions without
+  printing customer records. On the September 16 as-of date the private review
+  API has no owner properties, both customer portal reads return 403, the crew
+  route is June 15 with two stops, and the manager has no open exceptions.
+  No matched records were seeded or reset.
 - 2026-09-16: Replaced Property Manager Home and Portfolio preview visits with
   the protected customer visit collection. The workspace now lists only
   granted property names and customer-safe visits, and withholds property

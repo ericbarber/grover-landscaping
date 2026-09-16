@@ -82,6 +82,11 @@ recorded; it identifies current-app gaps in plan revision and field-to-office
 access questions. Portfolio's protected data-source repair is delivered, while
 the old preview-only Proof and Approvals tabs are not claimed as live. Matched
 grants/records, fixture reset, and participant sessions remain open.
+The [read-only local fixture probe](modern-grover/fixtures/README.md) now
+records the private review baseline for the study date: no Yard Owner
+acquisition properties, protected portal reads denied for Yard Owner and
+Property Manager, a past two-stop Crew Lead route, and no open manager
+exceptions. It makes fixture gaps reproducible without changing shared data.
 
 ### Current frontend design continuity
 

@@ -27,6 +27,8 @@ frontend panels. They describe code paths, not hosted behavior. The
 [current journey trace](CURRENT_JOURNEYS.md) records the limited local browser
 observation. PostgreSQL command-line tools were unavailable in this review
 environment, so database counts were not independently rechecked here.
+The [read-only local-review probe](fixtures/README.md) provides reproducible
+API-level counts and states without exposing record details.
 
 ## Record chain and comparison boundary
 

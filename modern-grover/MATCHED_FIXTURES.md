@@ -62,4 +62,5 @@ supported route/API chain, source-backed gaps, and a safe snapshot sequence.
 The current activation write cannot issue a Property Manager portal grant;
 that role's fixture needs a supported delegation contract first.
 The [workplan](WORKPLAN.md) requires matched records and reset verification
-before participant sessions.
+before participant sessions. The [read-only fixture probe](fixtures/README.md)
+captures baseline API states and counts; it does not seed the matched records.

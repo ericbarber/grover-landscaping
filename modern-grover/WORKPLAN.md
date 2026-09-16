@@ -40,7 +40,9 @@ starting evidence. Earlier designs remain comparison inputs.
    defines equivalent facts and authority boundaries. The
    [current-app fixture and authority map](FIXTURE_READINESS.md) now records
    route/API prerequisites and noncomparable tasks; seeding, direct authorization
-   checks, and reset behavior remain development work before comparison.
+   checks, and reset behavior remain development work before comparison. The
+   [read-only probe](fixtures/README.md) now records the local reviewer baseline
+   without exposing record details or changing state.
 4. Decide the public starting audience and role-entry model in
    [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md). Do not adopt a new homepage or
    role shell from the earlier preview before these choices are explicit.
@@ -98,6 +100,13 @@ issues a Property Owner portal grant; Property Manager delegation/issuance
 needs an explicit contract before that role's matched fixture. Next safe
 slice: prepare repeatable Yard Owner proposal/portal fixture copies and verify
 their grant, scope, and normal entry before a participant comparison.
+
+The first read-only fixture probe on the September 16 as-of date found zero
+Yard Owner acquisition properties, 403 portal reads for both customer roles,
+an older June 15 Crew Lead route with two stops, and zero open manager
+exceptions. These are local-review baseline counts, not evidence that the
+matched Canyon View/Sage Lane records exist. The next fixture work must use
+isolated synthetic identities and a tested reset path before writes.
 
 The existing [SX4 study](../design/review/simplified-product-experience-comparative-study.md)
 and [modern comparison guide](../design/review/modern-website-comparison-guide.md)
