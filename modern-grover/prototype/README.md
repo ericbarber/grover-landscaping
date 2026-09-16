@@ -4,11 +4,12 @@ Status: simulated M2 slices; no real account, API read, write, scheduling,
 notification, or participant result. Open `/modern-grover/prototype/customer.html`
 for Yard Owner, `/modern-grover/prototype/` for Company Manager, or
 `/modern-grover/prototype/field.html` for Crew Lead on the private review
-server. State resets when each page reloads.
+server. The [manager exception review](exception.html) follows the field
+question. State resets when each page reloads.
 
 These are the first new Modern Grover compositions in the independent track.
 The [Yard Owner decision](customer.html), [Company Manager decision](index.html),
-and [Crew Lead field task](field.html)
+[Crew Lead field task](field.html), and [manager exception review](exception.html)
 use the Canyon View synthetic record from [MATCHED_FIXTURES.md](../MATCHED_FIXTURES.md).
 The customer reviews proposal v3 for $420. Acceptance requests planning and
 does not schedule or charge. The manager study starts at the subsequent
@@ -20,9 +21,12 @@ persist a real decision. The field study starts from released Plan 8 on a fixed
 September 16, 2026 study day. It simulates an access question, one checklist
 change, offline tab-held state, a sent request, a Plan 9 conflict, and a failed
 read. Tab-held state is lost on reload; this page does not test durable offline
-storage. Manager review of the field exception and proof review are subsequent
-M2 slices. Scenario buttons load independent task moments rather than a
-continuous persisted timeline.
+storage. The office return view starts with the matching synthetic field
+request. It holds affected work, keeps the manager responsible for access
+verification, and simulates a reviewed Plan 9 release with unchanged accepted
+scope. The free-text field note does not transfer between pages. Proof review
+is a subsequent M2 slice. Scenario buttons load independent task moments
+rather than a continuous persisted timeline.
 
 ## Review tasks
 
@@ -46,6 +50,10 @@ continuous persisted timeline.
    simulated local state. Inject Plan 9 and verify replay stops for manager
    review; in a fresh scenario, reconnect without conflict and state the next
    owner. No customer price or private office controls should appear.
+7. From the office exception queue, open the matching Stop 1 request. Confirm
+   a hold instruction without changing accepted scope or releasing a plan.
+   Simulate verified access, review exact Plan 9, and release it to Crew Lead.
+   Retry a failed read without displaying request details while unavailable.
 
 Record task completion, first wrong turn, whether the participant states the
 correct version and next owner, and whether the recovery explains what did

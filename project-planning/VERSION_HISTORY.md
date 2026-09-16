@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-16: Added the simulated manager return path for Canyon View's field
+  access question. The office queue opens the exact Plan 8 request, sends a
+  hold instruction, keeps access verification with Company Manager, and
+  reviews a revised Plan 9 with unchanged proposal v3 scope before release.
+  Failed reads hide the protected request. The field page links to this
+  matching synthetic moment; typed field notes are not transferred. Browser
+  tasks pass at 320, 390, and 1440px; no real office action occurred.
 - 2026-09-16: Added a simulated Crew Lead task to the independent Modern
   Grover service flow. Released Plan 8 shows the assigned Canyon View stop,
   access question, and safe checklist work without customer price. Offline

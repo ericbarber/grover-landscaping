@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Prior concepts remain review inputs; Modern Grover M1 is active and M2 customer/manager/field tasks are simulated | Complete manager exception/proof handoffs, prepare matched current-app fixtures, resolve entry choices, then run participant tasks |
+| Design | Prior concepts remain review inputs; Modern Grover M1 is active and M2 decision/field/office tasks are simulated | Complete proof review and customer outcome, prepare matched current-app fixtures, resolve entry choices, then run participant tasks |
 
 ## Status Legend
 
@@ -53,8 +53,9 @@ service fixtures and resolve the open audience and role-context choices. The
 [linked Yard Owner, Company Manager, and Crew Lead prototypes](modern-grover/prototype/README.md)
 are interactive and clearly simulated: they cover proposal acceptance,
 customer consequence, crew fit, exact-version release, field access questions,
-tab-held offline state, stale versions, and failed-read recovery. Continue M2
-through manager exception review, proof correction, and customer outcome. Then
+tab-held offline state, manager access verification, revised Plan 9 release,
+stale versions, and failed-read recovery. Continue M2 through proof correction
+and customer outcome. Then
 run matched participant tasks and adopt only bounded, approved React/API slices.
 The continuity repair is a truth correction to the existing UI; the proposed
 new composition is not approved for production adoption.

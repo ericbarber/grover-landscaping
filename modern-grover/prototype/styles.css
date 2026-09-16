@@ -41,6 +41,7 @@ h1 { max-width: 18ch; margin: .5rem 0 .6rem; color: var(--deep); font-size: clam
 .queue-card, .service-main, .queue-sidebar { border: 1px solid var(--line); border-radius: 1.25rem; background: white; box-shadow: 0 18px 42px rgba(18, 52, 39, .055); }
 .queue-card { max-width: 58rem; padding: clamp(1.2rem, 3vw, 2.2rem); }
 .card-topline, .service-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.card-topline { flex-wrap: wrap; }
 .queue-card h2 { max-width: 20ch; margin: 1rem 0 .4rem; color: var(--deep); font-size: clamp(2rem, 4vw, 3rem); line-height: 1.1; }
 .muted { color: var(--muted); line-height: 1.55; }
 .status-tag { display: inline-flex; align-items: center; width: fit-content; border-radius: 100px; padding: .35rem .65rem; background: #eef2ed; color: #385247; font-size: .69rem; font-weight: 900; white-space: nowrap; }

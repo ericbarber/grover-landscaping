@@ -118,6 +118,9 @@ function renderField() {
           <div><p class="step-label">NEXT OWNER</p><h3 id="field-next-title">${nextOwner}</h3><p>${nextDetail}</p></div>
           <span class="status-tag ${pending > 0 ? 'status-tag-attention' : 'status-tag-good'}">${pending > 0 ? `${pending} held in tab` : 'No local changes'}</span>
         </section>
+        ${fieldState.issue === 'sent' && !fieldState.conflict
+          ? '<p class="study-link-note">Study control: <a href="exception.html">inspect the manager exception review</a>. This is not a crew workspace action.</p>'
+          : ''}
       </div>
     </div>
   `;

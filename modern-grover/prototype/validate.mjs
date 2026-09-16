@@ -156,14 +156,50 @@ try {
     await page.getByRole('button', { name: 'Reconnect and sync' }).click();
     await page.getByText('Company Manager reviews the access question').waitFor();
     await page.getByText('No local changes').waitFor();
+    if (!await page.getByRole('link', { name: 'inspect the manager exception review' }).count()) {
+      throw new Error(`${width}px missing the manager exception study link`);
+    }
     await page.getByRole('button', { name: 'Reset' }).click();
     await page.getByRole('button', { name: 'Plan changed' }).click();
     await page.getByRole('button', { name: 'Load released Plan 9' }).click();
     await page.getByText('Released Plan 9').first().waitFor();
     const fieldOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     if (fieldOverflow > 1) throw new Error(`${width}px field horizontal overflow: ${fieldOverflow}px`);
+
+    const exceptionResponse = await page.goto(new URL('exception.html', baseUrl).toString(), { waitUntil: 'domcontentloaded' });
+    if (exceptionResponse?.status() !== 200) throw new Error(`${width}px exception page returned ${exceptionResponse?.status()}`);
+    await page.getByRole('heading', { name: 'Work waiting on the office' }).waitFor();
+    const exceptionQueueOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (exceptionQueueOverflow > 1) throw new Error(`${width}px exception queue overflow: ${exceptionQueueOverflow}px`);
+    await page.getByRole('button', { name: 'Open Canyon View field exception' }).click();
+    await page.getByRole('heading', { name: 'Access question at Stop 1' }).waitFor();
+    if (await page.getByRole('button', { name: 'Release revised Plan 9' }).count()) {
+      throw new Error(`${width}px allowed release before access verification`);
+    }
+    await page.getByRole('button', { name: 'Review hold instruction' }).click();
+    await page.getByRole('button', { name: 'Send hold instruction' }).click();
+    await page.getByText('Company Manager verifies the access detail').waitFor();
+    await page.getByRole('button', { name: 'Simulate verified access' }).click();
+    await page.getByText('Plan 9 draft').first().waitFor();
+    await page.getByRole('button', { name: 'Review revised Plan 9' }).click();
+    await page.getByRole('heading', { name: 'Release revised Plan 9?' }).waitFor();
+    await page.getByText('Proposal v3 · unchanged').waitFor();
+    await page.getByRole('button', { name: 'Release revised Plan 9' }).click();
+    await page.getByText('Crew Lead reviews released Plan 9').waitFor();
+    if (!await page.getByRole('link', { name: 'inspect the Crew Lead side' }).count()) {
+      throw new Error(`${width}px missing the revised field study link`);
+    }
+    await page.getByRole('button', { name: 'Failed read' }).click();
+    await page.getByRole('heading', { name: 'The current field request could not be loaded.' }).waitFor();
+    if (await page.getByText('Proposal v3 · unchanged').count()) {
+      throw new Error(`${width}px exposed exception details during failed read`);
+    }
+    await page.getByRole('button', { name: 'Retry exception read' }).click();
+    await page.getByText('Crew Lead reviews released Plan 9').waitFor();
+    const exceptionOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (exceptionOverflow > 1) throw new Error(`${width}px exception horizontal overflow: ${exceptionOverflow}px`);
     if (errors.length) throw new Error(`${width}px browser errors: ${errors.join('; ')}`);
-    console.log(`${width}px: customer, manager, and field handoffs, offline, conflicts, failed reads, and layout passed`);
+    console.log(`${width}px: customer, manager, field, and office return flows passed`);
     await page.close();
   }
 } finally {
