@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-16: Added a responsive HTML plan page to the modern Grover prototype
+  and routed its review link there. The Markdown plan remains canonical;
+  desktop, phone, and narrow-phone browser checks verify the styled page and
+  return path.
 - 2026-09-16: Started the modern website and application design track with ten
   separate persona profiles and a responsive public concept. Customer and
   provider paths connect to five role-filtered workspace previews with

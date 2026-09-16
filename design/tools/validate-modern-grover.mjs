@@ -11,6 +11,7 @@ const prototype = resolve(
   "index.html",
 );
 const url = pathToFileURL(prototype).href;
+const planUrl = pathToFileURL(resolve(prototype, "..", "plan.html")).href;
 const roles = ["owner", "property", "company", "manager", "lead"];
 const states = ["attention", "on-track", "unavailable"];
 const viewports = [
@@ -52,6 +53,12 @@ try {
       )) <= 1,
       `${viewport.name}: home overflows`,
     );
+    await page.getByRole("link", { name: /Read the plan/ }).click();
+    check(
+      new URL(page.url()).pathname.endsWith("/modern-grover/plan.html"),
+      `${viewport.name}: review link did not open the styled plan`,
+    );
+    await page.goto(`${url}#home`);
     await page.getByRole("link", { name: /See the customer journey/ }).click();
     check(
       hash(page) === "#customer",
@@ -219,9 +226,54 @@ try {
       `${viewport.name}: browser errors: ${errors.join("; ")}`,
     );
     await page.close();
+
+    const planPage = await browser.newPage({ viewport });
+    const planErrors = [];
+    planPage.on("pageerror", (error) => planErrors.push(error.message));
+    planPage.on("console", (message) => {
+      if (message.type() === "error") planErrors.push(message.text());
+    });
+    await planPage.goto(planUrl);
+    check(
+      (await planPage.locator("h1:visible").count()) === 1,
+      `${viewport.name}: styled plan heading missing`,
+    );
+    check(
+      (await planPage.locator(".plan-surface-list article").count()) === 4,
+      `${viewport.name}: plan surfaces missing`,
+    );
+    check(
+      (await planPage.locator(".plan-phase-list li").count()) === 4,
+      `${viewport.name}: plan phases missing`,
+    );
+    check(
+      (await planPage
+        .locator(".plan-hero")
+        .evaluate((element) => getComputedStyle(element).backgroundColor)) ===
+        "rgb(15, 47, 40)",
+      `${viewport.name}: plan stylesheet did not load`,
+    );
+    check(
+      (await planPage.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
+      )) <= 1,
+      `${viewport.name}: styled plan overflows`,
+    );
+    await planPage.getByRole("link", { name: /Open prototype/ }).click();
+    check(
+      hash(planPage) === "#home",
+      `${viewport.name}: plan did not return to the prototype`,
+    );
+    check(
+      planErrors.length === 0,
+      `${viewport.name}: plan browser errors: ${planErrors.join("; ")}`,
+    );
+    await planPage.close();
   }
   console.log(
-    "Modern Grover prototype: public paths, five roles, three states, privacy, dialog, and responsive checks passed.",
+    "Modern Grover prototype: public paths, five roles, three states, styled plan, privacy, dialog, and responsive checks passed.",
   );
 } finally {
   await browser.close();

@@ -242,8 +242,9 @@ For the new website concept, start with the
 [modern prototype plan](review/modern-website-prototype-plan.md), its
 [separate persona profiles](personas/README.md), and the
 [working public and role preview](prototypes/modern-grover/index.html).
-This is design direction pending participant comparison and is not a current
-production mirror. Use the
+The [styled plan](prototypes/modern-grover/plan.html) is available for phone
+review. This is design direction pending participant comparison and is not a
+current production mirror. Use the
 [comparison guide](review/modern-website-comparison-guide.md) for the first
 public-path and five-role review sessions.
 

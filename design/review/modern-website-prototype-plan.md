@@ -2,6 +2,9 @@
 
 Status: planning and first-wave design direction, 2026-09-16
 
+The [styled browser view](../prototypes/modern-grover/plan.html) presents this
+plan on phones; this Markdown document remains the review source.
+
 ## Intent
 
 Use the existing Grover application as the baseline for a modern, coherent

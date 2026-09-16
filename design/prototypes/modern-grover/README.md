@@ -2,6 +2,8 @@
 
 Open [index.html](index.html) directly or visit `/design/prototypes/modern-grover/`
 on the local Vite review server. The prototype is static and dependency-free.
+The [styled plan](plan.html) is the phone-friendly browser view of the
+[canonical Markdown plan](../../review/modern-website-prototype-plan.md).
 
 Review routes:
 
@@ -17,15 +19,14 @@ authenticate, save a choice, publish a plan, or update production data.
 Dispatcher and Billing Administrator remain design-only roles and are excluded
 from this first-wave preview.
 
-The [plan](../../review/modern-website-prototype-plan.md) and
-[personas](../../personas/README.md) explain the intended review. This is a
+The [personas](../../personas/README.md) explain the intended review. This is a
 design direction, separate from the current React app and from the existing
 [service-thread prototype](../simplified-service-thread/README.md).
 Use the [comparison guide](../../review/modern-website-comparison-guide.md)
 to collect participant evidence before a production adoption proposal.
 
-Validate the five perspectives, three states, keyboard interaction, and desktop
-and phone layouts with:
+Validate the five perspectives, three states, styled plan, keyboard interaction,
+and desktop and phone layouts with:
 
 ```bash
 node design/tools/validate-modern-grover.mjs

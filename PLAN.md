@@ -41,7 +41,9 @@ focus return, and 1440/390/320px layouts. This is illustrative design direction;
 the existing React app and production access contracts remain authoritative.
 The [comparison guide](design/review/modern-website-comparison-guide.md) now
 defines matched public and role-comprehension tasks without claiming participant
-evidence. Next: run moderated sessions against the current frontend and
+evidence. A [styled plan page](design/prototypes/modern-grover/plan.html) now
+renders the design plan alongside the prototype for phone review. Next: run
+moderated sessions against the current frontend and
 service-thread direction before proposing React adoption.
 
 ### Current frontend design continuity
