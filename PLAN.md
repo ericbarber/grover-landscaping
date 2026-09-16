@@ -49,11 +49,12 @@ service-thread direction before proposing React adoption.
 The [September 16 critical workflow review](design/review/application-workflow-critical-review-2026-09-16.md)
 records current manager-navigation friction, public-promise and product-boundary
 drift, entry-path hypotheses, and the modern concept's inability to validate
-consequential actions. It defines a cross-role service blueprint and directs
+consequential actions. A [first-pass service blueprint](design/review/application-experience-blueprint.md)
+maps the customer, office, and field handoffs and their failure branches. It directs
 the prepared SX4/MW sessions toward observed task outcomes. This is expert
 review and local-browser evidence, not participant validation. Next: reconcile
-the public capability promise, map one exact service through five roles, then
-run the prepared sessions before React adoption.
+the public capability promise, prepare matched service records, then run the
+prepared sessions before React adoption.
 
 ### Current frontend design continuity
 

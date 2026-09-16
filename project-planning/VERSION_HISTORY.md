@@ -6,6 +6,11 @@
   audience entry, and next-owner clarity; it defines a cross-role service
   blueprint and evidence sequence. Findings are expert/browser observations and
   hypotheses, not participant results or production adoption approval.
+- 2026-09-16: Added a first-pass application experience blueprint connecting
+  private entry, exact scope, manager release, field/offline work, reviewed proof,
+  and customer outcome across five core roles. It names the source of truth and
+  failure branch at each handoff without claiming participant validation or
+  production implementation of every transition.
 - 2026-09-16: Added a responsive HTML plan page to the modern Grover prototype
   and routed its review link there. The Markdown plan remains canonical;
   desktop, phone, and narrow-phone browser checks verify the styled page and

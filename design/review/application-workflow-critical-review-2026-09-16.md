@@ -67,7 +67,9 @@ priorities, not claims about production incident severity.
 ## Build a clear picture of the experience
 
 Use one service outcome as the unit of study, then view it through each person's
-authorized perspective. The first map should show this chain:
+authorized perspective. The
+[first-pass cross-role blueprint](application-experience-blueprint.md) records
+the shared handoffs and open failure branches. It follows this chain:
 
 `public entry → access/relationship → need/scope → customer decision → exact plan/release → field work/offline exception → proof review → customer outcome/recovery`
 

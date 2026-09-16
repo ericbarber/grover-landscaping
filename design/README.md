@@ -58,6 +58,7 @@ design/
 ├── review/
 │   ├── checklist.md                   # Questions for each design review
 │   ├── application-workflow-critical-review-2026-09-16.md # Current workflow friction and evidence plan
+│   ├── application-experience-blueprint.md # Shared service and cross-role handoff map
 │   ├── current-frontend-design-audit-2026-09-03.md # Current UI parity and findings
 │   ├── frontend-truth-recovery-design.md # Adopted protected-read and route-state contract
 │   ├── minimalist-persona-prototype-plan.md # Task-first persona journey plan
