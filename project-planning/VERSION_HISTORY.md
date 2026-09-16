@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-16: Added independent Modern Grover personas for Yard Owner,
+  Property Manager, Company Owner, Company Manager, and Crew Lead, with
+  secondary/recovery perspectives for five more roles. Each first-wave
+  profile ties a task to source-backed access limits, prototype gaps, and a
+  research question. They remain hypotheses, not interview findings or new
+  backend permissions.
 - 2026-09-16: Prepared an independent Modern Grover formative session protocol
   and anonymous notes template. The script separates public claim/path
   comprehension from authenticated work, records normal entry and recovery,

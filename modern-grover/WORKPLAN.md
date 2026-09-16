@@ -123,6 +123,10 @@ Role tasks remain directional until matched records meet the fixture gate;
 Property Manager delegation, Plan 8/9 revision, and Crew Lead access transfer
 remain explicitly noncomparable completion tasks. No participant has been
 observed in this track.
+The [independent persona set](personas/README.md) now states the five
+first-wave tasks and authority boundaries plus five secondary/recovery
+perspectives. These are hypotheses tied to current-app gaps and simulated
+task moments; participant sessions must validate their language and needs.
 
 The existing [SX4 study](../design/review/simplified-product-experience-comparative-study.md)
 and [modern comparison guide](../design/review/modern-website-comparison-guide.md)

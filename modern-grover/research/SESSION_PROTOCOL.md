@@ -43,7 +43,7 @@ proposed concepts, but do not score them as comparative task completion.
 
 ## Participant and session setup
 
-- Recruit at least two people for each core perspective: Yard Owner, Property
+- Recruit at least two people for each [core perspective](../personas/README.md): Yard Owner, Property
   Manager, Company Owner, Company Manager, and Crew Lead. Include an owner who
   also manages daily operations and a Crew Lead on a representative phone.
 - Use synthetic identities and records. Record consent, device/viewport,

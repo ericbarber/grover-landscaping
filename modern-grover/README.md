@@ -16,6 +16,7 @@ is available at `/modern-grover/`. It is served separately from `/design/`.
 | --- | --- | --- |
 | [Workplan](WORKPLAN.md) | Planning and development sequence, phase exits, and immediate work | Active |
 | [Product decisions](PRODUCT_DECISIONS.md) | Questions that require a product choice before public or role adoption | Open decisions |
+| [Independent personas](personas/README.md) | Five first-wave task and authority hypotheses plus secondary/recovery perspectives | Research hypotheses; not participant findings |
 | [Public claim inventory](CLAIM_INVENTORY.md) | First-pass copy-to-capability audit and wording to test | Source audit; product copy unapproved |
 | [Current journey trace](CURRENT_JOURNEYS.md) | Phone review of normal entry paths and protected-read repairs | Local-review observation; matched records pending |
 | [Matched fixture specification](MATCHED_FIXTURES.md) | Two equivalent synthetic services for fair comparison | Specified; not seeded |
@@ -31,7 +32,7 @@ The existing [modern website preview](../design/prototypes/modern-grover/README.
 and its [earlier plan](../design/review/modern-website-prototype-plan.md) are
 prior candidates. The [simplified service-thread prototype](../design/prototypes/simplified-service-thread/README.md),
 [current frontend audit](../design/review/current-frontend-design-audit-2026-09-03.md),
-and [persona hypotheses](../design/personas/README.md) are research inputs.
+and [prior persona hypotheses](../design/personas/README.md) are research inputs.
 Their visual choices and navigation do not become the Modern Grover target
 without evidence and an explicit decision here.
 
