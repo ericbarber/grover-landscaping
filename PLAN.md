@@ -40,9 +40,11 @@ none is the approved target for this track. The prior
 validated illustrative concept with no React adoption or participant result.
 The current React app and production access contracts remain authoritative.
 
-M0 separation is delivered. M1 is next: audit public claims against delivered
-capability, trace current service and entry paths with exact fixtures, and
-resolve the open audience and role-context choices. Then build a new simulated
+M0 separation is delivered. M1 is in progress: a
+[first-pass public claim inventory](modern-grover/CLAIM_INVENTORY.md) now marks
+supported, ambiguous, and gated promises. Next, trace current service and entry
+paths with exact fixtures and resolve the open audience and role-context
+choices. Then build a new simulated
 cross-role service flow in this track, run matched participant tasks, and adopt
 only bounded, approved React/API slices. No new production UI is approved.
 

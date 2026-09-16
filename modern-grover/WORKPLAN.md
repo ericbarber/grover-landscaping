@@ -24,7 +24,9 @@ starting evidence. Earlier designs remain comparison inputs.
 1. Build the claim/capability inventory from the current public site, actual
    API/UI behavior, and [`PLAN.md`](../PLAN.md). The billing/revenue promise is
    the first known discrepancy; mark every entry delivered, local-review only,
-   prototype only, planned, gated, or unknown.
+   prototype only, planned, gated, or unknown. A
+   [first-pass source inventory](CLAIM_INVENTORY.md) is recorded; product
+   approval and hosted verification remain open.
 2. Record the current route and action path for five core tasks, using the
    [blueprint](review/application-experience-blueprint.md) as the handoff index.
    Keep source facts, inferred UX risk, and participant observation separate.

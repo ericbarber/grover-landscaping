@@ -16,6 +16,7 @@ is available at `/modern-grover/`. It is served separately from `/design/`.
 | --- | --- | --- |
 | [Workplan](WORKPLAN.md) | Planning and development sequence, phase exits, and immediate work | Active |
 | [Product decisions](PRODUCT_DECISIONS.md) | Questions that require a product choice before public or role adoption | Open decisions |
+| [Public claim inventory](CLAIM_INVENTORY.md) | First-pass copy-to-capability audit and wording to test | Source audit; product copy unapproved |
 | [Critical workflow review](review/application-workflow-critical-review-2026-09-16.md) | Evidence, design risks, and proposed rework | Expert/local-browser review; no participant results |
 | [Experience blueprint](review/application-experience-blueprint.md) | First-pass cross-role service and handoff map | Hypothesis for testing |
 

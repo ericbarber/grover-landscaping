@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-16: Began Modern Grover M1 with a source-based public claim inventory.
+  It separates locally implemented private-yard, portfolio, offline, and proof
+  capability from gated marketplace, billing, invoice, and payment promises;
+  proposed wording awaits product and participant review. No live marketing
+  copy changed.
 - 2026-09-16: Isolated the new Modern Grover planning and review in its own
   top-level track. The prior website, persona, and service-thread artifacts are
   now explicit inputs rather than an approved target. A track workplan and open
