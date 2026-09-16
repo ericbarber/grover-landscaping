@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | SX4 comparative study package is ready against the validated five-role service thread and seven contextual paths | Conduct counterbalanced participant sessions before production adoption planning |
+| Design | SX4 study is ready; modern website planning and ten persona profiles are recorded | Build the first responsive public/role-preview concept, then compare it in participant sessions |
 
 ## Status Legend
 
@@ -27,6 +27,18 @@ infer execution order from section position.
 | Backlog | Valuable but not part of the next delivery slice |
 
 ## In Progress
+
+### Modern website and application concept
+
+The [modern website prototype plan](design/review/modern-website-prototype-plan.md)
+starts a new design-review track for the existing application. Ten
+[persona profiles](design/personas/README.md) now define first answers, tasks,
+authority boundaries, and research prompts in a separate directory. A public
+website concept and five-role workspace preview are in progress. This work is
+illustrative design direction; the existing React app and production access
+contracts remain authoritative. Next: validate the responsive prototype and
+compare it with the current frontend and service-thread direction in moderated
+sessions before proposing React adoption.
 
 ### Current frontend design continuity
 

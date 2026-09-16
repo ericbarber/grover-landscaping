@@ -36,6 +36,7 @@ not copied into the production frontend build.
 design/
 ├── assets/                            # Original imagery and generation briefs
 ├── components/                        # Reusable UI catalog and state coverage
+├── personas/                           # Ten task and authority profiles for modern UI review
 ├── foundations/                       # Color, type, spacing, icons, and imagery
 │   └── navigation.md                  # Public, acquisition, and portal shell contract
 ├── high-fidelity/                     # Approved-direction visual concepts
@@ -235,6 +236,11 @@ Generated SVG files are committed intentionally: reviewers should not need the
 renderer or a design-tool account to see a proposed screen.
 
 ## Current review order
+
+For the new website concept, start with the
+[modern prototype plan](review/modern-website-prototype-plan.md) and its
+[separate persona profiles](personas/README.md). The working public and role
+preview follows as the next design slice.
 
 1. Start with the
    [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) to see
