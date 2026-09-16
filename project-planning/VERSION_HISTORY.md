@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-16: Started Modern Grover M2 in its independent directory with an
+  interactive Company Manager service decision concept. The synthetic Canyon
+  View flow connects accepted proposal v3, draft Plan 8, crew fit, correction,
+  exact-version simulated release, accountable next owner, stale Plan 9
+  recovery, and failed-read retry. Browser validation passed at 320, 390, and
+  1440px. No API action or participant result is claimed; customer, field, and
+  proof handoffs remain to build.
 - 2026-09-16: Reconciled current Home summaries with protected Yard Owner portal
   reads and loaded Crew Lead route dates/stops. Access errors no longer appear
   as an empty, clear schedule; historical routes are labeled read only across

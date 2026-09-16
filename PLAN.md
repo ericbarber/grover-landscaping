@@ -49,16 +49,21 @@ The bounded current-app Home continuity repair is delivered in local review:
 Yard Owner Home now reflects the protected portal read, while Crew Lead Home
 uses the loaded route date and stop count rather than assigned-job totals.
 The route header also shows the loaded service date. Next, prepare consistent
-service fixtures and resolve the open audience and role-context choices. Build
-a new simulated cross-role service flow in this track, run
+service fixtures and resolve the open audience and role-context choices. The
+[first new Company Manager decision prototype](modern-grover/prototype/README.md)
+is interactive and clearly simulated: it covers fit, correction, exact-version
+release, stale version, and failed-read recovery. Continue M2 through the
+customer decision, Crew Lead interruption, proof review, and customer outcome;
+then run
 matched participant tasks, and adopt only bounded, approved React/API slices.
 The continuity repair is a truth correction to the existing UI; the proposed
 new composition is not approved for production adoption.
 
 The [matched synthetic fixture specification](modern-grover/MATCHED_FIXTURES.md)
 now defines two equivalent cross-role services for fair current/new tasks.
-Those records are not seeded. Exact route/API mapping, access checks, fixture
-reset, and participant sessions remain open.
+Those records are not seeded. The prototype uses one specified synthetic task
+moment, not a current-app fixture. Exact route/API mapping, access checks,
+fixture reset, and participant sessions remain open.
 
 ### Current frontend design continuity
 
