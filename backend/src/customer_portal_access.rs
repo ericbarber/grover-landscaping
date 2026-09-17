@@ -161,6 +161,12 @@ const CUSTOMER_PORTAL_AUTHORIZATION_CTES: &str = r#"
               ON relation.organization_id = portal.organization_id
              AND relation.account_id = portal.account_id
              AND relation.status = 'active'
+            JOIN owner_provider_active_relationships relationship
+              ON relationship.activation_id = portal.activation_id
+             AND relationship.organization_id = portal.organization_id
+             AND relationship.customer_account_id = portal.account_id
+             AND relationship.customer_property_id = portal.property_id
+             AND relationship.status = 'active'
             JOIN customer_properties provenance_property
               ON provenance_property.id = portal.property_id
              AND provenance_property.organization_id = portal.organization_id

@@ -5289,6 +5289,14 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .await
     .expect("the fixture relationship should end");
     assert!(matches!(
+        portal_access.list_authorized_properties(owner_a).await,
+        CustomerPortalPropertyAccessResult::InvalidAuthorization
+    ));
+    assert!(matches!(
+        portal_access.list_confirmed_visits(owner_a).await,
+        CustomerPortalVisitReadResult::InvalidAuthorization
+    ));
+    assert!(matches!(
         visit_communication
             .get_customer_thread(owner_a, &customer_visit_reference)
             .await,

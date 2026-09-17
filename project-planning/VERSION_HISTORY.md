@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-17: Bound customer portal property and visit reads to the active
+  provider relationship behind each grant. Ending a relationship now withholds
+  the property collection even if its old grant and membership remain active.
+  Formatting, backend type check, and the isolated database lifecycle test
+  passed. This is a prerequisite for customer-controlled manager delegation;
+  grant issuance remains unimplemented.
 - 2026-09-17: Decided Modern Grover MG-D6: the customer controls Property
   Manager access after accepting the company as the service team. The first
   access contract maps that moment to completed provider relationship

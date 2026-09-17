@@ -17,10 +17,10 @@ or grant identifier from the browser.
 
 Every read begins with active portal grants and requires a matching active
 organization membership with the same provider organization, role, scope type,
-and scope identifier. It then revalidates the active provider/account relation,
-the current property relation, and either customer-account inheritance or the
-exact property grant. One stale or inconsistent active grant fails the entire
-read closed.
+and scope identifier. It then revalidates the active provider relationship,
+provider/account relation, the current property relation, and either
+customer-account inheritance or the exact property grant. One stale or
+inconsistent active grant fails the entire read closed.
 
 ## Success response
 
@@ -82,7 +82,8 @@ from the exact confirmed first visit.
 - `403 customer_portal_access_required`: no active portal grant matches the
   authenticated subject.
 - `409 customer_portal_access_inconsistent`: at least one active grant does not
-  match its current organization, account, property, role, membership, or scope.
+  match its current provider relationship, organization, account, property,
+  role, membership, or scope.
 - `503 customer_portal_visits_unavailable`: authorization or visit persistence
   could not be read. No partial collection is returned.
 

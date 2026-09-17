@@ -101,6 +101,10 @@ requires property-scoped invitation, recipient acceptance, customer
 revocation, and protected read checks. The current activation path still
 cannot issue that role's grant, so this comparison task stays out of
 completion scoring until the workflow and matched fixture are delivered.
+The customer portal property and visit read now also requires the provider
+relationship behind an active grant to remain active. An ended relationship
+with a stale active grant fails closed; the isolated database lifecycle test
+covers both property and visit reads.
 The [Modern Grover formative protocol](modern-grover/research/SESSION_PROTOCOL.md)
 and [session notes template](modern-grover/research/SESSION_NOTES_TEMPLATE.md)
 now define neutral public and role tasks, comparison eligibility, and evidence
