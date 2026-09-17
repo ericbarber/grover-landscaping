@@ -42,7 +42,7 @@ intact. Never count the seeded June route as Canyon View or Sage Lane.
 2. Verify owner/grant/scope denial, exact proposal version, confirmed visit,
    current-day route, and delivered-only proof through that study API before
    recording a matched task. Property Manager grant issuance still requires
-   [MG-D6](../PRODUCT_DECISIONS.md).
+   implementation of the decided [MG-D6](../PRODUCT_DECISIONS.md) rule.
 
 The API is reachable over the private Tailscale address at
 `http://100.88.21.105:8081`; it is a data-isolation endpoint, not a separate

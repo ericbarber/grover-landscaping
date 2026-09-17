@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-17: Decided Modern Grover MG-D6: the customer controls Property
+  Manager access after accepting the company as the service team. The first
+  access contract maps that moment to completed provider relationship
+  activation, scopes each grant to one property, and requires recipient
+  acceptance and customer revocation. Existing code still issues only an
+  owner grant, so no manager access or matched task is claimed yet.
 - 2026-09-16: Started and enabled a separate `grover-modern-study-api` user
   service against the isolated study database on port 8081. Its process
   identity and `local_review` mode were verified without exposing credentials;

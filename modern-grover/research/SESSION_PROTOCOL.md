@@ -36,7 +36,8 @@ completion `not comparable` where its record or action is absent. Never count a
 prototype click as a backend write.
 
 The Property Manager decision cannot be a completion comparison until a
-supported grant and delegation workflow exists ([MG-D6](../PRODUCT_DECISIONS.md)).
+supported grant and delegation workflow implements the decided
+[MG-D6](../PRODUCT_DECISIONS.md) rule.
 The Plan 8/9 revision and Crew Lead access-question transfer also lack
 equivalent current-app transitions. Test whether people understand those
 proposed concepts, but do not score them as comparative task completion.

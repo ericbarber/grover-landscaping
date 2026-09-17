@@ -54,8 +54,8 @@ access withholds the former preview properties and progress. The local reviewer
 has no valid portal grant, so an authorized two-property task still requires
 fixtures. Next, prepare consistent service fixtures and resolve the open
 audience and role-context choices. The current activation write issues only a
-Property Owner portal grant; a supported Property Manager delegation contract
-is needed before that role's matched task can be scored. The
+Property Owner portal grant; the approved Property Manager delegation
+workflow must be implemented before that role's matched task can be scored. The
 [linked Yard Owner, Company Manager, and Crew Lead prototypes](modern-grover/prototype/README.md)
 are interactive and clearly simulated: they cover proposal acceptance,
 customer consequence, crew fit, exact-version release, field access questions,
@@ -94,10 +94,13 @@ is now created and migrated, with its own active local-review API on port 8081.
 It contains only migration baseline records, including a historical June
 route; a seeder, reset, and matched records are not yet available. The phone
 review app still uses the shared API on port 8080.
-The Property Manager grant authority and scope are an open
-[MG-D6 product decision](modern-grover/PRODUCT_DECISIONS.md). The current
-activation path cannot issue that role's grant, so this comparison task stays
-out of completion scoring until the decision and API contract are delivered.
+The [MG-D6 product decision](modern-grover/PRODUCT_DECISIONS.md) now assigns
+Property Manager access to the customer after the provider relationship is
+active. The [delegation contract](modern-grover/PROPERTY_MANAGER_ACCESS.md)
+requires property-scoped invitation, recipient acceptance, customer
+revocation, and protected read checks. The current activation path still
+cannot issue that role's grant, so this comparison task stays out of
+completion scoring until the workflow and matched fixture are delivered.
 The [Modern Grover formative protocol](modern-grover/research/SESSION_PROTOCOL.md)
 and [session notes template](modern-grover/research/SESSION_NOTES_TEMPLATE.md)
 now define neutral public and role tasks, comparison eligibility, and evidence

@@ -15,7 +15,8 @@ is available at `/modern-grover/`. It is served separately from `/design/`.
 | Document | Role | Status |
 | --- | --- | --- |
 | [Workplan](WORKPLAN.md) | Planning and development sequence, phase exits, and immediate work | Active |
-| [Product decisions](PRODUCT_DECISIONS.md) | Questions that require a product choice before public or role adoption | Open decisions |
+| [Product decisions](PRODUCT_DECISIONS.md) | Questions that require a product choice before public or role adoption | MG-D6 decided; MG-D1–D5 open |
+| [Property Manager access contract](PROPERTY_MANAGER_ACCESS.md) | Customer-controlled delegation after provider relationship activation | MG-D6 rule decided; API/UI not delivered |
 | [Independent personas](personas/README.md) | Five first-wave task and authority hypotheses plus secondary/recovery perspectives | Research hypotheses; not participant findings |
 | [Public claim inventory](CLAIM_INVENTORY.md) | First-pass copy-to-capability audit and wording to test | Source audit; product copy unapproved |
 | [Current journey trace](CURRENT_JOURNEYS.md) | Phone review of normal entry paths and protected-read repairs | Local-review observation; matched records pending |

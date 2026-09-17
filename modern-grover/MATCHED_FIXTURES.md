@@ -59,8 +59,10 @@ separately from completion.
 Implementing the records in the current app is separate development work. The
 [current-app fixture and authority map](FIXTURE_READINESS.md) identifies the
 supported route/API chain, source-backed gaps, and a safe snapshot sequence.
-The current activation write cannot issue a Property Manager portal grant;
-that role's fixture needs a supported delegation contract first.
+The current activation write cannot issue a Property Manager portal grant.
+The customer-controlled [delegation contract](PROPERTY_MANAGER_ACCESS.md)
+must be implemented before that role's fixture can be treated as an
+equivalent current-app task.
 The [workplan](WORKPLAN.md) requires matched records and reset verification
 before participant sessions. The [read-only fixture probe](fixtures/README.md)
 captures baseline API states and counts; it does not seed the matched records.

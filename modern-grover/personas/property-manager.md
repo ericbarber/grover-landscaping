@@ -23,8 +23,8 @@ detail appears in the customer portfolio.
 **Source and gap.** Current Home and Portfolio now use a protected visit read,
 which denies this local review identity. Relationship activation issues only
 an owner grant; supported manager delegation and access-request transfer do
-not exist. [MG-D6](../PRODUCT_DECISIONS.md) must settle granting authority,
-scope, and revocation. The [prototype](../prototype/portfolio.html) is a
+not exist. [MG-D6](../PRODUCT_DECISIONS.md) now makes the customer responsible
+for delegation after provider activation. The [prototype](../prototype/portfolio.html) is a
 conceptual task, not an authorized or persisted response.
 
 **Research check.** Can a person find the exact affected property, distinguish

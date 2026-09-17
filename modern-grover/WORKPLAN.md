@@ -83,7 +83,7 @@ work. No actual photo is supplied. All six moments pass 320, 390, and 1440px
 state, privacy, focus, and overflow checks. The current-app route/API authority
 review is recorded in the [fixture map](FIXTURE_READINESS.md), and separate
 Property Manager and Company Owner task perspectives are available for study.
-Matched records, role delegation decisions, and participant evidence remain
+Matched records, role delegation implementation, and participant evidence remain
 before React adoption.
 
 The separate Property Manager and Company Owner task concepts now cover an
@@ -98,7 +98,7 @@ properties are withheld. The earlier preview-only Proof and Approvals tabs
 are not claimed in this protected workspace. These moments cannot be scored
 as matched task completion by seeding records alone. The activation path only
 issues a Property Owner portal grant; Property Manager delegation/issuance
-needs an explicit contract before that role's matched fixture. Next safe
+needs implementation before that role's matched fixture. Next safe
 slice: prepare repeatable Yard Owner proposal/portal fixture copies and verify
 their grant, scope, and normal entry before a participant comparison.
 The [isolated seed contract](fixtures/SEED_CONTRACT.md) now fixes the target
@@ -114,10 +114,15 @@ an older June 15 Crew Lead route with two stops, and zero open manager
 exceptions. These are local-review baseline counts, not evidence that the
 matched Canyon View/Sage Lane records exist. The next fixture work must use
 isolated synthetic identities and a tested reset path before writes.
-Property Manager delegation is now tracked as [MG-D6](PRODUCT_DECISIONS.md);
-the local environment has an active shared review API and a separate migrated
-study database/API, but no fixture reset path. The next writable fixture slice
-must verify the study target identity and prove manifest-owned reset before
+The customer-controlled Property Manager delegation rule is now decided in
+[MG-D6](PRODUCT_DECISIONS.md): the customer may delegate one property after
+the company relationship is active, and may revoke that access. The
+[access contract](PROPERTY_MANAGER_ACCESS.md) defines the required API and
+recipient checks. Its migration, endpoints, UI, and matched fixture remain
+development work. The local environment has an active shared review API and a
+separate migrated study database/API, but no fixture reset path. The next
+writable fixture slice must verify the study target identity and prove
+manifest-owned reset before
 any participant use.
 The fresh migrations add a June 15 sample route, which remains baseline data
 and cannot be mistaken for a matched current-day record.
@@ -127,8 +132,8 @@ The [independent session protocol](research/SESSION_PROTOCOL.md) and
 formative round. Public path and claim comprehension can be observed now.
 Role tasks remain directional until matched records meet the fixture gate;
 Property Manager delegation, Plan 8/9 revision, and Crew Lead access transfer
-remain explicitly noncomparable completion tasks. No participant has been
-observed in this track.
+remain explicitly noncomparable completion tasks until their workflows exist.
+No participant has been observed in this track.
 The [independent persona set](personas/README.md) now states the five
 first-wave tasks and authority boundaries plus five secondary/recovery
 perspectives. These are hypotheses tied to current-app gaps and simulated

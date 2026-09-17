@@ -56,9 +56,11 @@ otherwise the current app would present the route as historical and the task
 would not be comparable.
 
 The activation write creates only a Property Owner membership and portal
-grant. A Property Manager grant issuance/revocation workflow does not yet
-exist. Do not fabricate a manager grant by SQL and claim the delegation task
-works. Company Owner accountability, provider-originated property access
+grant. [MG-D6](../PRODUCT_DECISIONS.md) now assigns Property Manager access
+to customer-controlled delegation after relationship activation, but the
+issuance/revocation workflow does not yet exist. Do not fabricate a manager
+grant by SQL and claim the delegation task works. Company Owner
+accountability, provider-originated property access
 questions, and Plan 8/9 exact revision semantics also need product/API
 decisions before they can be scored as equivalent completion tasks.
 
