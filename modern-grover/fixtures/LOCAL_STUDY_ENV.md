@@ -20,7 +20,7 @@ the repository; the shared review API remains on port 8080.
 | Pre-create guard | Target database absent; local role had `CREATEDB` authority. |
 | Fresh database identity | `grover_modern_study`, owner `grover`, zero public tables before migrations. |
 | Migration run | Current `backend` `cargo run --bin migrate` completed; second run also completed. |
-| Migration verification | 124 SQLx migrations, all marked successful. |
+| Migration verification | 125 SQLx migrations, all marked successful after the customer Property Manager delegation schema was added on 2026-09-17. |
 | Task-related record counts | `owner_properties` 0; `customer_portal_access_grants` 0; `operational_exceptions` 0. |
 | Existing baseline route | `day_plans` 1: migration `0003_add_day_plan_tables.sql` inserts a published June 15, 2026 sample for `crew_1001` with two stops. It is not a Modern Grover fixture. |
 | Separate API identity | Process environment points to `grover_modern_study`, `local_review`, and port 8081; service is active and enabled. |

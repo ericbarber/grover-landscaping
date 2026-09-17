@@ -167,6 +167,20 @@ const CUSTOMER_PORTAL_AUTHORIZATION_CTES: &str = r#"
              AND relationship.customer_account_id = portal.account_id
              AND relationship.customer_property_id = portal.property_id
              AND relationship.status = 'active'
+            JOIN owner_provider_relationship_activations activation
+              ON activation.id = portal.activation_id
+             AND activation.organization_id = portal.organization_id
+             AND activation.customer_account_id = portal.account_id
+             AND activation.customer_property_id = portal.property_id
+            LEFT JOIN customer_property_manager_invitations delegation
+              ON delegation.id = portal.delegation_invitation_id
+             AND delegation.activation_id = portal.activation_id
+             AND delegation.organization_id = portal.organization_id
+             AND delegation.account_id = portal.account_id
+             AND delegation.property_id = portal.property_id
+             AND delegation.owner_user_id = activation.owner_user_id
+             AND delegation.accepted_user_id = portal.user_id
+             AND delegation.status = 'accepted'
             JOIN customer_properties provenance_property
               ON provenance_property.id = portal.property_id
              AND provenance_property.organization_id = portal.organization_id
@@ -179,11 +193,16 @@ const CUSTOMER_PORTAL_AUTHORIZATION_CTES: &str = r#"
              AND membership.scope_type = portal.scope_type
              AND membership.scope_id = portal.scope_id
             WHERE (
-                portal.scope_type = 'customer_account'
-                AND portal.scope_id = portal.account_id
-            ) OR (
-                portal.scope_type = 'property'
-                AND portal.scope_id = portal.property_id
+                (portal.access_role = 'property_owner'
+                 AND portal.user_id = activation.owner_user_id
+                 AND portal.delegation_invitation_id IS NULL)
+                OR (portal.access_role = 'property_manager'
+                    AND delegation.id IS NOT NULL)
+            ) AND (
+                (portal.scope_type = 'customer_account'
+                 AND portal.scope_id = portal.account_id)
+                OR (portal.scope_type = 'property'
+                    AND portal.scope_id = portal.property_id)
             )
         ),
         validation AS (

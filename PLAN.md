@@ -98,8 +98,10 @@ The [MG-D6 product decision](modern-grover/PRODUCT_DECISIONS.md) now assigns
 Property Manager access to the customer after the provider relationship is
 active. The [delegation contract](modern-grover/PROPERTY_MANAGER_ACCESS.md)
 requires property-scoped invitation, recipient acceptance, customer
-revocation, and protected read checks. The current activation path still
-cannot issue that role's grant, so this comparison task stays out of
+revocation, and protected read checks. The invitation/grant schema and
+accepted-invitation protected-read gate are now delivered, while customer
+issuance, recipient acceptance, and revocation routes are not. The current
+activation path still cannot issue that role's grant, so this comparison task stays out of
 completion scoring until the workflow and matched fixture are delivered.
 The customer portal property and visit read now also requires the provider
 relationship behind an active grant to remain active. An ended relationship

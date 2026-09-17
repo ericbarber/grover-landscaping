@@ -1,8 +1,8 @@
 # Customer-controlled Property Manager access contract
 
-Status: product authority decided under [MG-D6](PRODUCT_DECISIONS.md);
-implementation contract for a future bounded API/UI slice. No issuance or
-revocation route is delivered yet.
+Status: product authority decided under [MG-D6](PRODUCT_DECISIONS.md).
+Invitation/grant schema and accepted-invitation read checks are delivered;
+customer issuance, recipient acceptance, revocation routes, and UI are not.
 
 ## Customer action and timing
 
@@ -50,17 +50,24 @@ defaults chosen to make the approved authority rule enforceable. They require
 normal task validation with customers and managers; this document does not
 claim those interactions have been observed or approved as final UI copy.
 
-## Source changes required
+## Source implementation status
 
-The current `customer_portal_access_grants.activation_id` is unique, so the
-owner's activation grant prevents a second manager grant. The current
-activation transaction also creates only a `property_owner` membership/grant.
-A migration must permit separately identified delegated grants while
-preserving the one owner-origin grant per activation and the existing
-organization/account/property/user uniqueness. The issuance transaction
-must lock and recheck the active relationship and customer authority before
-writing. The read path must reject a delegated grant after relationship end,
-membership suspension, recipient mismatch, or customer revocation.
+The migration now provides pending/accepted/revoked/expired invitations,
+audit events, one owner-origin grant per activation, and separately sourced
+property-scoped manager grants. The existing
+organization/account/property/user uniqueness remains. The activation read
+still selects the owner's grant when a manager grant shares that activation.
+Portal property/visit, customer message/proof, and recommendation reads
+require an accepted invitation with the same customer, activation,
+organization, account, property, and recipient, plus an active relationship
+and matching manager membership. A revoked invitation fails closed even if
+its old grant still says `active`.
+
+The activation transaction still creates only a `property_owner` grant.
+Customer invitation creation, verified-recipient acceptance, grant/membership
+issuance, customer revocation, audit writes, and the Yard Owner UI remain the
+next implementation work. Those writes must lock and recheck the active
+relationship and customer authority before committing.
 
 The first UI slice belongs in the Yard Owner's activated provider relationship
 view: “People with access” lists property, recipient, pending/active/revoked

@@ -191,6 +191,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   the minimized persisted confirmed-visit read and fail-closed Yard Owner
   Home/Visits adoption are delivered with loading, valid-empty, missing-access,
   inconsistent-access, unavailable, and retry states and no illustrative fallback
+- Customer-controlled Property Manager delegation persistence now separates
+  the owner activation grant from property-scoped manager grants and requires
+  an accepted matching invitation on protected reads; customer invitation,
+  acceptance, and revocation APIs/UI remain planned
 - Delivered immutable provider service-release and customer-status persistence
   linking the exact confirmed first visit, accepted service scope, current
   organization/account/property relationship, authorized provider membership,

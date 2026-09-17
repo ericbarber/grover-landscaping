@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-09-17: Added the Property Manager delegation persistence foundation.
+  A customer invitation and audit schema permits a property-scoped manager
+  grant beside the owner's activation grant. The activation read still returns
+  the owner grant; portal, message/proof, and recommendation reads require the
+  exact accepted customer invitation and fail closed after its revocation.
+  The isolated database migration and lifecycle test passed. No customer
+  issuance, recipient acceptance, or
+  revocation endpoint/UI is delivered yet.
 - 2026-09-17: Bound customer portal property and visit reads to the active
   provider relationship behind each grant. Ending a relationship now withholds
   the property collection even if its old grant and membership remain active.

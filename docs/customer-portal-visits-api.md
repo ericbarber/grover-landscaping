@@ -21,6 +21,10 @@ and scope identifier. It then revalidates the active provider relationship,
 provider/account relation, the current property relation, and either
 customer-account inheritance or the exact property grant. One stale or
 inconsistent active grant fails the entire read closed.
+For a Property Manager grant, the server also requires a matching accepted
+customer invitation for the exact activation, property, and verified
+recipient. A revoked invitation cannot authorize a read through a stale
+active grant.
 
 ## Success response
 

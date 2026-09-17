@@ -118,8 +118,9 @@ The customer-controlled Property Manager delegation rule is now decided in
 [MG-D6](PRODUCT_DECISIONS.md): the customer may delegate one property after
 the company relationship is active, and may revoke that access. The
 [access contract](PROPERTY_MANAGER_ACCESS.md) defines the required API and
-recipient checks. Its migration, endpoints, UI, and matched fixture remain
-development work. The local environment has an active shared review API and a
+recipient checks. Its invitation/grant migration and accepted-invitation read
+gate are delivered; issuance/revocation endpoints, UI, and matched fixture
+remain development work. The local environment has an active shared review API and a
 separate migrated study database/API, but no fixture reset path. The next
 writable fixture slice must verify the study target identity and prove
 manifest-owned reset before
