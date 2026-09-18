@@ -28,6 +28,13 @@ instructions. Add `eric480` to the `docker` group and reconnect before testing
 `docker compose version` without `sudo`. Keep the Pi's operating system and
 Docker updated.
 
+The target at `192.168.50.10` was inspected on 2026-09-18: it is a Raspberry
+Pi 3 Model B with 1 GB RAM and a 32-bit `armhf` OS. Docker and Tailscale are
+absent. The ARM64 deployment job cannot run on that OS. Resolve this by
+installing Raspberry Pi OS Lite 64-bit or by adapting the image pipeline to
+ARMv7 before enabling deployment. Reimaging an SD card erases its contents;
+back up anything needed first.
+
 1. Join the Pi to the same tailnet as the development workstation. Choose a
    stable hostname, for example `grover-dev-pi`, and record the complete
    `*.ts.net` DNS name from `tailscale status`. Enable MagicDNS and HTTPS
