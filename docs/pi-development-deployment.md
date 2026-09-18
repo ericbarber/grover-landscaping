@@ -42,7 +42,8 @@ was reimaged from 32-bit Raspberry Pi OS to 64-bit Debian Trixie on 2026-09-18.
 The new SSH host key was checked against the device's unchanged Ethernet MAC
 address before updating the workstation's known-hosts entry. The workstation
 public key was reinstalled. Docker Engine, Compose, and Tailscale are now
-installed and running; Tailscale device authentication is pending. The prior
+installed and running; the Pi joined the tailnet as
+`grover-dev-pi.tailf6631b.ts.net`. The prior
 home directory was backed up outside this repository and was not restored
 wholesale onto the new OS.
 
@@ -98,6 +99,16 @@ with `auth_keys` scope for `tag:grover-ci`, restricted to this repository and
 its `main` deployment workflow. Set these GitHub `pi-development` environment
 secrets and variable:
 
+For this repository, open [Tailscale Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials),
+select **Credential → OpenID Connect → GitHub Actions**, and use subject
+`repo:ericbarber/grover-landscaping:environment:pi-development`. Add custom
+claims `ref=refs/heads/main` and
+`workflow_ref=ericbarber/grover-landscaping/.github/workflows/ci.yml@refs/heads/main`.
+Grant only `auth_keys` scope for `tag:grover-ci`, then copy the generated Client
+ID and Audience to the GitHub environment secrets below. The repository uses
+GitHub's default OIDC subject format and was created before the July 2026
+immutable-subject cutoff; recheck the subject if GitHub OIDC settings change.
+
 | Name | Kind | Value |
 | --- | --- | --- |
 | `TS_OAUTH_CLIENT_ID` | Secret | Tailscale federated identity client ID |
@@ -119,11 +130,14 @@ from this local checkout; publication still requires a deliberate push.
 
 The GitHub `pi-development` environment has been created with a `main`-only
 branch policy and `PI_SSH_PRIVATE_KEY` set to a dedicated CI key. Its public
-half is installed on the Pi and a dedicated-key SSH login succeeded. The
-Compose and deployment files are present on the Pi with matching checksums.
-The repository variable `PI_DEPLOY_ENABLED` is currently `false`. The Pi still
-needs a verified SSH host key under its tailnet name, a tailnet address, and
-the Tailscale federation values.
+half is installed on the Pi and a dedicated-key SSH login succeeded over
+Tailscale. The Compose and deployment files are present on the Pi with matching
+checksums. The SSH host key was verified against the Pi's local key and stored
+as `PI_SSH_KNOWN_HOSTS`; `PI_TAILSCALE_HOST` names
+`grover-dev-pi.tailf6631b.ts.net`. A private `.env` exists on the Pi, and
+PostgreSQL is healthy with a named data volume. The repository variable
+`PI_DEPLOY_ENABLED` is still `false`; Tailscale federation and tailnet grants
+remain to be configured.
 
 ## Operating the site
 

@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-18: Joined the development Pi to Tailscale, pinned its verified
+  tailnet SSH key in the GitHub environment, and created its private runtime
+  settings and healthy PostgreSQL volume. Tailscale Serve enablement, CI
+  federation, and first application deployment remain pending.
 - 2026-09-18: Reimaged the development Pi to 64-bit Debian Trixie and added a
   guarded host-dependency installer using the official Docker and Tailscale
   apt repositories. Docker Engine, Compose, and Tailscale services are active;

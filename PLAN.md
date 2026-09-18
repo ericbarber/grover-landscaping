@@ -12,7 +12,7 @@ infer execution order from section position.
 | Lane | Current state | Next phase |
 | --- | --- | --- |
 | Repository | R3 production-smoke safety and persistence contract is delivered | Await R2 external access or the P2 product-boundary decision |
-| Private review | Pi now runs ARM64 with Docker and Tailscale installed; the CI deployment remains disabled and unhosted | Join Pi to tailnet, configure Serve and GitHub trust, then verify first deploy |
+| Private review | Pi runs ARM64, has joined the tailnet, and has healthy PostgreSQL; the CI deployment remains disabled and unhosted | Enable Serve and GitHub workload trust, then verify first deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
 | Design | Prior concepts remain review inputs; Modern Grover M1 remains open and eight M2 task moments are simulated | Prepare matched proposal/portal fixtures, resolve entry choices, then run participant sessions |
@@ -40,11 +40,14 @@ infer execution order from section position.
 - The GitHub `pi-development` environment exists with a `main`-only branch
   policy and a dedicated CI SSH private-key secret. `PI_DEPLOY_ENABLED=false`.
   The matching CI public key is installed on the Pi and was verified with a
-  dedicated-key SSH login. The Compose and deployment files are copied to the
-  Pi with matching checksums. Tailscale device authentication is pending in
-  the owner's browser. Configure pinned SSH host key and Tailscale workload
-  identity, create the PostgreSQL volume and runtime secret, then verify the
-  first deployment. No Pi deployment or tailnet URL has been verified yet.
+  dedicated-key SSH login through Tailscale. The Compose and deployment files
+  are copied to the Pi with matching checksums. The Pi joined the tailnet as
+  `grover-dev-pi.tailf6631b.ts.net`; its SSH host key was pinned in the GitHub
+  environment, and `PI_TAILSCALE_HOST` is set. A private runtime `.env` exists
+  on the Pi and PostgreSQL is healthy with a named data volume. Tailscale Serve
+  enablement awaits the owner's browser approval. Configure CI workload
+  identity and tailnet grants, then verify the first deployment. No application
+  image has been deployed or tailnet HTTPS site verified yet.
 
 ### Modern Grover independent planning and review
 
