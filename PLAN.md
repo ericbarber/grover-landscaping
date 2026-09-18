@@ -39,10 +39,12 @@ infer execution order from section position.
   installed and their services active; a fresh SSH session can use Docker.
 - The GitHub `pi-development` environment exists with a `main`-only branch
   policy and a dedicated CI SSH private-key secret. `PI_DEPLOY_ENABLED=false`.
-  Tailscale device authentication is pending in the owner's browser. Add the
-  CI public key, configure pinned SSH host key and Tailscale workload identity,
-  create the PostgreSQL volume and runtime secret, then verify the first
-  deployment. No Pi deployment or tailnet URL has been verified yet.
+  The matching CI public key is installed on the Pi and was verified with a
+  dedicated-key SSH login. The Compose and deployment files are copied to the
+  Pi with matching checksums. Tailscale device authentication is pending in
+  the owner's browser. Configure pinned SSH host key and Tailscale workload
+  identity, create the PostgreSQL volume and runtime secret, then verify the
+  first deployment. No Pi deployment or tailnet URL has been verified yet.
 
 ### Modern Grover independent planning and review
 

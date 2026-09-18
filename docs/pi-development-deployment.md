@@ -118,10 +118,12 @@ commit checked by CI. Pull requests never deploy. The workflow does not deploy
 from this local checkout; publication still requires a deliberate push.
 
 The GitHub `pi-development` environment has been created with a `main`-only
-branch policy and `PI_SSH_PRIVATE_KEY` set to a dedicated CI key. The repository
-variable `PI_DEPLOY_ENABLED` is currently `false`. The Pi still needs that
-key's public half, a verified new SSH host key, a tailnet address, and the
-Tailscale federation values after the 64-bit reimage.
+branch policy and `PI_SSH_PRIVATE_KEY` set to a dedicated CI key. Its public
+half is installed on the Pi and a dedicated-key SSH login succeeded. The
+Compose and deployment files are present on the Pi with matching checksums.
+The repository variable `PI_DEPLOY_ENABLED` is currently `false`. The Pi still
+needs a verified SSH host key under its tailnet name, a tailnet address, and
+the Tailscale federation values.
 
 ## Operating the site
 
