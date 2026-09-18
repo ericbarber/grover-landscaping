@@ -35,6 +35,13 @@ installing Raspberry Pi OS Lite 64-bit or by adapting the image pipeline to
 ARMv7 before enabling deployment. Reimaging an SD card erases its contents;
 back up anything needed first.
 
+The owner chose Raspberry Pi OS Lite 64-bit and is flashing the SD card on a
+different laptop. In Imager Customisation, create user `eric480`, choose a
+stable hostname, and enable SSH with password authentication for first login.
+Reconnect the existing Ethernet cable for first boot. The Pi's previous home
+directory was backed up outside this repository; reinstall keys selectively
+after boot rather than restoring old OS configuration wholesale.
+
 1. Join the Pi to the same tailnet as the development workstation. Choose a
    stable hostname, for example `grover-dev-pi`, and record the complete
    `*.ts.net` DNS name from `tailscale status`. Enable MagicDNS and HTTPS
@@ -105,6 +112,12 @@ the repository variable `PI_DEPLOY_ENABLED` to `true`. Until then, the deploy
 job is skipped. Each passing push to `main` then builds and deploys the exact
 commit checked by CI. Pull requests never deploy. The workflow does not deploy
 from this local checkout; publication still requires a deliberate push.
+
+The GitHub `pi-development` environment has been created with a `main`-only
+branch policy and `PI_SSH_PRIVATE_KEY` set to a dedicated CI key. The repository
+variable `PI_DEPLOY_ENABLED` is currently `false`. The Pi still needs that
+key's public half, a verified new SSH host key, a tailnet address, and the
+Tailscale federation values after the 64-bit reimage.
 
 ## Operating the site
 

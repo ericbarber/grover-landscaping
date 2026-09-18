@@ -12,7 +12,7 @@ infer execution order from section position.
 | Lane | Current state | Next phase |
 | --- | --- | --- |
 | Repository | R3 production-smoke safety and persistence contract is delivered | Await R2 external access or the P2 product-boundary decision |
-| Private review | Existing Tailscale React/PostgreSQL review is available; an opt-in Pi ARM64 deployment path is repository-ready but not hosted | Resolve the Pi's 32-bit OS mismatch, then provision tailnet Serve and GitHub environment |
+| Private review | Existing Tailscale React/PostgreSQL review is available; the Pi ARM64 deploy path is opt-in and not hosted | Await 64-bit Lite reimage, then provision Docker, Tailscale, and first deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
 | Design | Prior concepts remain review inputs; Modern Grover M1 remains open and eight M2 task moments are simulated | Prepare matched proposal/portal fixtures, resolve entry choices, then run participant sessions |
@@ -33,14 +33,15 @@ infer execution order from section position.
 - The repository has an opt-in `main` deployment job gated by all CI checks,
   an ARM64 image build, private Compose runtime, readiness/rollback script,
   and Tailscale setup instructions. SSH key access to `eric480@192.168.50.10`
-  now works. The target is a Raspberry Pi 3 Model B with 1 GB RAM running
-  32-bit Raspberry Pi OS (`armhf`); Docker and Tailscale are not installed.
-  No Pi deployment or tailnet URL has been verified.
-- Resolve the OS/image architecture mismatch before preparing the Pi with
-  Docker, PostgreSQL volume, a runtime secret, and Tailscale Serve. Configure
-  pinned SSH and Tailscale workload identity in the GitHub `pi-development`
-  environment; enable `PI_DEPLOY_ENABLED` when those prerequisites are ready
-  and verify the first passing `main` deployment.
+  works on the current OS. The target is a Raspberry Pi 3 Model B with 1 GB
+  RAM. A home-directory backup is held outside the repository. The user chose
+  Raspberry Pi OS Lite 64-bit and is physically reimaging its SD card.
+- The GitHub `pi-development` environment exists with a `main`-only branch
+  policy and a dedicated CI SSH private-key secret. `PI_DEPLOY_ENABLED=false`.
+  After the Pi boots, install Docker and Tailscale, add the CI public key,
+  configure pinned SSH host key and Tailscale workload identity, create the
+  PostgreSQL volume and runtime secret, then verify the first deployment.
+  No Pi deployment or tailnet URL has been verified yet.
 
 ### Modern Grover independent planning and review
 
