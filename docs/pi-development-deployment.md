@@ -99,6 +99,12 @@ with `auth_keys` scope for `tag:grover-ci`, restricted to this repository and
 its `main` deployment workflow. Set these GitHub `pi-development` environment
 secrets and variable:
 
+First open [Tailscale Access controls](https://console.tailscale.com/admin/acls),
+choose **Tags → Create tag**, and enter `grover-ci` as the tag name without the
+`tag:` prefix. Leave the default admin ownership if offered. Save the tag so
+`tag:grover-ci` becomes available in the credential's Tags selector. This tag
+identifies the temporary GitHub runner.
+
 For this repository, open [Tailscale Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials),
 select **Credential → OpenID Connect → GitHub Actions**, and enter this Subject:
 `repo:ericbarber/grover-landscaping:environment:pi-development`. Add two Custom
