@@ -28,19 +28,23 @@ instructions. Add `eric480` to the `docker` group and reconnect before testing
 `docker compose version` without `sudo`. Keep the Pi's operating system and
 Docker updated.
 
-The target at `192.168.50.10` was inspected on 2026-09-18: it is a Raspberry
-Pi 3 Model B with 1 GB RAM and a 32-bit `armhf` OS. Docker and Tailscale are
-absent. The ARM64 deployment job cannot run on that OS. Resolve this by
-installing Raspberry Pi OS Lite 64-bit or by adapting the image pipeline to
-ARMv7 before enabling deployment. Reimaging an SD card erases its contents;
-back up anything needed first.
+On a freshly flashed 64-bit Debian Trixie Pi, the repository's
+`infra/pi/install-host-dependencies.sh` performs these package and service
+steps using the official Docker and Tailscale apt repositories. Copy it to the
+Pi, run `sudo bash install-host-dependencies.sh`, then reconnect SSH so the new
+Docker group membership takes effect. The script checks the OS and account
+before changing apt configuration. [Docker Debian installation](https://docs.docker.com/engine/install/debian/)
+and [Tailscale Debian packages](https://pkgs.tailscale.com/stable/)
+describe the upstream commands.
 
-The owner chose Raspberry Pi OS Lite 64-bit and is flashing the SD card on a
-different laptop. In Imager Customisation, create user `eric480`, choose a
-stable hostname, and enable SSH with password authentication for first login.
-Reconnect the existing Ethernet cable for first boot. The Pi's previous home
-directory was backed up outside this repository; reinstall keys selectively
-after boot rather than restoring old OS configuration wholesale.
+The target at `192.168.50.10` is a Raspberry Pi 3 Model B with 1 GB RAM. It
+was reimaged from 32-bit Raspberry Pi OS to 64-bit Debian Trixie on 2026-09-18.
+The new SSH host key was checked against the device's unchanged Ethernet MAC
+address before updating the workstation's known-hosts entry. The workstation
+public key was reinstalled. Docker Engine, Compose, and Tailscale are now
+installed and running; Tailscale device authentication is pending. The prior
+home directory was backed up outside this repository and was not restored
+wholesale onto the new OS.
 
 1. Join the Pi to the same tailnet as the development workstation. Choose a
    stable hostname, for example `grover-dev-pi`, and record the complete

@@ -12,7 +12,7 @@ infer execution order from section position.
 | Lane | Current state | Next phase |
 | --- | --- | --- |
 | Repository | R3 production-smoke safety and persistence contract is delivered | Await R2 external access or the P2 product-boundary decision |
-| Private review | Existing Tailscale React/PostgreSQL review is available; the Pi ARM64 deploy path is opt-in and not hosted | Await 64-bit Lite reimage, then provision Docker, Tailscale, and first deploy |
+| Private review | Pi now runs ARM64 with Docker and Tailscale installed; the CI deployment remains disabled and unhosted | Join Pi to tailnet, configure Serve and GitHub trust, then verify first deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
 | Design | Prior concepts remain review inputs; Modern Grover M1 remains open and eight M2 task moments are simulated | Prepare matched proposal/portal fixtures, resolve entry choices, then run participant sessions |
@@ -33,15 +33,16 @@ infer execution order from section position.
 - The repository has an opt-in `main` deployment job gated by all CI checks,
   an ARM64 image build, private Compose runtime, readiness/rollback script,
   and Tailscale setup instructions. SSH key access to `eric480@192.168.50.10`
-  works on the current OS. The target is a Raspberry Pi 3 Model B with 1 GB
-  RAM. A home-directory backup is held outside the repository. The user chose
-  Raspberry Pi OS Lite 64-bit and is physically reimaging its SD card.
+  works after a verified host-key change. The Raspberry Pi 3 Model B with 1 GB
+  RAM now runs 64-bit Debian Trixie (`aarch64`). A prior home-directory backup
+  is held outside the repository. Docker Engine, Compose, and Tailscale are
+  installed and their services active; a fresh SSH session can use Docker.
 - The GitHub `pi-development` environment exists with a `main`-only branch
   policy and a dedicated CI SSH private-key secret. `PI_DEPLOY_ENABLED=false`.
-  After the Pi boots, install Docker and Tailscale, add the CI public key,
-  configure pinned SSH host key and Tailscale workload identity, create the
-  PostgreSQL volume and runtime secret, then verify the first deployment.
-  No Pi deployment or tailnet URL has been verified yet.
+  Tailscale device authentication is pending in the owner's browser. Add the
+  CI public key, configure pinned SSH host key and Tailscale workload identity,
+  create the PostgreSQL volume and runtime secret, then verify the first
+  deployment. No Pi deployment or tailnet URL has been verified yet.
 
 ### Modern Grover independent planning and review
 

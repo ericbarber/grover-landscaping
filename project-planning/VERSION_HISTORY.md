@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-18: Reimaged the development Pi to 64-bit Debian Trixie and added a
+  guarded host-dependency installer using the official Docker and Tailscale
+  apt repositories. Docker Engine, Compose, and Tailscale services are active;
+  Docker works from a fresh unprivileged SSH login. Tailscale login, app
+  deployment, and HTTPS review remain pending.
 - 2026-09-18: Added an opt-in ARM64 Raspberry Pi development deployment job
   that waits for all GitHub Actions checks, connects through an ephemeral
   Tailscale CI node, transfers the image over pinned SSH, and verifies a
