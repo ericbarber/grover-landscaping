@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-18: Added the Tailscale federated Client ID and Audience to the
+  GitHub Pi deployment environment and configured Serve on the Pi. The private
+  HTTPS route passes TLS validation; it returns HTTP 502 until an application
+  image is deployed. The credential and tailnet grants still need validation
+  from a published workflow run.
 - 2026-09-18: Joined the development Pi to Tailscale, pinned its verified
   tailnet SSH key in the GitHub environment, and created its private runtime
   settings and healthy PostgreSQL volume. Tailscale Serve enablement, CI

@@ -12,7 +12,7 @@ infer execution order from section position.
 | Lane | Current state | Next phase |
 | --- | --- | --- |
 | Repository | R3 production-smoke safety and persistence contract is delivered | Await R2 external access or the P2 product-boundary decision |
-| Private review | Pi runs ARM64, has joined the tailnet, and has healthy PostgreSQL; the CI deployment remains disabled and unhosted | Enable Serve and GitHub workload trust, then verify first deploy |
+| Private review | Pi has an ARM64 runtime, healthy PostgreSQL, and private HTTPS route; the CI deployment remains disabled and unhosted | Validate tailnet grants and first CI-gated deploy after publication |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
 | Design | Prior concepts remain review inputs; Modern Grover M1 remains open and eight M2 task moments are simulated | Prepare matched proposal/portal fixtures, resolve entry choices, then run participant sessions |
@@ -45,10 +45,12 @@ infer execution order from section position.
   `grover-dev-pi.tailf6631b.ts.net`; its SSH host key was pinned in the GitHub
   environment, and `PI_TAILSCALE_HOST` is set. A private runtime `.env` exists
   on the Pi and PostgreSQL is healthy with a named data volume. The owner
-  enabled Tailscale Serve in the tailnet; applying the Pi's Serve configuration
-  awaits the `sudo` password in the visible SSH pane. Configure CI workload
-  identity and tailnet grants, then verify the first deployment. No application
-  image has been deployed or tailnet HTTPS site verified yet.
+  enabled Tailscale Serve and the Pi routes its private HTTPS address to local
+  port 10000. TLS validation succeeds; HTTP 502 is expected until an app image
+  runs. The Tailscale OIDC Client ID and Audience are stored in GitHub
+  environment secrets, but the credential and tailnet grants cannot be
+  exercised until the workflow runs. Verify those grants and the first
+  deployment after publication. No application image has been deployed yet.
 
 ### Modern Grover independent planning and review
 

@@ -148,8 +148,13 @@ as `PI_SSH_KNOWN_HOSTS`; `PI_TAILSCALE_HOST` names
 `grover-dev-pi.tailf6631b.ts.net`. A private `.env` exists on the Pi, and
 PostgreSQL is healthy with a named data volume. The repository variable
 `PI_DEPLOY_ENABLED` is still `false`; Tailscale Serve was approved in the
-tailnet but its Pi configuration awaits local `sudo` authentication. Tailscale
-federation and tailnet grants remain to be configured.
+tailnet and configured on the Pi to route
+`https://grover-dev-pi.tailf6631b.ts.net/` to `127.0.0.1:10000`. TLS validation
+from a tailnet workstation succeeds; the route currently returns HTTP 502
+because no application container has been deployed. The Tailscale OIDC Client
+ID and Audience were added to the GitHub environment as `TS_OAUTH_CLIENT_ID`
+and `TS_AUDIENCE`. The federation credential and tailnet grants have not yet
+been exercised by a GitHub runner.
 
 ## Operating the site
 
