@@ -49,8 +49,11 @@ infer execution order from section position.
   port 10000. TLS validation succeeds; HTTP 502 is expected until an app image
   runs. The Tailscale OIDC Client ID and Audience are stored in GitHub
   environment secrets, but the credential and tailnet grants cannot be
-  exercised until the workflow runs. Verify those grants and the first
-  deployment after publication. No application image has been deployed yet.
+  exercised until the workflow runs. The owner's supplied tailnet policy still
+  contains a broad allow-all grant; replace it with member access and a
+  `tag:grover-ci` to Pi TCP/22 grant before enabling deployment. Verify those
+  grants and the first deployment after publication. No application image has
+  been deployed yet.
 
 ### Modern Grover independent planning and review
 

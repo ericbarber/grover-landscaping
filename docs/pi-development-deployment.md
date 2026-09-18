@@ -128,8 +128,25 @@ immutable-subject cutoff; recheck the subject if GitHub OIDC settings change.
 | `PI_SSH_KNOWN_HOSTS` | Secret | Verified `*.ts.net ssh-ed25519 ...` line |
 | `PI_TAILSCALE_HOST` | Environment variable | Pi's `*.ts.net` DNS name |
 
-Allow `tag:grover-ci` to reach only the Pi's SSH port (22) in the tailnet
-policy. Allow intended reviewers to reach the Pi's Serve HTTPS port (443).
+The tailnet policy supplied on 2026-09-18 has a single broad grant with
+`src: ["*"]`, `dst: ["*"]`, and `ip: ["*"]`. Grants are additive, so adding a
+narrow CI grant while that rule remains would still allow the CI runner to
+reach every tailnet device and port. The current three nodes are all owned by
+one tailnet user. Replace that broad grant with these two grants, retaining the
+existing `tagOwners` and other policy sections:
+
+```hujson
+"grants": [
+  {"src": ["autogroup:member"], "dst": ["*"], "ip": ["*"]},
+  {"src": ["tag:grover-ci"], "dst": ["100.104.108.28"], "ip": ["tcp:22"]},
+]
+```
+
+`100.104.108.28` is the Pi's current Tailscale IPv4 address; update the grant
+if the Pi receives a different address. Check that no other allow-all grant or
+ACL remains. Allow intended reviewers to reach the Pi's Serve HTTPS port (443)
+through a separate grant if they are not tailnet members. Apply and validate
+this tailnet policy before enabling CI deployment.
 The Tailscale action creates an ephemeral CI node and waits for the Pi to
 become reachable. The Pi itself must remain a persistent tailnet node.
 
@@ -154,7 +171,8 @@ from a tailnet workstation succeeds; the route currently returns HTTP 502
 because no application container has been deployed. The Tailscale OIDC Client
 ID and Audience were added to the GitHub environment as `TS_OAUTH_CLIENT_ID`
 and `TS_AUDIENCE`. The federation credential and tailnet grants have not yet
-been exercised by a GitHub runner.
+been exercised by a GitHub runner. The supplied tailnet policy still has its
+default allow-all rule and needs the narrower grants above.
 
 ## Operating the site
 
