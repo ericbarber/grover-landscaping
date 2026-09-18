@@ -12,7 +12,7 @@ infer execution order from section position.
 | Lane | Current state | Next phase |
 | --- | --- | --- |
 | Repository | R3 production-smoke safety and persistence contract is delivered | Await R2 external access or the P2 product-boundary decision |
-| Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
+| Private review | Existing Tailscale React/PostgreSQL review is available; an opt-in Pi ARM64 deployment path is repository-ready but not hosted | Provision Pi access, tailnet Serve, and GitHub environment; then enable deployment after CI |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
 | Design | Prior concepts remain review inputs; Modern Grover M1 remains open and eight M2 task moments are simulated | Prepare matched proposal/portal fixtures, resolve entry choices, then run participant sessions |
@@ -27,6 +27,17 @@ infer execution order from section position.
 | Backlog | Valuable but not part of the next delivery slice |
 
 ## In Progress
+
+### Raspberry Pi development hosting
+
+- The repository has an opt-in `main` deployment job gated by all CI checks,
+  an ARM64 image build, private Compose runtime, readiness/rollback script,
+  and Tailscale setup instructions. No Pi deployment or tailnet URL has been
+  verified yet; SSH key access to `eric480@192.168.50.10` is pending.
+- Prepare the Pi with Docker, PostgreSQL volume, a runtime secret, and
+  Tailscale Serve. Configure pinned SSH and Tailscale workload identity in the
+  GitHub `pi-development` environment; enable `PI_DEPLOY_ENABLED` when those
+  prerequisites are ready and verify the first passing `main` deployment.
 
 ### Modern Grover independent planning and review
 

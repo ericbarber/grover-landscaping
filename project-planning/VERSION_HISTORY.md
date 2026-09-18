@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-18: Added an opt-in ARM64 Raspberry Pi development deployment job
+  that waits for all GitHub Actions checks, connects through an ephemeral
+  Tailscale CI node, transfers the image over pinned SSH, and verifies a
+  private Compose app with PostgreSQL. The Pi deploy script restores the prior
+  app image if readiness fails. The external Pi, tailnet Serve, and GitHub
+  credentials are not yet provisioned or verified.
 - 2026-09-17: Added the Property Manager delegation persistence foundation.
   A customer invitation and audit schema permits a property-scoped manager
   grant beside the owner's activation grant. The activation read still returns
