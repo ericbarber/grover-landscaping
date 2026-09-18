@@ -100,10 +100,15 @@ its `main` deployment workflow. Set these GitHub `pi-development` environment
 secrets and variable:
 
 For this repository, open [Tailscale Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials),
-select **Credential → OpenID Connect → GitHub Actions**, and use subject
-`repo:ericbarber/grover-landscaping:environment:pi-development`. Add custom
-claims `ref=refs/heads/main` and
-`workflow_ref=ericbarber/grover-landscaping/.github/workflows/ci.yml@refs/heads/main`.
+select **Credential → OpenID Connect → GitHub Actions**, and enter this Subject:
+`repo:ericbarber/grover-landscaping:environment:pi-development`. Add two Custom
+claim rows, putting each key and value into its own input:
+
+| Claim key | Claim value |
+| --- | --- |
+| `ref` | `refs/heads/main` |
+| `workflow_ref` | `ericbarber/grover-landscaping/.github/workflows/ci.yml@refs/heads/main` |
+
 Grant only `auth_keys` scope for `tag:grover-ci`, then copy the generated Client
 ID and Audience to the GitHub environment secrets below. The repository uses
 GitHub's default OIDC subject format and was created before the July 2026
