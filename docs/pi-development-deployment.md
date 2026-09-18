@@ -136,8 +136,9 @@ checksums. The SSH host key was verified against the Pi's local key and stored
 as `PI_SSH_KNOWN_HOSTS`; `PI_TAILSCALE_HOST` names
 `grover-dev-pi.tailf6631b.ts.net`. A private `.env` exists on the Pi, and
 PostgreSQL is healthy with a named data volume. The repository variable
-`PI_DEPLOY_ENABLED` is still `false`; Tailscale federation and tailnet grants
-remain to be configured.
+`PI_DEPLOY_ENABLED` is still `false`; Tailscale Serve was approved in the
+tailnet but its Pi configuration awaits local `sudo` authentication. Tailscale
+federation and tailnet grants remain to be configured.
 
 ## Operating the site
 

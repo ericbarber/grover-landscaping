@@ -44,8 +44,9 @@ infer execution order from section position.
   are copied to the Pi with matching checksums. The Pi joined the tailnet as
   `grover-dev-pi.tailf6631b.ts.net`; its SSH host key was pinned in the GitHub
   environment, and `PI_TAILSCALE_HOST` is set. A private runtime `.env` exists
-  on the Pi and PostgreSQL is healthy with a named data volume. Tailscale Serve
-  enablement awaits the owner's browser approval. Configure CI workload
+  on the Pi and PostgreSQL is healthy with a named data volume. The owner
+  enabled Tailscale Serve in the tailnet; applying the Pi's Serve configuration
+  awaits the `sudo` password in the visible SSH pane. Configure CI workload
   identity and tailnet grants, then verify the first deployment. No application
   image has been deployed or tailnet HTTPS site verified yet.
 
