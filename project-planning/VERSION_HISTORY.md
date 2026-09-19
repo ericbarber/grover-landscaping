@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-18: Replaced the tailnet's default allow-all grant with member access
+  and a CI-only TCP/22 grant to the Pi. Confirmed that workstation ping, SSH,
+  and HTTPS access still work after the policy change; tagged runner access
+  awaits the first published GitHub Actions run.
 - 2026-09-18: Added the Tailscale federated Client ID and Audience to the
   GitHub Pi deployment environment and configured Serve on the Pi. The private
   HTTPS route passes TLS validation; it returns HTTP 502 until an application

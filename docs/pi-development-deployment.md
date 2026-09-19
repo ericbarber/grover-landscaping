@@ -171,8 +171,10 @@ from a tailnet workstation succeeds; the route currently returns HTTP 502
 because no application container has been deployed. The Tailscale OIDC Client
 ID and Audience were added to the GitHub environment as `TS_OAUTH_CLIENT_ID`
 and `TS_AUDIENCE`. The federation credential and tailnet grants have not yet
-been exercised by a GitHub runner. The supplied tailnet policy still has its
-default allow-all rule and needs the narrower grants above.
+been exercised by a GitHub runner. The owner applied the narrower grants above
+and removed the default allow-all grant. Workstation Tailscale ping, SSH, and
+HTTPS still reached the Pi afterward; access from `tag:grover-ci` remains to be
+validated by the first GitHub Actions deployment run.
 
 ## Operating the site
 

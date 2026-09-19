@@ -12,7 +12,7 @@ infer execution order from section position.
 | Lane | Current state | Next phase |
 | --- | --- | --- |
 | Repository | R3 production-smoke safety and persistence contract is delivered | Await R2 external access or the P2 product-boundary decision |
-| Private review | Pi has an ARM64 runtime, healthy PostgreSQL, and private HTTPS route; the CI deployment remains disabled and unhosted | Validate tailnet grants and first CI-gated deploy after publication |
+| Private review | Pi has an ARM64 runtime, healthy PostgreSQL, private HTTPS, and restricted CI SSH grant; deployment remains disabled and unhosted | Publish the workflow, run CI, then verify the first gated deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
 | Design | Prior concepts remain review inputs; Modern Grover M1 remains open and eight M2 task moments are simulated | Prepare matched proposal/portal fixtures, resolve entry choices, then run participant sessions |
@@ -49,11 +49,11 @@ infer execution order from section position.
   port 10000. TLS validation succeeds; HTTP 502 is expected until an app image
   runs. The Tailscale OIDC Client ID and Audience are stored in GitHub
   environment secrets, but the credential and tailnet grants cannot be
-  exercised until the workflow runs. The owner's supplied tailnet policy still
-  contains a broad allow-all grant; replace it with member access and a
-  `tag:grover-ci` to Pi TCP/22 grant before enabling deployment. Verify those
-  grants and the first deployment after publication. No application image has
-  been deployed yet.
+  exercised until the workflow runs. The broad allow-all tailnet grant was
+  replaced with full access for user-owned member devices and a restricted
+  `tag:grover-ci` to Pi TCP/22 grant. Workstation ping, SSH, and HTTPS still
+  reach the Pi after the policy change. Verify the tagged runner and first
+  deployment after publication. No application image has been deployed yet.
 
 ### Modern Grover independent planning and review
 
