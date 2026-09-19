@@ -4,8 +4,25 @@ set -euo pipefail
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 preflight="${repository_root}/scripts/release-preflight.sh"
 
-repository_output="$(bash "${preflight}" --repository-only)"
-[[ "${repository_output}" == *'PREFLIGHT RESULT: READY'* ]]
+set +e
+repository_output="$(bash "${preflight}" --repository-only 2>&1)"
+repository_status=$?
+set -e
+
+case "${repository_status}" in
+  0)
+    [[ "${repository_output}" == *'PREFLIGHT RESULT: READY'* ]]
+    ;;
+  2)
+    [[ "${repository_output}" == *'PREFLIGHT RESULT: EXTERNAL PREREQUISITE'* ]]
+    [[ "${repository_output}" == *'Terraform 1.13.5+'* ]]
+    ;;
+  *)
+    echo "Unexpected repository preflight status: ${repository_status}" >&2
+    echo "${repository_output}" >&2
+    exit 1
+    ;;
+esac
 [[ "${repository_output}" == *'Failed checks: 0'* ]]
 
 set +e
