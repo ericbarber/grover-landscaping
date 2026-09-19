@@ -13,6 +13,23 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
+### Raspberry Pi incremental development hosting
+
+Goal: establish a CI-gated ARM64 deployment foundation so each merged feature
+can be reviewed on the private Pi as its own tested release.
+
+Current state:
+
+- This feature branch adds the opt-in GitHub Actions deployment job, Compose
+  runtime, readiness and rollback script, and host setup documentation.
+- The Raspberry Pi already runs 64-bit Debian with Docker, healthy PostgreSQL,
+  and Tailscale Serve at `grover-dev-pi.tailf6631b.ts.net`.
+- The GitHub `pi-development` environment has the pinned SSH and Tailscale OIDC
+  values. The tailnet restricts `tag:grover-ci` to TCP/22 on the Pi.
+- `PI_DEPLOY_ENABLED` remains `false` while this foundation is reviewed. After
+  its pull request passes and merges, enable the variable and validate one
+  baseline deployment before delivering website features individually.
+
 ### Prototype adoption and documentation convergence
 
 Goal: keep repository guidance aligned with delivered behavior and move approved

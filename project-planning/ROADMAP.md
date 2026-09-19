@@ -725,6 +725,9 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
   production-image construction without advisory suppression or automatic major
   upgrades.
 - Establish development, staging, and production release gates.
+- Activate the opt-in Raspberry Pi development deploy after validating its
+  ARM64 image, tailnet-only HTTPS, PostgreSQL readiness, and rollback on the
+  actual device; keep the Render/Cognito pilot gate separate.
 - Require migration checks, smoke tests, rollback notes, and environment-specific
   configuration.
 - Add logs, metrics, traces, alerts, backups, restore drills, and incident runbooks.

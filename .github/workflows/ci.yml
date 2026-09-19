@@ -28,6 +28,11 @@ jobs:
           test -f Dockerfile
           test -f render.yaml
 
+      - name: Validate Pi deployment contracts
+        run: |
+          bash -n infra/pi/install-host-dependencies.sh scripts/deploy-pi.sh scripts/deploy-pi.test.sh
+          bash scripts/deploy-pi.test.sh
+
   backend:
     name: Backend checks
     runs-on: ubuntu-latest
@@ -248,3 +253,74 @@ jobs:
         run: |
           terraform -chdir=infra/terraform/environments/prod init -backend=false
           terraform -chdir=infra/terraform/environments/prod validate
+
+  deploy-pi-development:
+    name: Deploy Pi development site
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.PI_DEPLOY_ENABLED == 'true'
+    needs: [repository-checks, backend, frontend, browser-journeys, pilot-assurance, production-image, terraform]
+    runs-on: ubuntu-24.04-arm
+    environment: pi-development
+    permissions:
+      contents: read
+      id-token: write
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Pi application image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm64
+          load: true
+          tags: grover-landscaping:${{ github.sha }}
+          cache-from: type=gha,scope=pi-development-arm64
+          cache-to: type=gha,mode=max,scope=pi-development-arm64
+
+      - name: Connect to the tailnet
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:grover-ci
+          ping: ${{ vars.PI_TAILSCALE_HOST }}
+
+      - name: Configure pinned SSH access
+        env:
+          PI_SSH_PRIVATE_KEY: ${{ secrets.PI_SSH_PRIVATE_KEY }}
+          PI_SSH_KNOWN_HOSTS: ${{ secrets.PI_SSH_KNOWN_HOSTS }}
+          PI_TAILSCALE_HOST: ${{ vars.PI_TAILSCALE_HOST }}
+        run: |
+          set -euo pipefail
+          [[ "$PI_TAILSCALE_HOST" =~ ^[a-zA-Z0-9.-]+\.ts\.net$ ]]
+          test -n "$PI_SSH_PRIVATE_KEY"
+          test -n "$PI_SSH_KNOWN_HOSTS"
+          umask 077
+          printf '%s\n' "$PI_SSH_PRIVATE_KEY" > "$RUNNER_TEMP/pi_ssh_key"
+          printf '%s\n' "$PI_SSH_KNOWN_HOSTS" > "$RUNNER_TEMP/pi_known_hosts"
+          ssh-keygen -lf "$RUNNER_TEMP/pi_known_hosts"
+          ssh -i "$RUNNER_TEMP/pi_ssh_key" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/pi_known_hosts" \
+            "eric480@$PI_TAILSCALE_HOST" 'mkdir -p ~/grover-landscaping'
+
+      - name: Transfer and activate Pi image
+        env:
+          PI_TAILSCALE_HOST: ${{ vars.PI_TAILSCALE_HOST }}
+        run: |
+          set -euo pipefail
+          ssh_options=(-i "$RUNNER_TEMP/pi_ssh_key" -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/pi_known_hosts")
+          scp "${ssh_options[@]}" infra/pi/compose.yml scripts/deploy-pi.sh \
+            "eric480@$PI_TAILSCALE_HOST:grover-landscaping/"
+          docker save "grover-landscaping:$GITHUB_SHA" | gzip -1 | \
+            ssh "${ssh_options[@]}" "eric480@$PI_TAILSCALE_HOST" \
+              'bash -o pipefail -c "gzip -d | docker load"'
+          ssh "${ssh_options[@]}" "eric480@$PI_TAILSCALE_HOST" \
+            "bash ~/grover-landscaping/deploy-pi.sh '$GITHUB_SHA'"
