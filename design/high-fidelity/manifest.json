@@ -1,5 +1,19 @@
 [
   {
+    "id": "current-frontend-desktop-v1",
+    "area": "current",
+    "status": "validated-production-mirror",
+    "source": "../prototypes/current-frontend-review/index.html#company-home",
+    "preview": "current/current-frontend-desktop-v1.png"
+  },
+  {
+    "id": "current-frontend-mobile-v1",
+    "area": "current",
+    "status": "validated-production-mirror",
+    "source": "../prototypes/current-frontend-review/index.html#crew-route",
+    "preview": "current/current-frontend-mobile-v1.png"
+  },
+  {
     "id": "visual-system-v1",
     "area": "foundation",
     "status": "review",

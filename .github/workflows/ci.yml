@@ -197,6 +197,15 @@ jobs:
           npx playwright install --with-deps chromium firefox webkit
         working-directory: frontend
 
+      - name: Validate current frontend design review
+        run: |
+          /usr/bin/time -f \
+            'current_frontend_review elapsed=%e user=%U system=%S max_rss_kb=%M' \
+            node design/tools/validate-current-frontend-review.mjs
+          /usr/bin/time -f \
+            'prototype_foundation elapsed=%e user=%U system=%S max_rss_kb=%M' \
+            node design/tools/validate-prototype-foundation.mjs
+
       - name: Run responsive browser journeys
         run: >-
           /usr/bin/time -f

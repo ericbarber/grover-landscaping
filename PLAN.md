@@ -15,6 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
+| Design | Dated current-state mirror and detailed cross-persona frontend audit are delivered | Prototype truthful state/recovery, manager continuity, then shell compression |
 
 ## Status Legend
 
@@ -26,6 +27,40 @@ infer execution order from section position.
 | Backlog | Valuable but not part of the next delivery slice |
 
 ## In Progress
+
+### Current frontend design continuity
+
+Goal: keep current-state evidence separate from future design direction, then
+resolve the most consequential continuity flaws in reviewable design slices.
+
+Current state:
+
+- A validated [current frontend mirror](design/prototypes/current-frontend-review/README.md)
+  represents eight public, company, crew, Yard Owner, and property-manager
+  surfaces at desktop and phone widths without API or persistence claims.
+- The [September 3 design audit](design/review/current-frontend-design-audit-2026-09-03.md)
+  records the surface parity matrix, observed strengths, eight ranked findings,
+  and the distinction between local-review chrome and hosted product UI.
+- Browser validation covers surface switching, stable hashes, one visible page
+  heading, horizontal overflow, responsive navigation, mobile touch targets,
+  shared focus treatment, reviewed failure/status evidence, and clean browser
+  execution. The hosted browser job runs both this review contract and the
+  shared prototype-foundation contract before the production journey suite.
+
+Next design slices:
+
+1. Truth and recovery: prototype one route-date/state vocabulary and complete
+   Yard Owner loading, empty, access-ended, inconsistent, and unavailable paths.
+2. Manager continuity: add authorized status and urgency to the six-category
+   Manage overview without duplicating its destination tools.
+3. Shell compression: remove redundant hosted identity/persona presentation and
+   prove final-action clearance above the phone bottom bar at narrow widths and
+   zoom.
+4. Prototype reconciliation: reclassify older artifacts explicitly as current
+   mirror, adopted behavior, design direction, or historical input.
+
+Concern handling, provider contact, preferences, external reviews, marketplace,
+and billing remain behind their existing product or external gates.
 
 ### Prototype adoption and documentation convergence
 
