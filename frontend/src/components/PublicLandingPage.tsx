@@ -374,9 +374,9 @@ export function PublicLandingPage({
                 );
               })}
             </div>
-            <div className="mt-8 lg:mt-5">
+            <div className="mt-8 lg:mt-3">
               <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-slate-600">Show me Grover as a</p>
-              <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="Choose your perspective">
+              <div className="mt-3 flex flex-wrap gap-2 lg:mt-2" role="tablist" aria-label="Choose your perspective">
                 {marketingPersonas.map((persona) => (
                   <button
                     aria-selected={persona.id === activePersona.id}
@@ -391,7 +391,7 @@ export function PublicLandingPage({
                 ))}
               </div>
             </div>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:mt-4" aria-label="Primary next steps">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:mt-3" aria-label="Primary next steps">
               {activePersona.id === 'owner' ? (
                 <a className="grover-button-primary" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
                   Sign up your yard <span className="ml-2" aria-hidden="true">→</span>
@@ -407,7 +407,7 @@ export function PublicLandingPage({
               )}
               <a className="grover-button-secondary" href="#tour">Explore your workflow</a>
             </div>
-            <div aria-label="Direct signup options" className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-extrabold text-slate-600 lg:mt-3">
+            <div aria-label="Direct signup options" className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-extrabold text-slate-600 lg:mt-2">
               <span className="text-xs uppercase tracking-[0.1em] text-slate-500">Ready to start?</span>
               {activePersona.id !== 'owner' ? (
                 <a className="min-h-11 content-center underline decoration-slate-300 underline-offset-4 hover:text-emerald-800" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
