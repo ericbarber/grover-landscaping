@@ -701,17 +701,19 @@ its work, decisions, evidence needs, and most relevant next step.
 Current state:
 
 - Yard Owner, property-manager, landscaping-company, and crew-lead campaign
-  routes now personalize the hero, action hierarchy, product preview, trust
-  signals, outcome story, proof cards, capability set, and final invitation.
+  routes now personalize the hero, action hierarchy, product preview,
+  perspective introduction, trust signals, outcome story, product tour, proof
+  cards, capability set, and final invitation.
 - The landscaping-company hero now adapts the approved “Today’s operation”
   prototype into a responsive, non-persistent owner overview with crews active,
   route progress, unassigned and at-risk signals, crew schedule/capacity, and an
   interactive dispatch decision. Visitors can expose capacity risk and apply a
   suggested balance without changing a real schedule.
-- The Plan step in the public product tour now embeds that same interactive
-  “Today’s operation” dashboard for every persona, replacing its abbreviated
-  route card while preserving persona-specific outcomes and the Care and Prove
-  previews.
+- Every public product-tour heading, step, explanation, outcome, and preview now
+  follows the active audience. Yard Owners see upcoming care, visit progress,
+  and controlled review; property managers see portfolio readiness, exceptions,
+  and reporting; crews see routes, stop work, and handoff. The interactive
+  “Today’s operation” dispatch dashboard remains exclusive to companies.
 - The audience selector switches the complete page story and canonical route
   without a reload while retaining campaign query parameters and first-party
   measurement.
@@ -1444,7 +1446,9 @@ or crew assignment.
 - Persona selection keeps UTM attribution while updating the browser URL, canonical metadata, and search/social descriptions without a page reload
 - Public crawler guidance keeps workspace, authentication, invitation, diagnostics, and customer-share routes out of search results
 - Interactive Plan-Care-Proof tour lets visitors inspect shipped route, field, offline, evidence, reporting, and recommendation workflows
-- Tour outcomes adapt to the active marketing persona while retaining a single connected product narrative
+- Product-tour headings, step names, explanations, outcomes, and previews adapt
+  to the active marketing persona; company dispatch and revenue operations are
+  excluded from Yard Owner, property-manager, and crew tours
 - Credibility section maps marketing claims to delivered capabilities and explicitly reserves customer quotes, logos, and metrics for verified approvals
 - Persona outcome panel replaces placeholder numbering with benefit-led titles and concise explanations of the operational change
 - First-party conversion events measure page views, persona selection, tour use, CTA engagement, form starts, submissions, and failures
