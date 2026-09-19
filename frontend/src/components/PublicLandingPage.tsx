@@ -349,7 +349,7 @@ export function PublicLandingPage({
       </header>
 
       <section className="grid bg-bone lg:h-[calc(100svh-5.0625rem)] lg:min-h-[39rem] lg:grid-cols-[1.02fr_0.98fr]">
-        <div className="flex items-center px-4 py-14 sm:px-8 sm:py-20 lg:h-full lg:px-[max(2rem,calc((100vw-86rem)/2+2rem))] lg:py-2 xl:py-[clamp(1rem,3vh,3rem)]">
+        <div className="flex items-center px-4 py-14 sm:px-8 sm:py-20 lg:min-h-0 lg:px-[max(2rem,calc((100vw-86rem)/2+2rem))] lg:py-2 xl:py-[clamp(1rem,3vh,3rem)]">
           <div className="w-full max-w-[40rem]">
             <div aria-atomic="true" aria-live="polite" className="grid" data-testid="hero-persona-copy">
               {marketingPersonas.map((persona) => {
@@ -427,7 +427,7 @@ export function PublicLandingPage({
             </div>
           </div>
         </div>
-        <div className={`relative overflow-hidden bg-forest lg:h-full lg:min-h-0 lg:rounded-bl-[5rem] ${activePersona.id === 'company' ? 'min-h-[62rem]' : 'min-h-[31rem]'}`}>
+        <div className={`relative overflow-hidden bg-forest lg:min-h-0 lg:rounded-bl-[5rem] ${activePersona.id === 'company' ? 'min-h-[62rem]' : 'min-h-[31rem]'}`}>
           <img alt="Landscape care team working in a Southwestern garden at sunrise" className="absolute inset-0 h-full w-full object-cover object-center" src="/brand/grover-landscape-home-hero.webp" />
           <span className="absolute inset-0 bg-gradient-to-t from-forest/35 via-transparent to-transparent" />
           {activePersona.id === 'company' ? <MarketingOperationsPlanner /> : <article aria-live="polite" className="absolute bottom-5 left-4 right-4 rounded-[1.35rem] border border-white/60 bg-paper/95 p-5 text-ink shadow-grover-lg backdrop-blur sm:bottom-8 sm:left-auto sm:right-8 sm:w-[min(31rem,calc(100%-4rem))] sm:p-7 lg:bottom-14 lg:right-12">
