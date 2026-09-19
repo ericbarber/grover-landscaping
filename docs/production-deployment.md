@@ -73,6 +73,7 @@ BASE_URL=https://grover-landscaping.onrender.com \
 OWNER_EMAIL='approved-owner@example.com' \
 ACCESS_TOKEN='current-cognito-access-token' \
 SMOKE_JOB_ID='authorized-pilot-job-id' \
+SMOKE_OTHER_TENANT_JOB_ID='known-other-tenant-job-id' \
 SMOKE_DAY_PLAN_ID='authorized-pilot-day-plan-id' \
 SMOKE_ACCOUNT_ID='authorized-pilot-account-id' \
 SMOKE_PROPERTY_ID='authorized-pilot-property-id' \
@@ -99,6 +100,7 @@ Run the production smoke test after the first deploy and after material platform
 BASE_URL=https://grover-landscaping.onrender.com \
 ACCESS_TOKEN='current-cognito-access-token' \
 SMOKE_JOB_ID=job_1001 \
+SMOKE_OTHER_TENANT_JOB_ID=job_other_tenant_1001 \
 SMOKE_DAY_PLAN_ID=day_plan_2026_06_15_crew_1001 \
 SMOKE_ACCOUNT_ID=acct_1001 \
 SMOKE_PROPERTY_ID=property_1001 \
@@ -111,17 +113,22 @@ The smoke test verifies:
 - Database-backed readiness
 - Cognito runtime auth configuration
 - Rejection of unauthenticated API requests
+- Exact `403 Forbidden` rejection when the current identity requests a known persisted job owned by another tenant
 - Cognito-authenticated access summary and job list reads
 - Authenticated route, report, photo upload-ticket/completion, photo-processing recovery, customer portfolio, customer bid-history, and customer report-history access
 - Read-after-write persistence for the exact completed smoke photo
 - Public frontend delivery for the managed-login entry point
 - Failure output that identifies the failed contract without printing response bodies, access tokens, signed URLs, object keys, or customer data
 
-All four `SMOKE_*` identifiers are required and must name authorized persisted
-records in the pilot tenant. The runner has no production fallback to seeded
-demo identifiers. Requests default to a 10-second connection timeout and a
-30-second total timeout; bounded overrides are available through
-`SMOKE_CONNECT_TIMEOUT_SECONDS` and `SMOKE_REQUEST_TIMEOUT_SECONDS`.
+All five `SMOKE_*` identifiers are required. The job, day plan, account, and
+property IDs must name authorized persisted records in the primary pilot
+tenant. `SMOKE_OTHER_TENANT_JOB_ID` must name a real persisted job in a
+controlled second pilot tenant where the current access token has no active
+membership; a fabricated or missing ID only proves not-found behavior. The
+runner has no production fallback to seeded demo identifiers. Requests default
+to a 10-second connection timeout and a 30-second total timeout; bounded
+overrides are available through `SMOKE_CONNECT_TIMEOUT_SECONDS` and
+`SMOKE_REQUEST_TIMEOUT_SECONDS`.
 
 The deterministic contract harness uses a fake transport and contacts no
 external service:

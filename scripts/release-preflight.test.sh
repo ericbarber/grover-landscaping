@@ -31,6 +31,7 @@ external_output="$(
   BASE_URL=https://pilot.example.com \
   ACCESS_TOKEN=do-not-print-access-token \
   SMOKE_JOB_ID=job_smoke \
+  SMOKE_OTHER_TENANT_JOB_ID=job_other_tenant \
   SMOKE_DAY_PLAN_ID=day_plan_smoke \
   SMOKE_ACCOUNT_ID=account_smoke \
   SMOKE_PROPERTY_ID=property_smoke \
