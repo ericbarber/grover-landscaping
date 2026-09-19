@@ -108,11 +108,11 @@ validate_render_blueprint() {
 validate_production_guards() {
   local errors=0
 
-  rg -q 'app_environment\.eq_ignore_ascii_case\("production"\)' backend/src/main.rs || errors=$((errors + 1))
-  rg -q 'DATABASE_URL is required when APP_ENV=production' backend/src/main.rs || errors=$((errors + 1))
-  rg -q 'production && matches!\(mode, "disabled" \| "local_review"\)' backend/src/auth.rs || errors=$((errors + 1))
-  rg -q 'production Cognito URLs must use HTTPS' backend/src/auth.rs || errors=$((errors + 1))
-  rg -q 'unsafe_development_auth_modes_are_rejected_in_production' backend/src/auth.rs || errors=$((errors + 1))
+  grep -Eq 'app_environment\.eq_ignore_ascii_case\("production"\)' backend/src/main.rs || errors=$((errors + 1))
+  grep -Eq 'DATABASE_URL is required when APP_ENV=production' backend/src/main.rs || errors=$((errors + 1))
+  grep -Eq 'production && matches!\(mode, "disabled" \| "local_review"\)' backend/src/auth.rs || errors=$((errors + 1))
+  grep -Eq 'production Cognito URLs must use HTTPS' backend/src/auth.rs || errors=$((errors + 1))
+  grep -Eq 'unsafe_development_auth_modes_are_rejected_in_production' backend/src/auth.rs || errors=$((errors + 1))
 
   if ((errors)); then
     failed "production persistence/authentication guard contract is incomplete (${errors} missing assertion(s))"
@@ -126,17 +126,17 @@ validate_smoke_contract() {
   local smoke=scripts/smoke-production.sh
 
   [[ -x "${smoke}" ]] || errors=$((errors + 1))
-  rg -q 'BASE_URL:\?Set BASE_URL' "${smoke}" || errors=$((errors + 1))
-  rg -q 'ACCESS_TOKEN:\?Set ACCESS_TOKEN' "${smoke}" || errors=$((errors + 1))
-  rg -q '/health/ready' "${smoke}" || errors=$((errors + 1))
-  rg -q '/auth/config' "${smoke}" || errors=$((errors + 1))
-  rg -q 'unauthorized_status.*401|return 401' "${smoke}" || errors=$((errors + 1))
-  rg -q 'BASE_URL must be an HTTPS origin' "${smoke}" || errors=$((errors + 1))
-  rg -q -- '--connect-timeout' "${smoke}" || errors=$((errors + 1))
-  rg -q -- '--max-time' "${smoke}" || errors=$((errors + 1))
-  rg -q 'completed photo was not readable from the persisted job' "${smoke}" || errors=$((errors + 1))
+  grep -Eq 'BASE_URL:\?Set BASE_URL' "${smoke}" || errors=$((errors + 1))
+  grep -Eq 'ACCESS_TOKEN:\?Set ACCESS_TOKEN' "${smoke}" || errors=$((errors + 1))
+  grep -Eq '/health/ready' "${smoke}" || errors=$((errors + 1))
+  grep -Eq '/auth/config' "${smoke}" || errors=$((errors + 1))
+  grep -Eq 'unauthorized_status.*401|return 401' "${smoke}" || errors=$((errors + 1))
+  grep -Eq 'BASE_URL must be an HTTPS origin' "${smoke}" || errors=$((errors + 1))
+  grep -Eq -- '--connect-timeout' "${smoke}" || errors=$((errors + 1))
+  grep -Eq -- '--max-time' "${smoke}" || errors=$((errors + 1))
+  grep -Eq 'completed photo was not readable from the persisted job' "${smoke}" || errors=$((errors + 1))
   for name in SMOKE_JOB_ID SMOKE_DAY_PLAN_ID SMOKE_ACCOUNT_ID SMOKE_PROPERTY_ID; do
-    rg -Fq "${name}:?Set" "${smoke}" || errors=$((errors + 1))
+    grep -Fq "${name}:?Set" "${smoke}" || errors=$((errors + 1))
   done
 
   if ((errors)); then
