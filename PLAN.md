@@ -550,10 +550,11 @@ Current state:
   evidence, not protected Cognito deployment evidence.
 - Hosted Yard Owner journeys now synchronize the transition into Connect care:
   they wait for the ready brief, require the step control to be enabled, and
-  prove it becomes the current step before asserting the assessment or proposal
-  panels. Three hosted WebKit failures had stopped at different unsynchronized
-  transitions, including two that persisted after a wider assertion timeout;
-  the test ceiling, assertion default, and zero-retry policy remain unchanged.
+  repeat that idempotent step selection until the UI proves it is current before
+  asserting the assessment or proposal panels. Four hosted WebKit failures had
+  stopped at unsynchronized transitions, including one that proved a completed
+  click could leave the step unchanged; the test ceiling, assertion default,
+  and zero-retry policy remain unchanged.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail

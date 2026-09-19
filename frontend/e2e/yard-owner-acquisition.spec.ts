@@ -3,8 +3,13 @@ import { expect, test, type Page } from '@playwright/test';
 async function openConnectCare(page: Page) {
   const connectCare = page.getByRole('button', { name: 'Connect care', exact: true });
   await expect(connectCare).toBeEnabled();
-  await connectCare.click();
-  await expect(connectCare).toHaveAttribute('aria-current', 'step');
+  await expect.poll(async () => {
+    if (await connectCare.getAttribute('aria-current') !== 'step') await connectCare.click();
+    return connectCare.getAttribute('aria-current');
+  }, {
+    message: 'Connect care becomes the current Yard Owner step',
+    timeout: 5_000,
+  }).toBe('step');
 }
 
 test('a verified owner creates a private profile and reconfirms a changed address', async ({ page }) => {

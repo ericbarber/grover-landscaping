@@ -1,11 +1,12 @@
 # Version History
 
 - 2026-09-19: Synchronized hosted Yard Owner navigation into Connect care after
-  three WebKit failures stopped at different asynchronous transitions, including
-  two that persisted with a wider assertion timeout. The journeys now wait for
-  a hydrated ready brief, require an enabled step control, and prove Connect
-  care becomes current before checking assessment or proposal panels. The
-  assertion default, 60-second test ceiling, and zero-retry policy remain intact.
+  four WebKit failures stopped at asynchronous transitions, including one that
+  proved a completed click could leave the step unchanged. The journeys now
+  wait for a hydrated ready brief, require an enabled step control, and repeat
+  that idempotent selection until Connect care becomes current before checking
+  assessment or proposal panels. The assertion default, 60-second test ceiling,
+  and zero-retry policy remain intact.
 - 2026-09-18: Delivered and validated the Raspberry Pi development deployment
   foundation. Pull request checks passed before merge; a manual baseline run
   then exercised the ARM64 build, Tailscale OIDC and restricted SSH path,
