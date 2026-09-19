@@ -407,7 +407,7 @@ export function PublicLandingPage({
               )}
               <a className="grover-button-secondary" href="#tour">Explore your workflow</a>
             </div>
-            <div aria-label="Direct signup options" className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-extrabold text-slate-600 lg:mt-2">
+            <div aria-label="Direct signup options" className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-extrabold text-slate-600 lg:mt-0.5">
               <span className="text-xs uppercase tracking-[0.1em] text-slate-500">Ready to start?</span>
               {activePersona.id !== 'owner' ? (
                 <a className="min-h-11 content-center underline decoration-slate-300 underline-offset-4 hover:text-emerald-800" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
