@@ -150,11 +150,13 @@ this tailnet policy before enabling CI deployment.
 The Tailscale action creates an ephemeral CI node and waits for the Pi to
 become reachable. The Pi itself must remain a persistent tailnet node.
 
-After the Pi, tailnet policy, SSH key, and GitHub environment are ready, set
-the repository variable `PI_DEPLOY_ENABLED` to `true`. Until then, the deploy
-job is skipped. Each passing push to `main` then builds and deploys the exact
-commit checked by CI. Pull requests never deploy. The workflow does not deploy
-from this local checkout; publication still requires a deliberate push.
+Keep `PI_DEPLOY_ENABLED` set to `false` while the deployment foundation pull
+request is reviewed and merged. Then set it to `true` and manually run the
+**CI** workflow against `main` for the first baseline deployment. That run
+executes every quality gate before it builds and deploys the exact `main`
+commit. Each later passing push to `main` deploys its own tested commit.
+Pull requests never deploy. The workflow does not deploy from this local
+checkout; publication still requires a deliberate push.
 
 The GitHub `pi-development` environment has been created with a `main`-only
 branch policy and `PI_SSH_PRIVATE_KEY` set to a dedicated CI key. Its public

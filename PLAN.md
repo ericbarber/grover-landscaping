@@ -27,8 +27,9 @@ Current state:
 - The GitHub `pi-development` environment has the pinned SSH and Tailscale OIDC
   values. The tailnet restricts `tag:grover-ci` to TCP/22 on the Pi.
 - `PI_DEPLOY_ENABLED` remains `false` while this foundation is reviewed. After
-  its pull request passes and merges, enable the variable and validate one
-  baseline deployment before delivering website features individually.
+  its pull request passes and merges, enable the variable and manually run CI
+  against `main` to validate one baseline deployment before delivering website
+  features individually. Later passing pushes to `main` deploy automatically.
 
 ### Prototype adoption and documentation convergence
 
