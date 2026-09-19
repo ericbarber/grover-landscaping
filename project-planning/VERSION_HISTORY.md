@@ -1,11 +1,11 @@
 # Version History
 
-- 2026-09-19: Stabilized hosted WebKit journey assertions after two separate
-  `main` runs timed out at different asynchronous transitions in the same Yard
-  Owner acquisition flow while identical pull-request runs and a failed-job
-  retry passed. Playwright assertions now allow ten seconds under hosted load;
-  the 60-second test ceiling and zero-retry policy remain unchanged so real
-  failures still block image creation and Pi deployment.
+- 2026-09-19: Synchronized hosted Yard Owner navigation into Connect care after
+  three WebKit failures stopped at different asynchronous transitions, including
+  two that persisted with a wider assertion timeout. The journeys now wait for
+  a hydrated ready brief, require an enabled step control, and prove Connect
+  care becomes current before checking assessment or proposal panels. The
+  assertion default, 60-second test ceiling, and zero-retry policy remain intact.
 - 2026-09-18: Delivered and validated the Raspberry Pi development deployment
   foundation. Pull request checks passed before merge; a manual baseline run
   then exercised the ARM64 build, Tailscale OIDC and restricted SSH path,
