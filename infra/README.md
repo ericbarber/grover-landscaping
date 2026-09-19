@@ -17,7 +17,7 @@ see [`../docs/pi-development-deployment.md`](../docs/pi-development-deployment.m
 | Area | Repository state | External work still required |
 | --- | --- | --- |
 | Local stack | Delivered through Docker Compose and watchdog scripts | None for normal local review |
-| Pi development review | Opt-in ARM64 image, CI deploy job, private Compose stack, and runbook prepared; Pi, Tailscale, PostgreSQL, SSH, and GitHub environment provisioned | Review and merge foundation, enable deployment, and validate the first hosted release |
+| Pi development review | Delivered through CI-gated ARM64 builds, Tailscale OIDC and SSH, private Compose, readiness rollback, and a validated hosted baseline | Deliver and review website work in focused feature branches |
 | Protected pilot image | Delivered Dockerfile, health/readiness, migrations, non-root runtime, and `render.yaml` | Provisioned service, secrets, domain, smoke/rollback evidence |
 | Cognito | Terraform modules and dev/prod environment definitions delivered | Apply with an authorized AWS account and bind real identities |
 | S3 photos | Optional private/versioned Terraform module delivered | Enable, provision, validate lifecycle/CORS, and approve retention |

@@ -13,24 +13,6 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
-### Raspberry Pi incremental development hosting
-
-Goal: establish a CI-gated ARM64 deployment foundation so each merged feature
-can be reviewed on the private Pi as its own tested release.
-
-Current state:
-
-- This feature branch adds the opt-in GitHub Actions deployment job, Compose
-  runtime, readiness and rollback script, and host setup documentation.
-- The Raspberry Pi already runs 64-bit Debian with Docker, healthy PostgreSQL,
-  and Tailscale Serve at `grover-dev-pi.tailf6631b.ts.net`.
-- The GitHub `pi-development` environment has the pinned SSH and Tailscale OIDC
-  values. The tailnet restricts `tag:grover-ci` to TCP/22 on the Pi.
-- `PI_DEPLOY_ENABLED` remains `false` while this foundation is reviewed. After
-  its pull request passes and merges, enable the variable and manually run CI
-  against `main` to validate one baseline deployment before delivering website
-  features individually. Later passing pushes to `main` deploy automatically.
-
 ### Prototype adoption and documentation convergence
 
 Goal: keep repository guidance aligned with delivered behavior and move approved
@@ -1366,6 +1348,24 @@ Exit condition: a manager can see who changed an operational exception, understa
 the outcome, and return to its recovery workflow from persisted activity history.
 
 ## Delivered
+
+### Raspberry Pi incremental development hosting
+
+- GitHub Actions deploys an ARM64 image only after repository, backend,
+  frontend, browser, assurance, Terraform, and production-image checks pass.
+- The deployment runner joins Tailscale with workload identity federation,
+  uses a pinned SSH host key, and can reach only the Pi's SSH port under the
+  tailnet policy.
+- The private Compose runtime keeps PostgreSQL in a named volume, binds the app
+  to loopback, verifies readiness, and restores the prior application image
+  when activation fails.
+- The first baseline deployment completed for merge commit
+  `1bd623731b308994d2136da89ad6ca9013b0755b`. Its tailnet-only HTTPS root,
+  readiness endpoint, PostgreSQL persistence, and `local_review` auth
+  configuration passed live checks.
+- `PI_DEPLOY_ENABLED` is active. Each later passing push to `main` deploys its
+  exact tested commit, allowing website work to ship in individual feature
+  branches and pull requests.
 
 ### Local role-review authentication
 
