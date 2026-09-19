@@ -364,10 +364,10 @@ export function PublicLandingPage({
                     <p className="grover-eyebrow flex items-center gap-3 before:h-px before:w-7 before:bg-emerald-700">
                       {persona.eyebrow}
                     </p>
-                    <h1 className="grover-display mt-6 max-w-[12ch] text-[clamp(3.25rem,6vw,5.8rem)] leading-[0.98] lg:mt-4 lg:max-w-[14ch] lg:text-[clamp(3.5rem,5vw,4.5rem)]">
+                    <h1 className="grover-display mt-6 max-w-[12ch] text-[clamp(3.25rem,6vw,5.8rem)] leading-[0.98] lg:mt-3 lg:max-w-[14ch] lg:text-[clamp(3.5rem,5vw,4.5rem)]">
                       {persona.headline}
                     </h1>
-                    <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl lg:mt-4">
+                    <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl lg:mt-3 lg:leading-7">
                       {persona.description}
                     </p>
                   </div>

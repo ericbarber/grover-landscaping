@@ -262,15 +262,16 @@ test('the complete desktop hero stays within the first viewport', async ({ page 
         };
       }, persona.tab);
 
-      expect(bounds.heroTop).toBe(bounds.headerBottom);
-      expect(bounds.heroBottom).toBeLessThanOrEqual(bounds.viewportBottom + 1);
-      expect(bounds.graphicTop).toBeGreaterThanOrEqual(bounds.heroTop! - 1);
-      expect(bounds.graphicBottom).toBeLessThanOrEqual(bounds.viewportBottom + 1);
-      expect(bounds.visualTop).toBeGreaterThanOrEqual(bounds.graphicTop! - 1);
-      expect(bounds.visualBottom).toBeLessThanOrEqual(bounds.graphicBottom! + 1);
-      expect(bounds.controlsBottom).toBeLessThanOrEqual(bounds.viewportBottom);
-      expect(bounds.actionsBottom).toBeLessThanOrEqual(bounds.viewportBottom);
-      expect(bounds.directSignupBottom).toBeLessThanOrEqual(bounds.viewportBottom);
+      const context = `${persona.tab} at ${viewport.width}×${viewport.height}`;
+      expect(bounds.heroTop, `${context} hero top`).toBe(bounds.headerBottom);
+      expect(bounds.heroBottom, `${context} hero bottom`).toBeLessThanOrEqual(bounds.viewportBottom + 1);
+      expect(bounds.graphicTop, `${context} graphic top`).toBeGreaterThanOrEqual(bounds.heroTop! - 1);
+      expect(bounds.graphicBottom, `${context} graphic bottom`).toBeLessThanOrEqual(bounds.viewportBottom + 1);
+      expect(bounds.visualTop, `${context} visual top`).toBeGreaterThanOrEqual(bounds.graphicTop! - 1);
+      expect(bounds.visualBottom, `${context} visual bottom`).toBeLessThanOrEqual(bounds.graphicBottom! + 1);
+      expect(bounds.controlsBottom, `${context} persona controls`).toBeLessThanOrEqual(bounds.viewportBottom);
+      expect(bounds.actionsBottom, `${context} primary actions`).toBeLessThanOrEqual(bounds.viewportBottom);
+      expect(bounds.directSignupBottom, `${context} direct signup`).toBeLessThanOrEqual(bounds.viewportBottom);
     }
   }
 });
