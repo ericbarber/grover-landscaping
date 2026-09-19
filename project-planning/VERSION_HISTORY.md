@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-18: Prepared an isolated Raspberry Pi deployment foundation branch
+  from `main`. It adds an opt-in ARM64 build and deploy job, private Compose
+  runtime, rollback checks, and the runbook for the already provisioned Pi.
+  The first post-merge baseline can be started manually; later passing `main`
+  pushes deploy automatically. Deployment remains disabled until review ends.
 - 2026-09-01: Published the completed Phase 6B development line to `main` and
   closed its current hosted-CI gate. A boxed API-error boundary passes strict
   Clippy on Rust 1.98, CI actions use supported runtimes, and patched
