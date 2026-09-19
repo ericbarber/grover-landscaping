@@ -27,7 +27,10 @@ explicit local-review mode. Protected Cognito/PostgreSQL deployment and
 authenticated smoke validation remain external because the available
 environment has no Render or AWS account credentials/state, deployment hook,
 or hosted test identity/token; they must not be inferred from CI or private-
-VPN review success.
+VPN review success. Repository preparation now includes deterministic protected
+smoke and tenant-isolation contracts plus a machine-validated, credential-safe
+deploy/migration/rollback evidence template; completing that record remains an
+external hosted-run gate.
 
 ## Delivered UX Context
 

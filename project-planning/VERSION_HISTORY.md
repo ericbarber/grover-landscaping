@@ -6,6 +6,13 @@
   private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
   commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
   pushes deploy automatically while pull requests remain validation-only.
+- 2026-09-03: Added the protected-release evidence contract. An intentionally
+  incomplete JSON template captures the exact source/deploy, migration,
+  PostgreSQL/Cognito/smoke, tenant-isolation, and distinct rollback references;
+  a dependency-free validator rejects incomplete, fail-open, malformed, or
+  credential-bearing records without echoing sensitive values. Four negative
+  and success cases now run in the repository gate and hosted CI, while the
+  completed evidence stays restricted to the eventual hosted run.
 - 2026-09-03: Added an executable tenant-isolation requirement to the protected
   production smoke. Operators must supply a real persisted job from a
   controlled second tenant, distinct from the authorized smoke job, and the

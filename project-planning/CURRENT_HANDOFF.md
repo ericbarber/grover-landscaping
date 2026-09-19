@@ -32,9 +32,18 @@ remain the basis for future bottleneck work.
 
 Run `bash scripts/release-preflight.sh --repository-only` for the repository
 contract or the complete command from an operator shell. The repository checks
-pass; the current environment reports seven external prerequisites and prints
-only their names. The script distinguishes ready, external-only, and failed
-outcomes with exit statuses 0, 2, and 1.
+pass; the current environment reports the remaining external prerequisites and
+prints only their names. The script distinguishes ready, external-only, and
+failed outcomes with exit statuses 0, 2, and 1.
+
+### Delivered: R3 repository preparation
+
+The protected smoke now requires bounded, redacted, exact read-after-write and
+known-other-tenant `403` evidence. A credential-safe JSON evidence template and
+validator capture the deployed commit, Render deploy, migration outcome,
+protected checks, and distinct rollback target. The template is intentionally
+incomplete; the actual record remains restricted and can only be completed
+after R2 provisioning.
 
 ### Delivered: P1 operational exception activity integration
 

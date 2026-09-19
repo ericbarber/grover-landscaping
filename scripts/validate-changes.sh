@@ -194,6 +194,17 @@ backend_command() {
   fi
 }
 
+node_command() {
+  if command -v node >/dev/null 2>&1; then
+    run_command node "$@"
+  elif compose_service_is_running frontend; then
+    run_command docker compose exec -T -w /workspace frontend node "$@"
+  else
+    echo "Repository evidence validation requires Node.js or the running Compose frontend service." >&2
+    return 1
+  fi
+}
+
 validate_markdown_links() {
   local files=()
   local file target resolved
@@ -226,7 +237,7 @@ validate_markdown_links() {
 
 print_scope_commands() {
   case "$1" in
-    repository) echo "  git diff --check; bash -n scripts/*.sh; shell contract tests; docker compose config --quiet" ;;
+    repository) echo "  git diff --check; bash -n scripts/*.sh; shell and release-evidence contract tests; docker compose config --quiet" ;;
     docs) echo "  validate changed Markdown links and delivery records" ;;
     frontend) echo "  npm run typecheck; npm test; npm run build" ;;
     backend) echo "  cargo fmt --all -- --check; cargo clippy --all-targets --all-features -- -D warnings; cargo test --all" ;;
@@ -251,6 +262,7 @@ for scope in "${ordered_scopes[@]}"; do
       run_command bash scripts/validate-changes.test.sh
       run_command bash scripts/release-preflight.test.sh
       run_command bash scripts/smoke-production.test.sh
+      node_command --test scripts/validate-protected-release-evidence.test.mjs
       run_command docker compose config --quiet
       ;;
     docs)
