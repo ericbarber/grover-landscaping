@@ -548,6 +548,13 @@ Current state:
   The private-VPN review service remains reachable with PostgreSQL readiness in
   explicit local-review authentication mode. This is publication and review
   evidence, not protected Cognito deployment evidence.
+- Hosted Yard Owner journeys now synchronize the transition into Connect care:
+  they wait for the ready brief, require the step control to be enabled, and
+  repeat that idempotent step selection until the UI proves it is current before
+  asserting the assessment or proposal panels. Four hosted WebKit failures had
+  stopped at unsynchronized transitions, including one that proved a completed
+  click could leave the step unchanged; the test ceiling, assertion default,
+  and zero-retry policy remain unchanged.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail

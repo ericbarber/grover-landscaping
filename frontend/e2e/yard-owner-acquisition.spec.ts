@@ -1,4 +1,16 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+async function openConnectCare(page: Page) {
+  const connectCare = page.getByRole('button', { name: 'Connect care', exact: true });
+  await expect(connectCare).toBeEnabled();
+  await expect.poll(async () => {
+    if (await connectCare.getAttribute('aria-current') !== 'step') await connectCare.click();
+    return connectCare.getAttribute('aria-current');
+  }, {
+    message: 'Connect care becomes the current Yard Owner step',
+    timeout: 5_000,
+  }).toBe('step');
+}
 
 test('a verified owner creates a private profile and reconfirms a changed address', async ({ page }) => {
   let yardBriefVersion = 0;
@@ -237,7 +249,7 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   await expect(page.getByText('Version 2 · ready')).toBeVisible();
   await expect(page.getByText('This is your starting brief—not a measurement, diagnosis, price, work order, or provider instruction.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Add useful views without diagnosing the yard' })).toBeVisible();
-  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
+  await openConnectCare(page);
   await expect(page.getByRole('heading', { name: 'Provider connection progress' })).toBeVisible();
   await expect(page.getByText('No provider connection has started.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).not.toBeVisible();
@@ -405,7 +417,7 @@ test('an owner safely retries approval and reconciles a stale revocation after l
   await page.goto('/app/yard-owner');
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
   await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
-  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
+  await openConnectCare(page);
   await expect(page.getByText('Nothing new is shared yet.')).toBeVisible();
   await page.getByRole('button', { name: 'Review access for Desert Green Care' }).click();
   await expect(page.getByRole('heading', { name: 'Review access for Desert Green Care' })).toBeFocused();
@@ -530,7 +542,7 @@ test('an owner confirms an assessment window and uses only the shared conversati
   await page.goto('/app/yard-owner');
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
   await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
-  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
+  await openConnectCare(page);
   await expect(page.getByRole('heading', { name: 'Review the yard before agreeing on care' })).toBeVisible();
   await expect(page.getByText('Assessment time needs your review')).toBeVisible();
   await expect(page.getByText(/America\/Phoenix/)).toBeVisible();
@@ -677,7 +689,8 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
 
   await page.goto('/app/yard-owner');
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
-  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
+  await openConnectCare(page);
   await expect(page.getByRole('heading', { name: 'Compare the exact offer before deciding' })).toBeVisible();
   await expect(page.getByText('$120.00 per visit')).toBeVisible();
   await expect(page.getByText('Tree work above eight feet')).toBeVisible();
