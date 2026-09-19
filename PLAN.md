@@ -548,6 +548,13 @@ Current state:
   The private-VPN review service remains reachable with PostgreSQL readiness in
   explicit local-review authentication mode. This is publication and review
   evidence, not protected Cognito deployment evidence.
+- Hosted browser assertions now allow ten seconds for asynchronous UI state
+  while retaining the 60-second test ceiling and zero retries. Two separate
+  `main` runs had exhausted Playwright's five-second assertion default at
+  different transitions in the same long WebKit Yard Owner acquisition
+  journey, while the identical content passed its pull-request runs and a
+  failed-job retry. The wider assertion window addresses hosted engine load
+  without hiding a failed test behind automatic retries.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
