@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Waiting on input | P1 operational exception activity integration is complete | R2 external access or P2 concern/preference product boundary |
+| Repository | Waiting on input | R3 production-smoke safety and persistence contract is complete | R2 external access or P2 concern/preference product boundary |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -122,6 +122,16 @@ Exit evidence:
 ### R3 — Authenticated hosted smoke
 
 State: follows R2.
+
+Repository preparation delivered:
+
+- The runner accepts only an exact HTTPS origin and explicit safe persisted
+  pilot IDs, and every request has bounded connection and total timeouts.
+- Failure messages identify the violated contract without printing response
+  bodies, tokens, signed URLs, object keys, or customer data.
+- Photo completion must pass an exact read-after-write persistence check.
+- A deterministic fake-transport suite covers success, transport configuration,
+  unsafe inputs, redaction, and missing persistence and runs in repository CI.
 
 Deliver:
 

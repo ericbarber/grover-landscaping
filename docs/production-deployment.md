@@ -72,6 +72,10 @@ TF_VAR_application_url=https://grover-landscaping.onrender.com \
 BASE_URL=https://grover-landscaping.onrender.com \
 OWNER_EMAIL='approved-owner@example.com' \
 ACCESS_TOKEN='current-cognito-access-token' \
+SMOKE_JOB_ID='authorized-pilot-job-id' \
+SMOKE_DAY_PLAN_ID='authorized-pilot-day-plan-id' \
+SMOKE_ACCOUNT_ID='authorized-pilot-account-id' \
+SMOKE_PROPERTY_ID='authorized-pilot-property-id' \
 RENDER_ACCESS_CONFIRMED=1 \
 TERRAFORM_STATE_CONFIRMED=1 \
 bash scripts/release-preflight.sh
@@ -103,14 +107,28 @@ bash scripts/smoke-production.sh
 
 The smoke test verifies:
 
+- An exact HTTPS deployment origin, safe explicit pilot identifiers, and bounded request timeouts
 - Database-backed readiness
 - Cognito runtime auth configuration
 - Rejection of unauthenticated API requests
 - Cognito-authenticated access summary and job list reads
 - Authenticated route, report, photo upload-ticket/completion, photo-processing recovery, customer portfolio, customer bid-history, and customer report-history access
+- Read-after-write persistence for the exact completed smoke photo
 - Public frontend delivery for the managed-login entry point
+- Failure output that identifies the failed contract without printing response bodies, access tokens, signed URLs, object keys, or customer data
 
-Override the `SMOKE_*` IDs when the pilot data set no longer uses the seeded demo job, day plan, account, or property identifiers.
+All four `SMOKE_*` identifiers are required and must name authorized persisted
+records in the pilot tenant. The runner has no production fallback to seeded
+demo identifiers. Requests default to a 10-second connection timeout and a
+30-second total timeout; bounded overrides are available through
+`SMOKE_CONNECT_TIMEOUT_SECONDS` and `SMOKE_REQUEST_TIMEOUT_SECONDS`.
+
+The deterministic contract harness uses a fake transport and contacts no
+external service:
+
+```bash
+bash scripts/smoke-production.test.sh
+```
 
 Validate the notification webhook gateway before setting `NOTIFICATION_DISPATCH_MODE=webhook` in Render:
 

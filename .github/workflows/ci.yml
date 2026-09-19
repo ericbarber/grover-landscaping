@@ -33,9 +33,12 @@ jobs:
           test -f Dockerfile
           test -f render.yaml
 
-      - name: Validate Pi deployment contracts
+      - name: Validate shell, release, and Pi deployment contracts
         run: |
-          bash -n infra/pi/install-host-dependencies.sh scripts/deploy-pi.sh scripts/deploy-pi.test.sh
+          bash -n infra/pi/install-host-dependencies.sh scripts/*.sh scripts/test-fixtures/*.sh
+          bash scripts/validate-changes.test.sh
+          bash scripts/release-preflight.test.sh
+          bash scripts/smoke-production.test.sh
           bash scripts/deploy-pi.test.sh
 
   backend:

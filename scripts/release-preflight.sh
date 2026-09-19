@@ -59,7 +59,9 @@ require_files() {
     infra/terraform/environments/prod/main.tf \
     infra/terraform/environments/prod/variables.tf \
     infra/terraform/environments/prod/outputs.tf \
-    scripts/smoke-production.sh; do
+    scripts/smoke-production.sh \
+    scripts/smoke-production.test.sh \
+    scripts/test-fixtures/fake-smoke-curl.sh; do
     [[ -f "${path}" ]] || missing+=("${path}")
   done
 
@@ -106,11 +108,11 @@ validate_render_blueprint() {
 validate_production_guards() {
   local errors=0
 
-  rg -q 'app_environment\.eq_ignore_ascii_case\("production"\)' backend/src/main.rs || errors=$((errors + 1))
-  rg -q 'DATABASE_URL is required when APP_ENV=production' backend/src/main.rs || errors=$((errors + 1))
-  rg -q 'production && matches!\(mode, "disabled" \| "local_review"\)' backend/src/auth.rs || errors=$((errors + 1))
-  rg -q 'production Cognito URLs must use HTTPS' backend/src/auth.rs || errors=$((errors + 1))
-  rg -q 'unsafe_development_auth_modes_are_rejected_in_production' backend/src/auth.rs || errors=$((errors + 1))
+  grep -Eq 'app_environment\.eq_ignore_ascii_case\("production"\)' backend/src/main.rs || errors=$((errors + 1))
+  grep -Eq 'DATABASE_URL is required when APP_ENV=production' backend/src/main.rs || errors=$((errors + 1))
+  grep -Eq 'production && matches!\(mode, "disabled" \| "local_review"\)' backend/src/auth.rs || errors=$((errors + 1))
+  grep -Eq 'production Cognito URLs must use HTTPS' backend/src/auth.rs || errors=$((errors + 1))
+  grep -Eq 'unsafe_development_auth_modes_are_rejected_in_production' backend/src/auth.rs || errors=$((errors + 1))
 
   if ((errors)); then
     failed "production persistence/authentication guard contract is incomplete (${errors} missing assertion(s))"
@@ -124,13 +126,17 @@ validate_smoke_contract() {
   local smoke=scripts/smoke-production.sh
 
   [[ -x "${smoke}" ]] || errors=$((errors + 1))
-  rg -q 'BASE_URL:\?Set BASE_URL' "${smoke}" || errors=$((errors + 1))
-  rg -q 'ACCESS_TOKEN:\?Set ACCESS_TOKEN' "${smoke}" || errors=$((errors + 1))
-  rg -q '/health/ready' "${smoke}" || errors=$((errors + 1))
-  rg -q '/auth/config' "${smoke}" || errors=$((errors + 1))
-  rg -q 'unauthorized_status.*401|return 401' "${smoke}" || errors=$((errors + 1))
+  grep -Eq 'BASE_URL:\?Set BASE_URL' "${smoke}" || errors=$((errors + 1))
+  grep -Eq 'ACCESS_TOKEN:\?Set ACCESS_TOKEN' "${smoke}" || errors=$((errors + 1))
+  grep -Eq '/health/ready' "${smoke}" || errors=$((errors + 1))
+  grep -Eq '/auth/config' "${smoke}" || errors=$((errors + 1))
+  grep -Eq 'unauthorized_status.*401|return 401' "${smoke}" || errors=$((errors + 1))
+  grep -Eq 'BASE_URL must be an HTTPS origin' "${smoke}" || errors=$((errors + 1))
+  grep -Eq -- '--connect-timeout' "${smoke}" || errors=$((errors + 1))
+  grep -Eq -- '--max-time' "${smoke}" || errors=$((errors + 1))
+  grep -Eq 'completed photo was not readable from the persisted job' "${smoke}" || errors=$((errors + 1))
   for name in SMOKE_JOB_ID SMOKE_DAY_PLAN_ID SMOKE_ACCOUNT_ID SMOKE_PROPERTY_ID; do
-    rg -q "${name}:-" "${smoke}" || errors=$((errors + 1))
+    grep -Fq "${name}:?Set" "${smoke}" || errors=$((errors + 1))
   done
 
   if ((errors)); then
@@ -208,7 +214,7 @@ validate_https_input() {
 
   if [[ -z "${value}" ]]; then
     external "${name}: ${description}"
-  elif [[ ! "${value}" =~ ^https://[^/[:space:]]+/?$ ]]; then
+  elif [[ ! "${value}" =~ ^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?/?$ ]]; then
     failed "${name} must be an HTTPS origin without a path, query, or fragment"
   else
     ready "${name} is present and uses HTTPS"
@@ -235,6 +241,10 @@ validate_external_inputs() {
   fi
 
   require_external_value ACCESS_TOKEN "provide a current Cognito access token only in the operator shell"
+  require_external_value SMOKE_JOB_ID "provide an authorized persisted pilot job identifier"
+  require_external_value SMOKE_DAY_PLAN_ID "provide an authorized persisted pilot day-plan identifier"
+  require_external_value SMOKE_ACCOUNT_ID "provide an authorized persisted pilot account identifier"
+  require_external_value SMOKE_PROPERTY_ID "provide an authorized persisted pilot property identifier"
   if [[ -z "${OWNER_EMAIL:-}" ]]; then
     external "OWNER_EMAIL: provide the approved first-owner email only in the operator shell"
   elif [[ "${OWNER_EMAIL}" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]]; then
