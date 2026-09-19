@@ -1384,6 +1384,21 @@ or crew assignment.
 - The completed hosted evidence remains external and restricted until R2 is
   provisioned; the intentionally incomplete template is not release evidence.
 
+### AWS protected-account setup handoff
+
+- A dedicated setup runbook now defines the recommended Organizations
+  management-account and isolated production-member boundary without expanding
+  the pilot beyond Render hosting, Cognito, optional S3 photos, and S3 state.
+- Root recovery, multiple MFA devices, Identity Center temporary sessions,
+  production-account assignment, cost budgets, anomaly alerts, multi-Region
+  CloudTrail, and least-privilege follow-down are explicit acceptance gates.
+- The runbook provides repeatable private/encrypted/versioned state-bucket
+  commands and records the exact non-secret handoff values needed to complete
+  the Terraform backend decision while forbidding credential/state disclosure.
+- AWS account creation, organization billing choice, operator assignment, and
+  bucket creation remain external owner actions; no cloud resource is claimed
+  as provisioned by repository documentation.
+
 ### Operational exception activity integration
 
 - Persisted operational activity now includes exception creation, assignment,

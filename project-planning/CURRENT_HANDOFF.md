@@ -45,6 +45,15 @@ protected checks, and distinct rollback target. The template is intentionally
 incomplete; the actual record remains restricted and can only be completed
 after R2 provisioning.
 
+### Delivered: R2 AWS account setup handoff
+
+[`../docs/aws-account-setup.md`](../docs/aws-account-setup.md) now provides the
+owner-operated path for management/production account separation, root and
+workforce security, temporary CLI access, cost/audit controls, and a versioned
+S3 state bucket. It stops before Terraform apply and identifies only the
+non-secret account, Region, bucket, state-key, locking, profile, and photo-mode
+facts development needs.
+
 ### Delivered: P1 operational exception activity integration
 
 Exception creation and all lifecycle audits now appear as tenant-scoped manager
@@ -68,6 +77,7 @@ environment:
 - Render account access and a created/reconciled Blueprint plus private
   PostgreSQL database;
 - AWS credentials and the production Terraform state/backend decision;
+- completion of the AWS account-setup acceptance checklist;
 - a final HTTPS application URL;
 - an approved first-owner email and a current hosted access token;
 - authorized persisted job, day-plan, account, and property IDs for the hosted
