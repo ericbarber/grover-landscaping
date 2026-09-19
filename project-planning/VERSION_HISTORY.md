@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-19: Isolated checklist persistence integration tests that share the
+  seeded `job_1001_yard_service` row. The state/read and offline-idempotency
+  cases now hold one async test lock across their mutations, preventing a
+  protected-main race that could recheck the item between update and read.
 - 2026-09-19: Synchronized hosted Yard Owner navigation into Connect care after
   four WebKit failures stopped at asynchronous transitions, including one that
   proved a completed click could leave the step unchanged. The journeys now
