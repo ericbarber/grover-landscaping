@@ -45,7 +45,8 @@ Current state:
   heading, horizontal overflow, responsive navigation, mobile touch targets,
   shared focus treatment, reviewed failure/status evidence, and clean browser
   execution. The hosted browser job runs the current mirror, truth/recovery,
-  and shared prototype-foundation contracts before the production journeys.
+  Yard Owner rollout, and shared prototype-foundation contracts before the
+  production journeys.
 - A separate [truth and recovery design](design/prototypes/frontend-truth-recovery/README.md)
   now defines five protected Yard Owner read outcomes and five Crew Route
   date/persistence modes. Historical routes are explicitly read only; phone
