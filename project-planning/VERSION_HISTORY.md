@@ -17,6 +17,13 @@
   private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
   commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
   pushes deploy automatically while pull requests remain validation-only.
+- 2026-09-03: Completed the first frontend-audit follow-up design. A separate
+  working prototype now specifies five fail-closed Yard Owner protected-read
+  outcomes and five Crew Route date/persistence modes using one user-facing
+  confidence vocabulary. Historical routes are explicitly read only, state
+  switching is announced and hash-addressable, and browser checks cover 1440px,
+  390px, and 320px layouts, touch targets, overflow, and primary-action
+  clearance above fixed mobile navigation. Production adoption remains next.
 - 2026-09-03: Completed a detailed current-frontend design parity review. A
   responsive, dependency-free mirror now covers eight representative public,
   company, crew, Yard Owner, and property-manager surfaces with deterministic

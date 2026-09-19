@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Dated current-state mirror and detailed cross-persona frontend audit are delivered | Prototype truthful state/recovery, manager continuity, then shell compression |
+| Design | Current-state audit plus proposed truth/recovery states are delivered | Prototype manager continuity, then shell compression |
 
 ## Status Legend
 
@@ -44,19 +44,22 @@ Current state:
 - Browser validation covers surface switching, stable hashes, one visible page
   heading, horizontal overflow, responsive navigation, mobile touch targets,
   shared focus treatment, reviewed failure/status evidence, and clean browser
-  execution. The hosted browser job runs both this review contract and the
-  shared prototype-foundation contract before the production journey suite.
+  execution. The hosted browser job runs the current mirror, truth/recovery,
+  and shared prototype-foundation contracts before the production journeys.
+- A separate [truth and recovery design](design/prototypes/frontend-truth-recovery/README.md)
+  now defines five protected Yard Owner read outcomes and five Crew Route
+  date/persistence modes. Historical routes are explicitly read only; phone
+  validation proves primary-action clearance above the fixed navigation at
+  390px and 320px widths.
 
 Next design slices:
 
-1. Truth and recovery: prototype one route-date/state vocabulary and complete
-   Yard Owner loading, empty, access-ended, inconsistent, and unavailable paths.
-2. Manager continuity: add authorized status and urgency to the six-category
+1. Manager continuity: add authorized status and urgency to the six-category
    Manage overview without duplicating its destination tools.
-3. Shell compression: remove redundant hosted identity/persona presentation and
+2. Shell compression: remove redundant hosted identity/persona presentation and
    prove final-action clearance above the phone bottom bar at narrow widths and
    zoom.
-4. Prototype reconciliation: reclassify older artifacts explicitly as current
+3. Prototype reconciliation: reclassify older artifacts explicitly as current
    mirror, adopted behavior, design direction, or historical input.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,

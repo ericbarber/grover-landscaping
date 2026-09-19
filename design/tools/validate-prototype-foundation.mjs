@@ -14,6 +14,7 @@ const prototypes = [
   { name: 'Yard Owner acquisition', path: 'prototypes/yard-owner-acquisition/index.html', hash: '#account', nav: '.journey-rail' },
   { name: 'Yard Owner portal', path: 'prototypes/yard-owner-portal/index.html', hash: '#home', nav: '.desktop-rail' },
   { name: 'Current frontend review', path: 'prototypes/current-frontend-review/index.html', hash: '#company-home', nav: '.workspace-rail' },
+  { name: 'Frontend truth and recovery', path: 'prototypes/frontend-truth-recovery/index.html', hash: '#crew/synced', nav: '.app-rail' },
 ];
 
 const expectedTokens = {
