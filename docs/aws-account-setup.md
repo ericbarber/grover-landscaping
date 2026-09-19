@@ -3,7 +3,7 @@
 This runbook prepares the AWS ownership and operator access required by the
 Grover Landscaping protected pilot. It does not deploy the application.
 
-Last verified against the linked AWS and HashiCorp documentation: 2026-09-03.
+Last verified against the linked AWS and HashiCorp documentation: 2026-09-19.
 Recheck the linked billing and console guidance if this runbook is used later.
 
 The current production design uses AWS for:
