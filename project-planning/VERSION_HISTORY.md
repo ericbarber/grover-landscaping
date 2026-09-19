@@ -6,6 +6,21 @@
   private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
   commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
   pushes deploy automatically while pull requests remain validation-only.
+- 2026-09-02: Brought the complete two-column public hero above the desktop
+  fold. Its height now tracks the viewport below the sticky header, responsive
+  typography and spacing preserve the action hierarchy, and the operations
+  graphic uses a denser intermediate-width composition without changing its
+  mobile or product-tour presentation. Browser assertions keep every persona's
+  controls, actions, and complete visual inside 1024×720 and 1280×720 viewports
+  across Chromium, Firefox, and WebKit; TypeScript, all 485 frontend tests, and
+  the production build also pass.
+- 2026-09-02: Stabilized the public hero while switching audiences. All persona
+  copy now shares a responsive intrinsic-height region sized by its longest
+  composition, keeping the title and selector stationary without hardcoded
+  breakpoint heights; only the active story remains visible to assistive
+  technology. The focused behavior passes Chromium, Firefox, and WebKit at
+  phone and desktop widths, alongside TypeScript, all 485 frontend tests, and
+  the production build.
 - 2026-09-02: Integrated operational exception creation and lifecycle audits
   into tenant-scoped manager activity. A dedicated Recovery source shows
   readable actor, state, assignment, and resolution context; successful

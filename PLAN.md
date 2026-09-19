@@ -715,6 +715,13 @@ Current state:
 - The audience selector switches the complete page story and canonical route
   without a reload while retaining campaign query parameters and first-party
   measurement.
+- The hero copy reserves the tallest persona composition at each responsive
+  width, so changing audiences does not move the selector or surrounding title
+  layout while only the selected persona remains visible and accessible.
+- The two-column desktop hero now occupies the viewport remaining below the
+  sticky header. Responsive type, spacing, and an intermediate-width planner
+  density keep the persona selector, actions, and complete visual together
+  above the fold at 1024 px and wider laptop layouts.
 - Yard and company signup remain visible from every persona view; the primary
   action instead follows the active audience through private yard setup,
   company onboarding, a portfolio discussion, or a field-workflow demo.
@@ -1419,6 +1426,11 @@ or crew assignment.
 - Interactive audience selector tailors the complete landing-page narrative for
   yard owners, property managers, landscaping companies, and crew leads,
   including the hero, trust, proof, capabilities, and final invitation
+- Persona-specific hero copy shares one responsive intrinsic-height region, so
+  switching audiences does not cause the title or selector to jump
+- The complete two-column desktop hero fits below the sticky header in the
+  first viewport, keeping persona controls, actions, and the full visual panel
+  visible together at supported laptop widths
 - Product preview, Plan-Care-Proof workflow, capability story, trust cues, and repeated workspace calls to action create a complete marketing narrative
 - `/app` remains the direct authenticated or auth-disabled workspace entry, while callbacks, invitations, diagnostics, shared bids, and shared reports retain dedicated routing
 - Installed application sessions now start directly at `/app`

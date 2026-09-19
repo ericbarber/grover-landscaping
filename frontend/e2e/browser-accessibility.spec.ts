@@ -181,6 +181,101 @@ test('the audience control switches the complete landing-page story and URL', as
   await expect(page.getByText('Portfolio readiness', { exact: true })).not.toBeVisible();
 });
 
+test('persona switching keeps the hero title section stable', async ({ page }) => {
+  const personas = [
+    { tab: 'Yard owner', headline: 'See the care behind your yard.' },
+    { tab: 'Property manager', headline: 'Keep every property ready.' },
+    { tab: 'Landscaping company', headline: 'Plan every visit. Care with confidence. Prove the work.' },
+    { tab: 'Crew lead', headline: 'Know the next stop—and what done looks like.' },
+  ];
+
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 720 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/for-landscaping-companies');
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
+
+    const heroCopy = page.getByTestId('hero-persona-copy');
+    const audienceControl = page.getByRole('tablist', { name: 'Choose your perspective' });
+    const baseline = await Promise.all([
+      heroCopy.evaluate((element) => element.getBoundingClientRect().height),
+      audienceControl.evaluate((element) => element.getBoundingClientRect().top),
+    ]);
+
+    for (const persona of personas) {
+      await page.getByRole('tab', { name: persona.tab }).click();
+      await expect(page.getByRole('heading', { level: 1, name: persona.headline })).toBeVisible();
+
+      const current = await Promise.all([
+        heroCopy.evaluate((element) => element.getBoundingClientRect().height),
+        audienceControl.evaluate((element) => element.getBoundingClientRect().top),
+      ]);
+      expect(current).toEqual(baseline);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+    }
+  }
+});
+
+test('the complete desktop hero stays within the first viewport', async ({ page }) => {
+  const personas = [
+    { tab: 'Yard owner', graphic: 'Your latest service is ready' },
+    { tab: 'Property manager', graphic: '14 of 16 properties on track' },
+    { tab: 'Landscaping company', graphic: 'Today’s operation' },
+    { tab: 'Crew lead', graphic: 'Oak Street residence' },
+  ];
+
+  for (const viewport of [{ width: 1024, height: 720 }, { width: 1280, height: 720 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/for-landscaping-companies');
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
+
+    for (const persona of personas) {
+      await page.getByRole('tab', { name: persona.tab }).click();
+      await expect(page.getByText(persona.graphic, { exact: true }).first()).toBeVisible();
+
+      const bounds = await page.evaluate((activeTab) => {
+        const header = document.querySelector('header')?.getBoundingClientRect();
+        const hero = document.querySelector('main > section')?.getBoundingClientRect();
+        const graphic = document.querySelector('main > section > div:last-child')?.getBoundingClientRect();
+        const visual = activeTab === 'Landscaping company'
+          ? document.querySelector('[aria-labelledby="marketing-operations-planner-title"]')?.getBoundingClientRect()
+          : document.querySelector('main > section > div:last-child article')?.getBoundingClientRect();
+        const controls = document.querySelector('[role="tablist"][aria-label="Choose your perspective"]')?.getBoundingClientRect();
+        const actions = document.querySelector('[aria-label="Primary next steps"]')?.getBoundingClientRect();
+        const directSignup = document.querySelector('[aria-label="Direct signup options"]')?.getBoundingClientRect();
+
+        return {
+          headerBottom: header?.bottom,
+          heroTop: hero?.top,
+          heroBottom: hero?.bottom,
+          graphicTop: graphic?.top,
+          graphicBottom: graphic?.bottom,
+          visualTop: visual?.top,
+          visualBottom: visual?.bottom,
+          controlsBottom: controls?.bottom,
+          actionsBottom: actions?.bottom,
+          directSignupBottom: directSignup?.bottom,
+          viewportBottom: window.innerHeight,
+        };
+      }, persona.tab);
+
+      const context = `${persona.tab} at ${viewport.width}×${viewport.height}`;
+      expect(bounds.heroTop, `${context} hero top`).toBe(bounds.headerBottom);
+      expect(bounds.heroBottom, `${context} hero bottom`).toBeLessThanOrEqual(bounds.viewportBottom + 1);
+      expect(bounds.graphicTop, `${context} graphic top`).toBeGreaterThanOrEqual(bounds.heroTop! - 1);
+      expect(bounds.graphicBottom, `${context} graphic bottom`).toBeLessThanOrEqual(bounds.viewportBottom + 1);
+      expect(bounds.visualTop, `${context} visual top`).toBeGreaterThanOrEqual(bounds.graphicTop! - 1);
+      expect(bounds.visualBottom, `${context} visual bottom`).toBeLessThanOrEqual(bounds.graphicBottom! + 1);
+      expect(bounds.controlsBottom, `${context} persona controls`).toBeLessThanOrEqual(bounds.viewportBottom);
+      expect(bounds.actionsBottom, `${context} primary actions`).toBeLessThanOrEqual(bounds.viewportBottom);
+      expect(bounds.directSignupBottom, `${context} direct signup`).toBeLessThanOrEqual(bounds.viewportBottom);
+    }
+  }
+});
+
 test('the landscaping-company hero demonstrates route workload balancing', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/for-landscaping-companies');
