@@ -44,7 +44,8 @@ Current state:
 - Browser validation covers surface switching, stable hashes, one visible page
   heading, horizontal overflow, responsive navigation, mobile touch targets,
   shared focus treatment, reviewed failure/status evidence, and clean browser
-  execution.
+  execution. The hosted browser job runs both this review contract and the
+  shared prototype-foundation contract before the production journey suite.
 
 Next design slices:
 
