@@ -590,6 +590,10 @@ Current state:
   stopped at unsynchronized transitions, including one that proved a completed
   click could leave the step unchanged; the test ceiling, assertion default,
   and zero-retry policy remain unchanged.
+- Checklist persistence integration cases now serialize their shared seeded-job
+  mutations. A protected `main` run proved the state/read assertion and offline
+  idempotency case could otherwise race on `job_1001_yard_service` after the
+  identical merge candidate passed its pull-request backend gate.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail

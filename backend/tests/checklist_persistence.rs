@@ -5,6 +5,8 @@ use sqlx::postgres::PgPoolOptions;
 use std::time::Duration;
 mod common;
 
+static CHECKLIST_PERSISTENCE_TEST_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 #[tokio::test]
 async fn repository_distinguishes_unavailable_job_writes_from_missing_records() {
     let pool = PgPoolOptions::new()
@@ -39,6 +41,7 @@ async fn repository_distinguishes_unavailable_job_writes_from_missing_records() 
 
 #[tokio::test]
 async fn repository_persists_checklist_item_state_and_summary_count() {
+    let _test_guard = CHECKLIST_PERSISTENCE_TEST_LOCK.lock().await;
     let Some(config) = common::database_config() else {
         return;
     };
@@ -95,6 +98,7 @@ async fn repository_persists_checklist_item_state_and_summary_count() {
 
 #[tokio::test]
 async fn repository_deduplicates_offline_checklist_mutations() {
+    let _test_guard = CHECKLIST_PERSISTENCE_TEST_LOCK.lock().await;
     let Some(config) = common::database_config() else {
         return;
     };
