@@ -11,10 +11,10 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | R1 non-secret release preflight is delivered; protected inputs remain external | P1 operational exception activity integration |
+| Repository | P1 operational exception activity integration is delivered | Await R2 external access or the P2 product-boundary decision |
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
-| Product | Core workflows are delivered; expansion is deliberately bounded | P1 operational exception activity after release tooling |
+| Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
 
 ## Status Legend
 
@@ -1341,27 +1341,21 @@ production interfaces. Acceptance must remain explicitly unactivated and create
 no provider customer, service property, job, contract, route, schedule, payment,
 or crew assignment.
 
+## Delivered
+
 ### Operational exception activity integration
 
-Goal: connect the exception recovery queue to the persisted manager activity
-timeline so lifecycle decisions remain visible and actionable outside the queue.
-
-Planned slice:
-
-- Include operational-exception creation and lifecycle audits in persisted
-  operational activity reads with readable actor, status, assignment, and
-  resolution context.
-- Map those records into manager activity tones and labels without breaking
-  unknown-event fallback behavior.
-- Add an activity-to-Recovery handoff that opens the operational exception tool
-  with the affected item context.
-- Cover tenant scoping, event mapping, and mobile handoff behavior, then update
-  delivery records after validation.
-
-Exit condition: a manager can see who changed an operational exception, understand
-the outcome, and return to its recovery workflow from persisted activity history.
-
-## Delivered
+- Persisted operational activity now includes exception creation, assignment,
+  start, resolution, and reopen audits within active manager tenant scope.
+- Audit metadata and manager presentation retain readable actor, title,
+  category, priority, state, assignment, and resolution context.
+- Manager activity has a dedicated Recovery source, preserves unknown-event
+  fallback, refreshes after exception mutations, and opens the exact exception
+  from activity history.
+- Focused PostgreSQL tests cover tenant filtering and all five event kinds; the
+  mobile browser journey covers activity-to-Recovery selection, focus, and
+  overflow. Strict Clippy, all 417 backend tests, TypeScript, all 485 frontend
+  tests, and the production build pass.
 
 ### Raspberry Pi incremental development hosting
 

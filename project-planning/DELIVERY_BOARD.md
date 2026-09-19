@@ -15,10 +15,10 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Active | R1 non-secret release preflight is complete | P1 operational exception activity integration while protected hosting waits |
+| Repository | Waiting on input | P1 operational exception activity integration is complete | R2 external access or P2 concern/preference product boundary |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
-| Product expansion | Queued | Core crew, manager, Yard Owner, property-manager, proof, and provider-acquisition paths are delivered | Resume only the highest-value ready slice after release tooling |
+| Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
 
 ## Execution queue
 
@@ -156,7 +156,7 @@ Exit evidence:
 
 ### P1 — Operational exception activity integration
 
-State: active repository-owned product slice while R2 awaits its owner.
+State: delivered.
 
 Deliver:
 
@@ -169,6 +169,15 @@ Exit evidence:
 
 - A manager can understand who changed an exception and return to the affected
   Recovery workflow from persisted history.
+
+Delivery evidence:
+
+- The tenant-scoped activity query includes all five persisted exception audit
+  kinds and returns their readable lifecycle metadata.
+- The manager feed exposes a dedicated Recovery source, actor/state/assignment/
+  resolution context, unknown-event fallback, and exact-item navigation.
+- PostgreSQL isolation tests, 417 backend tests, strict Clippy, 485 frontend
+  tests, production build, and the focused mobile handoff pass.
 
 ### P2 — Yard Owner concern and preference boundary
 

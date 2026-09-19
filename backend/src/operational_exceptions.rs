@@ -320,6 +320,9 @@ impl OperationalExceptionRepository {
         .bind(serde_json::json!({
             "category": request.category,
             "priority": request.priority,
+            "title": request.title.trim(),
+            "status": "open",
+            "assigned_user_id": request.assigned_user_id,
             "affected_resource_type": request.affected_resource_type,
             "affected_resource_id": request.affected_resource_id,
         }))
@@ -403,11 +406,14 @@ impl OperationalExceptionRepository {
             .bind(&event_kind)
             .bind(id)
             .bind(serde_json::json!({
+                "title": &exception.title,
+                "category": &exception.category,
+                "priority": &exception.priority,
                 "previous_status": previous_status,
-                "status": exception.status,
+                "status": &exception.status,
                 "previous_assigned_user_id": previous_assignee,
-                "assigned_user_id": exception.assigned_user_id,
-                "resolution_note": exception.resolution_note,
+                "assigned_user_id": &exception.assigned_user_id,
+                "resolution_note": &exception.resolution_note,
             }))
             .execute(&mut *transaction)
             .await?;

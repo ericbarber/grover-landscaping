@@ -1,5 +1,5 @@
 export type ManagerActivityTone = 'info' | 'warning' | 'success';
-export type ManagerActivitySource = 'route' | 'job' | 'photo' | 'sync';
+export type ManagerActivitySource = 'route' | 'job' | 'photo' | 'recovery' | 'sync';
 
 export type ManagerActivityItem = {
   id: string;
@@ -9,7 +9,7 @@ export type ManagerActivityItem = {
   source: ManagerActivitySource;
   occurredAt: string;
   recommendedAction?: string;
-  actionKind?: 'complete_dispatch_notification';
+  actionKind?: 'complete_dispatch_notification' | 'open_operational_exception';
   actionTargetId?: string;
 };
 

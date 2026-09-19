@@ -98,6 +98,69 @@ describe('persisted operational manager activity', () => {
     });
   });
 
+  it('maps operational exception creation and lifecycle context back to Recovery', () => {
+    expect(operationalToManagerActivity({
+      id: 'audit_exception_created_1001',
+      organizationId: 'org_1001',
+      eventKind: 'operational_exception_created',
+      targetId: 'exception_1001',
+      actorUserId: 'manager_1001',
+      actorLabel: 'Maria Manager',
+      occurredAt: '2026-07-19T17:12:00Z',
+      metadata: {
+        title: 'Blocked gate access',
+        category: 'access',
+        priority: 'high',
+        status: 'open',
+        assigned_user_id: null,
+      },
+    })).toMatchObject({
+      title: 'Operational exception created',
+      message: 'Blocked gate access (exception_1001) · recorded by Maria Manager. Access · High priority · Open · unassigned.',
+      tone: 'warning',
+      source: 'recovery',
+      actionKind: 'open_operational_exception',
+      actionTargetId: 'exception_1001',
+    });
+
+    expect(operationalToManagerActivity({
+      id: 'audit_exception_assign_1001',
+      organizationId: 'org_1001',
+      eventKind: 'operational_exception_assign',
+      targetId: 'exception_1001',
+      actorUserId: 'manager_1001',
+      occurredAt: '2026-07-19T17:13:00Z',
+      metadata: {
+        title: 'Blocked gate access',
+        previous_assigned_user_id: null,
+        assigned_user_id: 'manager_2002',
+      },
+    })).toMatchObject({
+      message: 'Blocked gate access (exception_1001) · recorded by manager_1001. Assignment unassigned → manager_2002.',
+      tone: 'info',
+      source: 'recovery',
+    });
+
+    expect(operationalToManagerActivity({
+      id: 'audit_exception_resolve_1001',
+      organizationId: 'org_1001',
+      eventKind: 'operational_exception_resolve',
+      targetId: 'exception_1001',
+      actorUserId: 'manager_2002',
+      occurredAt: '2026-07-19T17:14:00Z',
+      metadata: {
+        title: 'Blocked gate access',
+        previous_status: 'in_progress',
+        status: 'resolved',
+        resolution_note: 'Customer supplied a working code.',
+      },
+    })).toMatchObject({
+      message: 'Blocked gate access (exception_1001) · recorded by manager_2002. Status In progress → Resolved. Resolution: Customer supplied a working code.',
+      tone: 'success',
+      source: 'recovery',
+    });
+  });
+
   it('falls back safely when the API adds an activity kind before the UI presentation', () => {
     expect(operationalToManagerActivity({
       id: 'audit_future_1001',

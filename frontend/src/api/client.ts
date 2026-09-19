@@ -598,7 +598,12 @@ export type OperationalActivityEventKind =
   | 'photo_processing_resolved'
   | 'customer_photo_evidence_erased'
   | 'photo_erasure_deletion_retried'
-  | 'photo_erasure_deletion_resolved';
+  | 'photo_erasure_deletion_resolved'
+  | 'operational_exception_created'
+  | 'operational_exception_assign'
+  | 'operational_exception_start'
+  | 'operational_exception_resolve'
+  | 'operational_exception_reopen';
 
 interface ApiOperationalActivity {
   id: string;

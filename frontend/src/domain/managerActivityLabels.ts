@@ -13,6 +13,10 @@ export function managerActivitySourceLabel(source: ManagerActivitySource): strin
     return 'Photo';
   }
 
+  if (source === 'recovery') {
+    return 'Recovery';
+  }
+
   return 'Sync';
 }
 

@@ -15,6 +15,7 @@ describe('manager activity label helpers', () => {
     expect(managerActivitySourceLabel('route')).toBe('Route');
     expect(managerActivitySourceLabel('job')).toBe('Job');
     expect(managerActivitySourceLabel('photo')).toBe('Photo');
+    expect(managerActivitySourceLabel('recovery')).toBe('Recovery');
     expect(managerActivitySourceLabel('sync')).toBe('Sync');
   });
 
@@ -31,6 +32,7 @@ describe('manager activity label helpers', () => {
   it('summarizes selected source and tone filters', () => {
     expect(managerActivityFilterSummary('route', 'warning')).toBe('Route source · Warning tone');
     expect(managerActivityFilterSummary('photo', 'success')).toBe('Photo source · Success tone');
+    expect(managerActivityFilterSummary('recovery', 'warning')).toBe('Recovery source · Warning tone');
     expect(managerActivityFilterSummary('sync', 'info')).toBe('Sync source · Info tone');
   });
 });

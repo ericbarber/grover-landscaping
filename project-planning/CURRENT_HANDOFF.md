@@ -36,11 +36,20 @@ pass; the current environment reports seven external prerequisites and prints
 only their names. The script distinguishes ready, external-only, and failed
 outcomes with exit statuses 0, 2, and 1.
 
-### Active: P1 operational exception activity integration
+### Delivered: P1 operational exception activity integration
 
-Add exception creation and lifecycle audits to manager activity with readable
-actor/state/assignment/resolution context and a link back to the exact Recovery
-item. Preserve tenant scoping, unknown-event fallback, and mobile handoff.
+Exception creation and all lifecycle audits now appear as tenant-scoped manager
+Recovery activity with readable actor/state/assignment/resolution context. Each
+entry opens the exact exception, including a tested mobile focus and overflow
+handoff. The slice passes strict Clippy, 417 backend tests, TypeScript, 485
+frontend tests, the production build, and focused browser validation.
+
+### Next input boundary
+
+No repository implementation phase is active. Continue with R2 when the owning
+Render/AWS access and deployment inputs exist, or define the P2 Yard Owner
+concern/preference support, response, retention, privacy, and escalation
+boundary before implementation. Do not guess either input.
 
 ### Parallel external lane: R2 and R3
 
@@ -63,7 +72,7 @@ The latest published main gate includes:
 
 - repository layout checks;
 - zero-finding frontend high/critical dependency audit;
-- TypeScript, all 484 frontend tests, and the production frontend build;
+- TypeScript, all 485 frontend tests, and the production frontend build;
 - all 122 SQLx migrations, Rust formatting, strict all-target/all-feature
   Clippy on Rust 1.98, and all 417 backend tests;
 - Terraform formatting and development/production module validation;

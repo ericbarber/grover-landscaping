@@ -1051,19 +1051,46 @@ test('manager Recovery inspects an exception and returns to affected work', asyn
       },
     ]),
   }));
+  await page.route(/http:\/\/localhost:8080\/operational-activity(?:\?.*)?$/, (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([
+      {
+        id: 'audit_exception_route_created',
+        organization_id: 'org_demo_landscaping',
+        event_kind: 'operational_exception_created',
+        target_id: 'exception_route',
+        actor_user_id: 'local-review-manager',
+        actor_label: 'Morgan Manager',
+        occurred_at: '2026-08-22T15:05:00Z',
+        metadata: {
+          title: 'Lightning delay on North route',
+          category: 'weather',
+          priority: 'critical',
+          status: 'open',
+          assigned_user_id: 'local-review-manager',
+        },
+      },
+    ]),
+  }));
 
   await page.goto('/app');
   await page.getByRole('navigation', { name: 'Desktop workspace' })
     .getByRole('button', { name: 'Manage', exact: true }).click();
-  await page.getByRole('button', { name: /Recovery/ }).click();
-  await page.getByRole('button', { name: /Operational exceptions/ }).click();
+  await page.getByRole('button', { name: /Reports/ }).click();
+  await page.getByRole('button', { name: /Operations activity/ }).click();
+  await expect(page.getByRole('heading', { name: 'Operational exception created' })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Open Recovery item' }).click();
 
   const recovery = page.getByRole('heading', { name: 'Recovery and exceptions' }).locator('xpath=ancestor::div[1]');
   await expect(recovery.getByRole('region', { name: 'Recovery summary' }).getByText('1', { exact: true })).toHaveCount(4);
   await expect(recovery.getByRole('heading', { name: 'Work needing recovery' })).toBeVisible();
   await expect(recovery.getByRole('heading', { name: 'Lightning delay on North route' })).toBeVisible();
   await expect(recovery.getByText('Route · day_plan_north', { exact: true })).toBeVisible();
+  await expect(page.locator('#operational-exception-detail')).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
+  await page.setViewportSize({ width: 1440, height: 1000 });
   const queueHeading = recovery.getByRole('heading', { name: 'Work needing recovery' });
   const detailHeading = recovery.getByRole('heading', { name: 'Lightning delay on North route' });
   const desktopPositions = await Promise.all([queueHeading.boundingBox(), detailHeading.boundingBox()]);
