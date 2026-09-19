@@ -2,11 +2,25 @@
 
 This file tracks what has been delivered, what is actively being built, what is planned next, and what is intentionally backlogged. Keep this file focused on product delivery status, not detailed design notes.
 
+## Current Execution Snapshot
+
+The authoritative active queue is
+[`project-planning/DELIVERY_BOARD.md`](project-planning/DELIVERY_BOARD.md). Use
+this file for detailed feature status and historical delivery context, not to
+infer execution order from section position.
+
+| Lane | Current state | Next phase |
+| --- | --- | --- |
+| Repository | R1 non-secret release preflight is delivered; protected inputs remain external | P1 operational exception activity integration |
+| Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
+| Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
+| Product | Core workflows are delivered; expansion is deliberately bounded | P1 operational exception activity after release tooling |
+
 ## Status Legend
 
 | Status | Meaning |
 | --- | --- |
-| Delivered | Implemented in the repository and usable in local development |
+| Delivered | Implemented and repository-validated; hosted status must be stated separately |
 | In Progress | Started, partially wired, or available with local/browser fallback |
 | Planned | Prioritized upcoming work |
 | Backlog | Valuable but not part of the next delivery slice |
@@ -24,7 +38,7 @@ Current state:
   than the repository’s original proposed skeleton.
 - [`project-planning/PROTOTYPE_ADOPTION.md`](project-planning/PROTOTYPE_ADOPTION.md)
   maps each approved artifact to Adopted, Partial, Design ready, Product-gated,
-  or Future concept status and records the ordered production queue.
+  or Future concept status and records production-adoption history.
 - The current handoff, design index, high-fidelity index, prototype READMEs,
   application design delivery tracker, roadmap, feature catalog, and version
   history use the same adoption boundary.
@@ -934,7 +948,7 @@ responsive behavior, required states, and design decision record.
 Goal: adopt the professionally reviewed acquisition journey without storing a
 private pre-provider yard inside a landscaping company tenant.
 
-Active slice:
+Delivery record:
 
 - Phase 1A is delivered: authenticated-subject workspaces, private properties,
   per-owner duplicate protection, minimized lifecycle audit events, fail-closed

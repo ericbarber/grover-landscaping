@@ -9,17 +9,28 @@ Use this runbook for the first protected hosted pilot after the Render service U
 - `terraform`, `aws`, `psql`, and `curl` are available in the operator shell.
 - AWS credentials point at the account that owns the Cognito Terraform state.
 
-## Cognito Provisioning
-
-1. Copy and edit the production Terraform variables:
+Confirm the repository boundary before provisioning:
 
 ```bash
-cp infra/terraform/environments/prod/terraform.tfvars.example \
-  infra/terraform/environments/prod/terraform.tfvars
-$EDITOR infra/terraform/environments/prod/terraform.tfvars
+bash scripts/release-preflight.sh --repository-only
 ```
 
-Set `application_url` to the final HTTPS Render URL or custom domain.
+The complete preflight names missing operator inputs without printing their
+values. `RENDER_ACCESS_CONFIRMED=1` records owning-account access;
+`TERRAFORM_STATE_CONFIRMED=1` records the approved production state/backend
+decision.
+
+## Cognito Provisioning
+
+1. Set the final production origin for Terraform:
+
+```bash
+export TF_VAR_application_url=https://grover-landscaping.onrender.com
+```
+
+Use the final HTTPS Render URL or custom domain. The example variables file
+documents optional photo-lifecycle values; if an operator creates a local
+`terraform.tfvars`, verify that it remains outside version control.
 
 When the pilot is ready for S3 photo evidence, also set `enable_photo_storage = true`. Use the resulting `photo_bucket_name`, `photo_bucket_region`, and `photo_key_prefix` outputs for Render's `S3_PHOTO_BUCKET`, `S3_PHOTO_REGION`, and `S3_PHOTO_KEY_PREFIX` values.
 

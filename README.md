@@ -268,6 +268,37 @@ npm install
 npm run dev
 ```
 
+## Change-Aware Validation
+
+Run the smallest complete local gate for the files currently changed:
+
+```bash
+bash scripts/validate-changes.sh
+```
+
+Preview the selected scopes without running them, validate changes since a Git
+reference, or select a scope explicitly:
+
+```bash
+bash scripts/validate-changes.sh --dry-run
+bash scripts/validate-changes.sh --base origin/main
+bash scripts/validate-changes.sh --scope backend --scope database
+```
+
+Supported scopes are `docs`, `repository`, `frontend`, `backend`, `database`,
+`infra`, `browser`, and `full`. This is the local slice gate; publication to
+`main` still runs the complete hosted matrix.
+
+Before protected provisioning, run the non-secret release preflight:
+
+```bash
+bash scripts/release-preflight.sh --repository-only
+bash scripts/release-preflight.sh
+```
+
+The complete command reports `READY`, `EXTERNAL PREREQUISITE`, or `FAILED` and
+prints only environment-variable names, never credential values.
+
 ## Backend Commands
 
 ```bash

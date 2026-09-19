@@ -1,307 +1,110 @@
 # Current Delivery Handoff
 
+This is the short restart document. Execution order lives in
+[`DELIVERY_BOARD.md`](DELIVERY_BOARD.md); detailed delivery state lives in
+[`../PLAN.md`](../PLAN.md).
+
 ## Restart point
 
 - Branch: `main`
-- Resolve the current tip with `git log -1`; this handoff intentionally does not
-  pin a commit that will become stale.
-- Canonical delivery status: [`../PLAN.md`](../PLAN.md)
-- Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: adopt D-062 recommendations and exact-version decisions in the
-  signed-in Yard Owner experience.
-  Its audit, containment, constrained
-  persistence, initial send, immutable provider revision/supersession, and
-  legacy bearer-decision closure plus minimized hybrid-authorized exact-visit
-  list/detail reads and actor-scoped decisions are delivered. D-061 proof is
-  delivered end to end.
-  Curated-opportunity
-  availability/governance and governed provider credentials remain gated.
+- Resolve the current commit with `git log -1 --oneline`; do not pin a stale hash
+  here.
+- Phase 6B8 is published and the latest main-branch CI gate passes.
+- Private review is available at `http://100.88.21.105:5173/` through Tailscale.
+- The private-review API reports PostgreSQL readiness and intentionally uses
+  `AUTH_MODE=local_review`; it is not production evidence.
+- The public Render readiness route currently returns `404`, so protected
+  hosting is not deployed or healthy.
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
-## What is currently delivered
+## Active and next work
 
-### Public and shared visual experience
+### Delivered: F2 fast feedback orchestration
 
-- All four public personas carry a tailored story from hero through invitation.
-- Yard and company signup remain directly available.
-- The landscaping-company hero and the Plan product-tour step use the approved
-  interactive “Today’s operation” schedule concept.
-- The canonical palette, typography roles, wordmark, controls, focus treatment,
-  public/acquisition materials, and authenticated Home shell are in production.
-- Authenticated navigation now uses one reusable outlined SVG icon family,
-  retains phone bottom navigation, becomes a fixed left rail at tablet widths,
-  and yields to the existing desktop shell at the large breakpoint.
-- Shared semantic notice and status-pill primitives now align Home priority and
-  sync feedback, job lifecycle badges, persisted-job failures, and route
-  storage/availability recovery across neutral, info, success, warning, and
-  danger tones.
-- Desktop uses a persistent role-filtered forest rail, a compact Home summary,
-  and one active destination at a time instead of stacking every authorized
-  field, customer, and manager surface. Phone and tablet compositions retain
-  their bottom-bar and compact-rail behavior.
-- Field Route now follows Crew Route V1 hierarchy with high-contrast progress,
-  accessible completion percentage, explicit Current stop and Up next cards,
-  two-stop focus before full-route expansion, and route-change/recovery controls
-  after the immediate work. Persisted in-progress stops advance correctly.
-- Assigned Jobs now uses compact ordered cards with lifecycle, checklist, and
-  photo readiness plus customer/address search, status filtering, result count,
-  and an explicit filtered empty state.
-- Job detail now keeps the current customer/property target and guarded primary
-  actions visible while semantic tabs open one Overview, Checklist, Photos,
-  Add-ons, or Report panel at a time across phone and desktop layouts. Required
-  photo-evidence gaps and the next field action are explicit.
-- Authenticated manager Schedule now leads with Today’s operation and selected-
-  date crew/work/risk summaries, then opens the existing route builder beside a
-  bounded planning inspector on desktop and in task order on smaller screens.
-- Manager Recovery now leads with queue health, then pairs a selectable exception
-  queue with a bounded detail inspector. Managers can assign, start, resolve,
-  reopen, and return directly to linked Job, property, or Schedule context.
-- Manager Reports now carries the same command-center treatment into completion
-  review. Opening a ready or blocked record selects that exact Job and activates
-  its Report workflow on phone and desktop.
-- The secure shared completion report now follows the public proof design with
-  service identity, evidence, and completed approved-recommendation outcomes.
-  The API itself projects only customer-safe service/checklist/photo/outcome
-  fields and excludes internal IDs, notes, object keys, pricing, billing, and
-  operating context. Explicit retry remains available for storage or safe-
-  projection failures.
-- The secure shared proposal now uses the same public hierarchy for customer-facing
-  scope, pricing, explicit approval/decline confirmation, and recorded outcomes.
-  Its API response omits internal bid, line-item, and service identifiers plus
-  manager notes and delivery metadata.
-- Property Owner now enters a customer-density Yard Owner portal with Home,
-  Visits, Proof, and Account. Home/Visits load authorized properties and exactly
-  confirmed visits plus explicit customer service-day events from the minimized
-  persisted customer API, load proof only
-  for those authorized properties, distinguish loading/empty/access/inconsistent/
-  unavailable/retry states, and never substitute illustrative visit or portfolio
-  data. Recommendations remain withheld until D-062 persistence and its exact
-  hybrid-authorized customer contract are delivered.
-- Organization Owner Team now opens a prototype-aligned Team and access command
-  center with live active-member, pending-invitation, active-crew, and unstaffed-
-  territory summaries. It links directly to the existing member, invitation,
-  crew, hierarchy, and audit workflows. Partial outages preserve independently
-  available counts, identify missing sources, and never infer false zeroes;
-  staffing alerts open crew-lead or unstaffed-territory recovery directly.
-- The member directory labels the signed-in membership, warns before self-role
-  and self-suspension confirmation, keeps the last-owner guard, distinguishes
-  unavailable persistence from an empty team, and is mapped in the Phase 6
-  production handoff.
-- Local role review exposes seven fixed personas without AWS and the `/app`
-  composition follows the selected persona rather than changing only its title.
-- Authenticated entry now keeps protected navigation hidden until active access
-  verification succeeds. Access outages fail closed with retry; active membership
-  roles drive personas, while Support and first-owner bootstrap remain explicit
-  exceptions. Unscoped roles receive a Home-only invitation/restoration state.
-- Property-manager portfolio V1 is now adopted in React with Overview,
-  Properties, Proof, and Approvals; scoped grouping and property search; labeled
-  local-review readiness; protected proof and recommendation history with
-  partial-source isolation; customer-safe provider accountability; responsive
-  browser coverage; and a production handoff. PropertyOwner retains the Yard
-  Owner portal, while provider portfolio administration remains separate.
-- Yard Crew public fit/entry routing is adopted at `/providers/start` with
-  distinct owner-operator, company-owner, invited-worker, and known-owner paths.
-  Only allowlisted owner context opens authenticated Company setup, and the
-  selected query never changes claims, memberships, publication, or opportunity
-  access.
-- Company setup now projects provider identity/readiness from current profile
-  and setup-progress reads. Supplied identity/contact/website/service area,
-  recorded timezone/capacity, operational crew setup, missing facts, credentials
-  not collected, and marketplace eligibility not evaluated remain distinct; no
-  broad verified-provider claim is made.
-- The first-time known-owner provider path now removes the bearer fragment,
-  confirms the invited verified mailbox explicitly, connects an actor-scoped
-  existing or duplicate-safe new provider organization, requires withheld-data
-  acknowledgement, opens a resumable bounded inbox, and records controlled
-  question/interest/decline responses. Owner-approved disclosure, assessment,
-  proposal, activation, and first-visit preparation continue from that path.
-- A stable responsive navigator keeps Invitation, Organization, Disclosure,
-  Assessment, Proposal & setup, and First visit visible with precise current,
-  completed, upcoming, and closed states; only available workspaces are linked.
+Branch-scoped CI concurrency now cancels superseded work. Run
+`bash scripts/validate-changes.sh` to classify current changes and execute the
+smallest complete local package gates; use `--dry-run` to inspect the choice.
+The complete `main` gate remains unchanged, and its existing timing markers
+remain the basis for future bottleneck work.
 
-### Yard Owner production adoption
+### Delivered: R1 release preflight
 
-- Private owner workspace, property, versioned brief, and optional guided media
-  are owner-scoped and independent of provider tenants.
-- Known-provider invitation, delivery-state, recipient verification, organization
-  claim/review/appeal, bounded response, owner/provider progress, and abuse/opt-
-  out/revocation contracts are implemented.
-- Provider-specific disclosure review, immutable receipts, category-filtered
-  access, owner history, and future-access revocation are implemented in the API
-  and responsive owner/provider interfaces.
-- Assessment persistence, remote/on-site lifecycle, replacement windows,
-  customer-safe conversation, provider-private notes, owner interface, and
-  provider interface are implemented.
-- Versioned initial-service proposal persistence and authenticated provider
-  publish/revise plus owner list/detail/decision APIs are implemented. Acceptance
-  creates an immutable accepted-but-unactivated snapshot and does not create a
-  customer, job, route, schedule, or crew assignment.
+Run `bash scripts/release-preflight.sh --repository-only` for the repository
+contract or the complete command from an operator shell. The repository checks
+pass; the current environment reports seven external prerequisites and prints
+only their names. The script distinguishes ready, external-only, and failed
+outcomes with exit statuses 0, 2, and 1.
 
-### Repository assurance
+### Active: P1 operational exception activity integration
 
-- The pilot assurance manifest, alerts/runbook mapping, synthetic scenarios, and
-  browser/accessibility matrix provide repository-owned evidence.
-- Live provider delivery, monitoring, staffing, human usability/assistive-
-  technology/device sessions, Privacy/Security approval, and go/no-go remain
-  explicitly unsigned external gates.
+Add exception creation and lifecycle audits to manager activity with readable
+actor/state/assignment/resolution context and a link back to the exact Recovery
+item. Preserve tenant scoping, unknown-event fallback, and mobile handoff.
 
-## Next authorized slice
+### Parallel external lane: R2 and R3
 
-The shared shell; core Route, Jobs, Job, Schedule, Recovery, manager review;
-public proof and proposal decisions; and the Yard Owner four-destination shell
-are delivered. The Team and organization phase now also has its prototype-
-aligned overview composition.
+Protected provisioning requires resources that are unavailable in the current
+environment:
 
-1. Service mobilization persistence, provider release/status APIs, minimized
-   customer projection, and all six Yard Owner service-day modes are delivered.
-   Decision D-060's visit reference, immutable hybrid-authorized persistence,
-   provider queue, customer/provider APIs, Yard Owner question experience, and
-   responsive owner/manager response experience are delivered. D-061's proof
-   source audit rejects the legacy property-report route for Yard Owner and its
-   immediate containment and atomic delivery/snapshot storage are delivered.
-   The minimized exact-visit authenticated proof read and responsive Yard Owner
-   adoption are delivered. D-062's active-recommendation audit and legacy-route
-   containment, immutable publication/version/decision persistence, exact
-   initial provider-send bridge, revision/supersession publication, and legacy
-   bearer-decision closure and minimized hybrid exact-visit customer reads are
-   delivered, including actor-scoped exact-version decisions; adopt the signed-
-   in customer recommendation UI next while retaining the separate boundary.
-2. Yard Crew service categories and customer communication languages are now
-   persisted and surfaced as provider-supplied preparation facts. Do not add
-   provider availability/pause until the curated-opportunity projection and
-   operating contract are approved; do not add credential checking until its
-   evidence/review/correction/appeal ownership is approved.
-   Access/Home, completion proof, and Team/organization core adoption return to
-   regression when their contracts change.
-3. After the service-day extension, continue proof/recommendation, concern, and
-   preference adoption in bounded slices.
+- Render account access and a created/reconciled Blueprint plus private
+  PostgreSQL database;
+- AWS credentials and the production Terraform state/backend decision;
+- a final HTTPS application URL;
+- an approved first-owner email and a current hosted access token.
 
-## Read first
+Once supplied through the owning systems, provision Cognito and Render, then run
+readiness and authenticated smoke. Do not substitute CI or private-review
+results for these gates.
 
-1. [`../docs/owner-provider-initial-service-proposal-design.md`](../docs/owner-provider-initial-service-proposal-design.md)
-2. [`../docs/owner-provider-activation-design.md`](../docs/owner-provider-activation-design.md)
-3. [`../docs/owner-provider-first-visit-design.md`](../docs/owner-provider-first-visit-design.md)
-4. [`../docs/owner-provider-first-visit-api.md`](../docs/owner-provider-first-visit-api.md)
-5. [`../design/review/yard-owner-acquisition-handoff.md`](../design/review/yard-owner-acquisition-handoff.md)
-6. [`../docs/yard-owner-acquisition-production-plan.md`](../docs/yard-owner-acquisition-production-plan.md)
-7. [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-8. [`../design/review/property-manager-portfolio-handoff.md`](../design/review/property-manager-portfolio-handoff.md)
-9. [`../PLAN.md`](../PLAN.md), Yard Owner acquisition and visual-experience sections
-10. [`../docs/customer-portal-authorization-model.md`](../docs/customer-portal-authorization-model.md)
+## Current validation baseline
 
-## Validation baseline
+The latest published main gate includes:
 
-The current baseline passes all 473 frontend unit tests across 120 files,
-TypeScript, and the production build. The persisted Yard Owner adoption adds
-client mapping/error checks plus component coverage for loading, valid-empty,
-missing-access, inconsistent-access, unavailable, retry, and authorized content
-without illustrative fallback. The previously completed 36-test phone/desktop
-Chromium local-role workspace matrix remains recorded, but it was not rerun for
-this slice because the local Chromium executable cannot load `libnspr4.so`.
-That prior matrix covers all seven fixed identities, fail-closed access retry,
-unscoped-role Home-only recovery, Team staffing recovery, partial-read isolation,
-self-impact, unavailable-versus-empty, keyboard activation, and focus transfer,
-plus the direct property-manager portfolio journey.
-The D-060 persistence slice passes all 200 backend library tests and compiles
-and runs the focused owner/provider integration target. Its PostgreSQL fixture
-now covers release-created random references, customer/provider authority,
-revocation, invalid grants, exact replay, stale and changed writes, one-response
-reply linkage, immutability, cross-property provenance, and relationship closure.
-Those database-backed branches did not run in this environment because
-`DATABASE_URL` is unset; the target's unavailable-storage path passed. Strict
-library Clippy remains red on the repository's pre-existing warnings in auth,
-day-plan, organization, acquisition, bid, onboarding, and mobilization code; the
-two initially reported visit-communication findings were corrected.
-The D-060 API slice passes all 201 backend library tests, its focused binary
-request-validation/outage test, and the focused owner/provider integration
-target. The customer-reference frontend mapper was updated, but its focused
-Vitest and TypeScript checks initially lacked Node.js on `PATH`. Validation then
-used the repository-pinned Node.js 22.16.0 in a temporary external runtime.
-The Yard Owner question slice adds a minimized client, retry-stable
-authoritative-reload interaction, and focused client/component coverage. Its 14
-focused tests across three files, TypeScript check, and production build pass
-with that pinned runtime.
-The provider response slice adds the unanswered-first queue mapper, exact thread
-and response client, owner/manager-only manager navigation, retry-stable
-authoritative recovery, and focused queue/targeting/access coverage. Its 11
-focused tests across three files and TypeScript check pass with the same pinned
-runtime, and the production build passes.
-The D-061 source-audit containment slice stops Yard Owner from calling the
-legacy property-report list, adds an explicit protected-proof state, and leaves
-provider/property-manager consumers unchanged. Its 35 focused frontend tests
-across the Yard Owner panel and shared API client, TypeScript check, and
-production build pass with the pinned runtime.
-The D-061 atomic publication slice passes all 202 backend library tests, the
-focused public-route test, and both completion-report persistence integration
-tests. The live PostgreSQL target proves invalid snapshots leave the report in
-review, valid delivery stores the snapshot with lifecycle/audit state, later
-live job edits do not alter proof, and snapshot rewrites fail. Existing unrelated
-photo-storage dead-code warnings remain.
-The D-061 exact-proof slice passes all 202 backend library tests, its focused
-route test, and both live owner/provider PostgreSQL integration tests. The
-fixture proves pending, exact delivered, cross-owner, revoked, inconsistent,
-ended, minimized response, and proof-availability behavior. Its 19 focused
-frontend tests across four files, TypeScript check, and production build pass.
-The D-062 persistence slice applies both new migrations to live PostgreSQL and
-passes the full owner/provider persistence branch. Its fixture proves exact
-visit/release/job/stop/amendment/bid provenance, immutable customer snapshots,
-event-backed publication and approval, sequential exact question/response,
-affirmed current-version decision, rewrite rejection, and rejection of a post-
-approval revision. The same run exposed and corrected a reserved-keyword alias
-in the existing hybrid property resolver; the cross-owner expectations now
-distinguish no portal grant from an authorized-but-wrong exact reference.
-The D-062 initial provider bridge passes the live owner/provider fixture and all
-five existing amendment/project-bid persistence tests. The fixture proves that
-an exact send atomically creates one minimized version-1 publication and one
-notification, exact actor-key replay duplicates neither, changed retry identity
-conflicts, private IDs/notes/token are absent from the snapshot, and legacy bids
-without the exact chain retain their current non-portal behavior. Focused
-frontend client coverage, TypeScript, and the production build also pass.
-The D-062 provider revision and transitional-decision slice passes the same live
-owner/provider fixture. It proves exact v1-to-v2 immutable supersession,
-minimized revised scope, expected-version conflict, actor-key replay without
-duplicate publication or notification, the quiet-hours delivery path, and
-legacy bearer approval closing the signed-in surface as `withdrawn` without a
-fabricated D-062 decision. Focused backend route/unit checks, frontend client
-mapping, TypeScript, and the production build pass.
-The D-062 customer-read slice passes focused repository and route checks plus
-the live owner/provider fixture. The fixture loads current v2 state and both
-immutable versions for the exact owner, rejects a different owner and revoked
-or inconsistent authorization, and verifies that bid/amendment/plan/stop/job
-IDs, provider-private notes, delivery recipient, and bearer token never enter
-the serialized collection.
-The D-062 decision slice uses the same live fixture to prove exact affirmed
-approval, immutable decision/event state advance, exact actor-key replay, and
-changed-action conflict through the repository contract. Focused validation and
-repository outage behavior also pass.
-The completion-proof continuity slice additionally passes 32 targeted backend
-tests, 24 API-client tests, the production build, and eight mobile/desktop
-Chromium shared-proof/proposal journeys. Re-run the checks
-appropriate to each subsequent phase; do not infer that unrelated backend,
-PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this
-baseline.
-The property-manager portfolio design additionally passes its 1440px and 390px
-browser validator for navigation, state switching, search, dialog focus return,
-touch targets, and overflow. Its React adoption is included in the baseline above.
-Provider entry additionally passes four focused domain/component tests, the
-production build, and six phone/desktop Chromium journeys covering path choice,
-company CTA routing, authenticated handoff, authority language, and reflow.
-Provider identity/readiness additionally passes seven focused domain/component/
-onboarding checks, the production build, and two phone/desktop Chromium journeys
-covering precise fact states and no-verification/no-publication boundaries.
-Known-owner entry additionally passes nine focused client/component checks,
-backend formatting and compilation, the production build, and ten phone/desktop
-Chromium journeys including the first-time connection path and downstream
-assessment/proposal/first-visit regressions.
-Lifecycle orientation additionally passes three focused domain/rendering checks
-and the production build. A browser rerun was attempted twice but Chromium could
-not launch under exhausted host swap and exited 137; the same ten underlying
-phone/desktop journeys passed immediately before this navigator-only slice.
+- repository layout checks;
+- zero-finding frontend high/critical dependency audit;
+- TypeScript, all 484 frontend tests, and the production frontend build;
+- all 122 SQLx migrations, Rust formatting, strict all-target/all-feature
+  Clippy on Rust 1.98, and all 417 backend tests;
+- Terraform formatting and development/production module validation;
+- all 68 Chromium mobile/desktop, Firefox desktop, and WebKit mobile journeys;
+- the Yard Owner assurance contract and its failure-policy tests; and
+- the cached, unprivileged production image build.
+
+WebKit reflow validation waits for the post-resize layout cycle while retaining
+the exact no-horizontal-overflow condition. It passed ten consecutive focused
+WebKit repetitions and the complete hosted browser matrix.
+
+## Fast validation choices
+
+Use the smallest gate that can disprove the current change, then widen before
+the slice is committed:
+
+| Change | Inner loop | Slice gate |
+| --- | --- | --- |
+| Frontend component/client | TypeScript and focused Vitest | All frontend tests and production build |
+| Browser behavior/layout | Focused Playwright project/spec | Relevant browser matrix; full matrix on `main` |
+| Backend logic/API | Rust format/check and focused target | Strict Clippy and all backend tests |
+| Persistence/migration | Focused repository test | Fresh/repeat migration plus live PostgreSQL fixture |
+| Terraform/deployment config | Format and module validate | Release preflight and production image |
+| Documentation only | Link/status/diff checks | No unrelated package suite locally; full `main` gate remains authoritative |
+
+## Read next
+
+1. [`DELIVERY_BOARD.md`](DELIVERY_BOARD.md)
+2. [`../docs/backend-build-performance.md`](../docs/backend-build-performance.md)
+3. [`../docs/frontend-build-performance.md`](../docs/frontend-build-performance.md)
+4. [`../docs/production-image-performance.md`](../docs/production-image-performance.md)
+5. [`../docs/production-deployment.md`](../docs/production-deployment.md)
+6. [`../docs/hosted-pilot-runbook.md`](../docs/hosted-pilot-runbook.md)
+7. [`../docs/local-validation-sequence.md`](../docs/local-validation-sequence.md)
+
+Read product contracts only when their owning slice becomes active. Do not load
+the entire historical plan into an implementation task by default.
 
 ## Stop conditions
 
-Continue automatically through safe repository-owned slices. Pause only for a
-material product choice, new authority, unavailable required infrastructure, or
-evidence that must come from a real person or live service. Never represent a
-simulation, fallback, or local reviewer as production or signed evidence.
+Continue through safe repository-owned slices. Pause only for a material product
+choice, new authority, unavailable external infrastructure, or evidence that
+must come from a real person or live service. Never represent a simulation,
+fallback, private reviewer, or CI result as protected production evidence.
