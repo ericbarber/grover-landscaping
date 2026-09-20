@@ -36,6 +36,8 @@ try {
     check(await page.locator('#overview-experience').isVisible(), `${viewport.name}/overview: rollout map hidden`);
     check(await page.locator('#persona-map button').count() === 10, `${viewport.name}/overview: expected ten persona contracts`);
     check(await page.locator('h1:visible').count() === 1, `${viewport.name}/overview: expected one visible h1`);
+    check(await page.locator('#brand-home').getAttribute('href') === '#overview/map', `${viewport.name}/overview: brand home link leaked`);
+    check(await page.locator('#mobile-nav').getAttribute('aria-label') === 'Rollout map mobile navigation', `${viewport.name}/overview: mobile navigation label leaked`);
 
     for (const [persona, contract] of Object.entries(contracts)) {
       await page.selectOption('#persona-picker', persona);

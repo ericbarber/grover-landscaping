@@ -169,10 +169,13 @@ function showOverview(announce = true) {
   document.querySelector('#rail-persona').textContent = 'Rollout map';
   document.querySelector('#rail-name').textContent = '10 personas';
   document.querySelector('#rail-role').textContent = 'Functional units';
+  document.querySelector('#brand-home').href = '#overview/map';
   document.querySelector('#rollout-plan-link').href = sharedPlan;
   const nav = navMarkup(['Home']);
   document.querySelector('#rail-nav').innerHTML = nav;
-  document.querySelector('#mobile-nav').innerHTML = nav;
+  const mobileNav = document.querySelector('#mobile-nav');
+  mobileNav.innerHTML = nav;
+  mobileNav.setAttribute('aria-label', 'Rollout map mobile navigation');
   if (location.hash !== '#overview/map') history.replaceState(null, '', '#overview/map');
   document.title = 'All-persona functional rollout · Grover';
   if (announce) document.querySelector('#announcer').textContent = 'Showing the all-persona rollout map';
@@ -196,6 +199,7 @@ function setUnit(personaKey, unitKey, announce = true) {
   document.querySelector('#rail-persona').textContent = persona.role;
   document.querySelector('#rail-name').textContent = persona.shortName;
   document.querySelector('#rail-role').textContent = persona.role;
+  document.querySelector('#brand-home').href = `#${resolvedKey}/${fallback}`;
   document.querySelector('#rollout-plan-link').href = persona.plan;
   document.querySelectorAll('[data-unit-label]').forEach((element) => { element.textContent = unit.label; });
   document.querySelectorAll('[data-unit-title]').forEach((element) => { element.textContent = unit.title; });
