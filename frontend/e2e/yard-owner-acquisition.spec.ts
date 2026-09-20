@@ -220,7 +220,15 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   await expect(addressConfirmation).not.toBeChecked();
   await addressConfirmation.check();
   await page.getByLabel('I am authorized to request yard care for this property.').check();
-  await page.getByRole('button', { name: 'Save private property' }).click();
+  const savedProperty = page.waitForResponse((response) => (
+    response.request().method() === 'POST'
+    && response.url().endsWith('/owner-properties')
+    && response.status() === 201
+  ));
+  await Promise.all([
+    savedProperty,
+    page.getByRole('button', { name: 'Save private property' }).click(),
+  ]);
 
   await expect(page.getByText('Home is saved privately. No provider can see it yet.')).toBeVisible();
   await expect(page.getByText('125 Oak Street')).toBeVisible();
@@ -562,7 +570,15 @@ test('an owner confirms an assessment window and uses only the shared conversati
   await expect(page.getByText('Please make sure an adult can provide gate access.')).toBeVisible();
   await expect(page.getByText(/does not accept pricing, create a customer account, assign a crew/)).toBeVisible();
 
-  await page.getByRole('button', { name: 'Confirm assessment time' }).click();
+  const confirmedWindow = page.waitForResponse((response) => (
+    response.request().method() === 'POST'
+    && response.url().endsWith('/provider-assessments/assessment_3/window-decision')
+    && response.ok()
+  ));
+  await Promise.all([
+    confirmedWindow,
+    page.getByRole('button', { name: 'Confirm assessment time' }).click(),
+  ]);
   await expect(page.getByText('Assessment time confirmed. This did not accept service or schedule recurring care.')).toBeVisible();
   await expect(page.getByText('Assessment time confirmed', { exact: true })).toBeVisible();
 
