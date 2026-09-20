@@ -74,14 +74,17 @@ Current state:
   receipts make enable/advance/suspend/resume safe to retry. Projection version
   2 distinguishes untouched legacy users from managed cohorts, so suspension
   cannot restore the old full menu. Desktop and mobile workspace destinations
-  now follow the lowest common cumulative unit across current scopes; Yard Owner U2–U4 also gate Visits, delivered
-  Proof, and question/recommendation controls. Remaining manager, field,
-  portfolio, and support contextual controls are not yet shaped, and no live
-  cohort has been enabled.
+  now follow the lowest common cumulative unit across current scopes; Yard
+  Owner U2–U4 also gate Visits, delivered Proof, and
+  question/recommendation controls. Company Owner/Manager, Property
+  Manager, Dispatcher, Billing, and Support management categories/tools are
+  also cumulative and fail closed for suspended or unknown units. Field stop
+  actions and Property Manager portfolio details still require contextual
+  shaping, and no live cohort has been enabled.
 
 Next design slices:
 
-1. Functional rollout control: shape remaining contextual controls from the
+1. Functional rollout control: shape remaining field and portfolio controls from the
    delivered projection, then add protected per-unit success and denial
    smoke without weakening API authorization or discarding queued work. Dispatcher
    and Billing Administrator require an explicit backend role contract before

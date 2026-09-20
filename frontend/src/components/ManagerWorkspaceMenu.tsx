@@ -137,31 +137,107 @@ const toolAccess: Partial<Record<WorkspacePersonaId, ManagerWorkspaceTool[]>> = 
   ],
 };
 
+const rolloutToolAccess: Partial<
+Record<WorkspacePersonaId, Record<string, ManagerWorkspaceTool[]>>
+> = {
+  'company-owner': {
+    o1: ['owner-setup', 'company-readiness'],
+    o2: [
+      'owner-setup', 'company-readiness', 'day-plan', 'dispatch-hierarchy',
+      'dispatch-workload',
+    ],
+    o3: [
+      'owner-setup', 'company-readiness', 'day-plan', 'dispatch-hierarchy',
+      'dispatch-workload', 'property-profile', 'property-service', 'customer-accounts',
+      'customer-portal', 'customer-portfolios', 'team-overview', 'team-members',
+      'team-invitations', 'team-activity',
+    ],
+    o4: toolAccess['company-owner'] ?? [],
+  },
+  'company-manager': {
+    m1: ['company-readiness'],
+    m2: ['company-readiness', 'day-plan', 'dispatch-workload'],
+    m3: [
+      'company-readiness', 'day-plan', 'dispatch-workload', 'property-profile',
+      'property-service', 'customer-accounts', 'customer-portal', 'customer-portfolios',
+      'team-members', 'team-activity',
+    ],
+    m4: toolAccess['company-manager'] ?? [],
+  },
+  'property-manager': {
+    p4: toolAccess['property-manager'] ?? [],
+  },
+  dispatcher: {
+    d1: ['day-plan', 'dispatch-workload'],
+    d2: ['day-plan', 'dispatch-workload'],
+    d3: ['day-plan', 'dispatch-workload'],
+    d4: ['day-plan', 'dispatch-workload'],
+  },
+  'billing-admin': {
+    b1: ['customer-accounts', 'customer-portal'],
+    b2: ['customer-accounts', 'customer-portal', 'completion-reports'],
+    b3: ['customer-accounts', 'customer-portal', 'completion-reports'],
+  },
+  support: {
+    s1: ['operations-activity'],
+    s2: [
+      'team-members', 'team-invitations', 'team-activity', 'operations-activity',
+      'notifications',
+    ],
+    s3: [
+      'team-members', 'team-invitations', 'team-activity', 'operations-activity',
+      'notifications', 'completion-reports', 'marketing-leads', 'conversion-dashboard',
+      'photo-processing', 'operational-exceptions',
+    ],
+    s4: toolAccess.support ?? [],
+  },
+};
+
+function rolloutToolsForPersona(
+  personaId: WorkspacePersonaId,
+  rolloutUnit: string | null | undefined,
+): Set<ManagerWorkspaceTool> | null {
+  if (rolloutUnit === undefined) return null;
+  return new Set(rolloutUnit ? rolloutToolAccess[personaId]?.[rolloutUnit] ?? [] : []);
+}
+
 export function managerWorkspaceSectionsForPersona(
   personaId: WorkspacePersonaId,
+  rolloutUnit?: string | null,
 ): typeof managerWorkspaceSections {
   const allowed = new Set(sectionAccess[personaId] ?? []);
-  return managerWorkspaceSections.filter((section) => allowed.has(section.id));
+  const rolloutTools = rolloutToolsForPersona(personaId, rolloutUnit);
+  return managerWorkspaceSections.filter((section) => (
+    allowed.has(section.id)
+    && (rolloutTools === null
+      || managerWorkspaceTools[section.id].some(({ id }) => rolloutTools.has(id)))
+  ));
 }
 
 export function managerWorkspaceToolsForPersona(
   personaId: WorkspacePersonaId,
   section: ManagerWorkspaceSection,
+  rolloutUnit?: string | null,
 ): Array<{ id: ManagerWorkspaceTool; label: string; description: string }> {
   const allowed = new Set(toolAccess[personaId] ?? []);
-  return managerWorkspaceTools[section].filter((tool) => allowed.has(tool.id));
+  const rolloutTools = rolloutToolsForPersona(personaId, rolloutUnit);
+  return managerWorkspaceTools[section].filter((tool) => (
+    allowed.has(tool.id) && (rolloutTools === null || rolloutTools.has(tool.id))
+  ));
 }
 
 export function ManagerWorkspaceMenu({
   activeSection,
   onChange,
   personaId,
+  rolloutUnit,
 }: {
   activeSection: ManagerWorkspaceSection | null;
   onChange: (section: ManagerWorkspaceSection) => void;
   personaId: WorkspacePersonaId;
+  rolloutUnit?: string | null;
 }) {
-  const sections = managerWorkspaceSectionsForPersona(personaId);
+  const sections = managerWorkspaceSectionsForPersona(personaId, rolloutUnit);
 
   return (
     <section className="grover-card p-4">
@@ -205,6 +281,7 @@ export function ManagerWorkspaceToolMenu({
   onClear,
   onChange,
   personaId,
+  rolloutUnit,
 }: {
   section: ManagerWorkspaceSection;
   activeTool: ManagerWorkspaceTool | null;
@@ -212,8 +289,9 @@ export function ManagerWorkspaceToolMenu({
   onClear: () => void;
   onChange: (tool: ManagerWorkspaceTool) => void;
   personaId: WorkspacePersonaId;
+  rolloutUnit?: string | null;
 }) {
-  const tools = managerWorkspaceToolsForPersona(personaId, section);
+  const tools = managerWorkspaceToolsForPersona(personaId, section, rolloutUnit);
   const selectedTool = tools.find(
     (tool) => tool.id === activeTool,
   );
