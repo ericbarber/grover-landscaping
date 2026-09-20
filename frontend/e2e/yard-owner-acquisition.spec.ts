@@ -355,6 +355,18 @@ test('an owner safely retries approval and reconciles a stale revocation after l
     latest_event_kind: accessState === 'revoked' ? 'revoked' : 'granted',
     latest_reason_code: accessState === 'revoked' ? 'assessment_complete' : null,
   });
+  let resolveApprovalAbort!: () => void;
+  const approvalAbort = new Promise<void>((resolve) => {
+    resolveApprovalAbort = resolve;
+  });
+  let resolveRevokeAbort!: () => void;
+  const revokeAbort = new Promise<void>((resolve) => {
+    resolveRevokeAbort = resolve;
+  });
+  let resolveRevokeConflict!: () => void;
+  const revokeConflict = new Promise<void>((resolve) => {
+    resolveRevokeConflict = resolve;
+  });
 
   await page.route('**/auth/config', (route) => route.fulfill({
     contentType: 'application/json', body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }),
@@ -400,6 +412,7 @@ test('an owner safely retries approval and reconciles a stale revocation after l
     receipts = [activeReceipt()];
     if (approvalKeys.length === 1) {
       await route.abort('failed');
+      resolveApprovalAbort();
       return;
     }
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(activeReceipt()) });
@@ -410,6 +423,7 @@ test('an owner safely retries approval and reconciles a stale revocation after l
     expect(request).toMatchObject({ expected_version: 1, reason_code: 'assessment_complete', owner_confirmed: true });
     if (revokeKeys.length === 1) {
       await route.abort('failed');
+      resolveRevokeAbort();
       return;
     }
     accessState = 'revoked';
@@ -422,6 +436,7 @@ test('an owner safely retries approval and reconciles a stale revocation after l
         message: 'Assessment access changed before this request was applied.',
       }),
     });
+    resolveRevokeConflict();
   });
 
   await page.goto('/app/yard-owner');
@@ -438,10 +453,10 @@ test('an owner safely retries approval and reconciles a stale revocation after l
   await page.getByLabel('front-yard.jpg').check();
   await expect(page.getByText('Yard care brief, Owner contact, Access considerations')).toBeVisible();
   await page.getByLabel('I approve only the selected items for Desert Green Care to assess this yard.').check();
-  const approvalFailure = page.waitForEvent('requestfailed', (request) =>
-    request.method() === 'POST' && request.url().endsWith('/provider-invitations/invitation_2/disclosure-grants'));
-  await page.getByRole('button', { name: 'Approve selected assessment access' }).click();
-  await approvalFailure;
+  await Promise.all([
+    approvalAbort,
+    page.getByRole('button', { name: 'Approve selected assessment access' }).click(),
+  ]);
   await expect(page.getByRole('alert')).toBeVisible();
   await expect(page.getByLabel('Exact service address')).toBeChecked();
   await expect(page.getByLabel('Selected yard photographs')).toBeChecked();
@@ -455,18 +470,16 @@ test('an owner safely retries approval and reconciles a stale revocation after l
   await page.getByRole('button', { name: 'End future assessment access' }).click();
   await expect(page.getByRole('heading', { name: 'End future access for Desert Green Care?' })).toBeFocused();
   await page.getByLabel('Reason').selectOption('assessment_complete');
-  const revokeFailure = page.waitForEvent('requestfailed', (request) =>
-    request.method() === 'POST' && request.url().endsWith('/provider-disclosure-grants/grant_2/revoke'));
-  await page.getByRole('button', { name: 'Confirm and end future access' }).click();
-  await revokeFailure;
+  await Promise.all([
+    revokeAbort,
+    page.getByRole('button', { name: 'Confirm and end future access' }).click(),
+  ]);
   await expect(page.getByRole('alert')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'End future access for Desert Green Care?' })).toBeVisible();
-  const revokeConflict = page.waitForResponse((response) =>
-    response.request().method() === 'POST'
-      && response.url().endsWith('/provider-disclosure-grants/grant_2/revoke')
-      && response.status() === 409);
-  await page.getByRole('button', { name: 'Confirm and end future access' }).click();
-  await revokeConflict;
+  await Promise.all([
+    revokeConflict,
+    page.getByRole('button', { name: 'Confirm and end future access' }).click(),
+  ]);
   expect(revokeKeys).toHaveLength(2);
   expect(revokeKeys[1]).toBe(revokeKeys[0]);
   await expect(page.getByText('Assessment access changed in another tab. Current access was reloaded; review its status before trying again.')).toBeVisible();
