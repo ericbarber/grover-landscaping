@@ -3,42 +3,60 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Grover Yard Owner minimal rollout</title>
+  <title>Grover functional-unit rollout</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="../shared/grover-foundation.css">
 </head>
-<body data-prototype="yard-owner-minimal-rollout" data-unit="u1">
+<body data-prototype="yard-owner-minimal-rollout" data-persona="owner" data-unit="u1">
   <aside class="prototype-note review-bar" aria-label="Rollout design controls">
-    <div><strong>Yard Owner minimal rollout</strong><span>Each selection shows only complete enabled capabilities. No data is saved.</span></div>
-    <label>Functional unit<select id="unit-picker"><option value="u1">U1 · Care visibility — minimum launch</option><option value="u2">U2 · Visit tracking</option><option value="u3">U3 · Delivered proof</option><option value="u4">U4 · Questions and decisions</option></select></label>
-    <a class="prototype-review-link" href="../../review/yard-owner-minimal-rollout-plan.md">Read rollout plan</a>
+    <div><strong>Functional-unit rollout</strong><span>Each selection shows only complete enabled capabilities. No data is saved.</span></div>
+    <label>Persona<select id="persona-picker"><option value="owner">Yard Owner</option><option value="crew">Crew Lead</option></select></label>
+    <label>Functional unit<select id="unit-picker"></select></label>
+    <a class="prototype-review-link" id="rollout-plan-link" href="../../review/yard-owner-minimal-rollout-plan.md">Read rollout plan</a>
   </aside>
   <div class="sr-only" id="announcer" aria-live="polite"></div>
   <div class="portal-shell">
-    <header class="account-strip"><strong>Jamie — Property Owner</strong><button type="button">Account</button></header>
+    <header class="account-strip"><strong id="identity-name">Jamie — Property Owner</strong><button type="button" id="identity-action">Account</button></header>
     <aside class="desktop-rail">
-      <a class="brand" href="#u1"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M26 5C14 7 7 13 6 25c8-1 15-6 20-20Z"/><path d="M8 23 22 9"/></svg><span>Grover</span></a>
-      <p>Yard owner</p><nav id="rail-nav" aria-label="Yard Owner portal"></nav>
-      <div class="rail-identity"><strong>Jamie</strong><span>Yard owner</span></div>
+      <a class="brand" href="#owner/u1" id="brand-home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M26 5C14 7 7 13 6 25c8-1 15-6 20-20Z"/><path d="M8 23 22 9"/></svg><span>Grover</span></a>
+      <p id="rail-persona">Yard owner</p><nav id="rail-nav" aria-label="Workspace navigation"></nav>
+      <div class="rail-identity"><strong id="rail-name">Jamie</strong><span id="rail-role">Yard owner</span></div>
     </aside>
     <main id="main-content" tabindex="-1">
-      <section class="portal-card">
+      <section class="portal-card" id="owner-experience">
         <header class="portal-header"><div><span>My yard</span><p>Care, proof, and the next thing you need to know.</p></div><label>Property<select><option>Sonoran House</option></select></label></header>
         <nav class="portal-tabs" id="portal-tabs" aria-label="Portal destinations"></nav>
         <div class="content">
-          <header class="welcome"><span class="eyebrow">Sonoran House</span><h1>Welcome back, Jamie</h1><p id="unit-intro">Here is what is next for your yard.</p></header>
-          <div class="unit-banner"><span class="eyebrow" id="unit-label">Minimum launch</span><strong id="unit-title">Care visibility</strong><p id="unit-copy">A complete read-only answer to “What happens next?”</p></div>
+          <header class="welcome"><span class="eyebrow">Sonoran House</span><h1>Welcome back, Jamie</h1><p data-unit-intro>Here is what is next for your yard.</p></header>
+          <div class="unit-banner"><span class="eyebrow" data-unit-label>Minimum launch</span><strong data-unit-title>Care visibility</strong><p data-unit-copy>A complete read-only answer to “What happens next?”</p></div>
           <div class="home-grid">
             <article class="visit-card"><div class="card-head"><div><span class="eyebrow">Next confirmed visit</span><h2>Tuesday, September 8</h2><strong>8:00–10:00 AM · Routine yard care</strong></div><span class="status">Confirmed</span></div><ol class="progress" aria-label="Service progress"><li class="current">1<span>Confirmed</span></li><li>2<span>On the way</span></li><li>3<span>Care</span></li><li>4<span>Complete</span></li></ol><ul><li>Front and back lawn</li><li>Edges and hardscape cleanup</li></ul><div class="preparation"><strong>Before we arrive:</strong> Please unlock the side gate and bring pets inside.</div><p><strong>Next update:</strong> Your provider will update this page if timing changes.</p><div class="u4-only interaction"><span class="eyebrow">About this visit</span><button class="button button-secondary" type="button">Ask a question</button><button class="button button-secondary" type="button">Review recommendation</button></div></article>
             <article class="side-card u1-only"><span class="eyebrow">Minimum launch boundary</span><h2>One useful promise</h2><p>Owners can confirm the property, visit window, planned care, preparation, and next update. No unfinished destinations appear.</p><a href="../../review/frontend-truth-recovery-design.md">Review empty and recovery states →</a></article>
             <article class="side-card u2-only"><span class="eyebrow">Recent and upcoming</span><h2>Visit tracking</h2><div class="timeline"><div><b>Sep 8</b><span>Confirmed · Routine care</span></div><div><b>Aug 25</b><span>Complete · Proof pending</span></div></div><button class="button button-secondary" type="button">Open all visits</button></article>
             <article class="side-card u3-only proof-card"><span class="eyebrow">Latest delivered proof</span><h2>Care completed</h2><p>August 11 · Routine yard care</p><ul><li>Checklist completed</li><li>3 reviewed photos</li><li>No owner action needed</li></ul><button class="button button-secondary" type="button">Review proof</button></article>
           </div>
-          <section class="enabled-summary"><span class="eyebrow">Enabled for this account</span><div id="capabilities"></div></section>
+          <section class="enabled-summary"><span class="eyebrow">Enabled for this account</span><div data-capabilities></div></section>
+        </div>
+      </section>
+      <section class="crew-card" id="crew-experience" hidden>
+        <header class="crew-header"><div><span>Crew day plan</span><h1>North Route Crew</h1><p>Thursday, September 4, 2026</p></div><span class="crew-confidence">Synced</span></header>
+        <nav class="portal-tabs" id="crew-tabs" aria-label="Crew Lead workspace"></nav>
+        <div class="content">
+          <header class="welcome"><span class="eyebrow">Today’s route</span><h2>Start with the current stop.</h2><p data-unit-intro>See today’s route and property context before leaving the yard.</p></header>
+          <div class="unit-banner"><span class="eyebrow" data-unit-label>Minimum launch</span><strong data-unit-title>Day plan visibility</strong><p data-unit-copy>A reliable read-only route replaces paper and office check-ins.</p></div>
+          <div class="crew-grid">
+            <article class="route-overview"><div><span class="eyebrow">Route progress</span><strong>0 <small>of 4 stops</small></strong></div><div class="route-line"><i></i></div><footer><span>First stop · 8:00 AM</span><span>3 hr 40 min planned</span></footer></article>
+            <article class="current-stop"><span class="stop-number">1</span><div><span class="eyebrow">Current stop</span><h2>Oak Street residence</h2><p>Front and back lawn · Edges and hardscape cleanup</p><small>Gate code confirmed · Dogs must remain inside</small></div><span class="status">Ready</span><div class="c2-only crew-actions"><button class="button button-primary" type="button">Start stop</button><button class="button button-secondary" type="button">Open job details</button></div></article>
+            <article class="side-card c1-only"><span class="eyebrow">Minimum launch boundary</span><h2>One reliable field plan</h2><p>The Crew Lead can see today’s ordered stops, service expectations, access guidance, and current sync confidence. Execution controls remain absent.</p><a href="../../review/frontend-truth-recovery-design.md">Review route confidence states →</a></article>
+            <article class="side-card c2-only"><span class="eyebrow">Stop execution</span><h2>Progress that survives weak signal</h2><p>Start, arrive, pause, and complete use retry-stable writes. Offline changes say Saved on device until server confirmation.</p><span class="mini-status">0 changes waiting to sync</span></article>
+            <article class="side-card c3-only"><span class="eyebrow">Field proof</span><h2>Finish with complete evidence</h2><ul><li>4 of 6 checklist items</li><li>2 required photos</li><li>Completion report draft</li></ul><button class="button button-secondary" type="button">Continue evidence</button></article>
+            <article class="side-card c4-only"><span class="eyebrow">Changes and recovery</span><h2>Keep the office in the loop</h2><p>Request a skip or added service, review conflicts, and recover queued work without silently changing the published route.</p><button class="button button-secondary" type="button">Review route requests</button></article>
+          </div>
+          <section class="enabled-summary"><span class="eyebrow">Enabled for this crew</span><div data-capabilities></div></section>
         </div>
       </section>
     </main>
-    <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile Yard Owner portal"></nav>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Yard Owner mobile navigation"></nav>
   </div>
   <script src="app.js"></script>
 </body>
