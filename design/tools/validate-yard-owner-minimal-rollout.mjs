@@ -7,24 +7,33 @@ const designRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const prototypePath = resolve(designRoot, 'prototypes/yard-owner-minimal-rollout/index.html');
 const captureRoot = resolve(designRoot, 'high-fidelity/current');
 const capture = process.argv.includes('--capture');
-const contracts = {
-  owner: {
-    panel: '#owner-experience', nav: '#portal-tabs', units: {
-      u1: { nav: 1, title: 'Care visibility', visible: ['.u1-only'], hidden: ['.u2-only', '.u3-only', '.u4-only'] },
-      u2: { nav: 2, title: 'Visit tracking', visible: ['.u2-only'], hidden: ['.u1-only', '.u3-only', '.u4-only'] },
-      u3: { nav: 3, title: 'Delivered proof', visible: ['.u2-only', '.u3-only'], hidden: ['.u1-only', '.u4-only'] },
-      u4: { nav: 3, title: 'Questions and decisions', visible: ['.u2-only', '.u3-only', '.u4-only'], hidden: ['.u1-only'] },
-    },
-  },
-  crew: {
-    panel: '#crew-experience', nav: '#crew-tabs', units: {
-      c1: { nav: 2, title: 'Day plan visibility', visible: ['.c1-only'], hidden: ['.c2-only', '.c3-only', '.c4-only'] },
-      c2: { nav: 4, title: 'Stop execution', visible: ['.c2-only'], hidden: ['.c1-only', '.c3-only', '.c4-only'] },
-      c3: { nav: 4, title: 'Field proof', visible: ['.c2-only', '.c3-only'], hidden: ['.c1-only', '.c4-only'] },
-      c4: { nav: 4, title: 'Changes and recovery', visible: ['.c2-only', '.c3-only', '.c4-only'], hidden: ['.c1-only'] },
-    },
-  },
+
+const personaNames = {
+  owner: 'Yard Owner',
+  'property-manager': 'Property Manager',
+  crew: 'Crew Lead',
+  'crew-member': 'Crew Member',
+  'company-owner': 'Yard-care Company Owner',
+  'company-manager': 'Yard-care Company Manager',
+  dispatcher: 'Dispatcher',
+  'billing-admin': 'Billing Administrator',
+  support: 'Support Administrator',
+  general: 'Team Member',
 };
+
+const contracts = {
+  owner: { panel: '#owner-experience', nav: '#portal-tabs', plan: '../../review/yard-owner-minimal-rollout-plan.md', units: { u1: [1, 'Care visibility'], u2: [2, 'Visit tracking'], u3: [3, 'Delivered proof'], u4: [3, 'Questions and decisions'] } },
+  'property-manager': { panel: '#generic-experience', nav: '#generic-tabs', units: { p1: [2, 'Portfolio readiness'], p2: [2, 'Property coverage and proof'], p3: [2, 'Approvals and questions'], p4: [3, 'Portfolio administration'] } },
+  crew: { panel: '#crew-experience', nav: '#crew-tabs', plan: '../../review/crew-lead-minimal-rollout-plan.md', units: { c1: [2, 'Day plan visibility'], c2: [4, 'Stop execution'], c3: [4, 'Field proof'], c4: [4, 'Changes and recovery'] } },
+  'crew-member': { panel: '#generic-experience', nav: '#generic-tabs', units: { cm1: [2, 'Assigned work'], cm2: [4, 'Job execution'], cm3: [4, 'Field evidence'], cm4: [4, 'Personal recovery'] } },
+  'company-owner': { panel: '#generic-experience', nav: '#generic-tabs', units: { o1: [2, 'Company readiness'], o2: [5, 'Daily operations'], o3: [5, 'Customers and team'], o4: [5, 'Reports and recovery'] } },
+  'company-manager': { panel: '#generic-experience', nav: '#generic-tabs', units: { m1: [2, 'Operating readiness'], m2: [5, 'Schedule and field coordination'], m3: [5, 'Customers and team'], m4: [5, 'Reports and operational recovery'] } },
+  dispatcher: { panel: '#generic-experience', nav: '#generic-tabs', units: { d1: [2, 'Schedule visibility'], d2: [2, 'Dispatch publishing'], d3: [5, 'Field follow-through'], d4: [5, 'Schedule change recovery'] } },
+  'billing-admin': { panel: '#generic-experience', nav: '#generic-tabs', units: { b1: [2, 'Account records'], b2: [3, 'Completion readiness'], b3: [3, 'Account exception handoff'] } },
+  support: { panel: '#generic-experience', nav: '#generic-tabs', units: { s1: [2, 'Support triage'], s2: [2, 'Access and delivery support'], s3: [2, 'Evidence and exception recovery'], s4: [2, 'Privacy and erasure recovery'] } },
+  general: { panel: '#generic-experience', nav: '#generic-tabs', units: { g1: [1, 'Access resolution'] } },
+};
+
 function check(condition, message) { if (!condition) throw new Error(message); }
 
 const browser = await chromium.launch({ headless: true });
@@ -35,30 +44,41 @@ try {
     const errors = [];
     page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
     page.on('pageerror', (error) => errors.push(error.message));
-    await page.goto(`${pathToFileURL(prototypePath).href}#owner/u1`, { waitUntil: 'load' });
+    await page.goto(`${pathToFileURL(prototypePath).href}#overview/map`, { waitUntil: 'load' });
+
+    check(await page.locator('#overview-experience').isVisible(), `${viewport.name}/overview: rollout map hidden`);
+    check(await page.locator('#persona-map button').count() === 10, `${viewport.name}/overview: expected ten persona contracts`);
+    check(await page.locator('h1:visible').count() === 1, `${viewport.name}/overview: expected one visible h1`);
+    check(await page.locator('#brand-home').getAttribute('href') === '#overview/map', `${viewport.name}/overview: brand home link leaked`);
+    check(await page.locator('#mobile-nav').getAttribute('aria-label') === 'Rollout map mobile navigation', `${viewport.name}/overview: mobile navigation label leaked`);
 
     for (const [persona, contract] of Object.entries(contracts)) {
       await page.selectOption('#persona-picker', persona);
       check(await page.locator(contract.panel).isVisible(), `${viewport.name}/${persona}: selected experience is hidden`);
-      const otherPanel = persona === 'owner' ? '#crew-experience' : '#owner-experience';
-      check(!(await page.locator(otherPanel).isVisible()), `${viewport.name}/${persona}: other persona experience leaked`);
-      const personaName = persona === 'owner' ? 'Yard Owner' : 'Crew Lead';
-      const homeHash = persona === 'owner' ? '#owner/u1' : '#crew/c1';
+      check(await page.locator('#overview-experience:visible, #owner-experience:visible, #crew-experience:visible, #generic-experience:visible').count() === 1, `${viewport.name}/${persona}: another persona experience leaked`);
+      const personaName = personaNames[persona];
+      const firstUnit = Object.keys(contract.units)[0];
       check(await page.locator('#mobile-nav').getAttribute('aria-label') === `${personaName} mobile navigation`, `${viewport.name}/${persona}: mobile navigation label leaked`);
-      check(await page.locator('#brand-home').getAttribute('href') === homeHash, `${viewport.name}/${persona}: brand home link leaked`);
-      for (const [unit, unitContract] of Object.entries(contract.units)) {
+      check(await page.locator('#brand-home').getAttribute('href') === `#${persona}/${firstUnit}`, `${viewport.name}/${persona}: brand home link leaked`);
+      const units = Object.entries(contract.units);
+      for (const [index, [unit, [navCount, title]]] of units.entries()) {
         await page.selectOption('#unit-picker', unit);
         check(await page.locator('body').getAttribute('data-persona') === persona, `${viewport.name}/${persona}/${unit}: wrong persona state`);
         check(await page.locator('body').getAttribute('data-unit') === unit, `${viewport.name}/${persona}/${unit}: wrong unit state`);
         check(new URL(page.url()).hash === `#${persona}/${unit}`, `${viewport.name}/${persona}/${unit}: hash did not update`);
-        check(await page.locator(`${contract.panel} [data-unit-title]`).textContent() === unitContract.title, `${viewport.name}/${persona}/${unit}: wrong title`);
-        check(await page.locator(`${contract.nav} button`).count() === unitContract.nav, `${viewport.name}/${persona}/${unit}: wrong destination count`);
+        check((await page.locator(`${contract.panel} [data-unit-title]`).first().textContent()) === title, `${viewport.name}/${persona}/${unit}: wrong unit title`);
+        check(await page.locator(`${contract.nav} button`).count() === navCount, `${viewport.name}/${persona}/${unit}: wrong destination count`);
         check(await page.locator('h1:visible').count() === 1, `${viewport.name}/${persona}/${unit}: expected one visible h1`);
-        for (const selector of unitContract.visible) check(await page.locator(`${contract.panel} ${selector}:visible`).count() > 0, `${viewport.name}/${persona}/${unit}: ${selector} should be visible`);
-        for (const selector of unitContract.hidden) check(await page.locator(`${contract.panel} ${selector}:visible`).count() === 0, `${viewport.name}/${persona}/${unit}: ${selector} should be absent`);
+        check(await page.locator(`${contract.panel} [data-capabilities] span`).count() >= 4, `${viewport.name}/${persona}/${unit}: incomplete capability summary`);
+        if (contract.panel === '#generic-experience') {
+          check((await page.locator('#generic-boundary').isVisible()) === (index === 0), `${viewport.name}/${persona}/${unit}: minimum boundary visibility is wrong`);
+          check(await page.locator('#generic-cumulative article').count() === index, `${viewport.name}/${persona}/${unit}: cumulative card count is wrong`);
+        }
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         check(overflow <= 1, `${viewport.name}/${persona}/${unit}: horizontal overflow is ${overflow}px`);
       }
+      if (contract.plan) check(await page.locator('#rollout-plan-link').getAttribute('href') === contract.plan, `${viewport.name}/${persona}: dedicated plan link is wrong`);
+      else check((await page.locator('#rollout-plan-link').getAttribute('href')).startsWith('../../review/all-persona-minimal-rollout-plan.md#'), `${viewport.name}/${persona}: shared plan link is wrong`);
     }
 
     await page.selectOption('#persona-picker', 'owner');
@@ -67,7 +87,8 @@ try {
     await page.selectOption('#persona-picker', 'crew');
     await page.selectOption('#unit-picker', 'c1');
     check(!(await page.getByText('Start stop').isVisible()), `${viewport.name}: crew execution leaked into C1`);
-    check(await page.locator('#rollout-plan-link').getAttribute('href') === '../../review/crew-lead-minimal-rollout-plan.md', `${viewport.name}: crew plan link did not follow persona`);
+    await page.selectOption('#persona-picker', 'general');
+    check((await page.locator('#generic-primary').textContent()).includes('No workspace data loaded'), `${viewport.name}: no-role fallback exposes the wrong promise`);
 
     if (viewport.name === 'desktop') {
       check(await page.locator('.desktop-rail').isVisible(), 'desktop: rail hidden');
@@ -77,20 +98,24 @@ try {
       check(await page.locator('.mobile-nav').isVisible(), `${viewport.name}: mobile nav hidden`);
       const targets = await page.locator('.mobile-nav button').evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect()).map(({ width, height }) => ({ width, height })));
       check(targets.every(({ width, height }) => width >= 44 && height >= 44), `${viewport.name}: mobile target below 44px`);
-      const lastCard = page.locator('#crew-experience .enabled-summary');
+      const lastCard = page.locator('#generic-experience .enabled-summary');
       await lastCard.scrollIntoViewIfNeeded();
-      const clearance = await page.evaluate(() => document.querySelector('.mobile-nav').getBoundingClientRect().top - document.querySelector('#crew-experience .enabled-summary').getBoundingClientRect().bottom);
-      check(clearance >= 0, `${viewport.name}: final crew content is obscured by mobile navigation`);
+      const clearance = await page.evaluate(() => document.querySelector('.mobile-nav').getBoundingClientRect().top - document.querySelector('#generic-experience .enabled-summary').getBoundingClientRect().bottom);
+      check(clearance >= 0, `${viewport.name}: final content is obscured by mobile navigation`);
     }
     check(errors.length === 0, `${viewport.name}: browser errors: ${errors.join('; ')}`);
 
     if (capture && viewport.name === 'desktop') {
+      await page.selectOption('#persona-picker', 'overview');
+      await page.screenshot({ path: resolve(captureRoot, 'all-persona-minimal-rollout-desktop-v1.png'), fullPage: true });
       await page.selectOption('#persona-picker', 'owner'); await page.selectOption('#unit-picker', 'u1');
       await page.screenshot({ path: resolve(captureRoot, 'yard-owner-minimal-rollout-desktop-v1.png'), fullPage: true });
       await page.selectOption('#persona-picker', 'crew'); await page.selectOption('#unit-picker', 'c1');
       await page.screenshot({ path: resolve(captureRoot, 'crew-lead-minimal-rollout-desktop-v1.png'), fullPage: true });
     }
     if (capture && viewport.name === 'mobile') {
+      await page.selectOption('#persona-picker', 'support'); await page.selectOption('#unit-picker', 's4');
+      await page.screenshot({ path: resolve(captureRoot, 'all-persona-minimal-rollout-mobile-v1.png'), fullPage: true });
       await page.selectOption('#persona-picker', 'owner'); await page.selectOption('#unit-picker', 'u4');
       await page.screenshot({ path: resolve(captureRoot, 'yard-owner-minimal-rollout-mobile-v1.png'), fullPage: true });
       await page.selectOption('#persona-picker', 'crew'); await page.selectOption('#unit-picker', 'c4');
@@ -98,5 +123,5 @@ try {
     }
     await page.close();
   }
-  console.log(`Owner and Crew Lead minimal rollout validation passed${capture ? ' and captures refreshed' : ''}.`);
+  console.log(`All-persona minimal rollout validation passed across 36 functional units${capture ? ' and captures refreshed' : ''}.`);
 } finally { await browser.close(); }

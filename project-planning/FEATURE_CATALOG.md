@@ -99,6 +99,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   recovery; server-derived crew capabilities, supported-device operations,
   protected field smoke, and queued-work-safe rollback remain implementation
   work
+- Validated all-persona rollout map completing 36 cumulative units across the
+  ten production workspace personas, including exact manager-tool boundaries,
+  Crew Member versus Crew Lead authority, Billing Admin non-revenue scope,
+  guarded Support recovery, and a no-role access-resolution fallback
 - Compact Yard Owner visit history with one expanded customer-safe progress,
   update, questions, recommendations, and proof surface at a time, validated in
   Chromium and iPhone/WebKit phone journeys
