@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-19: Synchronized the Yard Owner lost-response browser journey to the
+  intentional approval and revocation request failures before asserting their
+  recovery notices. The test retains its exact idempotency-key checks, default
+  assertion timeout, and zero-retry policy while removing WebKit scheduling
+  sensitivity from the network-failure boundary.
 - 2026-09-19: Isolated checklist persistence integration tests that share the
   seeded `job_1001_yard_service` row. The state/read and offline-idempotency
   cases now hold one async test lock across their mutations, preventing a
