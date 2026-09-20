@@ -657,7 +657,7 @@ interface ApiPrincipalAccessSummary {
 
 interface ApiWorkspaceRolloutProjection {
   contract_version: number;
-  rollout_mode: 'default_off';
+  rollout_mode: 'default_off' | 'cohort';
   personas: Array<{
     persona_id: WorkspaceRolloutPersonaId;
     scope: {
@@ -684,7 +684,7 @@ export type WorkspaceRolloutPersonaId =
 
 export interface WorkspaceRolloutProjection {
   contractVersion: number;
-  rolloutMode: 'default_off';
+  rolloutMode: 'default_off' | 'cohort';
   personas: Array<{
     personaId: WorkspaceRolloutPersonaId;
     scope: {
