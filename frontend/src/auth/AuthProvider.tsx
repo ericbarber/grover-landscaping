@@ -9,7 +9,11 @@ import {
 } from 'react';
 import { User, UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { API_BASE_URL } from '../api/baseUrl';
-import { fetchPrincipalAccessSummary, type OrganizationMembership } from '../api/client';
+import {
+  fetchPrincipalAccessSummary,
+  type OrganizationMembership,
+  type WorkspaceRolloutProjection,
+} from '../api/client';
 import { configureApiAuthentication } from '../api/authenticatedFetch';
 
 type AuthMode = 'disabled' | 'local_review' | 'cognito';
@@ -44,6 +48,7 @@ interface AuthContextValue {
   verifiedEmail: string | null;
   roles: string[];
   memberships: OrganizationMembership[];
+  workspaceRollout: WorkspaceRolloutProjection | null;
   localReviewers: LocalReviewerProfile[];
   activeLocalReviewerId: string | null;
   selectLocalReviewer: (reviewerId: string) => void;
@@ -162,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [membershipRoles, setMembershipRoles] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [memberships, setMemberships] = useState<OrganizationMembership[]>([]);
+  const [workspaceRollout, setWorkspaceRollout] = useState<WorkspaceRolloutProjection | null>(null);
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
   const [localReviewers, setLocalReviewers] = useState<LocalReviewerProfile[]>([]);
   const [activeLocalReviewerId, setActiveLocalReviewerId] = useState<string | null>(null);
@@ -274,6 +280,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setManager(null);
     setConfig(null);
     setUser(null);
+    setWorkspaceRollout(null);
     setAccessStatus('idle');
     setAccessError(null);
     setLocalReviewers([]);
@@ -305,12 +312,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const access = await fetchPrincipalAccessSummary();
       setUserId(access.userId);
       setMemberships(access.memberships);
+      setWorkspaceRollout(access.workspaceRollout);
       setMembershipRoles(access.memberships.map((membership) => membership.role));
       setVerifiedEmail(access.verifiedEmail);
       setAccessStatus('ready');
     } catch {
       setUserId(null);
       setMemberships([]);
+      setWorkspaceRollout(null);
       setMembershipRoles([]);
       setVerifiedEmail(null);
       setAccessStatus('unavailable');
@@ -330,6 +339,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setUserId(null);
       setMemberships([]);
+      setWorkspaceRollout(null);
       setMembershipRoles([]);
       setVerifiedEmail(null);
       setAccessStatus('idle');
@@ -360,6 +370,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verifiedEmail,
         roles,
         memberships,
+        workspaceRollout,
         localReviewers,
         activeLocalReviewerId,
         selectLocalReviewer,
@@ -388,6 +399,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       userId,
       verifiedEmail,
+      workspaceRollout,
     ],
   );
 

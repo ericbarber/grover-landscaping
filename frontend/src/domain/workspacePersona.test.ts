@@ -1,8 +1,32 @@
 import { describe, expect, it } from 'vitest';
 import {
   workspacePersonasForRoles,
+  workspacePersonaForRollout,
   workspaceSurfacesForPersona,
 } from './workspacePersona';
+import type { WorkspaceRolloutProjection } from '../api/client';
+
+function rollout(
+  personaId: WorkspaceRolloutProjection['personas'][number]['personaId'],
+  enabledUnit: string | null,
+  enforcementMode: WorkspaceRolloutProjection['enforcementMode'] = 'managed',
+): WorkspaceRolloutProjection {
+  return {
+    contractVersion: 2,
+    enforcementMode,
+    rolloutMode: enabledUnit ? 'cohort' : 'default_off',
+    personas: [{
+      personaId,
+      scope: {
+        scopeType: 'organization',
+        scopeId: 'scope-1',
+        organizationId: 'organization-1',
+      },
+      enabledUnit,
+      capabilities: {},
+    }],
+  };
+}
 
 describe('persona workspaces', () => {
   it('maps current product roles to distinct workspaces', () => {
@@ -84,5 +108,87 @@ describe('persona workspaces', () => {
       customerCare: false,
       management: true,
     });
+  });
+
+  it('preserves current navigation until a subject enters managed rollout', () => {
+    const crewLead = workspacePersonasForRoles(['CrewLead'])[0];
+    expect(workspacePersonaForRollout(crewLead, null).navigation.map(({ view }) => view))
+      .toEqual(['home', 'route', 'jobs', 'job']);
+    expect(
+      workspacePersonaForRollout(crewLead, rollout('crew-lead', null, 'legacy'))
+        .navigation.map(({ view }) => view),
+    ).toEqual(['home', 'route', 'jobs', 'job']);
+  });
+
+  it('adds field destinations only with their cumulative unit', () => {
+    const crewLead = workspacePersonasForRoles(['CrewLead'])[0];
+    expect(
+      workspacePersonaForRollout(crewLead, rollout('crew-lead', 'c1'))
+        .navigation.map(({ view }) => view),
+    ).toEqual(['home', 'route']);
+    expect(
+      workspacePersonaForRollout(crewLead, rollout('crew-lead', 'c2'))
+        .navigation.map(({ view }) => view),
+    ).toEqual(['home', 'route', 'jobs', 'job']);
+  });
+
+  it('uses the lowest common unit across current scopes and fails closed for suspension', () => {
+    const crewLead = workspacePersonasForRoles(['CrewLead'])[0];
+    const multiScope = rollout('crew-lead', 'c3');
+    multiScope.personas.push({
+      ...multiScope.personas[0],
+      scope: { ...multiScope.personas[0].scope, scopeId: 'scope-2' },
+      enabledUnit: 'c1',
+    });
+    expect(
+      workspacePersonaForRollout(crewLead, multiScope).navigation.map(({ view }) => view),
+    ).toEqual(['home', 'route']);
+
+    multiScope.personas[1].enabledUnit = null;
+    expect(
+      workspacePersonaForRollout(crewLead, multiScope).navigation.map(({ view }) => view),
+    ).toEqual(['home']);
+  });
+
+  it('keeps suspended managed personas at safe Home instead of restoring legacy links', () => {
+    const companyOwner = workspacePersonasForRoles(['OrganizationOwner'])[0];
+    expect(
+      workspacePersonaForRollout(companyOwner, rollout('company-owner', null))
+        .navigation.map(({ view }) => view),
+    ).toEqual(['home']);
+    expect(
+      workspacePersonaForRollout(companyOwner, rollout('company-owner', 'unknown-unit'))
+        .navigation.map(({ view }) => view),
+    ).toEqual(['home']);
+  });
+
+  it('matches customer and company destination boundaries from the rollout map', () => {
+    const yardOwner = workspacePersonasForRoles(['PropertyOwner'])[0];
+    const propertyManager = workspacePersonasForRoles(['PropertyManager'])[0];
+    const companyManager = workspacePersonasForRoles(['Manager'])[0];
+    expect(
+      workspacePersonaForRollout(yardOwner, rollout('yard-owner', 'u1'))
+        .navigation.map(({ view }) => view),
+    ).toEqual(['home']);
+    expect(
+      workspacePersonaForRollout(yardOwner, rollout('yard-owner', 'u2'))
+        .navigation.map(({ view }) => view),
+    ).toEqual(['home', 'customer']);
+    expect(
+      workspacePersonaForRollout(propertyManager, rollout('property-manager', 'p1'))
+        .navigation.map(({ view }) => view),
+    ).toEqual(['home', 'customer']);
+    expect(
+      workspacePersonaForRollout(propertyManager, rollout('property-manager', 'p4'))
+        .navigation.map(({ view }) => view),
+    ).toEqual(['home', 'customer', 'manager']);
+    expect(
+      workspacePersonaForRollout(companyManager, rollout('company-manager', 'm1'))
+        .navigation.map(({ view }) => view),
+    ).toEqual(['home', 'manager']);
+    expect(
+      workspacePersonaForRollout(companyManager, rollout('company-manager', 'm2'))
+        .navigation.map(({ view }) => view),
+    ).toEqual(['home', 'manager', 'route', 'jobs', 'job']);
   });
 });

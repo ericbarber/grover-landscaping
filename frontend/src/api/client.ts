@@ -657,6 +657,7 @@ interface ApiPrincipalAccessSummary {
 
 interface ApiWorkspaceRolloutProjection {
   contract_version: number;
+  enforcement_mode?: 'legacy' | 'managed';
   rollout_mode: 'default_off' | 'cohort';
   personas: Array<{
     persona_id: WorkspaceRolloutPersonaId;
@@ -684,6 +685,7 @@ export type WorkspaceRolloutPersonaId =
 
 export interface WorkspaceRolloutProjection {
   contractVersion: number;
+  enforcementMode: 'legacy' | 'managed';
   rolloutMode: 'default_off' | 'cohort';
   personas: Array<{
     personaId: WorkspaceRolloutPersonaId;
@@ -1448,6 +1450,7 @@ export function toPrincipalAccessSummary(
     memberships: summary.memberships.map(toOrganizationMembership),
     workspaceRollout: {
       contractVersion: summary.workspace_rollout.contract_version,
+      enforcementMode: summary.workspace_rollout.enforcement_mode ?? 'legacy',
       rolloutMode: summary.workspace_rollout.rollout_mode,
       personas: summary.workspace_rollout.personas.map((persona) => ({
         personaId: persona.persona_id,

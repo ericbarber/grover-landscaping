@@ -348,6 +348,7 @@ function CustomerDeliveredProof({ visit }: { visit: CustomerPortalVisitSummary }
 
 export function YardOwnerPortalPanel({
   customerDisplayName,
+  rolloutUnit,
   properties,
   visits,
   isLoadingVisits,
@@ -355,12 +356,23 @@ export function YardOwnerPortalPanel({
   onRetryVisits,
 }: {
   customerDisplayName: string;
+  rolloutUnit?: string | null;
   properties: CustomerPortalPropertySummary[];
   visits: CustomerPortalVisitSummary[];
   isLoadingVisits: boolean;
   visitReadError: 'access_required' | 'inconsistent' | 'unavailable' | null;
   onRetryVisits: () => void;
 }) {
+  const rolloutManaged = rolloutUnit !== undefined;
+  const allowsVisits = !rolloutManaged || ['u2', 'u3', 'u4'].includes(rolloutUnit ?? '');
+  const allowsProof = !rolloutManaged || ['u3', 'u4'].includes(rolloutUnit ?? '');
+  const allowsInteraction = !rolloutManaged || rolloutUnit === 'u4';
+  const visibleDestinations = destinations.filter(({ id }) => (
+    id === 'home'
+    || (id === 'visits' && allowsVisits)
+    || (id === 'proof' && allowsProof)
+    || (id === 'account' && !rolloutManaged)
+  ));
   const visibleProperties = properties;
   const [destination, setDestination] = useState<PortalDestination>('home');
   const [selectedPropertyId, setSelectedPropertyId] = useState(visibleProperties[0]?.id ?? '');
@@ -383,6 +395,12 @@ export function YardOwnerPortalPanel({
   );
   const nextVisit = propertyVisits[0];
   const latestProofVisit = proofVisits[proofVisits.length - 1];
+  const destinationIsVisible = visibleDestinations.some(({ id }) => id === destination);
+
+  useEffect(() => {
+    if (destinationIsVisible) return;
+    setDestination('home');
+  }, [destinationIsVisible]);
 
   if (isLoadingVisits) {
     return (
@@ -461,8 +479,12 @@ export function YardOwnerPortalPanel({
         </div>
       </header>
 
-      <nav aria-label="Yard Owner portal" className="grid grid-cols-4 border-b border-slate-200 bg-slate-50 p-2">
-        {destinations.map((item) => (
+      <nav
+        aria-label="Yard Owner portal"
+        className="grid border-b border-slate-200 bg-slate-50 p-2"
+        style={{ gridTemplateColumns: `repeat(${visibleDestinations.length}, minmax(0, 1fr))` }}
+      >
+        {visibleDestinations.map((item) => (
           <button
             aria-current={destination === item.id ? 'page' : undefined}
             className={`min-h-12 rounded-xl px-2 text-xs font-black sm:text-sm ${destination === item.id ? 'bg-emerald-800 text-white shadow-grover-sm' : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-900'}`}
@@ -484,7 +506,7 @@ export function YardOwnerPortalPanel({
             </h1>
             <p className="mt-2 text-sm leading-6 text-slate-600">Here is what is next for {selectedProperty.displayName}.</p>
 
-            <div className="mt-7 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className={`mt-7 grid gap-5 ${allowsProof ? 'lg:grid-cols-[1.15fr_0.85fr]' : ''}`}>
               {nextVisit ? (
                 <article className={`rounded-2xl p-5 sm:p-6 ${serviceCardClass(nextVisit.status)}`}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -511,8 +533,8 @@ export function YardOwnerPortalPanel({
                     <strong className="text-forest">{preparationLabel(nextVisit.status)}:</strong> {nextVisit.preparationMessage}
                   </div>
                   <p className="mt-3 text-sm font-bold text-emerald-950"><strong>Next update:</strong> {nextVisit.nextUpdateMessage}</p>
-                  <CustomerVisitQuestions visit={nextVisit} />
-                  {nextVisit.customerVisitReference ? (
+                  {allowsInteraction ? <CustomerVisitQuestions visit={nextVisit} /> : null}
+                  {allowsInteraction && nextVisit.customerVisitReference ? (
                     <CustomerVisitRecommendationsPanel customerVisitReference={nextVisit.customerVisitReference} />
                   ) : null}
                 </article>
@@ -524,7 +546,7 @@ export function YardOwnerPortalPanel({
                 />
               )}
 
-              <article className="rounded-2xl border border-slate-200 p-5 sm:p-6">
+              {allowsProof ? <article className="rounded-2xl border border-slate-200 p-5 sm:p-6">
                 <p className="grover-eyebrow">Latest delivered proof</p>
                 {latestProofVisit ? (
                   <>
@@ -535,7 +557,7 @@ export function YardOwnerPortalPanel({
                 ) : (
                   <p className="mt-4 text-sm leading-6 text-slate-600">Your first proof will appear after your provider completes and delivers a service report.</p>
                 )}
-              </article>
+              </article> : null}
             </div>
           </div>
         ) : null}
@@ -573,11 +595,11 @@ export function YardOwnerPortalPanel({
                         <ServiceProgress status={visit.status} />
                         <ServiceStatusDetail visit={visit} />
                         <p className="mt-4 text-sm leading-6 text-slate-700"><strong className="text-forest">Next update:</strong> {visit.nextUpdateMessage}</p>
-                        <CustomerVisitQuestions visit={visit} />
-                        {visit.customerVisitReference ? (
+                        {allowsInteraction ? <CustomerVisitQuestions visit={visit} /> : null}
+                        {allowsInteraction && visit.customerVisitReference ? (
                           <CustomerVisitRecommendationsPanel customerVisitReference={visit.customerVisitReference} />
                         ) : null}
-                        <CustomerDeliveredProof visit={visit} />
+                        {allowsProof ? <CustomerDeliveredProof visit={visit} /> : null}
                       </div>
                     ) : null}
                   </article>

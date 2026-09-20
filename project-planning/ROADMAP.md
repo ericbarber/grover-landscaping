@@ -59,8 +59,12 @@ resolution is the only enabled non-data fallback. Migration 123 adds exact-
 scope cohort enrollments, cumulative units, versioned advancement, suspension
 rollback, and immutable lifecycle audit. Migration 124 and guarded organization
 APIs add membership-derived list/enable/advance/suspend/resume operations with
-exact versions and actor-scoped idempotent replay. React composition and
-protected per-unit smoke remain; Dispatcher and Billing
+exact versions and actor-scoped idempotent replay. Projection version 2 now
+separates untouched legacy subjects from managed cohorts, keeps suspension
+default off, shapes desktop/mobile destinations from the lowest common unit
+across current scopes, and gates Yard Owner visit,
+proof, question, and recommendation controls cumulatively. Remaining persona
+controls and protected per-unit smoke remain; Dispatcher and Billing
 Administrator also require authoritative backend roles.
 
 ## Delivered UX Context

@@ -15,6 +15,7 @@ pub struct WorkspaceRolloutAssignment {
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 pub struct WorkspaceRolloutProjection {
     pub contract_version: u8,
+    pub enforcement_mode: String,
     pub rollout_mode: String,
     pub personas: Vec<WorkspacePersonaRollout>,
 }
@@ -41,6 +42,7 @@ pub struct WorkspaceRolloutEnrollment {
     pub scope_type: String,
     pub scope_id: Option<String>,
     pub enabled_unit: String,
+    pub status: String,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
@@ -289,22 +291,22 @@ pub fn default_workspace_rollout_projection(
     }
 
     WorkspaceRolloutProjection {
-        contract_version: 1,
+        contract_version: 2,
+        enforcement_mode: "legacy".to_string(),
         rollout_mode: "default_off".to_string(),
         personas,
     }
 }
 
-pub async fn load_active_workspace_rollout_enrollments(
+pub async fn load_workspace_rollout_enrollments(
     pool: &PgPool,
     subject_user_id: &str,
 ) -> Result<Vec<WorkspaceRolloutEnrollment>, sqlx::Error> {
     let rows = sqlx::query(
         r#"
-        SELECT persona_id, organization_id, scope_type, scope_id, enabled_unit
+        SELECT persona_id, organization_id, scope_type, scope_id, enabled_unit, status
         FROM workspace_rollout_enrollments
         WHERE subject_user_id = $1
-          AND status = 'active'
         ORDER BY persona_id, organization_id NULLS FIRST, scope_type, scope_id NULLS FIRST
         "#,
     )
@@ -320,6 +322,7 @@ pub async fn load_active_workspace_rollout_enrollments(
             scope_type: row.get("scope_type"),
             scope_id: row.get("scope_id"),
             enabled_unit: row.get("enabled_unit"),
+            status: row.get("status"),
         })
         .collect())
 }
@@ -822,6 +825,10 @@ pub fn apply_workspace_rollout_enrollments(
         }) else {
             continue;
         };
+        projection.enforcement_mode = "managed".to_string();
+        if enrollment.status != "active" {
+            continue;
+        }
         let Some(enabled_index) = unit_ids(&persona.persona_id)
             .iter()
             .position(|unit_id| *unit_id == enrollment.enabled_unit)
@@ -876,7 +883,8 @@ mod tests {
         ];
 
         let projection = default_workspace_rollout_projection(&[], &assignments);
-        assert_eq!(projection.contract_version, 1);
+        assert_eq!(projection.contract_version, 2);
+        assert_eq!(projection.enforcement_mode, "legacy");
         assert_eq!(projection.rollout_mode, "default_off");
         assert_eq!(projection.personas.len(), 6);
         assert_eq!(
@@ -963,6 +971,7 @@ mod tests {
                 scope_type: "crew".to_string(),
                 scope_id: Some("crew-1".to_string()),
                 enabled_unit: "cm3".to_string(),
+                status: "active".to_string(),
             }],
         );
 
@@ -989,6 +998,7 @@ mod tests {
                 scope_type: "property".to_string(),
                 scope_id: Some("property-2".to_string()),
                 enabled_unit: "u4".to_string(),
+                status: "active".to_string(),
             },
             WorkspaceRolloutEnrollment {
                 persona_id: "yard-owner".to_string(),
@@ -996,11 +1006,38 @@ mod tests {
                 scope_type: "property".to_string(),
                 scope_id: Some("property-1".to_string()),
                 enabled_unit: "not-a-unit".to_string(),
+                status: "active".to_string(),
             },
         ];
 
         apply_workspace_rollout_enrollments(&mut projection, &enrollments);
 
+        assert_eq!(projection.rollout_mode, "default_off");
+        assert_eq!(projection.personas[0].enabled_unit, None);
+        assert!(projection.personas[0]
+            .capabilities
+            .values()
+            .all(|enabled| !enabled));
+    }
+
+    #[test]
+    fn suspended_exact_enrollment_keeps_the_persona_managed_and_default_off() {
+        let assignments = [assignment(AccessRole::CrewLead, "crew", Some("crew-1"))];
+        let mut projection = default_workspace_rollout_projection(&[], &assignments);
+
+        apply_workspace_rollout_enrollments(
+            &mut projection,
+            &[WorkspaceRolloutEnrollment {
+                persona_id: "crew-lead".to_string(),
+                organization_id: Some("org-1".to_string()),
+                scope_type: "crew".to_string(),
+                scope_id: Some("crew-1".to_string()),
+                enabled_unit: "c2".to_string(),
+                status: "suspended".to_string(),
+            }],
+        );
+
+        assert_eq!(projection.enforcement_mode, "managed");
         assert_eq!(projection.rollout_mode, "default_off");
         assert_eq!(projection.personas[0].enabled_unit, None);
         assert!(projection.personas[0]

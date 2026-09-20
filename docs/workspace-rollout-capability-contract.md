@@ -2,12 +2,14 @@
 
 ## Status
 
-The read contract, cohort persistence, and guarded organization-operator API
-are delivered through `GET /me/access`, migrations 123–124, and the endpoints
-below. Accounts remain default off unless an exact active enrollment exists.
-No production cohort is enabled by these migrations, navigation is not yet
-shaped, and rollout state never grants API authority. Capability-shaped React
-composition is the next slice.
+The read contract, cohort persistence, guarded organization-operator API, and
+first React composition slice are delivered through `GET /me/access`,
+migrations 123–124, and the endpoints below. Accounts remain default off unless
+an exact active enrollment exists. No production cohort is enabled by these
+changes, and rollout state never grants API authority. Desktop/mobile workspace
+destinations and Yard Owner U2–U4 portal controls now use the lowest common
+unit across current persona scopes, so a lower or suspended scope fails closed;
+the remaining persona-specific contextual controls are later slices.
 
 ## Response
 
@@ -16,7 +18,8 @@ principal access summary:
 
 ```json
 {
-  "contract_version": 1,
+  "contract_version": 2,
+  "enforcement_mode": "managed",
   "rollout_mode": "cohort",
   "personas": [
     {
@@ -51,6 +54,14 @@ An authenticated identity with no active mapped role receives only the
 single non-data recovery capability is true so the UI can explain how to accept
 an invitation, contact an administrator, or sign out safely.
 
+`enforcement_mode` separates rollout migration from rollout state. `legacy`
+preserves the existing workspace for a subject that has never had an exact
+enrollment. `managed` means at least one retained enrollment still matches a
+current persona/scope. An active match can enable cumulative units; a suspended
+match remains managed with its unit default off. This prevents suspension from
+silently restoring the legacy full menu. Older version-1 responses are treated
+as legacy during rolling deployment.
+
 ## Security boundary
 
 - The request supplies no role, persona, organization, account, property, crew,
@@ -58,7 +69,8 @@ an invitation, contact an administrator, or sign out safely.
 - Scope identifiers come from current server-side membership records.
 - A projection shapes future interface composition only. Every protected API
   repeats its existing role and exact-resource authorization.
-- A false or missing capability must fail closed in future client composition.
+- A false or missing capability fails closed for a managed subject; legacy mode
+  is an explicit migration state, not an inferred capability grant.
 - Enrollment reads and writes require an active OrganizationOwner or
   organization-scoped SupportAdmin membership in the exact target
   organization; a claim without that membership is insufficient.
@@ -121,8 +133,8 @@ foundation does not synthesize either role from Manager.
 
 ## Next implementation slices
 
-1. Shape React destinations and contextual controls from the projection while
-   retaining deep-link and API denial.
+1. Shape remaining manager, field-write, portfolio, and support contextual
+   controls from capabilities while retaining deep-link and API denial.
 2. Add protected success and cross-resource denial smoke per enabled unit.
 3. Resolve Dispatcher and BillingAdmin as explicit roles or remove the
    unsupported persona keys before either can enter a cohort.
