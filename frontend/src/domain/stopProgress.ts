@@ -1,5 +1,10 @@
 export type StopProgressStatus = 'pending' | 'in_progress' | 'finished';
-export type RouteProgressSyncStatus = 'local' | 'syncing' | 'synced';
+export type RouteProgressSyncStatus =
+  | 'local'
+  | 'syncing'
+  | 'synced'
+  | 'needs_attention'
+  | 'read_only';
 export type DayPlanAmendmentType = 'add_stop' | 'remove_stop' | 'add_service';
 export type DayPlanAmendmentStatus = 'draft' | 'submitted' | 'bid_review' | 'approved' | 'rejected';
 export type ProjectBidStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'converted';
@@ -148,12 +153,20 @@ export function resetStopStates(): StopStateMap {
 
 export function syncStatusLabel(syncStatus: RouteProgressSyncStatus): string {
   if (syncStatus === 'syncing') {
-    return 'syncing';
+    return 'Syncing';
   }
 
   if (syncStatus === 'synced') {
-    return 'synced';
+    return 'Synced';
   }
 
-  return 'saved locally';
+  if (syncStatus === 'needs_attention') {
+    return 'Needs attention';
+  }
+
+  if (syncStatus === 'read_only') {
+    return 'Read only';
+  }
+
+  return 'Saved on device';
 }

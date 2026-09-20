@@ -114,6 +114,12 @@ Next design slices:
    family inventory that distinguishes dated current mirrors, adopted behavior,
    design direction, historical input, and product-gated boundaries. The
    adoption tracker and dated mirror documentation use the same interpretation.
+5. Frontend truth and recovery: in progress. Crew routes now derive Past,
+   Today’s, Upcoming, or unavailable context from the local service day, show a
+   complete human date, and fail closed against progress or amendment writes
+   outside the active day. Confidence language is limited to Syncing, Saved on
+   device, Synced, Needs attention, and Read only; transport-source language is
+   removed. Yard Owner protected-read recovery is the next safe slice.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.
