@@ -203,14 +203,13 @@ export function workspaceEnabledUnitForPersona(
   rollout: WorkspaceRolloutProjection,
 ): string | null {
   const order = rolloutUnitOrder[personaId] ?? [];
-  return rollout.personas
-    .filter((candidate) => (
-      candidate.personaId === personaId
-      && candidate.enabledUnit
-      && order.includes(candidate.enabledUnit)
-    ))
-    .map((candidate) => candidate.enabledUnit as string)
-    .sort((left, right) => order.indexOf(right) - order.indexOf(left))[0] ?? null;
+  const candidates = rollout.personas.filter((candidate) => candidate.personaId === personaId);
+  if (candidates.length === 0) return null;
+  const enabledIndexes = candidates.map((candidate) => (
+    candidate.enabledUnit ? order.indexOf(candidate.enabledUnit) : -1
+  ));
+  const lowestCommonIndex = Math.min(...enabledIndexes);
+  return lowestCommonIndex >= 0 ? order[lowestCommonIndex] : null;
 }
 
 export function workspacePersonaForRollout(

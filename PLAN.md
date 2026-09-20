@@ -74,7 +74,7 @@ Current state:
   receipts make enable/advance/suspend/resume safe to retry. Projection version
   2 distinguishes untouched legacy users from managed cohorts, so suspension
   cannot restore the old full menu. Desktop and mobile workspace destinations
-  now follow cumulative units; Yard Owner U2–U4 also gate Visits, delivered
+  now follow the lowest common cumulative unit across current scopes; Yard Owner U2–U4 also gate Visits, delivered
   Proof, and question/recommendation controls. Remaining manager, field,
   portfolio, and support contextual controls are not yet shaped, and no live
   cohort has been enabled.

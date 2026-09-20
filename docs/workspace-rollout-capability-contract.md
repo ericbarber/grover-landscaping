@@ -7,7 +7,8 @@ first React composition slice are delivered through `GET /me/access`,
 migrations 123–124, and the endpoints below. Accounts remain default off unless
 an exact active enrollment exists. No production cohort is enabled by these
 changes, and rollout state never grants API authority. Desktop/mobile workspace
-destinations and Yard Owner U2–U4 portal controls are now capability-shaped;
+destinations and Yard Owner U2–U4 portal controls now use the lowest common
+unit across current persona scopes, so a lower or suspended scope fails closed;
 the remaining persona-specific contextual controls are later slices.
 
 ## Response

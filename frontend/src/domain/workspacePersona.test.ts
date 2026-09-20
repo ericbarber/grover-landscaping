@@ -132,6 +132,24 @@ describe('persona workspaces', () => {
     ).toEqual(['home', 'route', 'jobs', 'job']);
   });
 
+  it('uses the lowest common unit across current scopes and fails closed for suspension', () => {
+    const crewLead = workspacePersonasForRoles(['CrewLead'])[0];
+    const multiScope = rollout('crew-lead', 'c3');
+    multiScope.personas.push({
+      ...multiScope.personas[0],
+      scope: { ...multiScope.personas[0].scope, scopeId: 'scope-2' },
+      enabledUnit: 'c1',
+    });
+    expect(
+      workspacePersonaForRollout(crewLead, multiScope).navigation.map(({ view }) => view),
+    ).toEqual(['home', 'route']);
+
+    multiScope.personas[1].enabledUnit = null;
+    expect(
+      workspacePersonaForRollout(crewLead, multiScope).navigation.map(({ view }) => view),
+    ).toEqual(['home']);
+  });
+
   it('keeps suspended managed personas at safe Home instead of restoring legacy links', () => {
     const companyOwner = workspacePersonasForRoles(['OrganizationOwner'])[0];
     expect(
