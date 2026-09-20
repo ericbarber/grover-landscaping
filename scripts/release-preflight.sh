@@ -149,11 +149,11 @@ validate_smoke_contract() {
   done
   [[ -x "${rollout_smoke}" ]] || errors=$((errors + 1))
   for name in SMOKE_ROLLOUT_PERSONA SMOKE_ROLLOUT_UNIT SMOKE_ROLLOUT_SCOPE_TYPE SMOKE_ROLLOUT_SCOPE_ID SMOKE_ROLLOUT_ORGANIZATION_ID SMOKE_ROLLOUT_REQUIRED_CAPABILITIES SMOKE_ROLLOUT_FORBIDDEN_CAPABILITIES SMOKE_ROLLOUT_SUCCESS_PATHS_JSON SMOKE_ROLLOUT_DENIAL_PATHS_JSON; do
-    rg -Fq "'${name}'" "${rollout_smoke}" || errors=$((errors + 1))
+    grep -Fq "'${name}'" "${rollout_smoke}" || errors=$((errors + 1))
   done
-  rg -q 'enforcement_mode.*managed' "${rollout_smoke}" || errors=$((errors + 1))
-  rg -q 'rollout_mode.*cohort' "${rollout_smoke}" || errors=$((errors + 1))
-  rg -q 'cross-resource.*fail closed' "${rollout_smoke}" || errors=$((errors + 1))
+  grep -Eq 'enforcement_mode.*managed' "${rollout_smoke}" || errors=$((errors + 1))
+  grep -Eq 'rollout_mode.*cohort' "${rollout_smoke}" || errors=$((errors + 1))
+  grep -Eq 'cross-resource.*fail closed' "${rollout_smoke}" || errors=$((errors + 1))
 
   if ((errors)); then
     failed "production smoke input/behavior contract is incomplete (${errors} missing assertion(s))"
