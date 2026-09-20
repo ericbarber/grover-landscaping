@@ -42,6 +42,10 @@ try {
       check(await page.locator(contract.panel).isVisible(), `${viewport.name}/${persona}: selected experience is hidden`);
       const otherPanel = persona === 'owner' ? '#crew-experience' : '#owner-experience';
       check(!(await page.locator(otherPanel).isVisible()), `${viewport.name}/${persona}: other persona experience leaked`);
+      const personaName = persona === 'owner' ? 'Yard Owner' : 'Crew Lead';
+      const homeHash = persona === 'owner' ? '#owner/u1' : '#crew/c1';
+      check(await page.locator('#mobile-nav').getAttribute('aria-label') === `${personaName} mobile navigation`, `${viewport.name}/${persona}: mobile navigation label leaked`);
+      check(await page.locator('#brand-home').getAttribute('href') === homeHash, `${viewport.name}/${persona}: brand home link leaked`);
       for (const [unit, unitContract] of Object.entries(contract.units)) {
         await page.selectOption('#unit-picker', unit);
         check(await page.locator('body').getAttribute('data-persona') === persona, `${viewport.name}/${persona}/${unit}: wrong persona state`);

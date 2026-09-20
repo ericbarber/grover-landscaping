@@ -1,6 +1,6 @@
 const personas = {
   owner: {
-    name: 'Yard Owner', identity: 'Jamie — Property Owner', shortName: 'Jamie', role: 'Yard owner', identityAction: 'Account', plan: '../../review/yard-owner-minimal-rollout-plan.md',
+    name: 'Yard Owner', identity: 'Jamie — Property Owner', shortName: 'Jamie', role: 'Yard owner', identityAction: 'Account', home: '#owner/u1', plan: '../../review/yard-owner-minimal-rollout-plan.md',
     units: {
       u1: { option: 'U1 · Care visibility — minimum launch', label: 'Minimum launch', title: 'Care visibility', copy: 'A complete read-only answer to “What happens next?”', intro: 'Here is what is next for your yard.', nav: ['Home'], capabilities: ['Protected account and property access', 'Next confirmed visit', 'Preparation and next update', 'Empty and recovery states'] },
       u2: { option: 'U2 · Visit tracking', label: 'Functional unit 2', title: 'Visit tracking', copy: 'Add service-day progress only after provider status publishing is operational.', intro: 'Follow upcoming and customer-visible service updates.', nav: ['Home', 'Visits'], capabilities: ['Everything in U1', 'Visit chronology', 'Six explicit service-day states', 'Past/current date context'] },
@@ -9,7 +9,7 @@ const personas = {
     },
   },
   crew: {
-    name: 'Crew Lead', identity: 'Leah — Crew Lead', shortName: 'Leah', role: 'Crew lead', identityAction: 'Account', plan: '../../review/crew-lead-minimal-rollout-plan.md',
+    name: 'Crew Lead', identity: 'Leah — Crew Lead', shortName: 'Leah', role: 'Crew lead', identityAction: 'Account', home: '#crew/c1', plan: '../../review/crew-lead-minimal-rollout-plan.md',
     units: {
       c1: { option: 'C1 · Day plan visibility — minimum launch', label: 'Minimum launch', title: 'Day plan visibility', copy: 'A reliable read-only route replaces paper and office check-ins.', intro: 'See today’s route and property context before leaving the yard.', nav: ['Home', 'Route'], capabilities: ['Verified crew membership', 'Assigned day plan and ordered stops', 'Customer-safe service/access context', 'Current sync and unavailable states'] },
       c2: { option: 'C2 · Stop execution', label: 'Functional unit 2', title: 'Stop execution', copy: 'Add progress writes only after durable offline replay and conflict recovery pass.', intro: 'Move through each assigned stop with resilient progress.', nav: ['Home', 'Route', 'Jobs', 'Job'], capabilities: ['Everything in C1', 'Start, arrive, pause, and complete', 'Durable offline progress queue', 'Replay, stale, and conflict recovery'] },
@@ -48,6 +48,7 @@ function setUnit(personaKey, unitKey, announce = true) {
   document.querySelector('#rail-persona').textContent = persona.role;
   document.querySelector('#rail-name').textContent = persona.shortName;
   document.querySelector('#rail-role').textContent = persona.role;
+  document.querySelector('#brand-home').href = persona.home;
   document.querySelector('#rollout-plan-link').href = persona.plan;
   document.querySelectorAll('[data-unit-label]').forEach((element) => { element.textContent = unit.label; });
   document.querySelectorAll('[data-unit-title]').forEach((element) => { element.textContent = unit.title; });
@@ -55,7 +56,9 @@ function setUnit(personaKey, unitKey, announce = true) {
   document.querySelectorAll('[data-unit-intro]').forEach((element) => { element.textContent = unit.intro; });
   const nav = navMarkup(unit.nav);
   document.querySelector('#rail-nav').innerHTML = nav;
-  document.querySelector('#mobile-nav').innerHTML = nav;
+  const mobileNav = document.querySelector('#mobile-nav');
+  mobileNav.innerHTML = nav;
+  mobileNav.setAttribute('aria-label', `${persona.name} mobile navigation`);
   const innerNav = personaKey === 'owner' ? '#portal-tabs' : '#crew-tabs';
   document.querySelector(innerNav).innerHTML = nav;
   document.querySelectorAll('[data-capabilities]').forEach((element) => { element.innerHTML = unit.capabilities.map((capability) => `<span><b aria-hidden="true">✓</b>${capability}</span>`).join(''); });
