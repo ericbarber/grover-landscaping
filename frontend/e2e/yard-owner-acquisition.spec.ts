@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { workspaceRolloutFixture } from './workspace-rollout-fixture';
 
 async function openConnectCare(page: Page) {
   const connectCare = page.getByRole('button', { name: 'Connect care', exact: true });
@@ -27,6 +28,7 @@ test('a verified owner creates a private profile and reconfirms a changed addres
       username: 'Local Developer',
       verified_email: 'owner@example.com',
       claim_roles: [],
+      workspace_rollout: workspaceRolloutFixture(),
       memberships: [],
     }),
   }));
@@ -351,7 +353,7 @@ test('an owner safely retries approval and reconciles a stale revocation after l
   }));
   await page.route('**/me/access', (route) => route.fulfill({
     contentType: 'application/json', body: JSON.stringify({
-      user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], memberships: [],
+      user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], workspace_rollout: workspaceRolloutFixture(), memberships: [],
     }),
   }));
   await page.route('**/owner-workspace', (route) => route.fulfill({
@@ -497,7 +499,7 @@ test('an owner confirms an assessment window and uses only the shared conversati
   }));
   await page.route('**/me/access', (route) => route.fulfill({
     contentType: 'application/json', body: JSON.stringify({
-      user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], memberships: [],
+      user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], workspace_rollout: workspaceRolloutFixture(), memberships: [],
     }),
   }));
   await page.route('**/owner-workspace', (route) => route.fulfill({
@@ -603,7 +605,7 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
   };
 
   await page.route('**/auth/config', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }) }));
-  await page.route('**/me/access', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], memberships: [] }) }));
+  await page.route('**/me/access', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], workspace_rollout: workspaceRolloutFixture(), memberships: [] }) }));
   await page.route('**/owner-workspace', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ owner_user_id: 'local-development-user', verified_email: 'owner@example.com', display_name: 'Morgan Reyes', status: 'active', persisted: true }) }));
   await page.route('**/owner-properties', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify([property]) }));
   await page.route('**/owner-properties/owner_property_4/yard-brief', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ brief_id: 'brief_4', owner_user_id: 'local-development-user', property_id: 'owner_property_4', version: 2, status: 'ready', yard_areas: ['Front yard', 'Back yard'], care_goals: ['Routine upkeep'], cadence_preference: 'every_two_weeks', considerations: '', author_source: 'yard_owner', persisted: true }) }));

@@ -9,7 +9,9 @@
 5. API clients attach the Cognito access token as `Authorization: Bearer <token>`.
 6. The Rust API verifies the RS256 signature with Cognito JWKS, issuer, app client ID, expiration, and `token_use=access`.
 7. The browser loads `GET /me/access` and keeps protected navigation hidden until
-   active organization access is verified.
+   active organization access is verified. The response also includes a
+   versioned, server-derived `workspace_rollout` projection; its product
+   capabilities currently remain default off and do not replace API authority.
 8. If access persistence is unavailable, the browser shows a dedicated retry
    state and does not infer an empty membership, role, or workspace.
 9. The API maps `cognito:groups` to coarse claims and applies route-level,
@@ -42,6 +44,11 @@ Cognito groups provide coarse application roles:
 - `PropertyManager`
 - `SupportAdmin`
 
+The React persona catalog also contains reserved Dispatcher and Billing
+Administrator views, but neither is an authoritative backend/API role yet. They
+must not be synthesized from `Manager`; adding either requires an explicit role
+and authorization contract.
+
 Manager/owner/support roles can change authorized operational structure. Crew
 roles can read assigned operational data and update field progress. Property
 owners use separate self-scoped acquisition and customer-safe routes; property
@@ -54,6 +61,10 @@ unscoped group claim does not expose protected field or manager destinations.
 unscoped `OrganizationOwner` claim can reach first-owner organization bootstrap.
 An otherwise authenticated account without active membership receives Home only
 with invitation/restoration guidance.
+
+The [workspace rollout capability contract](workspace-rollout-capability-contract.md)
+documents the exact `/me/access` projection, scope rules, no-role recovery, and
+next cohort-control phases.
 
 ## Local Authenticated Runtime
 

@@ -652,6 +652,49 @@ interface ApiPrincipalAccessSummary {
   verified_email?: string | null;
   claim_roles: AccessRole[];
   memberships: ApiOrganizationMembership[];
+  workspace_rollout: ApiWorkspaceRolloutProjection;
+}
+
+interface ApiWorkspaceRolloutProjection {
+  contract_version: number;
+  rollout_mode: 'default_off';
+  personas: Array<{
+    persona_id: WorkspaceRolloutPersonaId;
+    scope: {
+      scope_type: string;
+      scope_id?: string | null;
+      organization_id?: string | null;
+    };
+    enabled_unit?: string | null;
+    capabilities: Record<string, boolean>;
+  }>;
+}
+
+export type WorkspaceRolloutPersonaId =
+  | 'yard-owner'
+  | 'property-manager'
+  | 'crew-lead'
+  | 'crew-member'
+  | 'company-owner'
+  | 'company-manager'
+  | 'dispatcher'
+  | 'billing-admin'
+  | 'support'
+  | 'general';
+
+export interface WorkspaceRolloutProjection {
+  contractVersion: number;
+  rolloutMode: 'default_off';
+  personas: Array<{
+    personaId: WorkspaceRolloutPersonaId;
+    scope: {
+      scopeType: string;
+      scopeId: string | null;
+      organizationId: string | null;
+    };
+    enabledUnit: string | null;
+    capabilities: Record<string, boolean>;
+  }>;
 }
 
 export interface PrincipalAccessSummary {
@@ -660,6 +703,7 @@ export interface PrincipalAccessSummary {
   verifiedEmail: string | null;
   claimRoles: AccessRole[];
   memberships: OrganizationMembership[];
+  workspaceRollout: WorkspaceRolloutProjection;
 }
 
 interface ApiBootstrapOrganizationResponse {
@@ -1402,6 +1446,20 @@ export function toPrincipalAccessSummary(
     verifiedEmail: summary.verified_email ?? null,
     claimRoles: summary.claim_roles,
     memberships: summary.memberships.map(toOrganizationMembership),
+    workspaceRollout: {
+      contractVersion: summary.workspace_rollout.contract_version,
+      rolloutMode: summary.workspace_rollout.rollout_mode,
+      personas: summary.workspace_rollout.personas.map((persona) => ({
+        personaId: persona.persona_id,
+        scope: {
+          scopeType: persona.scope.scope_type,
+          scopeId: persona.scope.scope_id ?? null,
+          organizationId: persona.scope.organization_id ?? null,
+        },
+        enabledUnit: persona.enabled_unit ?? null,
+        capabilities: persona.capabilities,
+      })),
+    },
   };
 }
 

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { workspaceRolloutFixture } from './workspace-rollout-fixture';
 
 async function mockProviderOwner(page: Page, includeReadiness = false) {
   await page.route('http://localhost:8080/**', (route) => {
@@ -18,6 +19,7 @@ async function mockProviderOwner(page: Page, includeReadiness = false) {
         contentType: 'application/json',
         body: JSON.stringify({
           user_id: 'owner_1', username: 'Olivia — Organization Owner', verified_email: 'owner@example.test', claim_roles: ['OrganizationOwner'],
+          workspace_rollout: workspaceRolloutFixture('OrganizationOwner', 'organization', 'org_1', 'org_1'),
           memberships: [{ id: 'membership_1', organization_id: 'org_1', organization_name: 'Desert Bloom', organization_type: 'yard_care_company', user_id: 'owner_1', display_name: 'Olivia — Organization Owner', role: 'OrganizationOwner', status: 'active', scope_type: 'organization', scope_id: 'org_1' }],
         }),
       });

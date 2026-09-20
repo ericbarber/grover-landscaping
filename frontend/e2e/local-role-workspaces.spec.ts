@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { workspaceRolloutFixture } from './workspace-rollout-fixture';
 
 const reviewers = [
   ['organization-owner', 'Olivia — Organization Owner', 'OrganizationOwner'],
@@ -57,6 +58,7 @@ test.beforeEach(async ({ page }) => {
           username: displayName,
           verified_email: `${reviewerId}@example.test`,
           claim_roles: [role],
+          workspace_rollout: workspaceRolloutFixture(role, 'organization', 'org_demo_landscaping', 'org_demo_landscaping'),
           memberships: [{
             id: `membership-${reviewerId}`,
             organization_id: 'org_demo_landscaping',
@@ -104,6 +106,7 @@ test('workspace access verification fails closed and recovers without a reload',
         username: 'Olivia — Organization Owner',
         verified_email: 'organization-owner@example.test',
         claim_roles: ['OrganizationOwner'],
+        workspace_rollout: workspaceRolloutFixture('OrganizationOwner', 'organization', 'org_demo_landscaping', 'org_demo_landscaping'),
         memberships: [{
           id: 'membership-organization-owner',
           organization_id: 'org_demo_landscaping',
@@ -142,6 +145,7 @@ test('an unscoped role claim receives Home only until membership is assigned', a
       username: 'Carlos — Crew Member',
       verified_email: 'crew-member@example.test',
       claim_roles: ['CrewMember'],
+      workspace_rollout: workspaceRolloutFixture('CrewMember'),
       memberships: [],
     }),
   }));
