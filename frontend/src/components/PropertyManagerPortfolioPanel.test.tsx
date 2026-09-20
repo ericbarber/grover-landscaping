@@ -1,7 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { CustomerAccountProfile, CustomerPropertyProfile } from '../domain/jobs';
-import { PropertyManagerPortfolioPanel } from './PropertyManagerPortfolioPanel';
+import {
+  PropertyManagerPortfolioPanel,
+  propertyManagerPortfolioCapabilities,
+} from './PropertyManagerPortfolioPanel';
 
 const customer: CustomerAccountProfile = {
   id: 'customer_1',
@@ -76,6 +79,66 @@ function renderPortfolio(overrides: Partial<Parameters<typeof PropertyManagerPor
 }
 
 describe('PropertyManagerPortfolioPanel', () => {
+  it('adds portfolio capabilities cumulatively and fails closed', () => {
+    const disabled = {
+      portfolioRead: false,
+      propertySearch: false,
+      serviceHistory: false,
+      deliveredProof: false,
+      questionsAndDecisions: false,
+    };
+    expect(propertyManagerPortfolioCapabilities(null)).toEqual(disabled);
+    expect(propertyManagerPortfolioCapabilities('unknown')).toEqual(disabled);
+    expect(propertyManagerPortfolioCapabilities('p1')).toEqual({
+      portfolioRead: true,
+      propertySearch: false,
+      serviceHistory: false,
+      deliveredProof: false,
+      questionsAndDecisions: false,
+    });
+    expect(propertyManagerPortfolioCapabilities('p2')).toMatchObject({
+      portfolioRead: true,
+      propertySearch: true,
+      serviceHistory: true,
+      deliveredProof: true,
+      questionsAndDecisions: false,
+    });
+    expect(propertyManagerPortfolioCapabilities('p3').questionsAndDecisions).toBe(true);
+    expect(propertyManagerPortfolioCapabilities('p4').questionsAndDecisions).toBe(true);
+  });
+
+  it('keeps the P1 portfolio focused on readiness and coverage', () => {
+    const markup = renderPortfolio({ rolloutUnit: 'p1' });
+
+    expect(markup).toContain('Customer-safe readiness and next service');
+    expect(markup).toContain('>Overview<');
+    expect(markup).toContain('>Properties<');
+    expect(markup).not.toContain('>Proof<');
+    expect(markup).not.toContain('>Approvals<');
+    expect(markup).not.toContain('Search portfolio properties');
+    expect(markup).not.toContain('Service history');
+    expect(markup).not.toContain('Waiting on you');
+  });
+
+  it('adds proof at P2 and questions and decisions at P3', () => {
+    const p2Markup = renderPortfolio({ rolloutUnit: 'p2' });
+    const p3Markup = renderPortfolio({ rolloutUnit: 'p3' });
+
+    expect(p2Markup).toContain('>Proof<');
+    expect(p2Markup).not.toContain('>Approvals<');
+    expect(p3Markup).toContain('>Proof<');
+    expect(p3Markup).toContain('>Approvals<');
+    expect(p3Markup).toContain('Waiting on you');
+  });
+
+  it('withholds all portfolio data for an unknown managed unit', () => {
+    const markup = renderPortfolio({ rolloutUnit: null });
+
+    expect(markup).toContain('Portfolio access is not enabled for this account.');
+    expect(markup).not.toContain(customer.displayName);
+    expect(markup).not.toContain('Roosevelt Courtyard');
+  });
+
   it('renders the connected customer-safe hierarchy using only scoped properties', () => {
     const markup = renderPortfolio();
 

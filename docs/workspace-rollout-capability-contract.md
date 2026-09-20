@@ -12,11 +12,14 @@ unit across current persona scopes, so a lower or suspended scope fails closed.
 Company, property-management, dispatch, billing, and support management menus
 are also unit-bounded. Field route, stop, job, evidence, report, and amendment
 controls now follow the Crew Lead, Crew Member, company-oversight, and
-dispatcher unit boundaries. Property Manager portfolio details are the
-remaining React composition slice. Existing offline work remains stored and
+dispatcher unit boundaries. Existing offline work remains stored and
 counted in the shared pending-work indicator, while automatic and manual replay
 wait for the corresponding execution, evidence, or route-change unit to be
-active.
+active. Property Manager readiness, property search, service history, delivered
+proof, questions/decisions, and administration are also composed cumulatively
+from P1 through P4; P1 does not fetch P2/P3 history.
+The verified-user middleware admits only the supported recommendation list,
+detail, and decision methods before the repository repeats exact visit access.
 
 ## Response
 
@@ -140,8 +143,6 @@ foundation does not synthesize either role from Manager.
 
 ## Next implementation slices
 
-1. Shape remaining Property Manager portfolio contextual controls from
-   capabilities while retaining deep-link and API denial.
-2. Add protected success and cross-resource denial smoke per enabled unit.
-3. Resolve Dispatcher and BillingAdmin as explicit roles or remove the
+1. Add protected success and cross-resource denial smoke per enabled unit.
+2. Resolve Dispatcher and BillingAdmin as explicit roles or remove the
    unsupported persona keys before either can enter a cohort.

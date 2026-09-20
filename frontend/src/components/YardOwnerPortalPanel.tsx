@@ -149,7 +149,7 @@ const questionTopics: Array<{ value: CustomerVisitQuestionTopic; label: string }
   { value: 'other', label: 'Something else' },
 ];
 
-function CustomerVisitQuestions({ visit }: { visit: CustomerPortalVisitSummary }) {
+export function CustomerVisitQuestions({ visit }: { visit: CustomerPortalVisitSummary }) {
   const reference = visit.customerVisitReference;
   const [open, setOpen] = useState(false);
   const [thread, setThread] = useState<CustomerVisitThread | null>(null);

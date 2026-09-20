@@ -68,9 +68,11 @@ management categories and tools now follow cumulative unit boundaries as well,
 including progressive Support recovery/privacy exposure and fail-closed unknown
 units. Field route/job controls now follow cumulative Crew Lead/Crew Member
 execution and evidence units, reserve route amendments for C4, and keep
-company/dispatcher job access read-only. Property Manager portfolio controls
-and protected per-unit smoke remain; Dispatcher and Billing Administrator also
-require authoritative backend roles.
+company/dispatcher job access read-only. Property Manager portfolio content now
+advances from P1 readiness to P2 search/history/proof, P3 questions/decisions,
+and P4 administration without fetching later history at P1. Protected per-unit
+smoke remains; Dispatcher and Billing Administrator also require authoritative
+backend roles.
 
 ## Delivered UX Context
 

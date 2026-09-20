@@ -83,16 +83,18 @@ Current state:
   C2/CM2, evidence and reports at C3/CM3, Crew Lead-only route amendments at
   C4, and read-only company/dispatcher job oversight. Queued offline work stays
   stored and counted but cannot replay without its corresponding active unit.
-  Property Manager portfolio details still require contextual shaping, and no
-  live cohort has been enabled.
+  Property Manager composition now keeps P1 to readiness and coverage, adds
+  property search, service history, and delivered proof at P2, questions and
+  decisions at P3, and the already-bounded Manage tools at P4. Managed P1 also
+  avoids P2/P3 history reads. No live cohort has been enabled.
 
 Next design slices:
 
-1. Functional rollout control: shape the remaining Property Manager portfolio
-   controls from the delivered projection, then add protected per-unit success
-   and denial smoke without weakening API authorization or discarding queued
-   work. Dispatcher and Billing Administrator require an explicit backend role
-   contract before either projection can be enabled.
+1. Functional rollout control: add protected per-unit success and denial smoke
+   for the delivered navigation and contextual composition without weakening
+   API authorization or discarding queued work. Dispatcher and Billing
+   Administrator require an explicit backend role contract before either
+   projection can be enabled.
 2. Manager continuity: add authorized status and urgency to the six-category
    Manage overview without duplicating its destination tools.
 3. Shell compression: remove redundant hosted identity/persona presentation and
