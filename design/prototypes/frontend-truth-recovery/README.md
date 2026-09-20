@@ -1,7 +1,8 @@
 # Frontend Truth and Recovery Design
 
-This proposed design follows the September 3 current-frontend audit. It is
-separate from the dated production mirror and does not claim implementation.
+This adopted-behavior reference follows the September 3 current-frontend
+audit. It is separate from the dated production mirror; production React and
+API contracts remain authoritative for exact composition and behavior.
 
 It defines two bounded improvements:
 
