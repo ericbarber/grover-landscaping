@@ -32,11 +32,11 @@
   cross-resource denial. Input validation, bounded requests, redacted failures,
   six failure-policy tests, release preflight, and CI integration are delivered;
   no hosted cohort pass is claimed.
-- 2026-09-19: Synchronized the Yard Owner lost-response browser journey to the
-  intentional approval and revocation request failures and the subsequent
-  revocation-conflict response before asserting their recovery state. The test
-  retains its exact idempotency-key checks, default assertion timeout, and
-  zero-retry policy while removing browser scheduling sensitivity from those
+- 2026-09-19: Synchronized the Yard Owner lost-response browser journey to
+  completions controlled by its mock route handlers for the intentional
+  approval and revocation failures and the subsequent revocation conflict. The
+  test retains its exact idempotency-key checks, default assertion timeout, and
+  zero-retry policy while removing browser event-order sensitivity from those
   network boundaries.
 - 2026-09-19: Isolated checklist persistence integration tests that share the
   seeded `job_1001_yard_service` row. The state/read and offline-idempotency
