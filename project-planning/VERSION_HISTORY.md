@@ -28,7 +28,9 @@
   property search, service history, and delivered proof; P3 adds exact-visit
   questions and versioned recommendations; and P4 retains its scoped Manage
   tools. Unknown managed units withhold portfolio data, and P1 does not request
-  later proof or decision history.
+  later proof or decision history. Hidden destinations now fail closed during
+  unit changes, and recommendation routes admit only supported methods before
+  exact-visit repository authorization.
 - 2026-09-05: Bounded field controls by rollout unit. C1/CM1 routes are
   read-only, C2/CM2 add assigned-job progress, C3/CM3 add checklist, photo, and
   report evidence, and only Crew Lead C4 can request route changes. Company and

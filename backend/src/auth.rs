@@ -585,6 +585,19 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     if path.starts_with("/customer-portal/visits/") && path.ends_with("/proof") {
         return principal.verified_email.is_some() && *method == Method::GET;
     }
+    if let Some(suffix) = path.strip_prefix("/customer-portal/visits/") {
+        let segments = suffix.split('/').collect::<Vec<_>>();
+        match segments.as_slice() {
+            [_, "recommendations"] => {
+                return principal.verified_email.is_some() && *method == Method::GET;
+            }
+            [_, "recommendations", _] => {
+                return principal.verified_email.is_some()
+                    && (*method == Method::GET || *method == Method::POST);
+            }
+            _ => {}
+        }
+    }
     if path == "/owner-workspace" {
         return principal.verified_email.is_some()
             && (*method == Method::GET || *method == Method::PUT);
@@ -1967,7 +1980,7 @@ mod tests {
     }
 
     #[test]
-    fn visit_question_routes_separate_customer_and_provider_roles() {
+    fn customer_visit_routes_separate_customer_and_provider_roles() {
         let customer_path = "/customer-portal/visits/customer_visit_1/messages";
         for method in [Method::GET, Method::POST] {
             assert!(is_protected_api_path(customer_path));
@@ -1988,6 +2001,36 @@ mod tests {
             &principal(AccessRole::PropertyOwner),
             &Method::POST,
             proof_path
+        ));
+
+        let recommendation_list_path = "/customer-portal/visits/customer_visit_1/recommendations";
+        let recommendation_detail_path =
+            "/customer-portal/visits/customer_visit_1/recommendations/customer_recommendation_1";
+        for role in [AccessRole::PropertyOwner, AccessRole::PropertyManager] {
+            assert!(is_authorized(
+                &principal(role.clone()),
+                &Method::GET,
+                recommendation_list_path
+            ));
+            for method in [Method::GET, Method::POST] {
+                assert!(is_authorized(
+                    &principal(role.clone()),
+                    &method,
+                    recommendation_detail_path
+                ));
+            }
+        }
+        assert!(!is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &Method::POST,
+            recommendation_list_path
+        ));
+        let mut unverified = principal(AccessRole::PropertyOwner);
+        unverified.verified_email = None;
+        assert!(!is_authorized(
+            &unverified,
+            &Method::GET,
+            recommendation_detail_path
         ));
 
         for (method, path) in [
@@ -2037,6 +2080,18 @@ mod tests {
         for (method, path) in [
             (Method::GET, "/me/access"),
             (Method::GET, "/customer-portal/visits"),
+            (
+                Method::GET,
+                "/customer-portal/visits/customer_visit_1/recommendations",
+            ),
+            (
+                Method::GET,
+                "/customer-portal/visits/customer_visit_1/recommendations/customer_recommendation_1",
+            ),
+            (
+                Method::POST,
+                "/customer-portal/visits/customer_visit_1/recommendations/customer_recommendation_1",
+            ),
             (Method::GET, "/owner-workspace"),
             (Method::PUT, "/owner-workspace"),
             (Method::GET, "/owner-properties"),

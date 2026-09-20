@@ -16,8 +16,10 @@ dispatcher unit boundaries. Existing offline work remains stored and
 counted in the shared pending-work indicator, while automatic and manual replay
 wait for the corresponding execution, evidence, or route-change unit to be
 active. Property Manager readiness, property search, service history, delivered
-proof, questions/decisions, and administration are
-also composed cumulatively from P1 through P4; P1 does not fetch P2/P3 history.
+proof, questions/decisions, and administration are also composed cumulatively
+from P1 through P4; P1 does not fetch P2/P3 history.
+The verified-user middleware admits only the supported recommendation list,
+detail, and decision methods before the repository repeats exact visit access.
 
 ## Response
 

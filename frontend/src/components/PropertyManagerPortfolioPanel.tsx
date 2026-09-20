@@ -154,8 +154,9 @@ export function PropertyManagerPortfolioPanel({
   const pendingBids = capabilities.questionsAndDecisions
     ? projectBids.filter((bid) => bid.status === 'sent')
     : [];
+  const effectiveSearch = capabilities.propertySearch ? search.trim().toLowerCase() : '';
   const filteredProperties = visibleProperties.filter((property) => (
-    `${property.displayName} ${property.address}`.toLowerCase().includes(search.trim().toLowerCase())
+    `${property.displayName} ${property.address}`.toLowerCase().includes(effectiveSearch)
   ));
   const hasPartialData = (capabilities.deliveredProof && hasReportHistoryError)
     || (capabilities.questionsAndDecisions && hasProjectBidHistoryError);
@@ -381,7 +382,7 @@ export function PropertyManagerPortfolioPanel({
           </div>
         ) : null}
 
-        {destination === 'proof' ? (
+        {destination === 'proof' && capabilities.deliveredProof ? (
           <div>
             <p className="grover-eyebrow">Delivered evidence</p>
             <h1 className="mt-2 font-display text-4xl font-black text-forest">Proof ready for review.</h1>
@@ -397,7 +398,7 @@ export function PropertyManagerPortfolioPanel({
           </div>
         ) : null}
 
-        {destination === 'approvals' ? (
+        {destination === 'approvals' && capabilities.questionsAndDecisions ? (
           <div>
             <p className="grover-eyebrow">Approval center</p>
             <h1 className="mt-2 font-display text-4xl font-black text-forest">Recommendations and recorded decisions.</h1>
