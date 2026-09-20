@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Ready for next safe slice | Frontend truth/recovery adoption is complete | Shared typography-role boundary from DFR-08 |
+| Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -283,6 +283,24 @@ Exit evidence:
 - Date classification has timezone-safe domain coverage, a phone route journey
   proves current mutation and historical read-only behavior, and protected Yard
   Owner outcomes never reveal stale or illustrative property facts.
+
+### UX5 — Authenticated typography roles
+
+State: delivered.
+
+Deliver:
+
+- Reserve editorial type for audience promise, place, service identity,
+  customer dates, and delivered-care moments.
+- Use explicit interface type for task destinations, loading/failure states,
+  operational headings, queues, decisions, and monetary values.
+- Record the rule in the shared foundation and apply it across the representative
+  Yard Owner, Property Manager, field, manager, and proposal surfaces.
+
+Exit evidence:
+
+- Focused component assertions distinguish editorial promises from operational
+  task headings; the full frontend suite and production build remain green.
 
 ## Later, not active
 

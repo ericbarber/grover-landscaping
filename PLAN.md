@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | All ten signed-in personas now have validated minimalist functional-unit rollout contracts | Implement the shared server-derived rollout control plane, then manager continuity |
+| Design | Repository adoption is complete for rollout composition and audited frontend continuity | Await hosted cohort evidence or the Dispatcher/Billing role decision |
 
 ## Status Legend
 
@@ -122,6 +122,10 @@ Next design slices:
    removed. Yard Owner loading, valid-empty, access-ended, inconsistent, and
    unavailable states withhold stale facts and provide retry/access recheck plus
    Return Home without inventing provider-contact or support behavior.
+6. Typography roles: delivered. Editorial type is reserved for audience,
+   place, service, and delivered-care moments. Authenticated task destinations,
+   operational headings, loading/failure states, decisions, queues, and monetary
+   values now explicitly use the interface family.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.

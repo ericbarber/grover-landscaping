@@ -282,7 +282,7 @@ export function PropertyManagerPortfolioPanel({
             <p className="grover-eyebrow">Portfolio overview</p>
             <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h1 className="font-display text-4xl font-black text-forest">Start with what needs attention.</h1>
+                <h1 className="grover-type-operational text-4xl font-black text-forest">Start with what needs attention.</h1>
                 <p className="mt-2 text-sm text-slate-600">
                   {capabilities.questionsAndDecisions
                     ? 'Readiness, exceptions, proof, and decisions stay connected to their properties.'
@@ -385,7 +385,7 @@ export function PropertyManagerPortfolioPanel({
         {destination === 'proof' && capabilities.deliveredProof ? (
           <div>
             <p className="grover-eyebrow">Delivered evidence</p>
-            <h1 className="mt-2 font-display text-4xl font-black text-forest">Proof ready for review.</h1>
+            <h1 className="grover-type-operational mt-2 text-4xl font-black text-forest">Proof ready for review.</h1>
             <p className="mt-2 text-sm text-slate-600">Customer-safe completion records across the selected portfolio.</p>
             {isLoadingReportHistory ? <p className="mt-5 text-sm font-bold text-slate-600" role="status">Loading delivered proof…</p> : null}
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -401,7 +401,7 @@ export function PropertyManagerPortfolioPanel({
         {destination === 'approvals' && capabilities.questionsAndDecisions ? (
           <div>
             <p className="grover-eyebrow">Approval center</p>
-            <h1 className="mt-2 font-display text-4xl font-black text-forest">Recommendations and recorded decisions.</h1>
+            <h1 className="grover-type-operational mt-2 text-4xl font-black text-forest">Recommendations and recorded decisions.</h1>
             <p className="mt-2 text-sm text-slate-600">Review customer-safe scope and total before responding.</p>
             {isLoadingProjectBids ? <p className="mt-5 text-sm font-bold text-slate-600" role="status">Loading recommendations…</p> : null}
             <div className="mt-5 space-y-3">

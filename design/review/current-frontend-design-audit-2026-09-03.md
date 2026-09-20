@@ -165,6 +165,13 @@ human-service moments. Use the sans face for task choice, data state, and
 operational controls. Record that rule in the shared foundation before broader
 visual tuning.
 
+**Design response — delivered September 19, 2026:** The shared typography
+foundation now names the production semantic rule and exposes an explicit
+operational type utility. Route, Yard Owner, Property Manager, Schedule, Team,
+Reports, Recovery, recommendation, and proposal surfaces use interface type for
+tasks, states, queues, decisions, and money while retaining editorial type for
+greetings, place/service identity, dates, and delivered-care moments.
+
 ## What is working well
 
 - Persona-specific public and authenticated content now avoids cross-audience
@@ -196,6 +203,9 @@ visual tuning.
    family inventory classifies dated mirrors, adopted behavior, design direction,
    historical input, and product-gated boundaries; only the prototype needed by
    the next production slice should be refreshed.
+6. **Typography roles — delivered September 19, 2026.** The shared foundation
+   names the editorial/operational boundary and the authenticated surfaces apply
+   it to task destinations, state, queues, decisions, and values.
 
 Product-gated concern,
 provider-contact, notification/preference, external-review, marketplace, and
