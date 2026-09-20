@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-19: Added the protected workspace-rollout smoke contract. Operators
+  can validate one exact hosted persona/unit/scope, its required cumulative and
+  forbidden later capabilities, an authorized resource read, and a controlled
+  cross-resource denial. Input validation, bounded requests, redacted failures,
+  six failure-policy tests, release preflight, and CI integration are delivered;
+  no hosted cohort pass is claimed.
 - 2026-09-19: Synchronized the Yard Owner lost-response browser journey to the
   intentional approval and revocation request failures and the subsequent
   revocation-conflict response before asserting their recovery state. The test

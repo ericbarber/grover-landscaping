@@ -984,6 +984,82 @@ mod tests {
     }
 
     #[test]
+    fn every_supported_rollout_unit_projects_exact_cumulative_capabilities() {
+        let cases: &[(AccessRole, &str, &[&str], &[&str])] = &[
+            (
+                AccessRole::PropertyOwner,
+                "yard-owner",
+                YARD_OWNER_UNITS,
+                YARD_OWNER,
+            ),
+            (
+                AccessRole::PropertyManager,
+                "property-manager",
+                PROPERTY_MANAGER_UNITS,
+                PROPERTY_MANAGER,
+            ),
+            (
+                AccessRole::CrewLead,
+                "crew-lead",
+                CREW_LEAD_UNITS,
+                CREW_LEAD,
+            ),
+            (
+                AccessRole::CrewMember,
+                "crew-member",
+                CREW_MEMBER_UNITS,
+                CREW_MEMBER,
+            ),
+            (
+                AccessRole::OrganizationOwner,
+                "company-owner",
+                COMPANY_OWNER_UNITS,
+                COMPANY_OWNER,
+            ),
+            (
+                AccessRole::Manager,
+                "company-manager",
+                COMPANY_MANAGER_UNITS,
+                COMPANY_MANAGER,
+            ),
+            (AccessRole::SupportAdmin, "support", SUPPORT_UNITS, SUPPORT),
+        ];
+
+        for (role, persona_id, units, capabilities) in cases {
+            assert_eq!(units.len(), capabilities.len());
+            for (enabled_index, unit_id) in units.iter().enumerate() {
+                let assignments = [assignment(role.clone(), "test-scope", Some("scope-1"))];
+                let mut projection = default_workspace_rollout_projection(&[], &assignments);
+                apply_workspace_rollout_enrollments(
+                    &mut projection,
+                    &[WorkspaceRolloutEnrollment {
+                        persona_id: (*persona_id).to_string(),
+                        organization_id: Some("org-1".to_string()),
+                        scope_type: "test-scope".to_string(),
+                        scope_id: Some("scope-1".to_string()),
+                        enabled_unit: (*unit_id).to_string(),
+                        status: "active".to_string(),
+                    }],
+                );
+
+                let persona = projection
+                    .personas
+                    .iter()
+                    .find(|candidate| candidate.persona_id == *persona_id)
+                    .expect("supported persona projection should exist");
+                assert_eq!(persona.enabled_unit.as_deref(), Some(*unit_id));
+                for (capability_index, capability) in capabilities.iter().enumerate() {
+                    assert_eq!(
+                        persona.capabilities[*capability],
+                        capability_index <= enabled_index,
+                        "{persona_id}/{unit_id} projected an incorrect {capability} value",
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
     fn mismatched_scope_or_unknown_unit_never_enables_a_projection() {
         let assignments = [assignment(
             AccessRole::PropertyOwner,

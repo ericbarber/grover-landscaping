@@ -138,6 +138,43 @@ bounds every request, withholds response bodies from failures, and confirms the
 completed photo can be read back from the exact persisted job. Validate this
 runner without a live endpoint using `bash scripts/smoke-production.test.sh`.
 
+After an exact workspace cohort enrollment is enabled, run the rollout smoke
+with that cohort identity. The following CM3 shape is illustrative; use
+controlled authorized and other-tenant records that match the persona’s real
+scope:
+
+```bash
+BASE_URL=https://grover-landscaping.onrender.com \
+ACCESS_TOKEN='<current cohort Cognito access token>' \
+SMOKE_ROLLOUT_PERSONA=crew-member \
+SMOKE_ROLLOUT_UNIT=cm3 \
+SMOKE_ROLLOUT_SCOPE_TYPE=crew \
+SMOKE_ROLLOUT_SCOPE_ID=crew_controlled \
+SMOKE_ROLLOUT_ORGANIZATION_ID=org_controlled \
+SMOKE_ROLLOUT_REQUIRED_CAPABILITIES=assigned_work,job_execution,field_evidence \
+SMOKE_ROLLOUT_FORBIDDEN_CAPABILITIES=personal_recovery \
+SMOKE_ROLLOUT_SUCCESS_PATHS_JSON='["/jobs/job_controlled"]' \
+SMOKE_ROLLOUT_DENIAL_PATHS_JSON='["/jobs/job_other_tenant"]' \
+node scripts/smoke-workspace-rollout.mjs
+```
+
+Use `none` only when the expected scope ID, organization ID, or later-unit
+capability list is intentionally absent. The runner requires contract version
+2 in managed cohort mode, an exact persona/unit/scope match, every named
+cumulative capability, every named later capability still false, at least one
+authorized `GET`, and at least one exact `403` or explicitly configured `404`
+cross-resource denial. It prints no token, scope ID, resource path, or response
+body. Run it once for every unit actually entering a cohort; do not claim one
+identity proves another persona or scope. Write-capability units additionally
+need their existing retry, conflict, unknown-outcome, and read-after-write
+contract evidence—the read-only rollout runner does not synthesize writes.
+
+Validate the runner itself without a live endpoint:
+
+```bash
+node --test scripts/smoke-workspace-rollout.test.mjs
+```
+
 Once smoke passes, complete the restricted copy of
 [`protected-release-evidence.template.json`](protected-release-evidence.template.json)
 and run `node scripts/validate-protected-release-evidence.mjs

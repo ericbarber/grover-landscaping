@@ -90,11 +90,13 @@ Current state:
 
 Next design slices:
 
-1. Functional rollout control: add protected per-unit success and denial smoke
-   for the delivered navigation and contextual composition without weakening
-   API authorization or discarding queued work. Dispatcher and Billing
-   Administrator require an explicit backend role contract before either
-   projection can be enabled.
+1. Functional rollout control: the credential-safe per-unit hosted runner now
+   verifies exact managed projection, cumulative/forbidden capabilities,
+   authorized resource reads, and cross-resource denial. Executing it for real
+   cohorts remains an external R2 gate; write units also retain their workflow-
+   specific replay/conflict evidence. Dispatcher and Billing Administrator
+   require an explicit backend role contract before either projection can be
+   enabled.
 2. Manager continuity: add authorized status and urgency to the six-category
    Manage overview without duplicating its destination tools.
 3. Shell compression: remove redundant hosted identity/persona presentation and

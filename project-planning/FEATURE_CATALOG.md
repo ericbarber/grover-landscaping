@@ -129,6 +129,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   coverage, P2 property search/service history/delivered proof, P3 exact-visit
   questions and versioned decisions, P4-only administration, fail-closed
   unknown units, and no P2/P3 history fetches during a managed P1 rollout
+- Credential-safe hosted rollout smoke runner requiring an exact version-2
+  managed persona/unit/scope projection, cumulative and forbidden capability
+  assertions, at least one authorized resource read, and at least one exact
+  cross-resource denial without logging tokens, identifiers, paths, or bodies
 - Compact Yard Owner visit history with one expanded customer-safe progress,
   update, questions, recommendations, and proof surface at a time, validated in
   Chromium and iPhone/WebKit phone journeys

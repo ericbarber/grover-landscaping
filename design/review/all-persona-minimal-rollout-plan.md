@@ -26,7 +26,9 @@ composition now progresses from P1
 readiness/coverage through P2 search/history/proof, P3 questions/decisions, and
 the already-bounded P4 administration tools; managed P1 does not request later
 history. Protected unit smoke, operational enablement, and hosted cohorts
-remain.
+remain external. The repository-owned smoke runner is delivered: it checks the
+exact managed projection, cumulative and forbidden capabilities, an authorized
+resource read, and cross-resource denial without logging protected inputs.
 
 ## Production persona source
 

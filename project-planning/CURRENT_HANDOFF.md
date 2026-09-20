@@ -65,12 +65,13 @@ frontend tests, the production build, and focused browser validation.
 ### Partial adoption: all-persona minimal rollout
 
 The validated rollout map now covers all ten signed-in persona designs and 36
-cumulative units. Migration 123 and `/me/access` adopt the shared control-plane
-foundation: exact user/persona/organization/scope enrollments apply only to
-current server-derived roles, units are cumulative, suspension is the rollback
-path, and lifecycle events are immutable. Product capabilities remain default
-off without an exact active enrollment. There is no guarded enrollment API or
-React navigation shaping yet, and no live cohort is claimed.
+cumulative units. The version-2 `/me/access` projection, exact-scope cohort
+persistence, guarded owner/support lifecycle API, managed-versus-legacy state,
+cumulative navigation, Yard Owner, manager, field, and Property Manager
+contextual composition are delivered. A credential-safe hosted runner now
+checks one exact managed unit, required/forbidden capabilities, authorized
+resource reads, and cross-resource denial. Product capabilities remain default
+off without an exact active enrollment, and no live cohort is claimed.
 
 Dispatcher and Billing Administrator remain design-only role keys because the
 authoritative backend/API role union does not contain them. Do not synthesize
@@ -79,11 +80,12 @@ retain their separate product gates.
 
 ### Next input boundary
 
-The next safe rollout slice is a guarded owner/support enrollment read and
-enable/advance/suspend/resume API over the delivered persistence, followed by
-capability-shaped React composition and protected per-unit smoke. Dispatcher/
-Billing role creation, R2 provisioning, and P2 concern/preference behavior each
-remain separate decision or external-input boundaries.
+The repository-owned all-persona rollout foundation and smoke contract are
+complete for the currently authoritative roles. Hosted per-unit execution waits
+on R2 identities, exact resource fixtures, and operator ownership. Dispatcher/
+Billing role creation and P2 concern/preference behavior each remain separate
+product decisions. The next safe repository UX slice is manager Home continuity
+and shell compression; neither may be represented as hosted rollout evidence.
 
 ### Parallel external lane: R2 and R3
 
