@@ -18,8 +18,10 @@ that distinction in the
 | --- | --- | --- |
 | [`../prototypes/yard-owner-minimal-rollout/index.html#overview/map`](../prototypes/yard-owner-minimal-rollout/index.html#overview/map) | [Desktop](current/all-persona-minimal-rollout-desktop-v1.png) · [Mobile](current/all-persona-minimal-rollout-mobile-v1.png) | Ten signed-in persona contracts and 36 cumulative units with minimum launch, authority, dependency, and rollback boundaries |
 
-The rollout artifact is validated design direction, not a hosted cohort or a
-claim that its proposed server capability control is implemented.
+The rollout artifact now represents adopted repository behavior for supported
+roles: server projection, cohort persistence/administration, cumulative
+composition, manager continuity, and protected smoke are implemented. It is not
+hosted cohort evidence, and Dispatcher/Billing backend roles remain gated.
 
 The V2 public artifact is interactive and browser-validated. Its theme, split
 hero, persona continuity, Plan–Care–Proof tour, direct signup paths, and

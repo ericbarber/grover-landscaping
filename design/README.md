@@ -8,7 +8,10 @@ before implementation changes begin.
 Approved behavior is adopted deliberately into React; a prototype is not proof
 that production behavior shipped. The current mapping and implementation order
 live in the
-[`prototype adoption tracker`](../project-planning/PROTOTYPE_ADOPTION.md).
+[`prototype adoption tracker`](../project-planning/PROTOTYPE_ADOPTION.md). The
+[`artifact-status inventory`](ARTIFACT_STATUS.md) classifies every design family
+as a dated current mirror, adopted behavior, design direction, historical input,
+or product-gated boundary.
 
 Open [`index.html`](index.html) in a browser to review the complete visual set.
 The individual SVG files can also be opened directly in a browser, Figma, or an
@@ -113,16 +116,18 @@ New UI work should not skip directly from a roadmap bullet to implementation.
 Back-end or infrastructure work that has no visual consequence can proceed while
 the relevant UI is under review.
 
-## Artifact status labels
+## Artifact classifications
 
-- **Current target:** represents an existing product area whose eventual visual
-  organization is being reviewed.
-- **Current + planned:** combines shipped foundations with clearly identified
-  roadmap additions.
-- **Active design target:** the next delivery slice currently being designed.
-- **Planned target:** an approved roadmap area that is not yet fully delivered.
-- **Future concept:** establishes boundaries and navigation only; it is not an
-  implementation commitment.
+- **Current mirror:** dated rendered-production evidence.
+- **Adopted behavior:** a named workflow or visual decision implemented in React.
+- **Design direction:** reviewed but not fully adopted production work.
+- **Historical input:** retained rationale that is no longer a parity target.
+- **Product-gated boundary:** a concept awaiting a separate product or external
+  decision.
+
+Older status text embedded in generated SVGs records the stage at which that
+artifact was created. Use the [current inventory](ARTIFACT_STATUS.md), not that
+legacy label alone, to interpret it.
 
 ## Review and change process
 
@@ -223,6 +228,9 @@ renderer or a design-tool account to see a proposed screen.
 1. Start with the
    [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) to see
    what is adopted, partial, design ready, product-gated, or only a future concept.
+   Use the [artifact-status inventory](ARTIFACT_STATUS.md) when deciding whether
+   a particular prototype or image is a mirror, adopted behavior, direction, or
+   historical input.
 2. Start functional rollout review with the shared
    [Yard Owner and Crew Lead prototype](prototypes/yard-owner-minimal-rollout/index.html),
    then compare the [customer unit gates](review/yard-owner-minimal-rollout-plan.md)
