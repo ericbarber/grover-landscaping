@@ -121,6 +121,10 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Cumulative manager-workspace composition for company, property-management,
   dispatch, billing, and support personas, with unit-bounded categories/tools
   and suspended or unknown managed units exposing no management tools
+- Status-bearing manager continuity using only each unit's authorized job,
+  report, delivery, activity, and recovery sources, with exact enabled-tool
+  fallbacks, no later-unit background feed reads, and only the selected
+  authorized tool panel mounted
 - Cumulative field-workspace composition with read-only C1/CM1 routes,
   assigned-job execution at C2/CM2, checklist/photo/report evidence at C3/CM3,
   Crew Lead-only route amendments at C4, and read-only company/dispatcher job

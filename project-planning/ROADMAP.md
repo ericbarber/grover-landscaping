@@ -73,6 +73,8 @@ advances from P1 readiness to P2 search/history/proof, P3 questions/decisions,
 and P4 administration without fetching later history at P1. Protected per-unit
 smoke now has a credential-safe executable contract for exact projection,
 cumulative/forbidden capabilities, authorized reads, and cross-resource denial.
+Manager Home now adds unit-bounded status and urgency while preventing later-
+unit feeds and inactive tool panels from mounting or loading in the background.
 Its hosted evidence remains external; Dispatcher and Billing Administrator also
 require authoritative backend roles.
 

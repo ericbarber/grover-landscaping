@@ -652,7 +652,7 @@ interface ApiPrincipalAccessSummary {
   verified_email?: string | null;
   claim_roles: AccessRole[];
   memberships: ApiOrganizationMembership[];
-  workspace_rollout: ApiWorkspaceRolloutProjection;
+  workspace_rollout?: ApiWorkspaceRolloutProjection;
 }
 
 interface ApiWorkspaceRolloutProjection {
@@ -1442,6 +1442,12 @@ function toOrganizationMembership(
 export function toPrincipalAccessSummary(
   summary: ApiPrincipalAccessSummary,
 ): PrincipalAccessSummary {
+  const workspaceRollout = summary.workspace_rollout ?? {
+    contract_version: 1,
+    enforcement_mode: 'legacy' as const,
+    rollout_mode: 'default_off' as const,
+    personas: [],
+  };
   return {
     userId: summary.user_id,
     username: summary.username,
@@ -1449,10 +1455,10 @@ export function toPrincipalAccessSummary(
     claimRoles: summary.claim_roles,
     memberships: summary.memberships.map(toOrganizationMembership),
     workspaceRollout: {
-      contractVersion: summary.workspace_rollout.contract_version,
-      enforcementMode: summary.workspace_rollout.enforcement_mode ?? 'legacy',
-      rolloutMode: summary.workspace_rollout.rollout_mode,
-      personas: summary.workspace_rollout.personas.map((persona) => ({
+      contractVersion: workspaceRollout.contract_version,
+      enforcementMode: workspaceRollout.enforcement_mode ?? 'legacy',
+      rolloutMode: workspaceRollout.rollout_mode,
+      personas: workspaceRollout.personas.map((persona) => ({
         personaId: persona.persona_id,
         scope: {
           scopeType: persona.scope.scope_type,

@@ -220,13 +220,13 @@ jobs:
           npm run test:e2e:cross-browser
         working-directory: frontend
 
-      - name: Validate manager recovery handoff
+      - name: Validate manager continuity handoffs
         run: >-
           /usr/bin/time -f
           'manager_recovery_journey elapsed=%e user=%U system=%S max_rss_kb=%M'
           npx playwright test --config playwright.config.ts
           --project=chromium-mobile e2e/local-role-workspaces.spec.ts
-          --grep 'manager Recovery inspects an exception and returns to affected work'
+          --grep 'managed first unit withholds later manager feeds|manager Schedule opens a responsive route board and planning inspector|manager Recovery inspects an exception and returns to affected work|manager completion review opens the selected Job report workflow'
         working-directory: frontend
 
   pilot-assurance:

@@ -70,8 +70,12 @@ persistence, guarded owner/support lifecycle API, managed-versus-legacy state,
 cumulative navigation, Yard Owner, manager, field, and Property Manager
 contextual composition are delivered. A credential-safe hosted runner now
 checks one exact managed unit, required/forbidden capabilities, authorized
-resource reads, and cross-resource denial. Product capabilities remain default
-off without an exact active enrollment, and no live cohort is claimed.
+resource reads, and cross-resource denial. Manager Home adds authorized status
+and urgency, later-unit customer/report/recovery feeds no longer preload, and
+only the selected authorized tool panel mounts. Pre-rollout access responses
+retain legacy composition during rolling frontend/backend updates. Product
+capabilities remain default off without an exact active enrollment, and no live
+cohort is claimed.
 
 Dispatcher and Billing Administrator remain design-only role keys because the
 authoritative backend/API role union does not contain them. Do not synthesize
@@ -84,8 +88,8 @@ The repository-owned all-persona rollout foundation and smoke contract are
 complete for the currently authoritative roles. Hosted per-unit execution waits
 on R2 identities, exact resource fixtures, and operator ownership. Dispatcher/
 Billing role creation and P2 concern/preference behavior each remain separate
-product decisions. The next safe repository UX slice is manager Home continuity
-and shell compression; neither may be represented as hosted rollout evidence.
+product decisions. The next safe repository UX slice is shell compression;
+it may not be represented as hosted rollout evidence.
 
 ### Parallel external lane: R2 and R3
 

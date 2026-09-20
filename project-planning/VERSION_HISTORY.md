@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-19: Delivered rollout-aware manager continuity. Authorized Manage
+  categories now show concise schedule, report, delivery, activity, and
+  recovery urgency or exact enabled-tool counts; later-unit feeds do not load
+  in the background; and only the selected authorized tool panel mounts.
+  Pre-rollout access responses retain legacy composition for rolling-deploy
+  compatibility. Frontend tests, TypeScript, the production build, and focused
+  manager Schedule, Recovery, and report handoffs pass.
 - 2026-09-19: Added the protected workspace-rollout smoke contract. Operators
   can validate one exact hosted persona/unit/scope, its required cumulative and
   forbidden later capabilities, an authorized resource read, and a controlled
