@@ -178,7 +178,7 @@ export function CustomerBidReviewPage({ shareToken }: CustomerBidReviewPageProps
 
               <div className="mt-5 flex items-center justify-between gap-4 rounded-2xl bg-forest p-5 text-white sm:p-6">
                 <span className="font-black">Proposal total</span>
-                <span className="font-display text-3xl font-black">{currencyLabel(bid.totalCents)}</span>
+                <span className="grover-type-operational text-3xl font-black">{currencyLabel(bid.totalCents)}</span>
               </div>
               {bid.expiresAt && bid.status === 'sent' ? (
                 <p className="mt-3 text-xs text-slate-500">This secure response link expires {dateTimeLabel(bid.expiresAt)}.</p>
@@ -187,7 +187,7 @@ export function CustomerBidReviewPage({ shareToken }: CustomerBidReviewPageProps
 
             <section aria-labelledby="proposal-decision-heading" className="border-t border-slate-200 pt-7">
               <p className="grover-eyebrow">Your decision</p>
-              <h2 className="mt-2 font-display text-3xl font-black text-forest" id="proposal-decision-heading">
+              <h2 className="grover-type-operational mt-2 text-3xl font-black text-forest" id="proposal-decision-heading">
                 {answered ? 'Response recorded' : 'Approve or decline'}
               </h2>
 

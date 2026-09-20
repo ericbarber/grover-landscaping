@@ -130,7 +130,7 @@ export function ManagerDayPlanPanel({
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Manager scheduling</p>
-            <h2 className="mt-2 font-display text-3xl font-black">Today’s operation</h2>
+            <h2 className="grover-type-operational mt-2 text-3xl font-black">Today’s operation</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-mist">
               Balance crew readiness, route capacity, and work that still needs an owner before publishing.
             </p>

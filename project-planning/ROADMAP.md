@@ -83,8 +83,11 @@ past, upcoming, and invalid-date routes are read only, current routes retain
 their authorized field actions, and user confidence uses persistence meaning
 instead of API/browser transport names. Yard Owner protected-read recovery now
 adds explicit retry/access recheck and Home exits while withholding stale or
-illustrative facts. The low-risk shared typography-role boundary is the next
-repository UX slice.
+illustrative facts. The shared typography-role boundary is also adopted across
+the authenticated surfaces: audience/place/service moments retain editorial
+type while tasks, states, queues, decisions, and values use interface type.
+Repository-owned rollout UX is complete; hosted cohort evidence and the explicit
+Dispatcher/Billing backend role decision remain the next gates.
 Its hosted evidence remains external; Dispatcher and Billing Administrator also
 require authoritative backend roles.
 

@@ -171,7 +171,7 @@ export function TeamOrganizationOverviewPanel({
         <p className="text-xs font-black uppercase tracking-[0.18em] text-gold">Organization operations</p>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="font-display text-3xl font-black" id="team-organization-heading">Team and access</h2>
+            <h2 className="grover-type-operational text-3xl font-black" id="team-organization-heading">Team and access</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200">
               Build the operating team, keep every territory staffed, and trace material access changes.
             </p>

@@ -89,7 +89,7 @@ function PublicationDetails({
         </div>
         <p className="text-right">
           <span className="block text-xs font-bold uppercase tracking-wide text-slate-500">One-time total</span>
-          <strong className="font-display text-2xl text-forest">
+          <strong className="grover-type-operational text-2xl font-black text-forest">
             {currencyLabel(publication.totalCents, publication.currencyCode)}
           </strong>
         </p>

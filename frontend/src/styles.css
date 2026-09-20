@@ -105,6 +105,10 @@ textarea {
     letter-spacing: -0.035em;
   }
 
+  .grover-type-operational {
+    @apply font-sans;
+  }
+
   .grover-card {
     @apply rounded-2xl border border-slate-200 bg-paper shadow-grover-sm;
   }
