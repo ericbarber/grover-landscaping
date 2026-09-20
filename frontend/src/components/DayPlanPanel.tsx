@@ -45,6 +45,7 @@ import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
 type DayPlanPanelProps = {
   actorId?: string | null;
   jobDetailsEnabled?: boolean;
+  onPendingChangeCountChange?: (count: number) => void;
   onSelectJob?: (jobId: string) => void;
   refreshSignal?: number;
   routeChangesEnabled?: boolean;
@@ -118,6 +119,7 @@ function servicePriceLabel(service: ServiceCatalogItem): string {
 export function DayPlanPanel({
   actorId,
   jobDetailsEnabled = true,
+  onPendingChangeCountChange,
   onSelectJob,
   refreshSignal = 0,
   routeChangesEnabled = true,
@@ -166,6 +168,12 @@ export function DayPlanPanel({
     ? dayPlan.stops
     : dayPlan.stops.slice(focusedStopStart, focusedStopStart + 2);
 
+  useEffect(() => {
+    onPendingChangeCountChange?.(
+      offlineMutations.length + offlineAmendmentMutations.length,
+    );
+  }, [offlineAmendmentMutations.length, offlineMutations.length, onPendingChangeCountChange]);
+
   function clickMatchingJobCard(customerName: string) {
     const buttons = Array.from(document.querySelectorAll('article button'));
     const button = buttons.find((candidate) => {
@@ -194,6 +202,7 @@ export function DayPlanPanel({
     stopId?: string,
     service?: ServiceCatalogItem,
   ) {
+    if (!routeChangesEnabled) return;
     const request: DayPlanAmendmentRequest = {
       id: `local_amendment_${dayPlan.id}_${amendmentType}_${Date.now()}`,
       dayPlanId: dayPlan.id,
@@ -329,6 +338,7 @@ export function DayPlanPanel({
   }
 
   function advanceStop(stopId: string) {
+    if (!stopProgressEnabled) return;
     setStopStates((current) => {
       const persistedStatus = dayPlan.stops.find((stop) => stop.id === stopId)?.stopStatus;
       const nextState = getNextStopStatus(resolveStopStatus(current[stopId], persistedStatus));
@@ -339,6 +349,7 @@ export function DayPlanPanel({
   }
 
   function resetRouteProgress() {
+    if (!routeChangesEnabled) return;
     clearStopStates(dayPlan.id);
     setStopStates(resetStopStates());
     if (pendingMutationCount > 0) {
@@ -367,7 +378,12 @@ export function DayPlanPanel({
   }
 
   const replayOfflineMutations = useCallback(async () => {
-    if (!actorId || !navigator.onLine || replayInProgress.current) return;
+    if (
+      !stopProgressEnabled
+      || !actorId
+      || !navigator.onLine
+      || replayInProgress.current
+    ) return;
     replayInProgress.current = true;
     setIsReplayingMutations(true);
     try {
@@ -408,10 +424,15 @@ export function DayPlanPanel({
       replayInProgress.current = false;
       setIsReplayingMutations(false);
     }
-  }, [actorId]);
+  }, [actorId, stopProgressEnabled]);
 
   const replayOfflineAmendments = useCallback(async () => {
-    if (!actorId || !navigator.onLine || amendmentReplayInProgress.current) return;
+    if (
+      !routeChangesEnabled
+      || !actorId
+      || !navigator.onLine
+      || amendmentReplayInProgress.current
+    ) return;
     amendmentReplayInProgress.current = true;
     setIsReplayingAmendments(true);
     try {
@@ -467,7 +488,7 @@ export function DayPlanPanel({
       amendmentReplayInProgress.current = false;
       setIsReplayingAmendments(false);
     }
-  }, [actorId]);
+  }, [actorId, routeChangesEnabled]);
 
   async function discardReviewedConflict(mutation: StopProgressOfflineMutation) {
     try {
@@ -673,6 +694,11 @@ export function DayPlanPanel({
                   {conflictMutationCount} {conflictMutationCount === 1 ? 'change needs' : 'changes need'} manager review before retrying.
                 </p>
               )}
+              {!stopProgressEnabled ? (
+                <p className="mt-1 font-medium">
+                  Saved progress stays on this phone until stop execution access returns.
+                </p>
+              ) : null}
               {conflictResolutionError && (
                 <p className="mt-1 font-medium text-red-900">
                   The reviewed conflict could not be removed from this phone. Try again.
@@ -742,11 +768,18 @@ export function DayPlanPanel({
               </details>
               <button
                 className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
-                disabled={!navigator.onLine || isReplayingMutations || conflictMutationCount > 0}
+                disabled={
+                  !stopProgressEnabled
+                  || !navigator.onLine
+                  || isReplayingMutations
+                  || conflictMutationCount > 0
+                }
                 onClick={() => void replayOfflineMutations()}
                 type="button"
               >
-                {isReplayingMutations
+                {!stopProgressEnabled
+                  ? 'Stop execution access needed'
+                  : isReplayingMutations
                   ? 'Syncing…'
                   : conflictMutationCount > 0
                     ? 'Manager review needed'
@@ -874,6 +907,11 @@ export function DayPlanPanel({
             {offlineAmendmentMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
             {offlineAmendmentMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
           </p>
+          {!routeChangesEnabled ? (
+            <p className="mt-1 font-medium">
+              Saved requests stay on this phone until route-change access returns.
+            </p>
+          ) : null}
           <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
             <summary className="min-h-11 cursor-pointer py-3 font-bold">
               Review queued route requests
@@ -938,14 +976,19 @@ export function DayPlanPanel({
           <button
             className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
             disabled={
-              !navigator.onLine
+              !routeChangesEnabled
+              || !navigator.onLine
               || isReplayingAmendments
               || offlineAmendmentMutations.some((mutation) => mutation.syncState === 'conflict')
             }
             onClick={() => void replayOfflineAmendments()}
             type="button"
           >
-            {isReplayingAmendments ? 'Sending requests…' : 'Send queued requests'}
+            {!routeChangesEnabled
+              ? 'Route-change access needed'
+              : isReplayingAmendments
+                ? 'Sending requests…'
+                : 'Send queued requests'}
           </button>
         </div>
       )}

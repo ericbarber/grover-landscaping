@@ -13,7 +13,10 @@ Company, property-management, dispatch, billing, and support management menus
 are also unit-bounded. Field route, stop, job, evidence, report, and amendment
 controls now follow the Crew Lead, Crew Member, company-oversight, and
 dispatcher unit boundaries. Property Manager portfolio details are the
-remaining React composition slice.
+remaining React composition slice. Existing offline work remains stored and
+counted in the shared pending-work indicator, while automatic and manual replay
+wait for the corresponding execution, evidence, or route-change unit to be
+active.
 
 ## Response
 

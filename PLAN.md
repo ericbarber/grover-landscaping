@@ -81,17 +81,18 @@ Current state:
   also cumulative and fail closed for suspended or unknown units. Field
   composition now keeps C1/CM1 read only, adds assigned-job execution at
   C2/CM2, evidence and reports at C3/CM3, Crew Lead-only route amendments at
-  C4, and read-only company/dispatcher job oversight. Property Manager
-  portfolio details still require contextual shaping, and no live cohort has
-  been enabled.
+  C4, and read-only company/dispatcher job oversight. Queued offline work stays
+  stored and counted but cannot replay without its corresponding active unit.
+  Property Manager portfolio details still require contextual shaping, and no
+  live cohort has been enabled.
 
 Next design slices:
 
 1. Functional rollout control: shape the remaining Property Manager portfolio
-   controls from the delivered projection, then add protected per-unit success and denial
-   smoke without weakening API authorization or discarding queued work. Dispatcher
-   and Billing Administrator require an explicit backend role contract before
-   either projection can be enabled.
+   controls from the delivered projection, then add protected per-unit success
+   and denial smoke without weakening API authorization or discarding queued
+   work. Dispatcher and Billing Administrator require an explicit backend role
+   contract before either projection can be enabled.
 2. Manager continuity: add authorized status and urgency to the six-category
    Manage overview without duplicating its destination tools.
 3. Shell compression: remove redundant hosted identity/persona presentation and

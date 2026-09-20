@@ -1343,6 +1343,7 @@ export function App() {
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
   const [offlinePhotoMutations, setOfflinePhotoMutations] = useState<PhotoUploadOfflineMutation[]>([]);
+  const [offlineRouteMutationCount, setOfflineRouteMutationCount] = useState(0);
   const [isReplayingJobMutations, setIsReplayingJobMutations] = useState(false);
   const [isReplayingChecklistMutations, setIsReplayingChecklistMutations] = useState(false);
   const [isReplayingPhotoMutations, setIsReplayingPhotoMutations] = useState(false);
@@ -1596,7 +1597,12 @@ export function App() {
   }
 
   const replayJobLifecycleMutations = useCallback(async () => {
-    if (!auth.userId || !navigator.onLine || jobReplayInProgress.current) return;
+    if (
+      !fieldControls.stopProgress
+      || !auth.userId
+      || !navigator.onLine
+      || jobReplayInProgress.current
+    ) return;
     jobReplayInProgress.current = true;
     setIsReplayingJobMutations(true);
     try {
@@ -1631,10 +1637,15 @@ export function App() {
       jobReplayInProgress.current = false;
       setIsReplayingJobMutations(false);
     }
-  }, [auth.userId]);
+  }, [auth.userId, fieldControls.stopProgress]);
 
   const replayChecklistMutations = useCallback(async () => {
-    if (!auth.userId || !navigator.onLine || checklistReplayInProgress.current) return;
+    if (
+      !fieldControls.fieldEvidence
+      || !auth.userId
+      || !navigator.onLine
+      || checklistReplayInProgress.current
+    ) return;
     checklistReplayInProgress.current = true;
     setIsReplayingChecklistMutations(true);
     try {
@@ -1672,10 +1683,15 @@ export function App() {
       checklistReplayInProgress.current = false;
       setIsReplayingChecklistMutations(false);
     }
-  }, [auth.userId]);
+  }, [auth.userId, fieldControls.fieldEvidence]);
 
   const replayPhotoMutations = useCallback(async () => {
-    if (!auth.userId || !navigator.onLine || photoReplayInProgress.current) return;
+    if (
+      !fieldControls.fieldEvidence
+      || !auth.userId
+      || !navigator.onLine
+      || photoReplayInProgress.current
+    ) return;
     photoReplayInProgress.current = true;
     setIsReplayingPhotoMutations(true);
     let replayedAny = false;
@@ -1719,7 +1735,7 @@ export function App() {
       photoReplayInProgress.current = false;
       setIsReplayingPhotoMutations(false);
     }
-  }, [auth.userId]);
+  }, [auth.userId, fieldControls.fieldEvidence]);
 
   useEffect(() => {
     if (!auth.userId) {
@@ -2226,6 +2242,7 @@ export function App() {
     jobId: string,
     action: JobLifecycleOfflineMutation['action'],
   ): Promise<boolean> {
+    if (!fieldControls.stopProgress) return false;
     const job = jobs.find((item) => item.id === jobId);
     if (!job?.organizationId || !auth.userId) return false;
     try {
@@ -2265,7 +2282,7 @@ export function App() {
   }
 
   async function handleChecklistItemChange(itemId: string, completed: boolean) {
-    if (!selectedJobId || !selectedJob) return;
+    if (!fieldControls.fieldEvidence || !selectedJobId || !selectedJob) return;
     let outcome = 'Checklist updated.';
     try {
       const result = await updateChecklistItem(selectedJobId, itemId, completed);
@@ -2339,7 +2356,7 @@ export function App() {
   }
 
   async function handleStartJob() {
-    if (!selectedJobId) {
+    if (!fieldControls.stopProgress || !selectedJobId) {
       return;
     }
 
@@ -2369,7 +2386,7 @@ export function App() {
   }
 
   async function handleCompleteJob() {
-    if (!selectedJobId) {
+    if (!fieldControls.fieldEvidence || !selectedJobId) {
       return;
     }
 
@@ -2424,7 +2441,7 @@ export function App() {
   }
 
   async function handleAddOnStatusChange(addOnId: string, status: JobAddOn['status']) {
-    if (!selectedJobId) return;
+    if (!fieldControls.stopProgress || !selectedJobId) return;
 
     try {
       const updated = await updateJobAddOnStatus(selectedJobId, addOnId, status);
@@ -2890,7 +2907,7 @@ export function App() {
   }
 
   async function handlePhotoSelected(file: File, photoType: PhotoType) {
-    if (!selectedJobId) {
+    if (!fieldControls.fieldEvidence || !selectedJobId) {
       return;
     }
 
@@ -3078,6 +3095,7 @@ export function App() {
           offlineJobMutations.length
           + offlineChecklistMutations.length
           + offlinePhotoMutations.length
+          + offlineRouteMutationCount
         }
         personaDescription={activePersona.description}
         personaLabel={activePersona.label}
@@ -3107,6 +3125,7 @@ export function App() {
                 offlineJobMutations.length
                 + offlineChecklistMutations.length
                 + offlinePhotoMutations.length
+                + offlineRouteMutationCount
               }
               persona={activePersona}
               signedInName={auth.displayName || 'Signed-in user'}
@@ -3116,6 +3135,7 @@ export function App() {
             <DayPlanPanel
               actorId={auth.userId}
               jobDetailsEnabled={fieldControls.jobDetails}
+              onPendingChangeCountChange={setOfflineRouteMutationCount}
               onSelectJob={selectJobForReview}
               refreshSignal={dayPlanRefreshSignal}
               routeChangesEnabled={fieldControls.routeChanges}
@@ -3144,6 +3164,11 @@ export function App() {
                   {offlineJobMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
                   {offlineJobMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
                 </p>
+                {!fieldControls.stopProgress ? (
+                  <p className="mt-1 font-medium">
+                    Saved changes stay on this phone until job execution access returns.
+                  </p>
+                ) : null}
                 <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
                   <summary className="min-h-11 cursor-pointer py-3 font-bold">
                     Review queued job changes
@@ -3206,14 +3231,19 @@ export function App() {
                 <button
                   className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
                   disabled={
-                    !navigator.onLine
+                    !fieldControls.stopProgress
+                    || !navigator.onLine
                     || isReplayingJobMutations
                     || offlineJobMutations.some((mutation) => mutation.syncState === 'conflict')
                   }
                   onClick={() => void replayJobLifecycleMutations()}
                   type="button"
                 >
-                  {isReplayingJobMutations ? 'Syncing job changes…' : 'Sync job changes'}
+                  {!fieldControls.stopProgress
+                    ? 'Job execution access needed'
+                    : isReplayingJobMutations
+                      ? 'Syncing job changes…'
+                      : 'Sync job changes'}
                 </button>
               </div>
             )}
@@ -3226,6 +3256,11 @@ export function App() {
                   {offlineChecklistMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
                   {offlineChecklistMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
                 </p>
+                {!fieldControls.fieldEvidence ? (
+                  <p className="mt-1 font-medium">
+                    Saved checklist work stays on this phone until evidence access returns.
+                  </p>
+                ) : null}
                 <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
                   <summary className="min-h-11 cursor-pointer py-3 font-bold">
                     Review queued checklist changes
@@ -3292,14 +3327,19 @@ export function App() {
                 <button
                   className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
                   disabled={
-                    !navigator.onLine
+                    !fieldControls.fieldEvidence
+                    || !navigator.onLine
                     || isReplayingChecklistMutations
                     || offlineChecklistMutations.some((mutation) => mutation.syncState === 'conflict')
                   }
                   onClick={() => void replayChecklistMutations()}
                   type="button"
                 >
-                  {isReplayingChecklistMutations ? 'Syncing checklist…' : 'Sync checklist changes'}
+                  {!fieldControls.fieldEvidence
+                    ? 'Evidence access needed'
+                    : isReplayingChecklistMutations
+                      ? 'Syncing checklist…'
+                      : 'Sync checklist changes'}
                 </button>
               </div>
             )}
@@ -3312,6 +3352,11 @@ export function App() {
                   {offlinePhotoMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
                   {offlinePhotoMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
                 </p>
+                {!fieldControls.fieldEvidence ? (
+                  <p className="mt-1 font-medium">
+                    Saved photos stay on this phone until evidence access returns.
+                  </p>
+                ) : null}
                 <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
                   <summary className="min-h-11 cursor-pointer py-3 font-bold">
                     Review queued photos
@@ -3375,14 +3420,19 @@ export function App() {
                 <button
                   className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
                   disabled={
-                    !navigator.onLine
+                    !fieldControls.fieldEvidence
+                    || !navigator.onLine
                     || isReplayingPhotoMutations
                     || offlinePhotoMutations.some((mutation) => mutation.syncState === 'conflict')
                   }
                   onClick={() => void replayPhotoMutations()}
                   type="button"
                 >
-                  {isReplayingPhotoMutations ? 'Uploading photos…' : 'Upload queued photos'}
+                  {!fieldControls.fieldEvidence
+                    ? 'Evidence access needed'
+                    : isReplayingPhotoMutations
+                      ? 'Uploading photos…'
+                      : 'Upload queued photos'}
                 </button>
               </div>
             )}

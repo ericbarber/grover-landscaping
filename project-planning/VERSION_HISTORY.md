@@ -28,7 +28,8 @@
   report evidence, and only Crew Lead C4 can request route changes. Company and
   dispatcher field surfaces expose job oversight without execution controls;
   suspended and unknown managed units fail closed while legacy behavior and
-  queued offline work are preserved.
+  queued offline work are preserved. Automatic and manual replay now wait for
+  the corresponding execution, evidence, or route-change unit to be active.
 - 2026-09-05: Shaped manager-style workspace internals by rollout unit. Company
   Owner and Manager categories progress from readiness through schedule,
   customers/team, and reports/recovery; Property Manager stays bounded to its

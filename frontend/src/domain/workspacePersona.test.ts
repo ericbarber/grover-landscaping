@@ -221,6 +221,21 @@ describe('persona workspaces', () => {
       stopProgress: false,
       routeChanges: false,
     });
-    expect(workspaceFieldControlsForPersona('crew-lead', null).jobDetails).toBe(false);
+    const disabled = {
+      jobDetails: false,
+      stopProgress: false,
+      routeChanges: false,
+      fieldEvidence: false,
+      report: false,
+    };
+    expect(workspaceFieldControlsForPersona('crew-lead', null)).toEqual(disabled);
+    expect(workspaceFieldControlsForPersona('crew-lead', 'unknown')).toEqual(disabled);
+    expect(workspaceFieldControlsForPersona('crew-lead', undefined)).toEqual({
+      jobDetails: true,
+      stopProgress: true,
+      routeChanges: true,
+      fieldEvidence: true,
+      report: true,
+    });
   });
 });
