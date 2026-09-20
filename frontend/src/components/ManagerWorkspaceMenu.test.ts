@@ -90,6 +90,26 @@ describe('manager workspace menu', () => {
       ]);
   });
 
+  it('bounds property, dispatch, and billing tools to their reviewed units', () => {
+    expect(managerWorkspaceSectionsForPersona('property-manager', 'p3')).toEqual([]);
+    expect(
+      managerWorkspaceToolsForPersona('property-manager', 'customers', 'p4').map(({ id }) => id),
+    ).toEqual(['customer-portal', 'customer-portfolios']);
+
+    expect(managerWorkspaceSectionsForPersona('dispatcher', 'd1').map(({ id }) => id))
+      .toEqual(['schedule']);
+    expect(managerWorkspaceToolsForPersona('dispatcher', 'schedule', 'd4').map(({ id }) => id))
+      .toEqual(['day-plan', 'dispatch-workload']);
+
+    expect(managerWorkspaceSectionsForPersona('billing-admin', 'b1').map(({ id }) => id))
+      .toEqual(['customers']);
+    expect(managerWorkspaceSectionsForPersona('billing-admin', 'b2').map(({ id }) => id))
+      .toEqual(['customers', 'reports']);
+    expect(
+      managerWorkspaceToolsForPersona('billing-admin', 'reports', 'b3').map(({ id }) => id),
+    ).toEqual(['completion-reports']);
+  });
+
   it('fails closed for suspended and unknown managed units', () => {
     expect(managerWorkspaceSectionsForPersona('company-owner', null)).toEqual([]);
     expect(managerWorkspaceSectionsForPersona('company-owner', 'unknown')).toEqual([]);
