@@ -194,8 +194,10 @@ describe('stop progress helpers', () => {
   });
 
   it('formats route progress sync labels', () => {
-    expect(syncStatusLabel('local')).toBe('saved locally');
-    expect(syncStatusLabel('syncing')).toBe('syncing');
-    expect(syncStatusLabel('synced')).toBe('synced');
+    expect(syncStatusLabel('local')).toBe('Saved on device');
+    expect(syncStatusLabel('syncing')).toBe('Syncing');
+    expect(syncStatusLabel('synced')).toBe('Synced');
+    expect(syncStatusLabel('needs_attention')).toBe('Needs attention');
+    expect(syncStatusLabel('read_only')).toBe('Read only');
   });
 });

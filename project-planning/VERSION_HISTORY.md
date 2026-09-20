@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-19: Adopted truthful Crew Route date and persistence context. Routes
+  now compare their service date with the active local day, render a complete
+  human-readable date, label past/today/upcoming explicitly, and block both stop
+  and route-amendment writes outside the service day. Confidence now says
+  Syncing, Saved on device, Synced, Needs attention, or Read only without
+  exposing API/browser source language; domain and phone browser coverage prove
+  classification, current-day mutation, and historical read-only behavior.
 - 2026-09-19: Reconciled the design workspace around one artifact-family status
   inventory. The gallery, design README, adoption tracker, rollout/high-fidelity
   guidance, and dated mirror now distinguish current mirrors, adopted behavior,
