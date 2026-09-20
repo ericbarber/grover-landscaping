@@ -23,6 +23,14 @@
   private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
   commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
   pushes deploy automatically while pull requests remain validation-only.
+- 2026-09-04: Designed a minimal Yard Owner rollout in four cumulative,
+  independently enableable customer units. U1 launches one complete read-only
+  Home promise; U2 adds visit tracking, U3 delivered proof, and U4 contextual
+  questions and recommendation decisions. The plan requires server-derived
+  account capabilities, audited default-off cohorts, protected isolation smoke,
+  named operational ownership, and non-destructive rollback. A responsive
+  prototype proves disabled destinations remain absent at 1440px, 390px, and
+  320px; no hosted rollout or capability implementation is claimed.
 - 2026-09-03: Completed the first frontend-audit follow-up design. A separate
   working prototype now specifies five fail-closed Yard Owner protected-read
   outcomes and five Crew Route date/persistence modes using one user-facing

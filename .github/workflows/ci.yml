@@ -206,6 +206,9 @@ jobs:
             'frontend_truth_recovery elapsed=%e user=%U system=%S max_rss_kb=%M' \
             node design/tools/validate-frontend-truth-recovery.mjs
           /usr/bin/time -f \
+            'yard_owner_minimal_rollout elapsed=%e user=%U system=%S max_rss_kb=%M' \
+            node design/tools/validate-yard-owner-minimal-rollout.mjs
+          /usr/bin/time -f \
             'prototype_foundation elapsed=%e user=%U system=%S max_rss_kb=%M' \
             node design/tools/validate-prototype-foundation.mjs
 

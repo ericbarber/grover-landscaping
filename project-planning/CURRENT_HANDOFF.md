@@ -62,12 +62,25 @@ entry opens the exact exception, including a tested mobile focus and overflow
 handoff. The slice passes strict Clippy, 417 backend tests, TypeScript, 485
 frontend tests, the production build, and focused browser validation.
 
+### Design ready: Yard Owner minimal rollout
+
+The portal now has a validated four-unit rollout design: U1 read-only care
+visibility, U2 visit tracking, U3 delivered proof, and U4 contextual questions/
+recommendation decisions. U1 is the minimum owner-visible launch; capabilities
+not enabled for an account are absent rather than rendered as unfinished
+destinations. Production still needs server-derived account capabilities,
+audited default-off cohorts, protected per-unit smoke, and non-destructive
+rollback. Concern/preferences and appreciation/external reviews retain their
+separate product gates.
+
 ### Next input boundary
 
 No repository implementation phase is active. Continue with R2 when the owning
-Render/AWS access and deployment inputs exist, or define the P2 Yard Owner
-concern/preference support, response, retention, privacy, and escalation
-boundary before implementation. Do not guess either input.
+Render/AWS access and deployment inputs exist, implement the reviewed Yard Owner
+account-capability rollout foundation as a separate authorized slice, or define
+the P2 concern/preference support, response, retention, privacy, and escalation
+boundary before implementing that product-gated unit. Do not guess external or
+P2 inputs.
 
 ### Parallel external lane: R2 and R3
 
