@@ -64,6 +64,7 @@ export function WorkspaceStatusNotice({
   detail,
   role,
   title,
+  titleAs = 'p',
   tone = 'neutral',
 }: {
   children?: ReactNode;
@@ -72,9 +73,11 @@ export function WorkspaceStatusNotice({
   detail?: ReactNode;
   role?: 'alert' | 'status';
   title?: ReactNode;
+  titleAs?: 'p' | 'h2' | 'h3' | 'h4';
   tone?: WorkspaceStatusTone;
 }) {
   const hasHeading = Boolean(title || detail);
+  const Title = titleAs;
 
   return (
     <div
@@ -89,7 +92,7 @@ export function WorkspaceStatusNotice({
           <WorkspaceIcon className={compact ? 'size-4' : 'size-5'} name={toneIcons[tone]} />
         </span>
         <div className="min-w-0 flex-1">
-          {title ? <p className="text-sm font-black text-current">{title}</p> : null}
+          {title ? <Title className="text-sm font-black text-current">{title}</Title> : null}
           {detail ? <p className={`${title ? 'mt-1' : ''} text-xs leading-5 opacity-80`}>{detail}</p> : null}
           {children ? <div className={hasHeading ? 'mt-3' : ''}>{children}</div> : null}
         </div>

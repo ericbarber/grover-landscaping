@@ -45,7 +45,7 @@ design/
 ├── prototypes/
 │   ├── public-homepage/                # Responsive working V2 design
 │   ├── current-frontend-review/        # Dated production-parity review mirror
-│   ├── frontend-truth-recovery/        # Proposed owner/crew continuity states
+│   ├── frontend-truth-recovery/        # Adopted owner/crew continuity states
 │   ├── property-manager-portfolio/     # Connected portfolio command center
 │   ├── shared/                         # Canonical tokens and shell primitives
 │   ├── yard-crew-acquisition/           # Provider entry, opportunity, assessment, and support
@@ -55,7 +55,7 @@ design/
 ├── review/
 │   ├── checklist.md                   # Questions for each design review
 │   ├── current-frontend-design-audit-2026-09-03.md # Current UI parity and findings
-│   ├── frontend-truth-recovery-design.md # Proposed protected-read and route-state contract
+│   ├── frontend-truth-recovery-design.md # Adopted protected-read and route-state contract
 │   ├── decision-log.md                # Accepted decisions and open questions
 │   ├── application-working-design-delivery-plan.md # Remaining application phases
 │   ├── yard-owner-portal-plan.md       # Yard Owner audit and phased acceptance
@@ -206,7 +206,7 @@ gallery captures with:
 node design/tools/validate-current-frontend-review.mjs --capture
 ```
 
-Validate the proposed Yard Owner and Crew Route truth/recovery states and
+Validate the adopted Yard Owner and Crew Route truth/recovery reference and
 refresh their review captures with:
 
 ```bash

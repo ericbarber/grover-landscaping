@@ -248,6 +248,16 @@ jobs:
           --grep 'field Route prioritizes progress, current stop, and up-next work'
         working-directory: frontend
 
+      - name: Validate Yard Owner protected recovery
+        run: >-
+          /usr/bin/time -f
+          'yard_owner_recovery elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npx playwright test --config playwright.config.ts
+          --project=chromium-mobile --project=webkit-mobile
+          e2e/local-role-workspaces.spec.ts
+          --grep 'yard owner protected visit recovery withholds facts and returns Home'
+        working-directory: frontend
+
   pilot-assurance:
     name: Yard Owner pilot assurance contract
     runs-on: ubuntu-latest

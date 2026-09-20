@@ -181,8 +181,9 @@ visual tuning.
 
 1. **Baseline and parity — delivered by this review.** Maintain the dated
    current-state mirror, gallery entry, responsive captures, and browser checks.
-2. **Truth and recovery.** Design and implement shared date/state vocabulary,
-   stale-route treatment, and complete Yard Owner recovery destinations.
+2. **Truth and recovery — delivered September 19, 2026.** Shared date/state
+   vocabulary, read-only non-current routes, and complete Yard Owner retry,
+   access-recheck, and Home recovery are adopted without fallback customer facts.
 3. **Manager continuity — delivered September 19, 2026.** The status-bearing
    Manage overview uses only authorized current sources or exact enabled-tool
    counts, and selected destinations mount on demand across Schedule, Customers,
@@ -196,7 +197,6 @@ visual tuning.
    historical input, and product-gated boundaries; only the prototype needed by
    the next production slice should be refreshed.
 
-Phase 2 remains a recommendation rather than delivered behavior.
 Product-gated concern,
 provider-contact, notification/preference, external-review, marketplace, and
 billing work remains governed by the existing delivery plan.

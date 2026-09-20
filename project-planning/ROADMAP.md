@@ -81,8 +81,10 @@ clearance rather than relying on a guessed phone footer height.
 Crew route truth now classifies the local service day before offering writes:
 past, upcoming, and invalid-date routes are read only, current routes retain
 their authorized field actions, and user confidence uses persistence meaning
-instead of API/browser transport names. Yard Owner protected-read recovery is
-the next repository UX slice.
+instead of API/browser transport names. Yard Owner protected-read recovery now
+adds explicit retry/access recheck and Home exits while withholding stale or
+illustrative facts. The low-risk shared typography-role boundary is the next
+repository UX slice.
 Its hosted evidence remains external; Dispatcher and Billing Administrator also
 require authoritative backend roles.
 
