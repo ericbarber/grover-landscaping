@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { authGateState } from './AuthGate';
+import { authGateShowsEnvironmentChrome, authGateState } from './AuthGate';
 
 describe('authentication and access gate state', () => {
   it('keeps protected work hidden through authentication and access verification', () => {
@@ -45,5 +45,11 @@ describe('authentication and access gate state', () => {
       authenticated: true,
       accessStatus: 'ready',
     })).toBe('ready');
+  });
+
+  it('keeps diagnostic identity chrome out of the hosted application shell', () => {
+    expect(authGateShowsEnvironmentChrome('local_review')).toBe(true);
+    expect(authGateShowsEnvironmentChrome('disabled')).toBe(true);
+    expect(authGateShowsEnvironmentChrome('cognito')).toBe(false);
   });
 });

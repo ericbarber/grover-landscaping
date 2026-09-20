@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { WorkspacePersona, WorkspacePersonaId } from '../domain/workspacePersona';
 import { GroverBrand } from './GroverBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
@@ -80,6 +81,7 @@ interface MobileWorkspaceHeaderProps extends MobileWorkspaceContextInput {
   availablePersonas: WorkspacePersona[];
   onBackToJobs: () => void;
   onPersonaChange: (personaId: WorkspacePersonaId) => void;
+  onSignOut?: () => void;
   signedInName: string;
 }
 
@@ -88,6 +90,7 @@ export function MobileWorkspaceHeader({
   availablePersonas,
   onBackToJobs,
   onPersonaChange,
+  onSignOut,
   signedInName,
   ...input
 }: MobileWorkspaceHeaderProps) {
@@ -113,7 +116,42 @@ export function MobileWorkspaceHeader({
           <h1 className="truncate text-lg font-black text-slate-950">{context.title}</h1>
           <p className="truncate text-xs text-slate-600">{context.detail}</p>
         </div>
-        {availablePersonas.length > 1 ? (
+        {onSignOut ? (
+          <details className="group relative shrink-0">
+            <summary
+              aria-label="Account menu"
+              className="grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-xl border border-slate-300 bg-paper text-sm font-black text-emerald-800 [&::-webkit-details-marker]:hidden"
+            >
+              {signedInName.trim().slice(0, 1).toUpperCase() || 'A'}
+            </summary>
+            <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 rounded-xl border border-slate-200 bg-paper p-3 text-left shadow-grover-md">
+              <p className="truncate text-sm font-black text-slate-900">{signedInName}</p>
+              <p className="mt-1 truncate text-xs text-slate-500">{input.personaLabel}</p>
+              {availablePersonas.length > 1 ? (
+                <label className="mt-3 block text-[0.65rem] font-bold uppercase tracking-wide text-slate-500">
+                  Workspace
+                  <select
+                    aria-label="Active workspace persona"
+                    className="mt-1 block min-h-11 w-full rounded-lg border border-slate-300 bg-paper px-2 text-sm font-semibold normal-case tracking-normal text-slate-800"
+                    onChange={(event) => onPersonaChange(event.target.value as WorkspacePersonaId)}
+                    value={activePersonaId}
+                  >
+                    {availablePersonas.map((persona) => (
+                      <option key={persona.id} value={persona.id}>{persona.label}</option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+              <button
+                className="mt-3 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-bold text-slate-700"
+                onClick={onSignOut}
+                type="button"
+              >
+                Sign out
+              </button>
+            </div>
+          </details>
+        ) : availablePersonas.length > 1 ? (
           <label className="max-w-28 shrink-0 text-right text-[0.65rem] font-bold uppercase tracking-wide text-slate-500">
             <span className="block truncate normal-case tracking-normal text-slate-700">
               {signedInName}
@@ -148,20 +186,24 @@ interface MobileWorkspaceNavigationProps {
 }
 
 interface DesktopWorkspaceNavigationProps extends MobileWorkspaceNavigationProps {
+  hasEnvironmentBanner?: boolean;
+  onSignOut?: () => void;
   personaLabel: string;
   signedInName: string;
 }
 
 export function DesktopWorkspaceNavigation({
   activeView,
+  hasEnvironmentBanner = false,
   hasSelectedJob,
   navigationItems,
   onChange,
+  onSignOut,
   personaLabel,
   signedInName,
 }: DesktopWorkspaceNavigationProps) {
   return (
-    <aside className="fixed bottom-0 left-0 top-[3.25rem] z-30 hidden w-60 flex-col bg-forest px-5 py-8 text-white shadow-grover-md lg:flex">
+    <aside className={`fixed bottom-0 left-0 z-30 hidden w-60 flex-col bg-forest px-5 py-8 text-white shadow-grover-md lg:flex ${hasEnvironmentBanner ? 'top-[3.25rem]' : 'top-0'}`}>
       <GroverBrand className="text-sand" />
       <p className="mt-5 text-[0.68rem] font-black uppercase tracking-[0.16em] text-emerald-200">
         {personaLabel}
@@ -193,6 +235,15 @@ export function DesktopWorkspaceNavigation({
       <div className="mt-auto rounded-xl border border-white/10 bg-slate-950/20 p-3">
         <p className="truncate text-sm font-black text-white">{signedInName}</p>
         <p className="mt-1 truncate text-xs text-emerald-100">{personaLabel}</p>
+        {onSignOut ? (
+          <button
+            className="mt-3 min-h-11 w-full rounded-lg border border-white/20 px-3 text-left text-sm font-bold text-white hover:bg-white/10"
+            onClick={onSignOut}
+            type="button"
+          >
+            Sign out
+          </button>
+        ) : null}
       </div>
     </aside>
   );
@@ -204,10 +255,37 @@ export function MobileWorkspaceNavigation({
   navigationItems,
   onChange,
 }: MobileWorkspaceNavigationProps) {
+  const navigationRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const navigation = navigationRef.current;
+    if (!navigation) return;
+    const root = document.documentElement;
+    const updateHeight = () => {
+      root.style.setProperty(
+        '--grover-mobile-workspace-nav-height',
+        `${Math.ceil(navigation.getBoundingClientRect().height)}px`,
+      );
+    };
+    updateHeight();
+    const observer = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(updateHeight);
+    observer?.observe(navigation);
+    window.addEventListener('resize', updateHeight);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', updateHeight);
+      root.style.removeProperty('--grover-mobile-workspace-nav-height');
+    };
+  }, [navigationItems.length]);
+
   return (
     <nav
       aria-label="Mobile workspace"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-paper/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,47,40,0.10)] backdrop-blur md:inset-y-0 md:left-0 md:right-auto md:w-24 md:border-r md:border-t-0 md:px-2 md:py-24 md:shadow-grover-md lg:hidden"
+      data-mobile-workspace-navigation
+      ref={navigationRef}
     >
       <div
         className="mx-auto grid max-w-lg gap-1 md:flex md:h-full md:flex-col md:justify-center"

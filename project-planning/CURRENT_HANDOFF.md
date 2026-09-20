@@ -77,6 +77,12 @@ retain legacy composition during rolling frontend/backend updates. Product
 capabilities remain default off without an exact active enrollment, and no live
 cohort is claimed.
 
+Authenticated shell compression is delivered as the next UX slice. Production
+identity/sign-out lives in the desktop rail or compact mobile account menu,
+local-review chrome stays visibly diagnostic, and the content clearance follows
+the measured fixed-navigation height. Chromium and WebKit pass the reusable
+320/390/430px and 200%-zoom final-action check.
+
 Dispatcher and Billing Administrator remain design-only role keys because the
 authoritative backend/API role union does not contain them. Do not synthesize
 either from Manager. Concern/preferences and appreciation/external reviews
@@ -88,8 +94,8 @@ The repository-owned all-persona rollout foundation and smoke contract are
 complete for the currently authoritative roles. Hosted per-unit execution waits
 on R2 identities, exact resource fixtures, and operator ownership. Dispatcher/
 Billing role creation and P2 concern/preference behavior each remain separate
-product decisions. The next safe repository UX slice is shell compression;
-it may not be represented as hosted rollout evidence.
+product decisions. The next safe repository UX slice is prototype
+reconciliation; it may not be represented as hosted rollout evidence.
 
 ### Parallel external lane: R2 and R3
 

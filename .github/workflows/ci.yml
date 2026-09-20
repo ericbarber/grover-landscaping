@@ -229,6 +229,16 @@ jobs:
           --grep 'managed first unit withholds later manager feeds|manager Schedule opens a responsive route board and planning inspector|manager Recovery inspects an exception and returns to affected work|manager completion review opens the selected Job report workflow'
         working-directory: frontend
 
+      - name: Validate mobile workspace clearance
+        run: >-
+          /usr/bin/time -f
+          'mobile_workspace_clearance elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npx playwright test --config playwright.config.ts
+          --project=chromium-mobile --project=webkit-mobile
+          e2e/local-role-workspaces.spec.ts
+          --grep 'mobile Home keeps its final action clear of fixed navigation'
+        working-directory: frontend
+
   pilot-assurance:
     name: Yard Owner pilot assurance contract
     runs-on: ubuntu-latest

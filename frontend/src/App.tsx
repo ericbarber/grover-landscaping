@@ -1419,6 +1419,9 @@ export function App() {
     )).length
     : jobs.filter((job) => job.status === 'completed').length;
   const canUseManagerTools = workspaceGuidance.managerTools && workspaceSurfaces.management;
+  const hostedSignOut = auth.authMode === 'cognito'
+    ? () => void auth.signOut()
+    : undefined;
   const enabledManagerTools = useMemo(() => new Set(
     managerWorkspaceSectionsForPersona(activePersona.id, managedPersonaUnit).flatMap(
       (section) => managerWorkspaceToolsForPersona(
@@ -3134,9 +3137,10 @@ export function App() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-bone pb-20 text-ink md:pb-0 md:pl-24 lg:pl-60">
+    <main className="authenticated-workspace-shell min-h-screen overflow-x-hidden bg-bone text-ink md:pl-24 lg:pl-60">
       <DesktopWorkspaceNavigation
         activeView={mobileView}
+        hasEnvironmentBanner={auth.authMode !== 'cognito'}
         hasSelectedJob={Boolean(selectedJobId)}
         navigationItems={activePersona.navigation}
         onChange={(view) => {
@@ -3146,6 +3150,7 @@ export function App() {
           }
           changeMobileView(view, true);
         }}
+        onSignOut={hostedSignOut}
         personaLabel={activePersona.label}
         signedInName={auth.displayName || 'Signed-in user'}
       />
@@ -3228,6 +3233,7 @@ export function App() {
           }
           changeMobileView(persona.defaultView, true);
         }}
+        onSignOut={hostedSignOut}
         pendingChangeCount={
           offlineJobMutations.length
           + offlineChecklistMutations.length
