@@ -200,8 +200,12 @@ use grover_landscaping_api::{
         is_valid_stop_progress_status, local_stop_progress_response,
         persisted_stop_progress_response, replayed_stop_progress_response, StopProgressRequest,
     },
-    validate_photo_upload_request, JobAddOn, JobSummary, PhotoEvidence, PhotoUploadMetadata,
-    PhotoUploadRequest,
+    validate_photo_upload_request,
+    workspace_rollout::{
+        UpdateWorkspaceRolloutEnrollmentRequest, WorkspaceRolloutEnrollmentRecord,
+        WorkspaceRolloutMutationResult,
+    },
+    JobAddOn, JobSummary, PhotoEvidence, PhotoUploadMetadata, PhotoUploadRequest,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
@@ -305,6 +309,12 @@ struct JobLifecycleActionResponse {
 struct ErrorResponse {
     error: &'static str,
     message: String,
+}
+
+#[derive(Debug, Serialize)]
+struct WorkspaceRolloutMutationResponse {
+    enrollment: WorkspaceRolloutEnrollmentRecord,
+    idempotent_replay: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -1091,6 +1101,14 @@ fn app_with_runtime(
         .route(
             "/organizations/{organization_id}/memberships",
             get(list_organization_memberships),
+        )
+        .route(
+            "/organizations/{organization_id}/workspace-rollout-enrollments",
+            get(list_workspace_rollout_enrollments),
+        )
+        .route(
+            "/organizations/{organization_id}/memberships/{membership_id}/workspace-rollout",
+            put(update_workspace_rollout_enrollment),
         )
         .route(
             "/organizations/{organization_id}/team-activity",
@@ -6112,6 +6130,102 @@ async fn list_organization_memberships(
         OrganizationCollectionResult::Unavailable => persisted_resource_unavailable_response(
             "organization_memberships_unavailable",
             "The persisted organization memberships could not be loaded.",
+        ),
+    }
+}
+
+async fn list_workspace_rollout_enrollments(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(organization_id): Path<String>,
+) -> Response {
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response.into_response();
+    }
+    match state
+        .organizations
+        .list_workspace_rollout_enrollments(&organization_id)
+        .await
+    {
+        OrganizationCollectionResult::Loaded(enrollments) => Json(enrollments).into_response(),
+        OrganizationCollectionResult::Unavailable => persisted_resource_unavailable_response(
+            "workspace_rollout_enrollments_unavailable",
+            "The persisted workspace rollout enrollments could not be loaded.",
+        ),
+    }
+}
+
+async fn update_workspace_rollout_enrollment(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((organization_id, membership_id)): Path<(String, String)>,
+    Json(request): Json<UpdateWorkspaceRolloutEnrollmentRequest>,
+) -> Response {
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response.into_response();
+    }
+    match state
+        .organizations
+        .update_workspace_rollout_enrollment(
+            &organization_id,
+            &membership_id,
+            &principal.subject,
+            request,
+        )
+        .await
+    {
+        WorkspaceRolloutMutationResult::Applied(enrollment) => Json(
+            WorkspaceRolloutMutationResponse {
+                enrollment,
+                idempotent_replay: false,
+            },
+        )
+        .into_response(),
+        WorkspaceRolloutMutationResult::Replayed(enrollment) => Json(
+            WorkspaceRolloutMutationResponse {
+                enrollment,
+                idempotent_replay: true,
+            },
+        )
+        .into_response(),
+        WorkspaceRolloutMutationResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "workspace_rollout_enrollment_conflict",
+                message: "The rollout enrollment changed or the mutation key was reused. Refresh before trying again.".to_string(),
+            }),
+        )
+            .into_response(),
+        WorkspaceRolloutMutationResult::Invalid => (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_workspace_rollout_enrollment",
+                message: "The rollout action, unit, version, reason, or mutation key is invalid."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        WorkspaceRolloutMutationResult::NotFound => resource_not_found_response(
+            "workspace_rollout_enrollment_not_found",
+            "The organization membership or rollout enrollment was not found.",
+        ),
+        WorkspaceRolloutMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "workspace_rollout_enrollment_unavailable",
+            "The persisted workspace rollout enrollment could not be changed.",
         ),
     }
 }

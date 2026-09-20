@@ -805,6 +805,14 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return *method == Method::GET && can_admin_organization;
     }
 
+    if path.starts_with("/organizations/") && path.ends_with("/workspace-rollout-enrollments") {
+        return *method == Method::GET && can_admin_organization;
+    }
+
+    if path.starts_with("/organizations/") && path.ends_with("/workspace-rollout") {
+        return *method == Method::PUT && can_admin_organization;
+    }
+
     if path.starts_with("/organizations/") && path.ends_with("/team-activity") {
         return *method == Method::GET && can_admin_organization;
     }
@@ -1586,6 +1594,16 @@ mod tests {
         assert!(is_authorized(
             &principal(AccessRole::OrganizationOwner),
             &Method::GET,
+            "/organizations/org_demo_landscaping/workspace-rollout-enrollments"
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::SupportAdmin),
+            &Method::PUT,
+            "/organizations/org_demo_landscaping/memberships/membership_1001/workspace-rollout"
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &Method::GET,
             "/organizations/org_demo_landscaping/team-activity"
         ));
         assert!(!is_authorized(
@@ -1627,6 +1645,16 @@ mod tests {
             &principal(AccessRole::Manager),
             &Method::GET,
             "/organizations/org_demo_landscaping/memberships"
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::GET,
+            "/organizations/org_demo_landscaping/workspace-rollout-enrollments"
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::PUT,
+            "/organizations/org_demo_landscaping/memberships/membership_1001/workspace-rollout"
         ));
         assert!(!is_authorized(
             &principal(AccessRole::Manager),
