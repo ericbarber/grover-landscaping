@@ -28,6 +28,14 @@ export interface WorkspaceSurfaces {
   management: boolean;
 }
 
+export interface WorkspaceFieldControlAvailability {
+  jobDetails: boolean;
+  stopProgress: boolean;
+  routeChanges: boolean;
+  fieldEvidence: boolean;
+  report: boolean;
+}
+
 const fieldNavigation: WorkspacePersona['navigation'] = [
   { view: 'home', label: 'Home', icon: 'home' },
   { view: 'route', label: 'Route', icon: 'route' },
@@ -263,5 +271,53 @@ export function workspacePersonaForRollout(
     ...persona,
     defaultView: allowedViews.has(persona.defaultView) ? persona.defaultView : 'home',
     navigation: persona.navigation.filter(({ view }) => allowedViews.has(view)),
+  };
+}
+
+export function workspaceFieldControlsForPersona(
+  personaId: WorkspacePersonaId,
+  rolloutUnit: string | null | undefined,
+): WorkspaceFieldControlAvailability {
+  if (rolloutUnit === undefined) {
+    return {
+      jobDetails: true,
+      stopProgress: true,
+      routeChanges: true,
+      fieldEvidence: true,
+      report: true,
+    };
+  }
+
+  if (personaId === 'crew-lead') {
+    return {
+      jobDetails: ['c2', 'c3', 'c4'].includes(rolloutUnit ?? ''),
+      stopProgress: ['c2', 'c3', 'c4'].includes(rolloutUnit ?? ''),
+      routeChanges: rolloutUnit === 'c4',
+      fieldEvidence: ['c3', 'c4'].includes(rolloutUnit ?? ''),
+      report: ['c3', 'c4'].includes(rolloutUnit ?? ''),
+    };
+  }
+  if (personaId === 'crew-member') {
+    return {
+      jobDetails: ['cm2', 'cm3', 'cm4'].includes(rolloutUnit ?? ''),
+      stopProgress: ['cm2', 'cm3', 'cm4'].includes(rolloutUnit ?? ''),
+      routeChanges: false,
+      fieldEvidence: ['cm3', 'cm4'].includes(rolloutUnit ?? ''),
+      report: ['cm3', 'cm4'].includes(rolloutUnit ?? ''),
+    };
+  }
+
+  const oversightUnits: Partial<Record<WorkspacePersonaId, string[]>> = {
+    'company-owner': ['o2', 'o3', 'o4'],
+    'company-manager': ['m2', 'm3', 'm4'],
+    dispatcher: ['d3', 'd4'],
+  };
+  return {
+    jobDetails: oversightUnits[personaId]?.includes(rolloutUnit ?? '') ?? false,
+    stopProgress: false,
+    routeChanges: false,
+    fieldEvidence: false,
+    report: (personaId === 'company-owner' && rolloutUnit === 'o4')
+      || (personaId === 'company-manager' && rolloutUnit === 'm4'),
   };
 }

@@ -23,6 +23,13 @@
   private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
   commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
   pushes deploy automatically while pull requests remain validation-only.
+- 2026-09-05: Bounded field controls by rollout unit. C1/CM1 routes are
+  read-only, C2/CM2 add assigned-job progress, C3/CM3 add checklist, photo, and
+  report evidence, and only Crew Lead C4 can request route changes. Company and
+  dispatcher field surfaces expose job oversight without execution controls;
+  suspended and unknown managed units fail closed while legacy behavior and
+  queued offline work are preserved. Automatic and manual replay now wait for
+  the corresponding execution, evidence, or route-change unit to be active.
 - 2026-09-05: Shaped manager-style workspace internals by rollout unit. Company
   Owner and Manager categories progress from readiness through schedule,
   customers/team, and reports/recovery; Property Manager stays bounded to its

@@ -82,6 +82,7 @@ import { workspaceGuidanceForRoles, workspaceRolesForAccess } from './domain/wor
 import {
   workspacePersonasForRoles,
   workspaceEnabledUnitForPersona,
+  workspaceFieldControlsForPersona,
   workspacePersonaForRollout,
   workspaceSurfacesForPersona,
   type WorkspacePersonaId,
@@ -795,6 +796,8 @@ function CustomerPortalPreviewPanel({
 
 function JobDetailPanel({
   job,
+  executionEnabled,
+  fieldEvidenceEnabled,
   isLoading,
   uploadTickets,
   reportSnapshot,
@@ -810,9 +813,12 @@ function JobDetailPanel({
   onDeliverReport,
   onQueueReportDeliveryNotification,
   reportActionStatus,
+  reportEnabled,
   requestedWorkflow,
 }: {
   job: JobDetail | null;
+  executionEnabled: boolean;
+  fieldEvidenceEnabled: boolean;
   isLoading: boolean;
   uploadTickets: PhotoUploadTicket[];
   reportSnapshot: CompletionReportSnapshot | null;
@@ -832,14 +838,23 @@ function JobDetailPanel({
     recipient: string,
   ) => Promise<void>;
   reportActionStatus: string | null;
+  reportEnabled: boolean;
   requestedWorkflow: JobWorkflowSection;
 }) {
   const [photoType, setPhotoType] = useState<PhotoType>('before');
   const [activeWorkflow, setActiveWorkflow] = useState<JobWorkflowSection>(requestedWorkflow);
+  const allowedWorkflowSections: JobWorkflowSection[] = [
+    'overview',
+    ...(fieldEvidenceEnabled ? ['checklist', 'photos'] as JobWorkflowSection[] : []),
+    ...(executionEnabled ? ['addons'] as JobWorkflowSection[] : []),
+    ...(reportEnabled ? ['report'] as JobWorkflowSection[] : []),
+  ];
 
   useEffect(() => {
-    setActiveWorkflow(requestedWorkflow);
-  }, [job?.id, requestedWorkflow]);
+    setActiveWorkflow(
+      allowedWorkflowSections.includes(requestedWorkflow) ? requestedWorkflow : 'overview',
+    );
+  }, [executionEnabled, fieldEvidenceEnabled, job?.id, reportEnabled, requestedWorkflow]);
 
   if (isLoading) {
     return (
@@ -876,15 +891,19 @@ function JobDetailPanel({
   const pendingAddOns = addOns.filter((addOn) => (
     addOn.status === 'scheduled' || addOn.status === 'in_progress'
   )).length;
-  const nextAction = job.status === 'scheduled'
-    ? 'Start this job when the crew is ready to begin.'
-    : missingRequiredEvidence.length > 0
-      ? `Capture ${missingRequiredEvidence.join(' and ')} photo evidence before completing this job.`
-      : pendingAddOns > 0
-        ? `Finish ${pendingAddOns} approved add-on${pendingAddOns === 1 ? '' : 's'} before the customer report is ready.`
-        : checklistProgress < 100
-          ? `Finish ${job.checklist.length - completedChecklistItems} checklist item${job.checklist.length - completedChecklistItems === 1 ? '' : 's'} before customer handoff.`
-          : 'Required field evidence is ready. Complete the job when service is finished.';
+  const nextAction = !executionEnabled
+    ? 'This rollout unit provides read-only job status. Field actions remain with the assigned crew.'
+    : job.status === 'scheduled'
+      ? 'Start this job when the crew is ready to begin.'
+      : !fieldEvidenceEnabled
+        ? 'Continue stop progress from Today’s route; proof actions are outside this rollout unit.'
+        : missingRequiredEvidence.length > 0
+          ? `Capture ${missingRequiredEvidence.join(' and ')} photo evidence before completing this job.`
+          : pendingAddOns > 0
+            ? `Finish ${pendingAddOns} approved add-on${pendingAddOns === 1 ? '' : 's'} before the customer report is ready.`
+            : checklistProgress < 100
+              ? `Finish ${job.checklist.length - completedChecklistItems} checklist item${job.checklist.length - completedChecklistItems === 1 ? '' : 's'} before customer handoff.`
+              : 'Required field evidence is ready. Complete the job when service is finished.';
 
   return (
     <div className="space-y-4">
@@ -899,35 +918,47 @@ function JobDetailPanel({
           <StatusBadge status={job.status} />
         </div>
 
-        <div className="mt-5 rounded-2xl border border-slate-200 bg-paper p-3">
+        {executionEnabled ? <div className="mt-5 rounded-2xl border border-slate-200 bg-paper p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-slate-500">Primary action</p>
               <p className="mt-1 text-sm font-bold text-slate-900">Move this visit forward without losing context.</p>
             </div>
-            <WorkspaceStatusBadge tone={missingRequiredEvidence.length === 0 ? 'success' : 'warning'}>
-              {missingRequiredEvidence.length === 0 ? 'Evidence ready' : `${missingRequiredEvidence.length} evidence gap${missingRequiredEvidence.length === 1 ? '' : 's'}`}
+            <WorkspaceStatusBadge tone={!fieldEvidenceEnabled || missingRequiredEvidence.length === 0 ? 'success' : 'warning'}>
+              {!fieldEvidenceEnabled
+                ? 'Execution enabled'
+                : missingRequiredEvidence.length === 0
+                  ? 'Evidence ready'
+                  : `${missingRequiredEvidence.length} evidence gap${missingRequiredEvidence.length === 1 ? '' : 's'}`}
             </WorkspaceStatusBadge>
           </div>
           <div className="mt-3 grid gap-3 min-[380px]:grid-cols-2">
-          <button
-            className="min-h-12 rounded-xl border border-emerald-700 px-4 py-3 text-sm font-bold text-emerald-900 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
-            disabled={job.status !== 'scheduled'}
-            onClick={() => void onStart()}
-            type="button"
-          >
-            {job.status === 'scheduled' ? 'Start Job' : 'Job Started'}
-          </button>
-          <button
-            className="min-h-12 rounded-xl bg-emerald-800 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:bg-slate-300"
-            disabled={job.status === 'completed' || missingRequiredEvidence.length > 0}
-            onClick={() => void onComplete()}
-            type="button"
-          >
-            {job.status === 'completed' ? 'Job Completed' : 'Complete Job'}
-          </button>
+            <button
+              className="min-h-12 rounded-xl border border-emerald-700 px-4 py-3 text-sm font-bold text-emerald-900 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
+              disabled={job.status !== 'scheduled'}
+              onClick={() => void onStart()}
+              type="button"
+            >
+              {job.status === 'scheduled' ? 'Start Job' : 'Job Started'}
+            </button>
+            {fieldEvidenceEnabled ? <button
+              className="min-h-12 rounded-xl bg-emerald-800 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:bg-slate-300"
+              disabled={job.status === 'completed' || missingRequiredEvidence.length > 0}
+              onClick={() => void onComplete()}
+              type="button"
+            >
+              {job.status === 'completed' ? 'Job Completed' : 'Complete Job'}
+            </button> : null}
           </div>
-        </div>
+        </div> : (
+          <WorkspaceStatusNotice
+            className="mt-5"
+            compact
+            detail="Progress, checklist, photo, add-on, and completion actions remain hidden."
+            title="Job oversight is read only."
+            tone="info"
+          />
+        )}
 
         <JobWorkflowMenu
           activeSection={activeWorkflow}
@@ -937,6 +968,7 @@ function JobDetailPanel({
           onChange={setActiveWorkflow}
           photoCount={uploadTickets.length}
           reportReady={Boolean(reportSnapshot?.readyForCustomer)}
+          allowedSections={allowedWorkflowSections}
         />
 
         <div
@@ -967,11 +999,11 @@ function JobDetailPanel({
             className="mt-3"
             detail={nextAction}
             title="Next best action"
-            tone={missingRequiredEvidence.length > 0 ? 'warning' : 'info'}
+            tone={fieldEvidenceEnabled && missingRequiredEvidence.length > 0 ? 'warning' : 'info'}
           />
         </div>
 
-        <section
+        {fieldEvidenceEnabled ? <section
           aria-labelledby="job-workflow-tab-checklist"
           className={`${activeWorkflow === 'checklist' ? 'block' : 'hidden'} mt-5 rounded-xl border border-slate-200 bg-paper px-3`}
           id="job-workflow-panel-checklist"
@@ -1000,9 +1032,9 @@ function JobDetailPanel({
             ))}
           </div>
           <div className="h-3" />
-        </section>
+        </section> : null}
 
-        {addOns.length > 0 ? (
+        {executionEnabled ? (addOns.length > 0 ? (
           <div
             aria-labelledby="job-workflow-tab-addons"
             className={`${activeWorkflow === 'addons' ? 'block' : 'hidden'} mt-5`}
@@ -1051,9 +1083,9 @@ function JobDetailPanel({
           >
             No approved add-on work is attached to this job.
           </div>
-        )}
+        )) : null}
 
-        <div
+        {fieldEvidenceEnabled ? <div
           aria-labelledby="job-workflow-tab-photos"
           className={`${activeWorkflow === 'photos' ? 'block' : 'hidden'} mt-5 rounded-2xl bg-paper p-4`}
           id="job-workflow-panel-photos"
@@ -1112,10 +1144,10 @@ function JobDetailPanel({
               ))}
             </div>
           )}
-        </div>
+        </div> : null}
       </section>
 
-      <div
+      {reportEnabled ? <div
         aria-labelledby="job-workflow-tab-report"
         className={activeWorkflow === 'report' ? 'block' : 'hidden'}
         id="job-workflow-panel-report"
@@ -1132,7 +1164,7 @@ function JobDetailPanel({
         onQueueDeliveryNotification={onQueueReportDeliveryNotification}
         actionStatus={reportActionStatus}
       />
-      </div>
+      </div> : null}
     </div>
   );
 }
@@ -1311,6 +1343,7 @@ export function App() {
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
   const [offlinePhotoMutations, setOfflinePhotoMutations] = useState<PhotoUploadOfflineMutation[]>([]);
+  const [offlineRouteMutationCount, setOfflineRouteMutationCount] = useState(0);
   const [isReplayingJobMutations, setIsReplayingJobMutations] = useState(false);
   const [isReplayingChecklistMutations, setIsReplayingChecklistMutations] = useState(false);
   const [isReplayingPhotoMutations, setIsReplayingPhotoMutations] = useState(false);
@@ -1344,6 +1377,10 @@ export function App() {
   const managedPersonaUnit = auth.workspaceRollout?.enforcementMode === 'managed'
     ? workspaceEnabledUnitForPersona(activePersona.id, auth.workspaceRollout)
     : undefined;
+  const fieldControls = workspaceFieldControlsForPersona(
+    activePersona.id,
+    managedPersonaUnit,
+  );
   const homeCustomerVisits = activePersona.id === 'yard-owner'
     ? customerPortalVisits
     : activePersona.id === 'property-manager'
@@ -1560,7 +1597,12 @@ export function App() {
   }
 
   const replayJobLifecycleMutations = useCallback(async () => {
-    if (!auth.userId || !navigator.onLine || jobReplayInProgress.current) return;
+    if (
+      !fieldControls.stopProgress
+      || !auth.userId
+      || !navigator.onLine
+      || jobReplayInProgress.current
+    ) return;
     jobReplayInProgress.current = true;
     setIsReplayingJobMutations(true);
     try {
@@ -1595,10 +1637,15 @@ export function App() {
       jobReplayInProgress.current = false;
       setIsReplayingJobMutations(false);
     }
-  }, [auth.userId]);
+  }, [auth.userId, fieldControls.stopProgress]);
 
   const replayChecklistMutations = useCallback(async () => {
-    if (!auth.userId || !navigator.onLine || checklistReplayInProgress.current) return;
+    if (
+      !fieldControls.fieldEvidence
+      || !auth.userId
+      || !navigator.onLine
+      || checklistReplayInProgress.current
+    ) return;
     checklistReplayInProgress.current = true;
     setIsReplayingChecklistMutations(true);
     try {
@@ -1636,10 +1683,15 @@ export function App() {
       checklistReplayInProgress.current = false;
       setIsReplayingChecklistMutations(false);
     }
-  }, [auth.userId]);
+  }, [auth.userId, fieldControls.fieldEvidence]);
 
   const replayPhotoMutations = useCallback(async () => {
-    if (!auth.userId || !navigator.onLine || photoReplayInProgress.current) return;
+    if (
+      !fieldControls.fieldEvidence
+      || !auth.userId
+      || !navigator.onLine
+      || photoReplayInProgress.current
+    ) return;
     photoReplayInProgress.current = true;
     setIsReplayingPhotoMutations(true);
     let replayedAny = false;
@@ -1683,7 +1735,7 @@ export function App() {
       photoReplayInProgress.current = false;
       setIsReplayingPhotoMutations(false);
     }
-  }, [auth.userId]);
+  }, [auth.userId, fieldControls.fieldEvidence]);
 
   useEffect(() => {
     if (!auth.userId) {
@@ -2190,6 +2242,7 @@ export function App() {
     jobId: string,
     action: JobLifecycleOfflineMutation['action'],
   ): Promise<boolean> {
+    if (!fieldControls.stopProgress) return false;
     const job = jobs.find((item) => item.id === jobId);
     if (!job?.organizationId || !auth.userId) return false;
     try {
@@ -2229,7 +2282,7 @@ export function App() {
   }
 
   async function handleChecklistItemChange(itemId: string, completed: boolean) {
-    if (!selectedJobId || !selectedJob) return;
+    if (!fieldControls.fieldEvidence || !selectedJobId || !selectedJob) return;
     let outcome = 'Checklist updated.';
     try {
       const result = await updateChecklistItem(selectedJobId, itemId, completed);
@@ -2303,7 +2356,7 @@ export function App() {
   }
 
   async function handleStartJob() {
-    if (!selectedJobId) {
+    if (!fieldControls.stopProgress || !selectedJobId) {
       return;
     }
 
@@ -2333,7 +2386,7 @@ export function App() {
   }
 
   async function handleCompleteJob() {
-    if (!selectedJobId) {
+    if (!fieldControls.fieldEvidence || !selectedJobId) {
       return;
     }
 
@@ -2388,7 +2441,7 @@ export function App() {
   }
 
   async function handleAddOnStatusChange(addOnId: string, status: JobAddOn['status']) {
-    if (!selectedJobId) return;
+    if (!fieldControls.stopProgress || !selectedJobId) return;
 
     try {
       const updated = await updateJobAddOnStatus(selectedJobId, addOnId, status);
@@ -2854,7 +2907,7 @@ export function App() {
   }
 
   async function handlePhotoSelected(file: File, photoType: PhotoType) {
-    if (!selectedJobId) {
+    if (!fieldControls.fieldEvidence || !selectedJobId) {
       return;
     }
 
@@ -3042,6 +3095,7 @@ export function App() {
           offlineJobMutations.length
           + offlineChecklistMutations.length
           + offlinePhotoMutations.length
+          + offlineRouteMutationCount
         }
         personaDescription={activePersona.description}
         personaLabel={activePersona.label}
@@ -3071,6 +3125,7 @@ export function App() {
                 offlineJobMutations.length
                 + offlineChecklistMutations.length
                 + offlinePhotoMutations.length
+                + offlineRouteMutationCount
               }
               persona={activePersona}
               signedInName={auth.displayName || 'Signed-in user'}
@@ -3079,8 +3134,12 @@ export function App() {
           <div className={`${workspaceSurfaces.fieldOperations && mobileView === 'route' ? 'block' : 'hidden'} scroll-mt-16`} id="today-route">
             <DayPlanPanel
               actorId={auth.userId}
+              jobDetailsEnabled={fieldControls.jobDetails}
+              onPendingChangeCountChange={setOfflineRouteMutationCount}
               onSelectJob={selectJobForReview}
               refreshSignal={dayPlanRefreshSignal}
+              routeChangesEnabled={fieldControls.routeChanges}
+              stopProgressEnabled={fieldControls.stopProgress}
             />
           </div>
           <section className={workspaceSurfaces.fieldOperations && mobileView === 'jobs' ? 'block' : 'hidden'}>
@@ -3105,6 +3164,11 @@ export function App() {
                   {offlineJobMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
                   {offlineJobMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
                 </p>
+                {!fieldControls.stopProgress ? (
+                  <p className="mt-1 font-medium">
+                    Saved changes stay on this phone until job execution access returns.
+                  </p>
+                ) : null}
                 <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
                   <summary className="min-h-11 cursor-pointer py-3 font-bold">
                     Review queued job changes
@@ -3167,14 +3231,19 @@ export function App() {
                 <button
                   className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
                   disabled={
-                    !navigator.onLine
+                    !fieldControls.stopProgress
+                    || !navigator.onLine
                     || isReplayingJobMutations
                     || offlineJobMutations.some((mutation) => mutation.syncState === 'conflict')
                   }
                   onClick={() => void replayJobLifecycleMutations()}
                   type="button"
                 >
-                  {isReplayingJobMutations ? 'Syncing job changes…' : 'Sync job changes'}
+                  {!fieldControls.stopProgress
+                    ? 'Job execution access needed'
+                    : isReplayingJobMutations
+                      ? 'Syncing job changes…'
+                      : 'Sync job changes'}
                 </button>
               </div>
             )}
@@ -3187,6 +3256,11 @@ export function App() {
                   {offlineChecklistMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
                   {offlineChecklistMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
                 </p>
+                {!fieldControls.fieldEvidence ? (
+                  <p className="mt-1 font-medium">
+                    Saved checklist work stays on this phone until evidence access returns.
+                  </p>
+                ) : null}
                 <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
                   <summary className="min-h-11 cursor-pointer py-3 font-bold">
                     Review queued checklist changes
@@ -3253,14 +3327,19 @@ export function App() {
                 <button
                   className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
                   disabled={
-                    !navigator.onLine
+                    !fieldControls.fieldEvidence
+                    || !navigator.onLine
                     || isReplayingChecklistMutations
                     || offlineChecklistMutations.some((mutation) => mutation.syncState === 'conflict')
                   }
                   onClick={() => void replayChecklistMutations()}
                   type="button"
                 >
-                  {isReplayingChecklistMutations ? 'Syncing checklist…' : 'Sync checklist changes'}
+                  {!fieldControls.fieldEvidence
+                    ? 'Evidence access needed'
+                    : isReplayingChecklistMutations
+                      ? 'Syncing checklist…'
+                      : 'Sync checklist changes'}
                 </button>
               </div>
             )}
@@ -3273,6 +3352,11 @@ export function App() {
                   {offlinePhotoMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
                   {offlinePhotoMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
                 </p>
+                {!fieldControls.fieldEvidence ? (
+                  <p className="mt-1 font-medium">
+                    Saved photos stay on this phone until evidence access returns.
+                  </p>
+                ) : null}
                 <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
                   <summary className="min-h-11 cursor-pointer py-3 font-bold">
                     Review queued photos
@@ -3336,14 +3420,19 @@ export function App() {
                 <button
                   className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
                   disabled={
-                    !navigator.onLine
+                    !fieldControls.fieldEvidence
+                    || !navigator.onLine
                     || isReplayingPhotoMutations
                     || offlinePhotoMutations.some((mutation) => mutation.syncState === 'conflict')
                   }
                   onClick={() => void replayPhotoMutations()}
                   type="button"
                 >
-                  {isReplayingPhotoMutations ? 'Uploading photos…' : 'Upload queued photos'}
+                  {!fieldControls.fieldEvidence
+                    ? 'Evidence access needed'
+                    : isReplayingPhotoMutations
+                      ? 'Uploading photos…'
+                      : 'Upload queued photos'}
                 </button>
               </div>
             )}
@@ -3923,6 +4012,8 @@ export function App() {
           ) : null}
           <JobDetailPanel
             job={selectedJob}
+            executionEnabled={fieldControls.stopProgress}
+            fieldEvidenceEnabled={fieldControls.fieldEvidence}
             isLoading={isLoadingDetail}
             addOns={selectedJobAddOns}
             uploadTickets={selectedJobTickets}
@@ -3938,6 +4029,7 @@ export function App() {
             onDeliverReport={handleDeliverReport}
             onQueueReportDeliveryNotification={handleQueueReportDeliveryNotification}
             reportActionStatus={completionReportActionStatus}
+            reportEnabled={fieldControls.report}
             requestedWorkflow={requestedJobWorkflow}
           />
         </div>

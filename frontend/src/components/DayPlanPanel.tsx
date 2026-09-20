@@ -44,8 +44,12 @@ import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
 
 type DayPlanPanelProps = {
   actorId?: string | null;
+  jobDetailsEnabled?: boolean;
+  onPendingChangeCountChange?: (count: number) => void;
   onSelectJob?: (jobId: string) => void;
   refreshSignal?: number;
+  routeChangesEnabled?: boolean;
+  stopProgressEnabled?: boolean;
 };
 
 const crewExtraServiceCatalog: ServiceCatalogItem[] = [
@@ -114,8 +118,12 @@ function servicePriceLabel(service: ServiceCatalogItem): string {
 
 export function DayPlanPanel({
   actorId,
+  jobDetailsEnabled = true,
+  onPendingChangeCountChange,
   onSelectJob,
   refreshSignal = 0,
+  routeChangesEnabled = true,
+  stopProgressEnabled = true,
 }: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
   const [source, setSource] = useState<'api' | 'local' | 'missing' | 'unavailable'>('local');
@@ -160,6 +168,12 @@ export function DayPlanPanel({
     ? dayPlan.stops
     : dayPlan.stops.slice(focusedStopStart, focusedStopStart + 2);
 
+  useEffect(() => {
+    onPendingChangeCountChange?.(
+      offlineMutations.length + offlineAmendmentMutations.length,
+    );
+  }, [offlineAmendmentMutations.length, offlineMutations.length, onPendingChangeCountChange]);
+
   function clickMatchingJobCard(customerName: string) {
     const buttons = Array.from(document.querySelectorAll('article button'));
     const button = buttons.find((candidate) => {
@@ -188,6 +202,7 @@ export function DayPlanPanel({
     stopId?: string,
     service?: ServiceCatalogItem,
   ) {
+    if (!routeChangesEnabled) return;
     const request: DayPlanAmendmentRequest = {
       id: `local_amendment_${dayPlan.id}_${amendmentType}_${Date.now()}`,
       dayPlanId: dayPlan.id,
@@ -323,6 +338,7 @@ export function DayPlanPanel({
   }
 
   function advanceStop(stopId: string) {
+    if (!stopProgressEnabled) return;
     setStopStates((current) => {
       const persistedStatus = dayPlan.stops.find((stop) => stop.id === stopId)?.stopStatus;
       const nextState = getNextStopStatus(resolveStopStatus(current[stopId], persistedStatus));
@@ -333,6 +349,7 @@ export function DayPlanPanel({
   }
 
   function resetRouteProgress() {
+    if (!routeChangesEnabled) return;
     clearStopStates(dayPlan.id);
     setStopStates(resetStopStates());
     if (pendingMutationCount > 0) {
@@ -361,7 +378,12 @@ export function DayPlanPanel({
   }
 
   const replayOfflineMutations = useCallback(async () => {
-    if (!actorId || !navigator.onLine || replayInProgress.current) return;
+    if (
+      !stopProgressEnabled
+      || !actorId
+      || !navigator.onLine
+      || replayInProgress.current
+    ) return;
     replayInProgress.current = true;
     setIsReplayingMutations(true);
     try {
@@ -402,10 +424,15 @@ export function DayPlanPanel({
       replayInProgress.current = false;
       setIsReplayingMutations(false);
     }
-  }, [actorId]);
+  }, [actorId, stopProgressEnabled]);
 
   const replayOfflineAmendments = useCallback(async () => {
-    if (!actorId || !navigator.onLine || amendmentReplayInProgress.current) return;
+    if (
+      !routeChangesEnabled
+      || !actorId
+      || !navigator.onLine
+      || amendmentReplayInProgress.current
+    ) return;
     amendmentReplayInProgress.current = true;
     setIsReplayingAmendments(true);
     try {
@@ -461,7 +488,7 @@ export function DayPlanPanel({
       amendmentReplayInProgress.current = false;
       setIsReplayingAmendments(false);
     }
-  }, [actorId]);
+  }, [actorId, routeChangesEnabled]);
 
   async function discardReviewedConflict(mutation: StopProgressOfflineMutation) {
     try {
@@ -667,6 +694,11 @@ export function DayPlanPanel({
                   {conflictMutationCount} {conflictMutationCount === 1 ? 'change needs' : 'changes need'} manager review before retrying.
                 </p>
               )}
+              {!stopProgressEnabled ? (
+                <p className="mt-1 font-medium">
+                  Saved progress stays on this phone until stop execution access returns.
+                </p>
+              ) : null}
               {conflictResolutionError && (
                 <p className="mt-1 font-medium text-red-900">
                   The reviewed conflict could not be removed from this phone. Try again.
@@ -736,11 +768,18 @@ export function DayPlanPanel({
               </details>
               <button
                 className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
-                disabled={!navigator.onLine || isReplayingMutations || conflictMutationCount > 0}
+                disabled={
+                  !stopProgressEnabled
+                  || !navigator.onLine
+                  || isReplayingMutations
+                  || conflictMutationCount > 0
+                }
                 onClick={() => void replayOfflineMutations()}
                 type="button"
               >
-                {isReplayingMutations
+                {!stopProgressEnabled
+                  ? 'Stop execution access needed'
+                  : isReplayingMutations
                   ? 'Syncing…'
                   : conflictMutationCount > 0
                     ? 'Manager review needed'
@@ -780,7 +819,17 @@ export function DayPlanPanel({
         </div>
       </section>
 
-      <details className="order-4 mt-4 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-3">
+      {!jobDetailsEnabled && !stopProgressEnabled && !routeChangesEnabled ? (
+        <WorkspaceStatusNotice
+          className="order-3 mt-4"
+          compact
+          detail="Job execution, evidence, and route-change actions are not enabled for this rollout unit."
+          title="Today’s route is read only."
+          tone="info"
+        />
+      ) : null}
+
+      {routeChangesEnabled ? <details className="order-4 mt-4 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-3">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-emerald-950 [&::-webkit-details-marker]:hidden">
           Route changes
           <span className="text-xs font-medium text-emerald-700">Add a stop</span>
@@ -809,7 +858,7 @@ export function DayPlanPanel({
             Reset route progress
           </button>
         </div>
-      </details>
+      </details> : null}
 
       {amendmentRequests.length > 0 ? (
         <details className="order-5 mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -858,6 +907,11 @@ export function DayPlanPanel({
             {offlineAmendmentMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
             {offlineAmendmentMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
           </p>
+          {!routeChangesEnabled ? (
+            <p className="mt-1 font-medium">
+              Saved requests stay on this phone until route-change access returns.
+            </p>
+          ) : null}
           <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
             <summary className="min-h-11 cursor-pointer py-3 font-bold">
               Review queued route requests
@@ -922,14 +976,19 @@ export function DayPlanPanel({
           <button
             className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
             disabled={
-              !navigator.onLine
+              !routeChangesEnabled
+              || !navigator.onLine
               || isReplayingAmendments
               || offlineAmendmentMutations.some((mutation) => mutation.syncState === 'conflict')
             }
             onClick={() => void replayOfflineAmendments()}
             type="button"
           >
-            {isReplayingAmendments ? 'Sending requests…' : 'Send queued requests'}
+            {!routeChangesEnabled
+              ? 'Route-change access needed'
+              : isReplayingAmendments
+                ? 'Sending requests…'
+                : 'Send queued requests'}
           </button>
         </div>
       )}
@@ -975,6 +1034,30 @@ export function DayPlanPanel({
           const actionLabel = stopActionLabel(localState);
           const selectedExtraServiceId = selectedExtraServices[stop.id] ?? crewExtraServiceCatalog[0]?.id ?? '';
           const selectedExtraService = crewExtraServiceCatalog.find((service) => service.id === selectedExtraServiceId);
+          const stopSummary = (
+            <div className="flex flex-col items-start gap-3 min-[380px]:flex-row">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white">
+                {stop.stopOrder}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-slate-950">{stop.customerName}</p>
+                <p className="text-sm text-slate-600">{stop.propertyAddress}</p>
+                <p className="mt-2 text-xs text-slate-500">
+                  Drive {stop.estimatedDriveMinutes} min / service {stop.estimatedServiceMinutes} min
+                </p>
+              </div>
+              <WorkspaceStatusBadge
+                className="uppercase tracking-wide"
+                tone={localState === 'finished'
+                  ? 'success'
+                  : localState === 'in_progress'
+                    ? 'warning'
+                    : 'neutral'}
+              >
+                {localState.replace('_', ' ')}
+              </WorkspaceStatusBadge>
+            </div>
+          );
 
           return (
             <div key={stop.id}>
@@ -984,44 +1067,27 @@ export function DayPlanPanel({
                   : index === 1 ? 'Up next' : `Stop ${stop.stopOrder}`}
               </h3>
               <article className={`rounded-2xl border p-4 ${index === 0 ? 'border-emerald-300 bg-paper shadow-grover-sm' : 'border-slate-200 bg-slate-50'}`}>
-              <button
-                aria-label={`Open job details for ${stop.customerName}`}
-                className="w-full text-left"
-                onClick={() => handleStopClick(stop.jobId, stop.customerName)}
-              >
-                <div className="flex flex-col items-start gap-3 min-[380px]:flex-row">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white">
-                    {stop.stopOrder}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-slate-950">{stop.customerName}</p>
-                    <p className="text-sm text-slate-600">{stop.propertyAddress}</p>
-                    <p className="mt-2 text-xs text-slate-500">
-                      Drive {stop.estimatedDriveMinutes} min / service {stop.estimatedServiceMinutes} min
-                    </p>
-                  </div>
-                  <WorkspaceStatusBadge
-                    className="uppercase tracking-wide"
-                    tone={localState === 'finished'
-                      ? 'success'
-                      : localState === 'in_progress'
-                        ? 'warning'
-                        : 'neutral'}
-                  >
-                    {localState.replace('_', ' ')}
-                  </WorkspaceStatusBadge>
-                </div>
-              </button>
+              {jobDetailsEnabled ? (
+                <button
+                  aria-label={`Open job details for ${stop.customerName}`}
+                  className="w-full text-left"
+                  onClick={() => handleStopClick(stop.jobId, stop.customerName)}
+                  type="button"
+                >
+                  {stopSummary}
+                </button>
+              ) : <div>{stopSummary}</div>}
 
-              <button
+              {stopProgressEnabled ? <button
                 className={`mt-3 min-h-11 w-full rounded-xl border px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${index === 0 ? 'border-forest bg-forest text-white hover:bg-emerald-900' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}
                 disabled={localState === 'finished'}
                 onClick={() => advanceStop(stop.id)}
+                type="button"
               >
                 {actionLabel}
-              </button>
+              </button> : null}
 
-              <details className="mt-3 rounded-xl border border-slate-200 bg-white px-3">
+              {routeChangesEnabled ? <details className="mt-3 rounded-xl border border-slate-200 bg-white px-3">
                 <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-slate-600 [&::-webkit-details-marker]:hidden">
                   Stop options
                   <span className="font-normal text-slate-500">Skip or add service</span>
@@ -1074,7 +1140,7 @@ export function DayPlanPanel({
                   </button>
                   </div>
                 </div>
-              </details>
+              </details> : null}
               </article>
             </div>
           );
