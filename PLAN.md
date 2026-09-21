@@ -57,6 +57,12 @@ infer execution order from section position.
 
 ### Modern Grover independent planning and review
 
+The [working mission and core values](project-planning/MISSION_AND_VALUES.md)
+now give the content review a physical-environment outcome: outdoor places that
+are more beautiful and better maintained through clear plans, practical work,
+and lasting follow-through. This is a messaging foundation; specific public
+capability claims still require the existing claim review and product decisions.
+
 The [Modern Grover track](modern-grover/README.md) owns the active
 [workplan](modern-grover/WORKPLAN.md), [product decisions](modern-grover/PRODUCT_DECISIONS.md),
 [critical workflow review](modern-grover/review/application-workflow-critical-review-2026-09-16.md),

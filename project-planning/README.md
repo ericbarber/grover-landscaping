@@ -9,6 +9,7 @@ moving their existing canonical documents.
 | Document | Purpose |
 | --- | --- |
 | [DELIVERY_BOARD.md](DELIVERY_BOARD.md) | Authoritative active phase, next queue, blockers, and exit evidence |
+| [MISSION_AND_VALUES.md](MISSION_AND_VALUES.md) | Working mission and five core values for content and messaging review |
 | [ROADMAP.md](ROADMAP.md) | Consolidated continuation plan and phased roadmap |
 | [FEATURE_CATALOG.md](FEATURE_CATALOG.md) | Index of product capabilities and their source specifications |
 | [PROTOTYPE_ADOPTION.md](PROTOTYPE_ADOPTION.md) | Approved design-to-production status and adoption history |
