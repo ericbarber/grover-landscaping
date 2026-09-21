@@ -13,32 +13,32 @@ the beauty and maintenance of the physical places where people live and work.
 
 ## Core values
 
-### 1. Stewardship of place
+### 1. Stewardship
 
 We care about the condition of the places people experience every day. We
 consider each property's character, ongoing needs, and long-term upkeep when
 deciding what good care looks like. Beauty matters most when people can sustain
 it.
 
-### 2. Pride in the work
+### 2. Craft
 
 We respect the skill and effort behind excellent landscape care. We help teams
 understand the job, do it well, and see that their work is represented fairly.
 Quality is built through attentive visits and reliable follow-through.
 
-### 3. Own the outcome
+### 3. Accountability
 
 We make responsibilities and next steps clear, follow commitments through, and
 surface problems while they can still be addressed. A missed need or changed
 plan deserves a clear owner and an honest path forward.
 
-### 4. Show what is true
+### 4. Honesty
 
 We communicate plans, progress, and results in plain language. Photos, notes,
 and status should help people understand what happened and what remains to be
 done. We make claims that the work and the product can support.
 
-### 5. Respect every person involved
+### 5. Respect
 
 We respect customers' goals and control over their property information, the
 practical realities of field work, and the people affected by each property.
