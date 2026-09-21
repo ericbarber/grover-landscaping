@@ -32,11 +32,11 @@ We make responsibilities and next steps clear, follow commitments through, and
 surface problems while they can still be addressed. A missed need or changed
 plan deserves a clear owner and an honest path forward.
 
-### 4. Honesty
+### 4. Integrity
 
-We communicate plans, progress, and results in plain language. Photos, notes,
-and status should help people understand what happened and what remains to be
-done. We make claims that the work and the product can support.
+We keep what we say, record, and show aligned with what actually happened.
+Photos, notes, and status should help people understand the work completed and
+the work still needed. We make claims that the work and the product can support.
 
 ### 5. Respect
 
