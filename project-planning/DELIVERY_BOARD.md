@@ -65,6 +65,10 @@ Delivery evidence:
 
 - `scripts/validate-changes.sh` classifies working-tree, branch-diff, explicit
   path, and explicit scope inputs while preserving full affected-package gates.
+- Local validation selects the API binary explicitly now that the crate also
+  ships a migration binary, and repository contract coverage protects every
+  documented/watchdog launcher. Infrastructure validation uses host Terraform
+  or the cached pinned 1.13.5 image without requiring a second tool install.
 - `scripts/validate-changes.test.sh` verifies representative scope mappings.
 - Branch-scoped GitHub Actions concurrency cancels superseded runs without
   changing the surviving run's job matrix.
@@ -97,6 +101,9 @@ Delivery evidence:
   distinct exit statuses and redacts operator values.
 - Contract tests cover repository readiness, external classification, invalid
   supplied input, and secret/PII non-disclosure.
+- The September 30 repository-only preflight is `READY`: required artifacts,
+  Render shape, production guards, smoke inputs, formatting, and both Terraform
+  environments pass. Protected hosting remains an R2 external prerequisite.
 
 ### R2 — Protected environment provisioning
 

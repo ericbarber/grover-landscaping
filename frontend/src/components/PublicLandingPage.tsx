@@ -373,7 +373,7 @@ export function PublicLandingPage({
         </nav>
       </header>
 
-      <section className="grid bg-bone lg:h-[calc(100svh-5.0625rem)] lg:min-h-[39rem] lg:grid-cols-[1.02fr_0.98fr]">
+      <section className="grid bg-bone lg:h-[calc(100svh-5.0625rem)] lg:min-h-[39rem] lg:grid-cols-[1.02fr_0.98fr] lg:grid-rows-[minmax(0,1fr)]">
         <div className="flex items-center px-4 py-14 sm:px-8 sm:py-20 lg:h-full lg:px-[max(2rem,calc((100vw-86rem)/2+2rem))] lg:py-2 xl:py-[clamp(1rem,3vh,3rem)]">
           <div className="w-full max-w-[40rem]">
             <div aria-atomic="true" aria-live="polite" className="grid" data-testid="hero-persona-copy">
@@ -389,10 +389,10 @@ export function PublicLandingPage({
                     <p className="grover-eyebrow flex items-center gap-3 before:h-px before:w-7 before:bg-emerald-700">
                       {persona.eyebrow}
                     </p>
-                    <h1 className="grover-display mt-6 max-w-[12ch] text-[clamp(3.25rem,6vw,5.8rem)] leading-[0.98] lg:mt-4 lg:max-w-[14ch] lg:text-[clamp(3.5rem,5vw,4.5rem)]">
+                    <h1 className="grover-display mt-6 max-w-[12ch] text-[clamp(3.25rem,6vw,5.8rem)] leading-[0.98] lg:mt-4 lg:max-w-[14ch] lg:text-[clamp(3rem,5vw,4.5rem)]">
                       {persona.headline}
                     </h1>
-                    <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl lg:mt-4">
+                    <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl lg:mt-4 lg:text-lg lg:leading-7 xl:text-xl xl:leading-8">
                       {persona.description}
                     </p>
                   </div>

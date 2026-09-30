@@ -905,6 +905,18 @@ Current state:
   The private-VPN review service remains reachable with PostgreSQL readiness in
   explicit local-review authentication mode. This is publication and review
   evidence, not protected Cognito deployment evidence.
+- Phase 6B9 hardens the repeatable local publication gate after the backend
+  gained a separate migration binary. Cargo now has an explicit API default
+  target, every local launcher names that binary, and a repository contract
+  prevents the Compose watchdog or review instructions from regressing to an
+  ambiguous `cargo run`. Change-aware infrastructure validation can use either
+  host Terraform or the cached, pinned Terraform 1.13.5 image and reuses
+  initialized provider directories. The public desktop hero constrains its grid
+  row to the viewport and compacts type at the 1024px breakpoint for Firefox;
+  the provider-invitation journey also allows for a cold route-module load.
+  Mobile projects no longer apply the desktop-only hero geometry assertion.
+  The complete local matrix passes 78 journeys with those two mobile-context
+  skips across Chromium, Firefox, and WebKit.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail

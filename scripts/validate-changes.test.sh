@@ -49,4 +49,7 @@ assert_contains "${workflow_output}" "docker compose config --quiet"
 full_output="$(bash "${validator}" --scope full --dry-run)"
 assert_contains "${full_output}" "Selected validation scopes: repository docs frontend backend database infra browser"
 
+infra_output="$(bash "${validator}" --scope infra --dry-run)"
+assert_contains "${infra_output}" "terraform fmt -check -recursive and validate dev/prod modules"
+
 echo "Change-aware validation selection tests passed."

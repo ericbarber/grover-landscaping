@@ -90,7 +90,7 @@ test('a first-time recipient completes the bounded known-owner connection path',
   });
 
   await page.goto('/app/provider-invitation#invitation=first_connection_secret');
-  await expect(page.getByRole('heading', { name: 'Desert Green Care' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Desert Green Care' })).toBeVisible({ timeout: 15_000 });
   await page.getByRole('button', { name: 'Continue as dispatch@provider.example' }).click();
   await expect(page.getByRole('heading', { name: 'Connect the provider organization' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Current: Organization' })).toBeVisible();

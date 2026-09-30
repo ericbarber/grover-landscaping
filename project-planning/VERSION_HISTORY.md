@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-30: Hardened the local publication gate after adding the migration
+  binary. Backend launchers now select the API binary explicitly, the
+  change-aware validator can reuse a cached pinned Terraform executable, and
+  repository contracts cover both behaviors. Cross-browser release review also
+  constrained the public desktop hero grid to the viewport, tightened the
+  1024px typography for Firefox, scoped desktop-only geometry to desktop
+  contexts, and made the invitation journey resilient to cold module loading.
 - 2026-09-30: Extracted durable field offline recovery from the application
   shell. One actor-scoped hook now hydrates job/checklist/photo queues, serializes
   replay per queue, retries on reconnect, classifies conflicts, and refreshes

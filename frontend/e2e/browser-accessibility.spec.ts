@@ -222,7 +222,9 @@ test('persona switching keeps the hero title section stable', async ({ page }) =
   }
 });
 
-test('the complete desktop hero stays within the first viewport', async ({ page }) => {
+test('the complete desktop hero stays within the first viewport', async ({ page }, testInfo) => {
+  test.skip(Boolean(testInfo.project.use.isMobile), 'Desktop hero geometry requires a desktop browser context.');
+
   const personas = [
     { tab: 'Yard owner', graphic: 'Your latest service is ready' },
     { tab: 'Property manager', graphic: '14 of 16 properties on track' },

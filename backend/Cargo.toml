@@ -2,6 +2,7 @@
 name = "grover-landscaping-api"
 version = "0.1.0"
 edition = "2021"
+default-run = "grover-landscaping-api"
 
 [dependencies]
 axum = "0.8"

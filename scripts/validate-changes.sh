@@ -8,6 +8,16 @@ dry_run=false
 base_ref=""
 requested_scopes=()
 requested_paths=()
+terraform_runner=""
+terraform_image="hashicorp/terraform:1.13.5"
+temporary_terraform=""
+
+cleanup() {
+  if [[ -n "${temporary_terraform}" && -f "${temporary_terraform}" ]]; then
+    rm -f -- "${temporary_terraform}"
+  fi
+}
+trap cleanup EXIT
 
 usage() {
   sed -n '2,36p' "${BASH_SOURCE[0]}" | sed -n 's/^# //p'
@@ -205,6 +215,34 @@ node_command() {
   fi
 }
 
+select_terraform_runner() {
+  if command -v terraform >/dev/null 2>&1; then
+    terraform_runner="$(command -v terraform)"
+    return
+  fi
+
+  if command -v docker >/dev/null 2>&1 &&
+    docker image inspect "${terraform_image}" >/dev/null 2>&1; then
+    local container_id
+    temporary_terraform="$(mktemp /tmp/grover-validate-terraform.XXXXXX)"
+    container_id="$(docker create "${terraform_image}")"
+    if docker cp "${container_id}:/bin/terraform" "${temporary_terraform}" >/dev/null 2>&1; then
+      chmod +x "${temporary_terraform}"
+      terraform_runner="${temporary_terraform}"
+    fi
+    docker rm "${container_id}" >/dev/null
+  fi
+}
+
+terraform_command() {
+  [[ -n "${terraform_runner}" ]] || select_terraform_runner
+  if [[ -z "${terraform_runner}" ]]; then
+    echo "Infrastructure validation requires Terraform on PATH or cached image ${terraform_image}." >&2
+    return 1
+  fi
+  TF_IN_AUTOMATION=1 run_command "${terraform_runner}" "$@"
+}
+
 validate_markdown_links() {
   local files=()
   local file target resolved
@@ -259,6 +297,7 @@ for scope in "${ordered_scopes[@]}"; do
     repository)
       run_command git diff --check
       for script in scripts/*.sh; do run_command bash -n "${script}"; done
+      run_command bash scripts/backend-entrypoint.test.sh
       run_command bash scripts/validate-changes.test.sh
       run_command bash scripts/release-preflight.test.sh
       run_command bash scripts/smoke-production.test.sh
@@ -284,15 +323,14 @@ for scope in "${ordered_scopes[@]}"; do
       run_command bash scripts/apply-local-migrations.sh
       ;;
     infra)
-      if ! command -v terraform >/dev/null 2>&1; then
-        echo "Infrastructure validation requires terraform on PATH." >&2
-        exit 1
-      fi
-      run_command terraform fmt -check -recursive infra/terraform
-      run_command terraform -chdir=infra/terraform/environments/dev init -backend=false
-      run_command terraform -chdir=infra/terraform/environments/dev validate
-      run_command terraform -chdir=infra/terraform/environments/prod init -backend=false
-      run_command terraform -chdir=infra/terraform/environments/prod validate
+      terraform_command fmt -check -recursive infra/terraform
+      for environment in dev prod; do
+        terraform_environment="infra/terraform/environments/${environment}"
+        if [[ ! -d "${terraform_environment}/.terraform/providers" ]]; then
+          terraform_command -chdir="${terraform_environment}" init -backend=false -input=false
+        fi
+        terraform_command -chdir="${terraform_environment}" validate
+      done
       ;;
     browser)
       frontend_command run test:e2e:cross-browser
