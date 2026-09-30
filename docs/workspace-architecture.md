@@ -113,4 +113,9 @@ local filtering and conflict-confirmation state; `App` retains mutation
 execution until the field coordinator is extracted. Selected-job presentation
 is also separated: workflow navigation, checklist, photo evidence, add-ons, and
 completion-report rendering consume injected operations and resolved field
-controls rather than owning access policy.
+controls rather than owning access policy. Pure field-data continuity rules now
+live beside that recovery policy: trusted job summaries can produce an explicit
+detail fallback, failed uploads can produce typed local evidence, and persisted
+evidence merges without discarding unsaved local or other-job photos. `App`
+still owns API calls, durable mutation execution, and cross-request state until
+the field coordinator is extracted.

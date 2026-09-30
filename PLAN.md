@@ -236,9 +236,11 @@ Current state:
   offline recovery queues now render through dedicated field components; their
   filter and conflict-confirmation state no longer lives in `App`. Selected-job
   overview, workflow navigation, checklist, evidence upload, add-ons, and report
-  presentation now also live in a dedicated field component. The remaining
-  field API/offline coordinator and other data-loading/state coordinators remain
-  later slices.
+  presentation now also live in a dedicated field component. Field detail
+  fallback construction, local photo-ticket construction, and authoritative
+  evidence merging now share the field feature boundary instead of being
+  embedded in `App`. The remaining field API/offline coordinator and other
+  data-loading/state coordinators remain later slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-30: Centralized pure field-data continuity policy. Job summaries now
+  produce explicit detail fallbacks, failed uploads produce typed local photo
+  tickets, and authoritative photo reloads preserve unsaved and other-job
+  evidence without relying on application-shell helpers.
 - 2026-09-30: Extracted selected-job presentation from the application shell.
   Overview, field actions, workflow navigation, checklist, photo evidence,
   approved add-ons, and completion-report rendering now live in a dedicated

@@ -4,7 +4,15 @@ import type {
   JobLifecycleOfflineMutation,
   PhotoUploadOfflineMutation,
 } from '../../../domain/offlineMutationQueue';
-import { fieldQueueCanSync, fieldRecoveryState } from './fieldWorkspace';
+import type { PhotoUploadTicket } from '../../../api/client';
+import type { YardCareJob } from '../../../domain/jobs';
+import {
+  createLocalPhotoTicket,
+  fallbackJobDetail,
+  fieldQueueCanSync,
+  fieldRecoveryState,
+  mergePhotoEvidence,
+} from './fieldWorkspace';
 
 const base = {
   organizationId: 'organization-1',
@@ -47,5 +55,65 @@ describe('field workspace recovery policy', () => {
     expect(fieldQueueCanSync(summary, false, false)).toBe(false);
     expect(fieldQueueCanSync(summary, true, true)).toBe(false);
     expect(fieldQueueCanSync({ ...summary, conflicts: 1 }, true, false)).toBe(false);
+  });
+
+  it('builds an explicit local detail fallback from the trusted job summary', () => {
+    const job = {
+      id: 'job-1',
+      status: 'in_progress',
+      beforePhotos: 1,
+      afterPhotos: 0,
+    } as YardCareJob;
+
+    expect(fallbackJobDetail(job).checklist).toEqual([
+      { id: 'before-photos', label: 'Capture before photos', completed: true },
+      { id: 'yard-service', label: 'Complete yard service', completed: true },
+      { id: 'after-photos', label: 'Capture after photos', completed: false },
+      { id: 'completion-notes', label: 'Submit completion notes', completed: false },
+    ]);
+  });
+
+  it('creates deterministic local photo evidence metadata', () => {
+    const ticket = createLocalPhotoTicket(
+      'job-1',
+      { name: 'before.jpg', type: 'image/jpeg' },
+      'before',
+      { fileSizeBytes: 1024, imageWidthPx: 800, imageHeightPx: 600 },
+      { now: 1234, createObjectUrl: () => 'blob:before' },
+    );
+
+    expect(ticket).toMatchObject({
+      photoId: 'local_job-1_before_1234',
+      objectKey: 'browser/jobs/job-1/before/before.jpg',
+      thumbnailUrl: 'blob:before',
+      metadataSource: 'client_reported',
+    });
+  });
+
+  it('merges authoritative evidence without dropping unsaved local or other-job photos', () => {
+    const ticket = (photoId: string, jobId: string): PhotoUploadTicket => ({
+      status: 'created',
+      jobId,
+      photoId,
+      photoType: 'before',
+      fileName: `${photoId}.jpg`,
+      contentType: 'image/jpeg',
+      uploadMode: 'test',
+      uploadUrl: '',
+      objectKey: photoId,
+    });
+    const current = [
+      ticket('persisted-1', 'job-1'),
+      ticket('local-1', 'job-1'),
+      ticket('other-1', 'job-2'),
+    ];
+    const persisted = [ticket('persisted-1', 'job-1'), ticket('persisted-2', 'job-1')];
+
+    expect(mergePhotoEvidence(current, 'job-1', persisted).map(({ photoId }) => photoId)).toEqual([
+      'persisted-1',
+      'persisted-2',
+      'local-1',
+      'other-1',
+    ]);
   });
 });

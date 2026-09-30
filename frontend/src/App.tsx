@@ -35,7 +35,6 @@ import {
   startCompletionReportReview,
   uploadPhotoToTicket,
   updateJobAddOnStatus,
-  type CompletePhotoUploadMetadata,
   type CompletionReportSnapshot,
   type CustomerPropertyRecord,
   type CustomerPhotoErasureSummary,
@@ -122,12 +121,16 @@ import {
   type CustomerPortalReadState,
 } from './workspaces/features/customer/customerWorkspace';
 import {
+  createLocalPhotoTicket,
+  fallbackJobDetail,
   fieldRecoveryState,
+  mergePhotoEvidence,
+  type FieldPhotoType,
 } from './workspaces/features/field/fieldWorkspace';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { AssignedJobsPanel } from './components/AssignedJobsPanel';
 import { FieldOfflineRecoveryPanel } from './components/FieldOfflineRecoveryPanel';
-import { JobDetailPanel, type PhotoType } from './components/JobDetailPanel';
+import { JobDetailPanel } from './components/JobDetailPanel';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { PropertyManagerAuthorizedPortfolioPanel } from './components/PropertyManagerAuthorizedPortfolioPanel';
 import { YardOwnerPortalPanel } from './components/YardOwnerPortalPanel';
@@ -714,56 +717,6 @@ function CustomerPortalPreviewPanel({
       ) : null}
     </section>
   );
-}
-
-function fallbackJobDetail(job: YardCareJob): JobDetail {
-  return {
-    ...job,
-    checklist: [
-      { id: 'before-photos', label: 'Capture before photos', completed: job.beforePhotos > 0 },
-      { id: 'yard-service', label: 'Complete yard service', completed: job.status !== 'scheduled' },
-      { id: 'after-photos', label: 'Capture after photos', completed: job.afterPhotos > 0 },
-      { id: 'completion-notes', label: 'Submit completion notes', completed: job.status === 'completed' },
-    ],
-  };
-}
-
-function localPhotoTicket(
-  jobId: string,
-  file: File,
-  photoType: PhotoType,
-  metadata: CompletePhotoUploadMetadata,
-): PhotoUploadTicket {
-  return {
-    status: 'created',
-    jobId,
-    photoId: `local_${jobId}_${photoType}_${Date.now()}`,
-    photoType,
-    fileName: file.name,
-    contentType: file.type || 'application/octet-stream',
-    uploadMode: 'browser-local-placeholder',
-    uploadUrl: `local://${file.name}`,
-    objectKey: `browser/jobs/${jobId}/${photoType}/${file.name}`,
-    thumbnailUrl: URL.createObjectURL(file),
-    fileSizeBytes: metadata.fileSizeBytes,
-    imageWidthPx: metadata.imageWidthPx,
-    imageHeightPx: metadata.imageHeightPx,
-    metadataSource: 'client_reported',
-  };
-}
-
-function mergePhotoEvidence(
-  current: PhotoUploadTicket[],
-  jobId: string,
-  persistedEvidence: PhotoUploadTicket[],
-): PhotoUploadTicket[] {
-  const persistedIds = new Set(persistedEvidence.map((photo) => photo.photoId));
-  const currentJobLocalEvidence = current.filter(
-    (photo) => photo.jobId === jobId && !persistedIds.has(photo.photoId),
-  );
-  const otherJobEvidence = current.filter((photo) => photo.jobId !== jobId);
-
-  return [...persistedEvidence, ...currentJobLocalEvidence, ...otherJobEvidence];
 }
 
 export function App() {
@@ -2538,7 +2491,7 @@ export function App() {
     }
   }
 
-  async function handlePhotoSelected(file: File, photoType: PhotoType) {
+  async function handlePhotoSelected(file: File, photoType: FieldPhotoType) {
     if (!selectedJobId) {
       return;
     }
@@ -2572,7 +2525,7 @@ export function App() {
         source: 'photo',
       });
     } catch {
-      ticket = localPhotoTicket(selectedJobId, file, photoType, metadata);
+      ticket = createLocalPhotoTicket(selectedJobId, file, photoType, metadata);
       let queued = false;
       if (selectedJob?.organizationId && auth.userId) {
         try {

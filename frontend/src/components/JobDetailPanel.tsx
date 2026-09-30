@@ -12,8 +12,7 @@ import {
   type JobWorkflowSection,
 } from './JobWorkflowMenu';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
-
-export type PhotoType = 'before' | 'after' | 'issue' | 'extra';
+import type { FieldPhotoType } from '../workspaces/features/field/fieldWorkspace';
 
 export function JobDetailPanel({
   job,
@@ -47,7 +46,7 @@ export function JobDetailPanel({
   onStart: () => Promise<void>;
   onComplete: () => Promise<void>;
   onChecklistItemChange: (itemId: string, completed: boolean) => Promise<void>;
-  onPhotoSelected: (file: File, photoType: PhotoType) => Promise<void>;
+  onPhotoSelected: (file: File, photoType: FieldPhotoType) => Promise<void>;
   onAddOnStatusChange: (addOnId: string, status: JobAddOn['status']) => Promise<void>;
   onStartReportReview: (reportId: string) => Promise<void>;
   onRequestReportChanges: (reportId: string, reason: string) => Promise<void>;
@@ -62,7 +61,7 @@ export function JobDetailPanel({
   reportEnabled: boolean;
   requestedWorkflow: JobWorkflowSection;
 }) {
-  const [photoType, setPhotoType] = useState<PhotoType>('before');
+  const [photoType, setPhotoType] = useState<FieldPhotoType>('before');
   const [activeWorkflow, setActiveWorkflow] = useState<JobWorkflowSection>(requestedWorkflow);
   const allowedWorkflowSections: JobWorkflowSection[] = [
     'overview',
@@ -321,7 +320,7 @@ export function JobDetailPanel({
             <select
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
               value={photoType}
-              onChange={(event) => setPhotoType(event.target.value as PhotoType)}
+              onChange={(event) => setPhotoType(event.target.value as FieldPhotoType)}
             >
               <option value="before">Before photo</option>
               <option value="after">After photo</option>
@@ -389,4 +388,3 @@ export function JobDetailPanel({
     </div>
   );
 }
-

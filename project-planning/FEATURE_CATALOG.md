@@ -98,6 +98,8 @@ boundary; inclusion here alone does not mean a feature shipped.
   field filtering and conflict-confirmation UI outside the application shell
 - Dedicated selected-job presentation component for overview, checklist,
   evidence capture, approved add-ons, and completion-report workflow
+- Centralized field-data continuity policy for job-detail fallbacks, typed local
+  photo evidence, and authoritative evidence merges that preserve unsaved work
 - Validated minimalist task-first design direction for all ten signed-in
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,
