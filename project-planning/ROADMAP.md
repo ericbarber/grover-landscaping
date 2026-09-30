@@ -151,7 +151,10 @@ the first field slices now centralize offline queue status and replay gating and
 move assigned-job, selected-job, and offline-recovery presentation out of `App`.
 Job-detail fallback, local photo evidence, and authoritative evidence-merge
 rules now also live in the field feature boundary; API and durable-mutation
-coordination remain the next internal extraction.
+coordination remain the next internal extraction. Selected-job detail and add-on
+reads now form the first stateful field coordinator, including request
+cancellation and fail-closed API-unavailable handling. Photo/report reads and
+offline mutation coordination remain bounded follow-on slices.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.

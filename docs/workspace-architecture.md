@@ -117,5 +117,8 @@ controls rather than owning access policy. Pure field-data continuity rules now
 live beside that recovery policy: trusted job summaries can produce an explicit
 detail fallback, failed uploads can produce typed local evidence, and persisted
 evidence merges without discarding unsaved local or other-job photos. `App`
-still owns API calls, durable mutation execution, and cross-request state until
-the field coordinator is extracted.
+no longer coordinates selected-job detail and add-on reads: a field selection
+hook owns request lifecycle, stale-result cancellation, loading/unavailable
+state, and the narrow transport fallback. `App` still owns photo/report reads,
+durable mutation execution, and their cross-request state until those field
+coordinators are extracted.

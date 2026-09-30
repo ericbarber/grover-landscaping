@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-30: Extracted selected-job detail and add-on read coordination from
+  the application shell. The field selection hook now owns loading state,
+  stale-result cancellation, authoritative unavailability, and transport-only
+  detail fallback while continuing to expose controlled updates to field
+  actions.
 - 2026-09-30: Centralized pure field-data continuity policy. Job summaries now
   produce explicit detail fallbacks, failed uploads produce typed local photo
   tickets, and authoritative photo reloads preserve unsaved and other-job

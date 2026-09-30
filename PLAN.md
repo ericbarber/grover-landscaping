@@ -239,8 +239,11 @@ Current state:
   presentation now also live in a dedicated field component. Field detail
   fallback construction, local photo-ticket construction, and authoritative
   evidence merging now share the field feature boundary instead of being
-  embedded in `App`. The remaining field API/offline coordinator and other
-  data-loading/state coordinators remain later slices.
+  embedded in `App`. A field selection hook now owns selected-job detail and
+  add-on reads, loading state, cancellation, and the fail-closed distinction
+  between authoritative API errors and transport-only local fallback. Photo,
+  report, mutation, and other data-loading/state coordinators remain later
+  slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

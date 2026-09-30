@@ -12,7 +12,6 @@ import {
   updateJobDispatchAssignment,
   fetchCustomerPrivacyExport,
   fetchJobDetail,
-  fetchJobAddOns,
   fetchJobPhotoEvidence,
   fetchJobs,
   fetchNotificationHistory,
@@ -39,7 +38,6 @@ import {
   type CustomerPropertyRecord,
   type CustomerPhotoErasureSummary,
   type CustomerPrivacyExport,
-  type JobDetail,
   type JobAddOn,
   type NotificationHistoryItem,
   type OperationalActivity,
@@ -122,11 +120,11 @@ import {
 } from './workspaces/features/customer/customerWorkspace';
 import {
   createLocalPhotoTicket,
-  fallbackJobDetail,
   fieldRecoveryState,
   mergePhotoEvidence,
   type FieldPhotoType,
 } from './workspaces/features/field/fieldWorkspace';
+import { useFieldJobSelection } from './workspaces/features/field/useFieldJobSelection';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { AssignedJobsPanel } from './components/AssignedJobsPanel';
 import { FieldOfflineRecoveryPanel } from './components/FieldOfflineRecoveryPanel';
@@ -745,14 +743,18 @@ export function App() {
   const [mobileView, setMobileView] = useState<MobileWorkspaceView>(
     activePersona.defaultView,
   );
-  const [selectedJob, setSelectedJob] = useState<JobDetail | null>(null);
-  const [jobDetailUnavailable, setJobDetailUnavailable] = useState(false);
-  const [selectedJobAddOns, setSelectedJobAddOns] = useState<JobAddOn[]>([]);
-  const [jobAddOnsUnavailable, setJobAddOnsUnavailable] = useState(false);
+  const {
+    selectedJob,
+    setSelectedJob,
+    jobDetailUnavailable,
+    isLoadingDetail,
+    selectedJobAddOns,
+    setSelectedJobAddOns,
+    jobAddOnsUnavailable,
+  } = useFieldJobSelection(selectedJobId, jobs);
   const [photoEvidenceUnavailable, setPhotoEvidenceUnavailable] = useState(false);
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
   const [jobsUnavailable, setJobsUnavailable] = useState(false);
-  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
   const [uploadTickets, setUploadTickets] = useState<PhotoUploadTicket[]>([]);
   const [selectedCompletionReport, setSelectedCompletionReport] = useState<CompletionReportSnapshot | null>(null);
@@ -1575,70 +1577,6 @@ export function App() {
       isMounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (!selectedJobId) {
-      setSelectedJob(null);
-      setSelectedCompletionReport(null);
-      return;
-    }
-
-    let isMounted = true;
-    setIsLoadingDetail(true);
-    setJobDetailUnavailable(false);
-
-    fetchJobDetail(selectedJobId)
-      .then((detail) => {
-        if (isMounted) {
-          setSelectedJob(detail);
-        }
-      })
-      .catch((error: unknown) => {
-        if (isMounted) {
-          if (error instanceof ApiRequestError) {
-            setSelectedJob(null);
-            setJobDetailUnavailable(true);
-          } else {
-            const fallback = jobs.find((job) => job.id === selectedJobId) ?? null;
-            setSelectedJob(fallback ? fallbackJobDetail(fallback) : null);
-          }
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoadingDetail(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [jobs, selectedJobId]);
-
-  useEffect(() => {
-    if (!selectedJobId) {
-      setSelectedJobAddOns([]);
-      setJobAddOnsUnavailable(false);
-      return;
-    }
-
-    let isMounted = true;
-    setJobAddOnsUnavailable(false);
-    fetchJobAddOns(selectedJobId)
-      .then((addOns) => {
-        if (isMounted) setSelectedJobAddOns(addOns);
-      })
-      .catch((error: unknown) => {
-        if (isMounted) {
-          setSelectedJobAddOns([]);
-          setJobAddOnsUnavailable(error instanceof ApiRequestError);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedJobId]);
 
   useEffect(() => {
     if (!selectedJobId) {
