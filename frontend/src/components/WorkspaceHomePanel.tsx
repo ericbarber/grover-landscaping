@@ -9,8 +9,8 @@ import {
   personaHomePromise,
   personaProgressLanguage,
   workspaceHomeActions,
-  type PortalHomeReadState,
 } from '../workspaces/features/home/workspaceHome';
+import type { CustomerPortalReadState } from '../workspaces/features/customer/customerWorkspace';
 import { GroverBrand } from './GroverBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
@@ -34,7 +34,7 @@ export function WorkspaceHomePanel({
   onOpen: (view: WorkspaceView) => void;
   pendingChangeCount: number;
   persona: WorkspacePersona;
-  portalReadState?: PortalHomeReadState;
+  portalReadState?: CustomerPortalReadState;
   routeOverview?: CrewRouteOverview;
   signedInName: string;
 }) {

@@ -5,7 +5,7 @@ import {
   type CustomerPortalPropertySummary,
   type CustomerPortalVisitSummary,
 } from '../domain/customerPortalVisits';
-import type { PortalHomeReadState } from '../workspaces/features/home/workspaceHome';
+import type { CustomerPortalReadState } from '../workspaces/features/customer/customerWorkspace';
 import { CustomerVisitQuestions } from './YardOwnerPortalPanel';
 import { propertyManagerPortfolioCapabilities } from './PropertyManagerPortfolioPanel';
 import { WorkspaceStatusNotice } from './WorkspaceStatus';
@@ -13,7 +13,7 @@ import { WorkspaceStatusNotice } from './WorkspaceStatus';
 type Props = {
   properties: CustomerPortalPropertySummary[];
   visits: CustomerPortalVisitSummary[];
-  readState: PortalHomeReadState;
+  readState: CustomerPortalReadState;
   rolloutUnit?: string | null;
   onRetry: () => void;
   onReturnHome: () => void;
@@ -25,7 +25,7 @@ function serviceDateLabel(value: string): string {
   });
 }
 
-const readFailure: Record<Exclude<PortalHomeReadState, 'loading' | 'ready'>, {
+const readFailure: Record<Exclude<CustomerPortalReadState, 'loading' | 'ready'>, {
   title: string;
   detail: string;
 }> = {

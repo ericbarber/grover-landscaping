@@ -143,9 +143,10 @@ filtering, active selection, and status derivation are independent of the React
 menu. Home is also extracted: actions, persona language, progress/priority,
 protected-read continuity, and route-date policy are independent of its React
 panel. Eligible-persona selection, access-change fallback, and rollout
-resolution are also owned by the workspace core rather than `App`. Customer,
-field, recovery, and top-level data coordination remain bounded follow-on
-extractions.
+resolution are also owned by the workspace core rather than `App`. Customer
+mode, protected-read eligibility, manager-preview separation, and Home summary
+policy are now extracted and unsupported proposed modes fail closed. Field,
+recovery, and top-level data coordination remain bounded follow-on extractions.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.

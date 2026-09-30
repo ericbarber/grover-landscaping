@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-30: Extracted customer workspace policy from the application shell.
+  Yard Owner and Property Manager modes, protected-read eligibility, manager
+  preview separation, and Home work summaries now share one feature boundary;
+  unsupported proposed customer modes show no customer data rather than falling
+  through to the Yard Owner portal.
 - 2026-09-30: Moved authenticated persona selection into the workspace core.
   The application shell now consumes eligible personas and a resolved active
   workspace from one hook, while the core owns safe fallback after access

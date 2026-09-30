@@ -1,4 +1,5 @@
 import { classifyRouteDate, type CrewRouteOverview } from '../../../domain/dayPlans';
+import type { CustomerPortalReadState } from '../customer/customerWorkspace';
 import type {
   WorkspacePersona,
   WorkspacePersonaId,
@@ -95,16 +96,9 @@ export function homePriorityStatus({
   };
 }
 
-export type PortalHomeReadState =
-  | 'loading'
-  | 'ready'
-  | 'access_required'
-  | 'inconsistent'
-  | 'unavailable';
-
 export function homeContinuityStatus(
   personaId: WorkspacePersonaId,
-  portalReadState: PortalHomeReadState,
+  portalReadState: CustomerPortalReadState,
   routeOverview: CrewRouteOverview,
 ): {
   title: string;

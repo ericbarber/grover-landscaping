@@ -5,7 +5,7 @@ import type {
   CustomerPortalPropertySummary,
   CustomerPortalVisitSummary,
 } from '../domain/customerPortalVisits';
-import type { PortalHomeReadState } from '../workspaces/features/home/workspaceHome';
+import type { CustomerPortalReadState } from '../workspaces/features/customer/customerWorkspace';
 import { PropertyManagerAuthorizedPortfolioPanel } from './PropertyManagerAuthorizedPortfolioPanel';
 
 const properties: CustomerPortalPropertySummary[] = [
@@ -21,7 +21,7 @@ const visits: CustomerPortalVisitSummary[] = [{
   deliveredProofAvailable: false,
 }];
 
-function render(readState: PortalHomeReadState, rolloutUnit: string | null | undefined = 'p3') {
+function render(readState: CustomerPortalReadState, rolloutUnit: string | null | undefined = 'p3') {
   return renderToStaticMarkup(createElement(PropertyManagerAuthorizedPortfolioPanel, {
     properties, visits, readState, rolloutUnit,
     onRetry: () => undefined, onReturnHome: () => undefined,

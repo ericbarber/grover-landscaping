@@ -102,4 +102,7 @@ protected-read continuity, and route-date interpretation live under
 `workspaces/features/home`; the React panel owns layout and interaction. The
 workspace-selection hook in `workspaces/core` now owns eligible-persona state,
 safe fallback when access changes, and rollout resolution; `App` consumes the
-resolved workspace instead of coordinating those persona rules itself.
+resolved workspace instead of coordinating those persona rules itself. Customer
+workspace policy now owns customer-mode selection, protected-read eligibility,
+manager-preview separation, and Home work summaries. Unsupported proposed
+customer modes fail closed instead of inheriting the Yard Owner experience.

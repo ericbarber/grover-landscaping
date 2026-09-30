@@ -117,6 +117,13 @@ import {
   personaHomePromise,
   personaProgressLanguage,
 } from './workspaces/features/home/workspaceHome';
+import {
+  customerHomeWorkSummary,
+  customerWorkspaceModeForPersona,
+  personaUsesAuthorizedCustomerRead,
+  personaUsesManagerCustomerPreview,
+  type CustomerPortalReadState,
+} from './workspaces/features/customer/customerWorkspace';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
@@ -1285,9 +1292,8 @@ export function App() {
     'access_required' | 'inconsistent' | 'unavailable' | null
   >(null);
   const [customerPortalVisitRefreshSignal, setCustomerPortalVisitRefreshSignal] = useState(0);
-  const [portalHomeReadState, setPortalHomeReadState] = useState<
-    'loading' | 'ready' | 'access_required' | 'inconsistent' | 'unavailable'
-  >('loading');
+  const [portalHomeReadState, setPortalHomeReadState] =
+    useState<CustomerPortalReadState>('loading');
   const [crewRouteOverview, setCrewRouteOverview] = useState<CrewRouteOverview>({
     source: 'loading', totalStops: 0, completedStops: 0,
   });
@@ -1361,15 +1367,12 @@ export function App() {
   const jobDetailRef = useRef<HTMLDivElement>(null);
   const providerEntryOpened = useRef(false);
   const mobileScrollPositions = useRef<Partial<Record<MobileWorkspaceView, number>>>({});
-  const homeCustomerVisits = activePersona.id === 'yard-owner'
-    || activePersona.id === 'property-manager'
-    ? customerPortalVisits : null;
-  const homeAssignedWorkCount = homeCustomerVisits?.length ?? jobs.length;
-  const homeCompletedWorkCount = homeCustomerVisits
-    ? homeCustomerVisits.filter((visit) => (
-      visit.status === 'complete_proof_pending' || visit.deliveredProofAvailable
-    )).length
-    : jobs.filter((job) => job.status === 'completed').length;
+  const homeWorkSummary = customerHomeWorkSummary(
+    activePersona.id,
+    customerPortalVisits,
+    jobs,
+  );
+  const customerWorkspaceMode = customerWorkspaceModeForPersona(activePersona.id);
   const canUseManagerTools = workspaceGuidance.managerTools && workspaceSurfaces.management;
   const hostedSignOut = auth.authMode === 'cognito'
     ? () => void auth.signOut()
@@ -1836,7 +1839,7 @@ export function App() {
   }, [managerActivity]);
 
   useEffect(() => {
-    if ((activePersona.id !== 'yard-owner' && activePersona.id !== 'property-manager') || !auth.userId) {
+    if (!personaUsesAuthorizedCustomerRead(activePersona.id) || !auth.userId) {
       setCustomerPortalProperties([]);
       setCustomerPortalVisits([]);
       setCustomerPortalVisitError(null);
@@ -1882,8 +1885,11 @@ export function App() {
   useEffect(() => {
     let isMounted = true;
 
-    const canLoadHistory = activePersona.id !== 'property-manager' && canLoadCustomerPortalPreview;
-    if (activePersona.id === 'yard-owner' || !canLoadHistory) {
+    const canLoadHistory = personaUsesManagerCustomerPreview(
+      activePersona.id,
+      canLoadCustomerPortalPreview,
+    );
+    if (!canLoadHistory) {
       setPropertyCompletionReports({});
       setIsLoadingPropertyCompletionReports(false);
       setHasPropertyCompletionReportHistoryError(false);
@@ -1976,8 +1982,11 @@ export function App() {
   useEffect(() => {
     let isMounted = true;
 
-    const canLoadBids = activePersona.id !== 'property-manager' && canLoadCustomerPortalPreview;
-    if (activePersona.id === 'yard-owner' || !canLoadBids) {
+    const canLoadBids = personaUsesManagerCustomerPreview(
+      activePersona.id,
+      canLoadCustomerPortalPreview,
+    );
+    if (!canLoadBids) {
       setCustomerProjectBids([]);
       setIsLoadingCustomerProjectBids(false);
       setHasCustomerProjectBidHistoryError(false);
@@ -3188,8 +3197,8 @@ export function App() {
         <div className="min-w-0">
           <div className={mobileView === 'home' ? 'block' : 'hidden'}>
             <WorkspaceHomePanel
-              assignedJobCount={homeAssignedWorkCount}
-              completedJobCount={homeCompletedWorkCount}
+              assignedJobCount={homeWorkSummary.assigned}
+              completedJobCount={homeWorkSummary.completed}
               hasSelectedJob={Boolean(selectedJobId)}
               hasWorkspaceRole={workspaceRoles.length > 0}
               onOpen={(view) => {
@@ -3539,7 +3548,7 @@ export function App() {
           </section>
 
           <div className={workspaceSurfaces.customerCare && mobileView === 'customer' ? 'space-y-6' : 'hidden'} id="customer-workspace">
-            {activePersona.id === 'property-manager' ? (
+            {customerWorkspaceMode === 'portfolio' ? (
               <PropertyManagerAuthorizedPortfolioPanel
                 rolloutUnit={managedPersonaUnit}
                 properties={customerPortalProperties}
@@ -3548,16 +3557,22 @@ export function App() {
                 onRetry={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
                 onReturnHome={() => changeMobileView('home', true)}
               />
-            ) : (
+            ) : customerWorkspaceMode === 'yard' ? (
               <YardOwnerPortalPanel
                 customerDisplayName={auth.displayName}
-                rolloutUnit={activePersona.id === 'yard-owner' ? managedPersonaUnit : undefined}
+                rolloutUnit={managedPersonaUnit}
                 properties={customerPortalProperties}
                 visits={customerPortalVisits}
                 isLoadingVisits={isLoadingCustomerPortalVisits}
                 visitReadError={customerPortalVisitError}
                 onRetryVisits={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
                 onReturnHome={() => changeMobileView('home', true)}
+              />
+            ) : (
+              <WorkspaceStatusNotice
+                detail="This proposed persona does not yet have an authoritative customer-account workflow. No customer data is shown."
+                title={`${activePersona.label} customer workspace is not available.`}
+                tone="neutral"
               />
             )}
           </div>
