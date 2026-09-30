@@ -124,6 +124,10 @@ import {
   personaUsesManagerCustomerPreview,
   type CustomerPortalReadState,
 } from './workspaces/features/customer/customerWorkspace';
+import {
+  fieldQueueCanSync,
+  fieldRecoveryState,
+} from './workspaces/features/field/fieldWorkspace';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
@@ -1373,6 +1377,11 @@ export function App() {
     jobs,
   );
   const customerWorkspaceMode = customerWorkspaceModeForPersona(activePersona.id);
+  const fieldRecovery = fieldRecoveryState({
+    jobMutations: offlineJobMutations,
+    checklistMutations: offlineChecklistMutations,
+    photoMutations: offlinePhotoMutations,
+  });
   const canUseManagerTools = workspaceGuidance.managerTools && workspaceSurfaces.management;
   const hostedSignOut = auth.authMode === 'cognito'
     ? () => void auth.signOut()
@@ -3179,9 +3188,7 @@ export function App() {
         }}
         onSignOut={hostedSignOut}
         pendingChangeCount={
-          offlineJobMutations.length
-          + offlineChecklistMutations.length
-          + offlinePhotoMutations.length
+          fieldRecovery.pendingChangeCount
         }
         routeOverview={crewRouteOverview}
         personaDescription={activePersona.description}
@@ -3209,9 +3216,7 @@ export function App() {
                 changeMobileView(view, true);
               }}
               pendingChangeCount={
-                offlineJobMutations.length
-                + offlineChecklistMutations.length
-                + offlinePhotoMutations.length
+                fieldRecovery.pendingChangeCount
               }
               persona={activePersona}
               portalReadState={portalHomeReadState}
@@ -3249,8 +3254,8 @@ export function App() {
                   {offlineJobMutations.length} job {offlineJobMutations.length === 1 ? 'change is' : 'changes are'} queued offline on this phone.
                 </p>
                 <p className="mt-1 font-medium">
-                  {offlineJobMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
-                  {offlineJobMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
+                  {fieldRecovery.jobs.failed} retry failed ·{' '}
+                  {fieldRecovery.jobs.conflicts} conflicted
                 </p>
                 <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
                   <summary className="min-h-11 cursor-pointer py-3 font-bold">
@@ -3314,9 +3319,11 @@ export function App() {
                 <button
                   className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
                   disabled={
-                    !navigator.onLine
-                    || isReplayingJobMutations
-                    || offlineJobMutations.some((mutation) => mutation.syncState === 'conflict')
+                    !fieldQueueCanSync(
+                      fieldRecovery.jobs,
+                      navigator.onLine,
+                      isReplayingJobMutations,
+                    )
                   }
                   onClick={() => void replayJobLifecycleMutations()}
                   type="button"
@@ -3331,8 +3338,8 @@ export function App() {
                   {offlineChecklistMutations.length} checklist {offlineChecklistMutations.length === 1 ? 'change is' : 'changes are'} queued offline.
                 </p>
                 <p className="mt-1 font-medium">
-                  {offlineChecklistMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
-                  {offlineChecklistMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
+                  {fieldRecovery.checklist.failed} retry failed ·{' '}
+                  {fieldRecovery.checklist.conflicts} conflicted
                 </p>
                 <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
                   <summary className="min-h-11 cursor-pointer py-3 font-bold">
@@ -3400,9 +3407,11 @@ export function App() {
                 <button
                   className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
                   disabled={
-                    !navigator.onLine
-                    || isReplayingChecklistMutations
-                    || offlineChecklistMutations.some((mutation) => mutation.syncState === 'conflict')
+                    !fieldQueueCanSync(
+                      fieldRecovery.checklist,
+                      navigator.onLine,
+                      isReplayingChecklistMutations,
+                    )
                   }
                   onClick={() => void replayChecklistMutations()}
                   type="button"
@@ -3417,8 +3426,8 @@ export function App() {
                   {offlinePhotoMutations.length} photo {offlinePhotoMutations.length === 1 ? 'upload is' : 'uploads are'} stored offline on this phone.
                 </p>
                 <p className="mt-1 font-medium">
-                  {offlinePhotoMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
-                  {offlinePhotoMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
+                  {fieldRecovery.photos.failed} retry failed ·{' '}
+                  {fieldRecovery.photos.conflicts} conflicted
                 </p>
                 <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
                   <summary className="min-h-11 cursor-pointer py-3 font-bold">
@@ -3483,9 +3492,11 @@ export function App() {
                 <button
                   className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
                   disabled={
-                    !navigator.onLine
-                    || isReplayingPhotoMutations
-                    || offlinePhotoMutations.some((mutation) => mutation.syncState === 'conflict')
+                    !fieldQueueCanSync(
+                      fieldRecovery.photos,
+                      navigator.onLine,
+                      isReplayingPhotoMutations,
+                    )
                   }
                   onClick={() => void replayPhotoMutations()}
                   type="button"

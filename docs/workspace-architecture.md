@@ -106,3 +106,5 @@ resolved workspace instead of coordinating those persona rules itself. Customer
 workspace policy now owns customer-mode selection, protected-read eligibility,
 manager-preview separation, and Home work summaries. Unsupported proposed
 customer modes fail closed instead of inheriting the Yard Owner experience.
+Field recovery policy now provides one summary for job, checklist, and photo
+queues plus the conflict-aware replay gate used by the shell.

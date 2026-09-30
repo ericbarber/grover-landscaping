@@ -92,6 +92,8 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Extracted customer workspace policy distinguishing Yard Owner and Property
   Manager experiences, protected reads, manager previews, and Home summaries;
   unsupported proposed customer modes fail closed without exposing customer data
+- Extracted field recovery policy with combined job, checklist, and photo queue
+  summaries plus one online/idle/conflict-free replay gate
 - Validated minimalist task-first design direction for all ten signed-in
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,

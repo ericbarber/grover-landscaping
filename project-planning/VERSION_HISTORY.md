@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-30: Extracted the first field workspace recovery policy. Job,
+  checklist, and photo offline queues now produce one shared recovery summary,
+  and replay availability consistently requires an online, idle, conflict-free
+  queue.
 - 2026-09-30: Extracted customer workspace policy from the application shell.
   Yard Owner and Property Manager modes, protected-read eligibility, manager
   preview separation, and Home work summaries now share one feature boundary;

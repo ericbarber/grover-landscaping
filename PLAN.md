@@ -230,8 +230,10 @@ Current state:
   owns eligible-persona state, access-change fallback, and rollout resolution
   outside `App`. Customer policy now separates Yard Owner, Property Manager,
   and unsupported proposed modes; owns protected-read and manager-preview
-  eligibility; and derives Home customer progress. Field, recovery, and the
-  remaining data-loading/state coordinators remain later slices.
+  eligibility; and derives Home customer progress. Field recovery policy now
+  centralizes job, checklist, and photo queue summaries and conflict-aware replay
+  gates. Field presentation and the remaining data-loading/state coordinators
+  remain later slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

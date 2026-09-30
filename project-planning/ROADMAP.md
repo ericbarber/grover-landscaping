@@ -146,7 +146,8 @@ panel. Eligible-persona selection, access-change fallback, and rollout
 resolution are also owned by the workspace core rather than `App`. Customer
 mode, protected-read eligibility, manager-preview separation, and Home summary
 policy are now extracted and unsupported proposed modes fail closed. Field,
-recovery, and top-level data coordination remain bounded follow-on extractions.
+recovery, and top-level data coordination remain bounded follow-on extractions;
+the first field slice now centralizes offline queue status and replay gating.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.
