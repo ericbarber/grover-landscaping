@@ -125,10 +125,12 @@ import {
   type CustomerPortalReadState,
 } from './workspaces/features/customer/customerWorkspace';
 import {
-  fieldQueueCanSync,
   fieldRecoveryState,
 } from './workspaces/features/field/fieldWorkspace';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
+import { AssignedJobsPanel } from './components/AssignedJobsPanel';
+import { FieldOfflineRecoveryPanel } from './components/FieldOfflineRecoveryPanel';
+import { JobStatusBadge } from './components/JobStatusBadge';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { PropertyManagerAuthorizedPortfolioPanel } from './components/PropertyManagerAuthorizedPortfolioPanel';
@@ -173,10 +175,8 @@ import {
   countReadyCustomerReports,
   customerNeedsOnboardingAttention,
   filterCrewsForCompany,
-  filterAssignedJobs,
   filterPropertiesForCustomerPortal,
   filterWorkSummariesForCustomerPortal,
-  getCompletionProgress,
   getContractedServiceCount,
   getCustomerPropertyCount,
   getEnabledCrewCapacityMinutes,
@@ -343,21 +343,6 @@ function managerActivityTimestamp() {
   return `Today ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
 }
 
-function StatusBadge({ status }: { status: YardCareJob['status'] }) {
-  const label = status.replace('_', ' ');
-  const tone = status === 'completed'
-    ? 'success'
-    : status === 'in_progress'
-      ? 'warning'
-      : 'info';
-
-  return (
-    <WorkspaceStatusBadge className="uppercase tracking-wide" tone={tone}>
-      {label}
-    </WorkspaceStatusBadge>
-  );
-}
-
 function ManagerToolSurface({
   activeTool,
   children,
@@ -373,60 +358,6 @@ function ManagerToolSurface({
 }) {
   if (activeTool !== tool) return null;
   return <div className={className} id={id}>{children}</div>;
-}
-
-function JobCard({
-  job,
-  isSelected,
-  onSelect,
-  position,
-}: {
-  job: YardCareJob;
-  isSelected: boolean;
-  onSelect: (jobId: string) => void;
-  position: number;
-}) {
-  const progress = getCompletionProgress(job);
-
-  return (
-    <article
-      className={`rounded-2xl border bg-paper p-4 shadow-sm ${
-        isSelected ? 'border-emerald-500 ring-2 ring-emerald-200' : 'border-slate-200'
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-black ${
-          isSelected ? 'bg-forest text-white' : 'bg-slate-100 text-forest'
-        }`}>
-          {position}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{job.scheduledDate}</p>
-              <h3 className="mt-1 text-lg font-black text-slate-950">{job.customerName}</h3>
-            </div>
-            <StatusBadge status={job.status} />
-          </div>
-          <p className="mt-1 text-sm text-slate-600">{job.propertyAddress}</p>
-          <p className="mt-3 text-xs font-semibold text-slate-600">
-            {job.completedChecklistItems}/{job.checklistItems} checklist · {job.beforePhotos} before · {job.afterPhotos} after
-          </p>
-        </div>
-      </div>
-
-      <div aria-label={`${progress}% checklist complete`} className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-emerald-700" style={{ width: `${progress}%` }} />
-      </div>
-
-      <button
-        className="mt-4 min-h-11 w-full rounded-xl bg-emerald-800 px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-900"
-        onClick={() => onSelect(job.id)}
-      >
-        {isSelected ? 'Selected Job' : 'Open Job'}
-      </button>
-    </article>
-  );
 }
 
 function companyTypeLabel(companyType: CompanyProfile['companyType']): string {
@@ -912,7 +843,7 @@ function JobDetailPanel({
             <p className="mt-1 text-sm text-slate-600">{job.propertyAddress}</p>
             <p className="mt-1 text-xs font-semibold text-slate-500">Scheduled {job.scheduledDate}</p>
           </div>
-          <StatusBadge status={job.status} />
+          <JobStatusBadge status={job.status} />
         </div>
 
         {executionEnabled ? <div className="mt-5 rounded-2xl border border-slate-200 bg-paper p-3">
@@ -1237,14 +1168,8 @@ export function App() {
     || workspaceRoles.includes('SupportAdmin');
   const canReviewMarketingLeads = workspaceRoles.includes('SupportAdmin');
   const [jobs, setJobs] = useState<YardCareJob[]>(seedJobs);
-  const [jobSearch, setJobSearch] = useState('');
-  const [jobStatusFilter, setJobStatusFilter] = useState<YardCareJob['status'] | 'all'>('all');
   const [selectedJobId, setSelectedJobId] = useState<string | null>(seedJobs[0]?.id ?? null);
   const [requestedJobWorkflow, setRequestedJobWorkflow] = useState<JobWorkflowSection>('overview');
-  const visibleAssignedJobs = useMemo(
-    () => filterAssignedJobs(jobs, jobSearch, jobStatusFilter),
-    [jobSearch, jobStatusFilter, jobs],
-  );
   const [mobileView, setMobileView] = useState<MobileWorkspaceView>(
     activePersona.defaultView,
   );
@@ -1352,9 +1277,6 @@ export function App() {
   const [isReplayingJobMutations, setIsReplayingJobMutations] = useState(false);
   const [isReplayingChecklistMutations, setIsReplayingChecklistMutations] = useState(false);
   const [isReplayingPhotoMutations, setIsReplayingPhotoMutations] = useState(false);
-  const [jobConflictDiscardId, setJobConflictDiscardId] = useState<string | null>(null);
-  const [checklistConflictDiscardId, setChecklistConflictDiscardId] = useState<string | null>(null);
-  const [photoConflictDiscardId, setPhotoConflictDiscardId] = useState<string | null>(null);
   const jobReplayInProgress = useRef(false);
   const checklistReplayInProgress = useRef(false);
   const photoReplayInProgress = useRef(false);
@@ -2363,7 +2285,6 @@ export function App() {
       setStatusMessage('The reviewed job conflict could not be removed from this phone. Try again.');
       return;
     }
-    setJobConflictDiscardId(null);
     setOfflineJobMutations((current) => current.filter((item) => item.id !== mutation.id));
     try {
       const serverJob = await fetchJobDetail(mutation.jobId);
@@ -2418,7 +2339,6 @@ export function App() {
       setStatusMessage('The reviewed checklist conflict could not be removed from this phone.');
       return;
     }
-    setChecklistConflictDiscardId(null);
     setOfflineChecklistMutations((current) => current.filter((item) => item.id !== mutation.id));
     try {
       const serverJob = await fetchJobDetail(mutation.jobId);
@@ -2438,7 +2358,6 @@ export function App() {
       setStatusMessage('The reviewed photo conflict could not be removed from this phone.');
       return;
     }
-    setPhotoConflictDiscardId(null);
     setOfflinePhotoMutations((current) => current.filter((item) => item.id !== mutation.id));
     try {
       setJobs(await fetchJobs());
@@ -3235,328 +3154,34 @@ export function App() {
               stopProgressEnabled={fieldControls.stopProgress}
             />
           </div>
-          <section className={workspaceSurfaces.fieldOperations && mobileView === 'jobs' ? 'block' : 'hidden'}>
-          <div className="mb-4 mt-0 scroll-mt-16 lg:mt-6" id="assigned-jobs">
-            <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Assigned jobs</h2>
-            <p className="mt-1 text-sm text-slate-600" role="status">{statusMessage}</p>
-            {jobsUnavailable ? (
-              <WorkspaceStatusNotice
-                className="mt-2"
-                compact
-                detail="Assigned jobs remain hidden until API readiness recovers."
-                title="Persisted field work could not be loaded."
-                tone="danger"
+          <AssignedJobsPanel
+            className={workspaceSurfaces.fieldOperations && mobileView === 'jobs' ? 'block' : 'hidden'}
+            jobs={jobs}
+            jobsUnavailable={jobsUnavailable}
+            onSelectJob={selectJobForReview}
+            recovery={(
+              <FieldOfflineRecoveryPanel
+                checklistMutations={offlineChecklistMutations}
+                isOnline={navigator.onLine}
+                isReplayingChecklist={isReplayingChecklistMutations}
+                isReplayingJobs={isReplayingJobMutations}
+                isReplayingPhotos={isReplayingPhotoMutations}
+                jobMutations={offlineJobMutations}
+                jobs={jobs}
+                onDiscardChecklistConflict={discardReviewedChecklistConflict}
+                onDiscardJobConflict={discardReviewedJobConflict}
+                onDiscardPhotoConflict={discardReviewedPhotoConflict}
+                onReplayChecklist={replayChecklistMutations}
+                onReplayJobs={replayJobLifecycleMutations}
+                onReplayPhotos={replayPhotoMutations}
+                photoMutations={offlinePhotoMutations}
+                recovery={fieldRecovery}
+                selectedJob={selectedJob}
               />
-            ) : null}
-            {offlineJobMutations.length > 0 && (
-              <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
-                <p>
-                  {offlineJobMutations.length} job {offlineJobMutations.length === 1 ? 'change is' : 'changes are'} queued offline on this phone.
-                </p>
-                <p className="mt-1 font-medium">
-                  {fieldRecovery.jobs.failed} retry failed ·{' '}
-                  {fieldRecovery.jobs.conflicts} conflicted
-                </p>
-                <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
-                  <summary className="min-h-11 cursor-pointer py-3 font-bold">
-                    Review queued job changes
-                  </summary>
-                  <div className="space-y-2 border-t border-amber-200 pt-2">
-                    {offlineJobMutations.map((mutation) => {
-                      const job = jobs.find((item) => item.id === mutation.jobId);
-                      return (
-                        <article className="rounded-lg bg-amber-50 p-2 font-medium" key={mutation.id}>
-                          <p className="font-bold text-slate-900">
-                            {job?.customerName ?? mutation.jobId}
-                          </p>
-                          <p className="mt-1 text-slate-700">
-                            {mutation.action === 'start' ? 'Start job' : 'Complete job'} · {mutation.syncState}
-                          </p>
-                          <p className="mt-1 text-slate-600">
-                            Queued {new Date(mutation.createdAt).toLocaleString()}
-                            {mutation.attemptCount > 0
-                              ? ` · ${mutation.attemptCount} ${mutation.attemptCount === 1 ? 'attempt' : 'attempts'}`
-                              : ''}
-                          </p>
-                          {mutation.syncState === 'conflict' && (
-                            jobConflictDiscardId === mutation.id ? (
-                              <div className="mt-2 rounded-lg border border-red-300 bg-white p-2">
-                                <p className="text-red-900">
-                                  Confirm a manager reviewed this job action. Discarding restores server state.
-                                </p>
-                                <div className="mt-2 flex gap-2">
-                                  <button
-                                    className="min-h-11 flex-1 rounded-lg bg-red-800 px-3 font-bold text-white"
-                                    onClick={() => void discardReviewedJobConflict(mutation)}
-                                    type="button"
-                                  >
-                                    Discard conflict
-                                  </button>
-                                  <button
-                                    className="min-h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 font-bold"
-                                    onClick={() => setJobConflictDiscardId(null)}
-                                    type="button"
-                                  >
-                                    Keep change
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <button
-                                className="mt-2 min-h-11 rounded-lg border border-red-300 bg-white px-3 font-bold text-red-900"
-                                onClick={() => setJobConflictDiscardId(mutation.id)}
-                                type="button"
-                              >
-                                Resolve after manager review
-                              </button>
-                            )
-                          )}
-                        </article>
-                      );
-                    })}
-                  </div>
-                </details>
-                <button
-                  className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
-                  disabled={
-                    !fieldQueueCanSync(
-                      fieldRecovery.jobs,
-                      navigator.onLine,
-                      isReplayingJobMutations,
-                    )
-                  }
-                  onClick={() => void replayJobLifecycleMutations()}
-                  type="button"
-                >
-                  {isReplayingJobMutations ? 'Syncing job changes…' : 'Sync job changes'}
-                </button>
-              </div>
             )}
-            {offlineChecklistMutations.length > 0 && (
-              <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
-                <p>
-                  {offlineChecklistMutations.length} checklist {offlineChecklistMutations.length === 1 ? 'change is' : 'changes are'} queued offline.
-                </p>
-                <p className="mt-1 font-medium">
-                  {fieldRecovery.checklist.failed} retry failed ·{' '}
-                  {fieldRecovery.checklist.conflicts} conflicted
-                </p>
-                <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
-                  <summary className="min-h-11 cursor-pointer py-3 font-bold">
-                    Review queued checklist changes
-                  </summary>
-                  <div className="space-y-2 border-t border-amber-200 pt-2">
-                    {offlineChecklistMutations.map((mutation) => {
-                      const job = jobs.find((item) => item.id === mutation.jobId);
-                      const checklistItem = selectedJob?.id === mutation.jobId
-                        ? selectedJob.checklist.find((item) => item.id === mutation.checklistItemId)
-                        : undefined;
-                      return (
-                        <article className="rounded-lg bg-amber-50 p-2 font-medium" key={mutation.id}>
-                          <p className="font-bold text-slate-900">
-                            {job?.customerName ?? mutation.jobId}
-                          </p>
-                          <p className="mt-1 text-slate-700">
-                            {checklistItem?.label ?? mutation.checklistItemId} ·{' '}
-                            {mutation.completed ? 'Complete' : 'Not complete'} · {mutation.syncState}
-                          </p>
-                          <p className="mt-1 text-slate-600">
-                            Queued {new Date(mutation.createdAt).toLocaleString()}
-                            {mutation.attemptCount > 0
-                              ? ` · ${mutation.attemptCount} ${mutation.attemptCount === 1 ? 'attempt' : 'attempts'}`
-                              : ''}
-                          </p>
-                          {mutation.syncState === 'conflict' && (
-                            checklistConflictDiscardId === mutation.id ? (
-                              <div className="mt-2 rounded-lg border border-red-300 bg-white p-2">
-                                <p className="text-red-900">
-                                  Confirm a manager reviewed this checklist change. Discarding restores server state.
-                                </p>
-                                <div className="mt-2 flex gap-2">
-                                  <button
-                                    className="min-h-11 flex-1 rounded-lg bg-red-800 px-3 font-bold text-white"
-                                    onClick={() => void discardReviewedChecklistConflict(mutation)}
-                                    type="button"
-                                  >
-                                    Discard conflict
-                                  </button>
-                                  <button
-                                    className="min-h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 font-bold"
-                                    onClick={() => setChecklistConflictDiscardId(null)}
-                                    type="button"
-                                  >
-                                    Keep change
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <button
-                                className="mt-2 min-h-11 rounded-lg border border-red-300 bg-white px-3 font-bold text-red-900"
-                                onClick={() => setChecklistConflictDiscardId(mutation.id)}
-                                type="button"
-                              >
-                                Resolve after manager review
-                              </button>
-                            )
-                          )}
-                        </article>
-                      );
-                    })}
-                  </div>
-                </details>
-                <button
-                  className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
-                  disabled={
-                    !fieldQueueCanSync(
-                      fieldRecovery.checklist,
-                      navigator.onLine,
-                      isReplayingChecklistMutations,
-                    )
-                  }
-                  onClick={() => void replayChecklistMutations()}
-                  type="button"
-                >
-                  {isReplayingChecklistMutations ? 'Syncing checklist…' : 'Sync checklist changes'}
-                </button>
-              </div>
-            )}
-            {offlinePhotoMutations.length > 0 && (
-              <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
-                <p>
-                  {offlinePhotoMutations.length} photo {offlinePhotoMutations.length === 1 ? 'upload is' : 'uploads are'} stored offline on this phone.
-                </p>
-                <p className="mt-1 font-medium">
-                  {fieldRecovery.photos.failed} retry failed ·{' '}
-                  {fieldRecovery.photos.conflicts} conflicted
-                </p>
-                <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
-                  <summary className="min-h-11 cursor-pointer py-3 font-bold">
-                    Review queued photos
-                  </summary>
-                  <div className="space-y-2 border-t border-amber-200 pt-2">
-                    {offlinePhotoMutations.map((mutation) => {
-                      const job = jobs.find((item) => item.id === mutation.jobId);
-                      return (
-                        <article className="rounded-lg bg-amber-50 p-2 font-medium" key={mutation.id}>
-                          <p className="font-bold text-slate-900">
-                            {job?.customerName ?? mutation.jobId}
-                          </p>
-                          <p className="mt-1 break-all text-slate-700">
-                            {mutation.photoType} photo · {mutation.fileName} ·{' '}
-                            {(mutation.fileSizeBytes / 1024 / 1024).toFixed(1)} MB · {mutation.syncState}
-                          </p>
-                          <p className="mt-1 text-slate-600">
-                            Queued {new Date(mutation.createdAt).toLocaleString()}
-                            {mutation.attemptCount > 0
-                              ? ` · ${mutation.attemptCount} ${mutation.attemptCount === 1 ? 'attempt' : 'attempts'}`
-                              : ''}
-                          </p>
-                          {mutation.syncState === 'conflict' && (
-                            photoConflictDiscardId === mutation.id ? (
-                              <div className="mt-2 rounded-lg border border-red-300 bg-white p-2">
-                                <p className="text-red-900">
-                                  Confirm a manager reviewed this photo. Discarding permanently removes its local image bytes.
-                                </p>
-                                <div className="mt-2 flex gap-2">
-                                  <button
-                                    className="min-h-11 flex-1 rounded-lg bg-red-800 px-3 font-bold text-white"
-                                    onClick={() => void discardReviewedPhotoConflict(mutation)}
-                                    type="button"
-                                  >
-                                    Discard photo
-                                  </button>
-                                  <button
-                                    className="min-h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 font-bold"
-                                    onClick={() => setPhotoConflictDiscardId(null)}
-                                    type="button"
-                                  >
-                                    Keep photo
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <button
-                                className="mt-2 min-h-11 rounded-lg border border-red-300 bg-white px-3 font-bold text-red-900"
-                                onClick={() => setPhotoConflictDiscardId(mutation.id)}
-                                type="button"
-                              >
-                                Resolve after manager review
-                              </button>
-                            )
-                          )}
-                        </article>
-                      );
-                    })}
-                  </div>
-                </details>
-                <button
-                  className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
-                  disabled={
-                    !fieldQueueCanSync(
-                      fieldRecovery.photos,
-                      navigator.onLine,
-                      isReplayingPhotoMutations,
-                    )
-                  }
-                  onClick={() => void replayPhotoMutations()}
-                  type="button"
-                >
-                  {isReplayingPhotoMutations ? 'Uploading photos…' : 'Upload queued photos'}
-                </button>
-              </div>
-            )}
-            <div className="mt-4 grid gap-2 rounded-2xl border border-slate-200 bg-paper p-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-center">
-              <label className="text-xs font-black uppercase tracking-wide text-slate-600">
-                Search
-                <input
-                  aria-label="Search assigned jobs"
-                  className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium normal-case tracking-normal text-slate-900"
-                  onChange={(event) => setJobSearch(event.target.value)}
-                  placeholder="Customer or address"
-                  type="search"
-                  value={jobSearch}
-                />
-              </label>
-              <label className="text-xs font-black uppercase tracking-wide text-slate-600">
-                Status
-                <select
-                  aria-label="Filter assigned jobs by status"
-                  className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium normal-case tracking-normal text-slate-900"
-                  onChange={(event) => setJobStatusFilter(event.target.value as YardCareJob['status'] | 'all')}
-                  value={jobStatusFilter}
-                >
-                  <option value="all">All jobs</option>
-                  <option value="scheduled">Scheduled</option>
-                  <option value="in_progress">In progress</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </label>
-              <WorkspaceStatusBadge className="justify-self-start sm:mt-5" tone="neutral">
-                {visibleAssignedJobs.length} shown
-              </WorkspaceStatusBadge>
-            </div>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            {visibleAssignedJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                isSelected={job.id === selectedJobId}
-                onSelect={selectJobForReview}
-                position={jobs.findIndex((item) => item.id === job.id) + 1}
-              />
-            ))}
-            {visibleAssignedJobs.length === 0 ? (
-              <WorkspaceStatusNotice
-                className="md:col-span-2"
-                detail="Clear or change the search and status filters to see other assignments."
-                title="No assigned jobs match these filters."
-                tone="neutral"
-              />
-            ) : null}
-          </div>
-          </section>
+            selectedJobId={selectedJobId}
+            statusMessage={statusMessage}
+          />
 
           <div className={workspaceSurfaces.customerCare && mobileView === 'customer' ? 'space-y-6' : 'hidden'} id="customer-workspace">
             {customerWorkspaceMode === 'portfolio' ? (

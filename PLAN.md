@@ -232,8 +232,11 @@ Current state:
   and unsupported proposed modes; owns protected-read and manager-preview
   eligibility; and derives Home customer progress. Field recovery policy now
   centralizes job, checklist, and photo queue summaries and conflict-aware replay
-  gates. Field presentation and the remaining data-loading/state coordinators
-  remain later slices.
+  gates. Assigned-job search, filtering, cards, data-read status, and the three
+  offline recovery queues now render through dedicated field components; their
+  filter and conflict-confirmation state no longer lives in `App`. Job-detail
+  presentation and the remaining data-loading/state coordinators remain later
+  slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

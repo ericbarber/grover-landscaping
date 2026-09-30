@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-30: Extracted assigned-job and offline-recovery presentation from the
+  application shell. Dedicated field components now own job search/filter state,
+  cards, queue status, and conflict confirmation, while `App` retains the API
+  and durable-mutation execution callbacks pending a field coordinator slice.
 - 2026-09-30: Extracted the first field workspace recovery policy. Job,
   checklist, and photo offline queues now produce one shared recovery summary,
   and replay availability consistently requires an online, idle, conflict-free

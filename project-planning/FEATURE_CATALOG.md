@@ -94,6 +94,8 @@ boundary; inclusion here alone does not mean a feature shipped.
   unsupported proposed customer modes fail closed without exposing customer data
 - Extracted field recovery policy with combined job, checklist, and photo queue
   summaries plus one online/idle/conflict-free replay gate
+- Dedicated assigned-jobs and offline-recovery presentation components owning
+  field filtering and conflict-confirmation UI outside the application shell
 - Validated minimalist task-first design direction for all ten signed-in
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,
