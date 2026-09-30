@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-30: Extracted completion-report notification delivery from the
+  application shell. The management feature boundary now owns queue writes,
+  shared busy state, and best-effort history refresh while preserving successful
+  delivery outcomes when only the follow-up history read is unavailable.
 - 2026-09-30: Extracted manager completion-report lifecycle commands from the
   application shell. One management hook now owns review start, change request,
   resubmission, delivery, shared busy state, and the required report/activity

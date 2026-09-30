@@ -14,7 +14,6 @@ import {
   fetchPhotoErasureDeletionHistory,
   fetchPhotoProcessingHistory,
   fetchPropertyCompletionReports,
-  queueCompletionReportDeliveryNotification,
   readPhotoUploadMetadata,
   resolveNotificationDelivery,
   resolvePhotoErasureDeletionJob,
@@ -126,6 +125,7 @@ import {
 } from './domain/completionReportOperationalFilters';
 import { useManagerCompletionReportQueue } from './workspaces/features/management/useManagerCompletionReportQueue';
 import { useManagerCompletionReportActions } from './workspaces/features/management/useManagerCompletionReportActions';
+import { useManagerCompletionReportNotifications } from './workspaces/features/management/useManagerCompletionReportNotifications';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
@@ -791,7 +791,6 @@ export function App() {
   const [customerProjectBids, setCustomerProjectBids] = useState<ProjectBid[]>([]);
   const [isLoadingCustomerProjectBids, setIsLoadingCustomerProjectBids] = useState(false);
   const [hasCustomerProjectBidHistoryError, setHasCustomerProjectBidHistoryError] = useState(false);
-  const [reportNotificationActionStatus, setReportNotificationActionStatus] = useState<string | null>(null);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
   const [propertyOnboardingRefreshSignal, setPropertyOnboardingRefreshSignal] = useState(0);
   const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
@@ -975,6 +974,10 @@ export function App() {
     refreshReport: refreshCompletionReport,
     refreshActivity: refreshOperationalActivity,
   });
+  const {
+    actionStatus: reportNotificationActionStatus,
+    queueDelivery: queueManagerReportDeliveryNotification,
+  } = useManagerCompletionReportNotifications();
   const managerWorkspaceSignals = useMemo(
     () => managerWorkspaceSectionSignalsForPersona(
       activePersona.id,
@@ -2042,38 +2045,37 @@ export function App() {
     channel: 'email' | 'sms',
     recipient: string,
   ) {
-    setReportNotificationActionStatus('Queueing customer notification...');
-
-    try {
-      const notification = await queueCompletionReportDeliveryNotification(reportId, channel, recipient);
-      try {
-        setNotificationHistory(await fetchNotificationHistory({ limit: 25 }));
-        setNotificationHistoryUnavailable(false);
-      } catch {
-        setNotificationHistoryUnavailable(true);
-        recordManagerActivity({
-          title: 'Notification history refresh failed',
-          message: 'The customer notification was queued, but the history panel did not refresh.',
-          tone: 'warning',
-          source: 'sync',
-        });
-      }
-      setStatusMessage(`${notification.reportId} notification queued for ${notification.recipient}.`);
-      setReportNotificationActionStatus(null);
-      recordManagerActivity({
-        title: 'Completion report notification queued',
-        message: `${notification.channel} delivery queued for ${notification.reportId}.`,
-        tone: 'success',
-        source: 'sync',
-      });
-    } catch (error) {
-      setReportNotificationActionStatus(null);
+    const result = await queueManagerReportDeliveryNotification(reportId, channel, recipient);
+    if (!result.ok) {
       setStatusMessage(
-        isApiErrorCode(error, 'completion_report_notification_preference_blocked')
+        isApiErrorCode(result.error, 'completion_report_notification_preference_blocked')
           ? 'Delivery blocked by this customer’s account preferences. Enable the selected channel and use the configured account recipient.'
           : 'Could not queue the customer notification. Confirm the report is delivered and the recipient is valid.',
       );
+      return;
     }
+
+    if (result.history) {
+      setNotificationHistory(result.history);
+      setNotificationHistoryUnavailable(false);
+    } else {
+      setNotificationHistoryUnavailable(true);
+      recordManagerActivity({
+        title: 'Notification history refresh failed',
+        message: 'The customer notification was queued, but the history panel did not refresh.',
+        tone: 'warning',
+        source: 'sync',
+      });
+    }
+    setStatusMessage(
+      `${result.notification.reportId} notification queued for ${result.notification.recipient}.`,
+    );
+    recordManagerActivity({
+      title: 'Completion report notification queued',
+      message: `${result.notification.channel} delivery queued for ${result.notification.reportId}.`,
+      tone: 'success',
+      source: 'sync',
+    });
   }
 
   async function handlePhotoSelected(file: File, photoType: FieldPhotoType) {
