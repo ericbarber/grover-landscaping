@@ -95,13 +95,15 @@ import {
 import {
   ManagerWorkspaceMenu,
   ManagerWorkspaceToolMenu,
+} from './components/ManagerWorkspaceMenu';
+import {
   managerWorkspaceActiveToolForPersona,
   managerWorkspaceSectionSignalsForPersona,
   managerWorkspaceSectionsForPersona,
   managerWorkspaceToolsForPersona,
   type ManagerWorkspaceSection,
   type ManagerWorkspaceTool,
-} from './components/ManagerWorkspaceMenu';
+} from './workspaces/features/management/managerWorkspace';
 import {
   JobWorkflowMenu,
   type JobWorkflowSection,

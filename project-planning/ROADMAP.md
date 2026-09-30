@@ -138,6 +138,10 @@ rollout metadata, and scope metadata use that resolved result. The next internal
 architecture slice is incremental extraction of shared feature/state modules
 from the top-level React `App`; it does not replace the external hosted cohort
 or Dispatcher/Billing authority gates.
+Management is now the first extracted feature module: catalog, capability
+filtering, active selection, and status derivation are independent of the React
+menu. Customer, field, recovery, and top-level data coordination remain bounded
+follow-on extractions.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.

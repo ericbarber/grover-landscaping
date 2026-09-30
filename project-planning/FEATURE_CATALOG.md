@@ -81,6 +81,9 @@ boundary; inclusion here alone does not mean a feature shipped.
   per persona, explicit authoritative/proposed/system status, a central resolver
   that consumes server capability flags, and shared navigation, home, field,
   and manager-tool outputs without granting API authority
+- Extracted management workspace feature policy containing the shared section
+  and tool catalog, manifest/capability filtering, active-tool validation, and
+  status derivation independently of the React menu presentation
 - Validated minimalist task-first design direction for all ten signed-in
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,

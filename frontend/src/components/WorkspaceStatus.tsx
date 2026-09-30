@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
+import type { WorkspaceStatusTone } from '../workspaces/core/types';
 import { WorkspaceIcon } from './WorkspaceIcon';
 import type { WorkspaceIconName } from './WorkspaceIcon';
 
-export type WorkspaceStatusTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+export type { WorkspaceStatusTone } from '../workspaces/core/types';
 
 const noticeToneClasses: Record<WorkspaceStatusTone, string> = {
   neutral: 'border-slate-200 bg-slate-50 text-slate-800',

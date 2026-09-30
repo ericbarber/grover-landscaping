@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-30: Extracted management workspace policy from its React menu into a
+  shared feature module. Section/tool catalogs, persona-manifest capability
+  filtering, active-tool validation, and status/urgency derivation now remain
+  independently testable while the menu component owns presentation and
+  interaction only. Workspace status tone is also a core contract rather than
+  a component-owned type.
 - 2026-09-30: Completed the workspace compatibility migration by moving the
   authenticated app, shell, Home, manager menu, and their tests onto workspace
   core imports and removing the temporary legacy-domain facade. The next

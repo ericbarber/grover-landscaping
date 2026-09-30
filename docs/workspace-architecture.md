@@ -23,7 +23,7 @@ operation.
 | Workspace capability | Server-derived `/me/access` projection | Fail-closed interface composition and rollout state |
 | Persona manifest | `frontend/src/workspaces/personas/<persona>/manifest.ts` | Presentation, priority, copy, destinations, and feature ordering |
 | Workspace resolver | `frontend/src/workspaces/core/resolveWorkspace.ts` | Intersects a manifest with the server projection |
-| Feature implementation | Existing domain/API/component modules; future `workspaces/features/` extraction | Reusable workflow behavior shared by one or more personas |
+| Feature implementation | `frontend/src/workspaces/features/` plus existing domain/API modules | Reusable workflow behavior shared by one or more personas |
 
 A persona is a presentation profile. It does not grant access, expand a scope,
 or replace backend checks. Dispatcher and Billing Administrator manifests are
@@ -93,4 +93,7 @@ The architecture boundary is active, but `frontend/src/App.tsx` still
 coordinates state and data loading for all workspace families. Continue by
 extracting shared feature modules and thin persona home compositions in small
 slices. Keep new persona policy in manifests and the resolver while that
-top-level orchestration is reduced.
+top-level orchestration is reduced. Management is the first extracted feature:
+its section/tool catalog, capability filtering, active-tool validation, and
+status derivation live under `workspaces/features/management`; the React menu
+contains rendering and interaction only.

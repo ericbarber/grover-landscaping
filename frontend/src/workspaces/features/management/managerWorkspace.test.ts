@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { WorkspaceCapability } from '../workspaces/core/types';
+import type { WorkspaceCapability } from '../../core/types';
 import {
   managerWorkspaceActiveToolForPersona,
   managerWorkspaceSectionLabel,
@@ -8,7 +8,7 @@ import {
   managerWorkspaceSectionsForPersona,
   managerWorkspaceTools,
   managerWorkspaceToolsForPersona,
-} from './ManagerWorkspaceMenu';
+} from './managerWorkspace';
 
 const signalInput = {
   isLoadingJobs: false,

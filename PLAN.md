@@ -220,7 +220,11 @@ Current state:
   and backend resource authorization remains authoritative. Production callers
   now import the workspace core directly and the temporary legacy-domain facade
   is removed. Remaining internal work is to extract feature/state families from
-  the top-level React `App`.
+  the top-level React `App`. The first extraction now moves the manager section
+  and tool catalog, manifest/capability filtering, active-tool validation, and
+  status-signal derivation into `workspaces/features/management`; the manager
+  React component is presentation-only. Customer, field, recovery, and their
+  data-loading/state coordinators remain later slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

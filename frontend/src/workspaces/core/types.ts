@@ -33,6 +33,8 @@ export type WorkspaceNavigationIcon =
   | 'manage'
   | 'customer';
 
+export type WorkspaceStatusTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+
 export type WorkspaceCapability =
   | 'access_resolution'
   | 'care_visibility'
