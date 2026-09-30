@@ -148,7 +148,7 @@ mode, protected-read eligibility, manager-preview separation, and Home summary
 policy are now extracted and unsupported proposed modes fail closed. Field,
 recovery, and top-level data coordination remain bounded follow-on extractions;
 the first field slices now centralize offline queue status and replay gating and
-move assigned-job and offline-recovery presentation out of `App`.
+move assigned-job, selected-job, and offline-recovery presentation out of `App`.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.

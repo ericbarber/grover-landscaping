@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-30: Extracted selected-job presentation from the application shell.
+  Overview, field actions, workflow navigation, checklist, photo evidence,
+  approved add-ons, and completion-report rendering now live in a dedicated
+  component driven by resolved field controls and injected operations.
 - 2026-09-30: Extracted assigned-job and offline-recovery presentation from the
   application shell. Dedicated field components now own job search/filter state,
   cards, queue status, and conflict confirmation, while `App` retains the API

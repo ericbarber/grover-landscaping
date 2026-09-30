@@ -110,4 +110,7 @@ Field recovery policy now provides one summary for job, checklist, and photo
 queues plus the conflict-aware replay gate used by the shell. Assigned-job and
 offline-recovery presentation now live in dedicated components, including their
 local filtering and conflict-confirmation state; `App` retains mutation
-execution until the field coordinator is extracted.
+execution until the field coordinator is extracted. Selected-job presentation
+is also separated: workflow navigation, checklist, photo evidence, add-ons, and
+completion-report rendering consume injected operations and resolved field
+controls rather than owning access policy.

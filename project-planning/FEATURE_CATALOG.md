@@ -96,6 +96,8 @@ boundary; inclusion here alone does not mean a feature shipped.
   summaries plus one online/idle/conflict-free replay gate
 - Dedicated assigned-jobs and offline-recovery presentation components owning
   field filtering and conflict-confirmation UI outside the application shell
+- Dedicated selected-job presentation component for overview, checklist,
+  evidence capture, approved add-ons, and completion-report workflow
 - Validated minimalist task-first design direction for all ten signed-in
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,

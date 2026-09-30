@@ -234,9 +234,11 @@ Current state:
   centralizes job, checklist, and photo queue summaries and conflict-aware replay
   gates. Assigned-job search, filtering, cards, data-read status, and the three
   offline recovery queues now render through dedicated field components; their
-  filter and conflict-confirmation state no longer lives in `App`. Job-detail
-  presentation and the remaining data-loading/state coordinators remain later
-  slices.
+  filter and conflict-confirmation state no longer lives in `App`. Selected-job
+  overview, workflow navigation, checklist, evidence upload, add-ons, and report
+  presentation now also live in a dedicated field component. The remaining
+  field API/offline coordinator and other data-loading/state coordinators remain
+  later slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,
