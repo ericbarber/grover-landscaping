@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-30: Extracted manager completion-report lifecycle commands from the
+  application shell. One management hook now owns review start, change request,
+  resubmission, delivery, shared busy state, and the required report/activity
+  refresh sequence; the shell maps typed success or failure to existing status
+  language.
 - 2026-09-30: Extracted the manager completion-report queue coordinator from
   the application shell. A management hook now owns collection reads, partial
   per-job initial fallback, strict filtered refresh, loading state, snapshot

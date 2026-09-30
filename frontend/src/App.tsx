@@ -5,7 +5,6 @@ import {
   completeDispatchCustomerNotification,
   completePhotoUpload,
   createPhotoUploadTicket,
-  deliverCompletionReport,
   eraseCustomerPhotoEvidence,
   fetchCompletionReport,
   updateJobDispatchAssignment,
@@ -15,7 +14,6 @@ import {
   fetchPhotoErasureDeletionHistory,
   fetchPhotoProcessingHistory,
   fetchPropertyCompletionReports,
-  requestCompletionReportChanges,
   queueCompletionReportDeliveryNotification,
   readPhotoUploadMetadata,
   resolveNotificationDelivery,
@@ -24,10 +22,8 @@ import {
   retryNotificationDelivery,
   retryPhotoErasureDeletionJob,
   retryPhotoProcessingJob,
-  resubmitCompletionReport,
   startJob,
   updateChecklistItem,
-  startCompletionReportReview,
   uploadPhotoToTicket,
   updateJobAddOnStatus,
   type CustomerPropertyRecord,
@@ -129,6 +125,7 @@ import {
   type CompletionReportOperationalFilters,
 } from './domain/completionReportOperationalFilters';
 import { useManagerCompletionReportQueue } from './workspaces/features/management/useManagerCompletionReportQueue';
+import { useManagerCompletionReportActions } from './workspaces/features/management/useManagerCompletionReportActions';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
@@ -794,7 +791,7 @@ export function App() {
   const [customerProjectBids, setCustomerProjectBids] = useState<ProjectBid[]>([]);
   const [isLoadingCustomerProjectBids, setIsLoadingCustomerProjectBids] = useState(false);
   const [hasCustomerProjectBidHistoryError, setHasCustomerProjectBidHistoryError] = useState(false);
-  const [completionReportActionStatus, setCompletionReportActionStatus] = useState<string | null>(null);
+  const [reportNotificationActionStatus, setReportNotificationActionStatus] = useState<string | null>(null);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
   const [propertyOnboardingRefreshSignal, setPropertyOnboardingRefreshSignal] = useState(0);
   const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
@@ -967,6 +964,16 @@ export function App() {
         source: 'photo',
       });
     },
+  });
+  const {
+    actionStatus: managerReportActionStatus,
+    startReview: startManagerReportReview,
+    requestChanges: requestManagerReportChanges,
+    resubmit: resubmitManagerReport,
+    deliver: deliverManagerReport,
+  } = useManagerCompletionReportActions({
+    refreshReport: refreshCompletionReport,
+    refreshActivity: refreshOperationalActivity,
   });
   const managerWorkspaceSignals = useMemo(
     () => managerWorkspaceSectionSignalsForPersona(
@@ -1995,63 +2002,39 @@ export function App() {
   }
 
   async function handleStartReportReview(reportId: string) {
-    setCompletionReportActionStatus('Starting manager review...');
-
-    try {
-      const action = await startCompletionReportReview(reportId);
-      await refreshCompletionReport(action.jobId);
-      await refreshOperationalActivity();
-      setStatusMessage(`${action.reportId} is in manager review.`);
-      setCompletionReportActionStatus(null);
-    } catch {
-      setCompletionReportActionStatus(null);
+    const result = await startManagerReportReview(reportId);
+    if (!result.ok) {
       setStatusMessage('Could not start manager review. Confirm the report is submitted and persisted.');
+      return;
     }
+    setStatusMessage(`${result.action.reportId} is in manager review.`);
   }
 
   async function handleRequestReportChanges(reportId: string, reason: string) {
-    setCompletionReportActionStatus('Requesting report changes...');
-
-    try {
-      const action = await requestCompletionReportChanges(reportId, reason);
-      await refreshCompletionReport(action.jobId);
-      await refreshOperationalActivity();
-      setStatusMessage(`${action.reportId} has changes requested.`);
-      setCompletionReportActionStatus(null);
-    } catch {
-      setCompletionReportActionStatus(null);
+    const result = await requestManagerReportChanges(reportId, reason);
+    if (!result.ok) {
       setStatusMessage('Could not request changes. Confirm the report is currently in review.');
+      return;
     }
+    setStatusMessage(`${result.action.reportId} has changes requested.`);
   }
 
   async function handleResubmitReport(reportId: string) {
-    setCompletionReportActionStatus('Resubmitting completion report...');
-
-    try {
-      const action = await resubmitCompletionReport(reportId);
-      await refreshCompletionReport(action.jobId);
-      await refreshOperationalActivity();
-      setStatusMessage(`${action.reportId} resubmitted for manager review.`);
-      setCompletionReportActionStatus(null);
-    } catch {
-      setCompletionReportActionStatus(null);
+    const result = await resubmitManagerReport(reportId);
+    if (!result.ok) {
       setStatusMessage('Could not resubmit. Confirm the report is change-requested and delivery-ready.');
+      return;
     }
+    setStatusMessage(`${result.action.reportId} resubmitted for manager review.`);
   }
 
   async function handleDeliverReport(reportId: string) {
-    setCompletionReportActionStatus('Delivering completion report...');
-
-    try {
-      const action = await deliverCompletionReport(reportId);
-      await refreshCompletionReport(action.jobId);
-      await refreshOperationalActivity();
-      setStatusMessage(`${action.reportId} delivered to the customer portal.`);
-      setCompletionReportActionStatus(null);
-    } catch {
-      setCompletionReportActionStatus(null);
+    const result = await deliverManagerReport(reportId);
+    if (!result.ok) {
       setStatusMessage('Could not deliver. Confirm the report passed review and delivery readiness checks.');
+      return;
     }
+    setStatusMessage(`${result.action.reportId} delivered to the customer portal.`);
   }
 
   async function handleQueueReportDeliveryNotification(
@@ -2059,7 +2042,7 @@ export function App() {
     channel: 'email' | 'sms',
     recipient: string,
   ) {
-    setCompletionReportActionStatus('Queueing customer notification...');
+    setReportNotificationActionStatus('Queueing customer notification...');
 
     try {
       const notification = await queueCompletionReportDeliveryNotification(reportId, channel, recipient);
@@ -2076,7 +2059,7 @@ export function App() {
         });
       }
       setStatusMessage(`${notification.reportId} notification queued for ${notification.recipient}.`);
-      setCompletionReportActionStatus(null);
+      setReportNotificationActionStatus(null);
       recordManagerActivity({
         title: 'Completion report notification queued',
         message: `${notification.channel} delivery queued for ${notification.reportId}.`,
@@ -2084,7 +2067,7 @@ export function App() {
         source: 'sync',
       });
     } catch (error) {
-      setCompletionReportActionStatus(null);
+      setReportNotificationActionStatus(null);
       setStatusMessage(
         isApiErrorCode(error, 'completion_report_notification_preference_blocked')
           ? 'Delivery blocked by this customer’s account preferences. Enable the selected channel and use the configured account recipient.'
@@ -2986,7 +2969,7 @@ export function App() {
             onResubmitReport={handleResubmitReport}
             onDeliverReport={handleDeliverReport}
             onQueueReportDeliveryNotification={handleQueueReportDeliveryNotification}
-            reportActionStatus={completionReportActionStatus}
+            reportActionStatus={managerReportActionStatus ?? reportNotificationActionStatus}
             reportEnabled={fieldControls.report}
             requestedWorkflow={requestedJobWorkflow}
           />

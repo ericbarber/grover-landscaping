@@ -257,8 +257,11 @@ Current state:
   application shell only maps typed outcomes to status copy. The management
   feature boundary now also owns completion-report queue loading, partial
   per-job fallback, strict filtered refresh, loading state, snapshot indexing,
-  and report upserts shared with the selected field report. Remaining
-  cross-workspace action coordinators stay as later slices.
+  and report upserts shared with the selected field report. A companion
+  management hook now owns the review, change-request, resubmit, and delivery
+  commands plus their shared busy state and required report/activity refresh.
+  Notification delivery and remaining cross-workspace coordinators stay as
+  later slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,
