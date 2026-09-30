@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-30: Extracted selected completion-report loading from the application
+  shell. The field report hook owns request cancellation and explicitly routes
+  authoritative snapshots/evidence or the existing browser-local fallback
+  signal back to shell operations.
 - 2026-09-30: Extracted selected-job photo-evidence reads from the application
   shell. The field evidence hook now owns stale-result cancellation,
   authoritative unavailability, and local-preserving server evidence merges

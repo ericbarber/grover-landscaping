@@ -244,8 +244,10 @@ Current state:
   between authoritative API errors and transport-only local fallback. A
   separate evidence hook owns selected-job photo reads, stale-result
   cancellation, evidence merging, and unavailable state while preserving local
-  tickets. Report, upload/replay mutation, and other data-loading/state
-  coordinators remain later slices.
+  tickets. Selected completion-report loading now has its own field hook, which
+  publishes authoritative snapshots/evidence or invokes the existing local
+  fallback signal. Report-queue, upload/replay mutation, and other
+  data-loading/state coordinators remain later slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

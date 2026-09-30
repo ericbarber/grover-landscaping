@@ -125,6 +125,7 @@ import {
 } from './workspaces/features/field/fieldWorkspace';
 import { useFieldJobSelection } from './workspaces/features/field/useFieldJobSelection';
 import { useFieldPhotoEvidence } from './workspaces/features/field/useFieldPhotoEvidence';
+import { useFieldCompletionReport } from './workspaces/features/field/useFieldCompletionReport';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { AssignedJobsPanel } from './components/AssignedJobsPanel';
 import { FieldOfflineRecoveryPanel } from './components/FieldOfflineRecoveryPanel';
@@ -760,7 +761,6 @@ export function App() {
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
   const [jobsUnavailable, setJobsUnavailable] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
-  const [selectedCompletionReport, setSelectedCompletionReport] = useState<CompletionReportSnapshot | null>(null);
   const [completionReportSnapshots, setCompletionReportSnapshots] = useState<Record<string, CompletionReportSnapshot>>({});
   const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
   const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
@@ -867,6 +867,32 @@ export function App() {
     readStoredManagerActivityItems(),
   );
   const [isManagerActivityPersisted, setIsManagerActivityPersisted] = useState(true);
+  const recordManagerActivity = useCallback((item: NewManagerActivity) => {
+    setManagerActivity((current) =>
+      prependManagerActivity(current, {
+        ...item,
+        id: `${item.source}_${item.tone}_${Date.now()}`,
+        occurredAt: managerActivityTimestamp(),
+      }),
+    );
+  }, []);
+  const {
+    selectedCompletionReport,
+    setSelectedCompletionReport,
+  } = useFieldCompletionReport(selectedJobId, {
+    onLoaded: (report) => {
+      setCompletionReportSnapshots((current) => ({ ...current, [report.jobId]: report }));
+      setUploadTickets((current) => mergePhotoEvidence(current, report.jobId, report.photoEvidence));
+    },
+    onFallback: (jobId) => {
+      recordManagerActivity({
+        title: 'Completion report fallback active',
+        message: `${jobId} completion report is using browser-local evidence until the API is reachable.`,
+        tone: 'warning',
+        source: 'photo',
+      });
+    },
+  });
   const jobDetailRef = useRef<HTMLDivElement>(null);
   const providerEntryOpened = useRef(false);
   const mobileScrollPositions = useRef<Partial<Record<MobileWorkspaceView, number>>>({});
@@ -1151,16 +1177,6 @@ export function App() {
       .filter((accountId): accountId is string => Boolean(accountId));
     return Array.from(new Set([...reportAccountIds, 'acct_1001', 'acct_1002'])).sort();
   }, [managerReportQueueReports]);
-
-  function recordManagerActivity(item: NewManagerActivity) {
-    setManagerActivity((current) =>
-      prependManagerActivity(current, {
-        ...item,
-        id: `${item.source}_${item.tone}_${Date.now()}`,
-        occurredAt: managerActivityTimestamp(),
-      }),
-    );
-  }
 
   function resetManagerActivityHistory() {
     setManagerActivity([]);
@@ -1580,39 +1596,6 @@ export function App() {
       isMounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (!selectedJobId) {
-      setSelectedCompletionReport(null);
-      return;
-    }
-
-    let isMounted = true;
-    setSelectedCompletionReport(null);
-
-    fetchCompletionReport(selectedJobId)
-      .then((report) => {
-        if (isMounted) {
-          setSelectedCompletionReport(report);
-          setCompletionReportSnapshots((current) => ({ ...current, [report.jobId]: report }));
-          setUploadTickets((current) => mergePhotoEvidence(current, selectedJobId, report.photoEvidence));
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          recordManagerActivity({
-            title: 'Completion report fallback active',
-            message: `${selectedJobId} completion report is using browser-local evidence until the API is reachable.`,
-            tone: 'warning',
-            source: 'photo',
-          });
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedJobId]);
 
   useEffect(() => {
     if (!canLoadCompletionReportQueue || jobs.length === 0) {

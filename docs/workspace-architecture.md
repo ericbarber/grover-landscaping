@@ -121,6 +121,8 @@ no longer coordinates selected-job detail and add-on reads: a field selection
 hook owns request lifecycle, stale-result cancellation, loading/unavailable
 state, and the narrow transport fallback. A separate field evidence hook owns
 selected-job photo reads, unavailable state, stale-result cancellation, and
-merging authoritative evidence without dropping local work. `App` still owns
-completion-report reads, upload/replay execution, and their cross-request state
-until those field coordinators are extracted.
+merging authoritative evidence without dropping local work. A selected-report
+hook similarly owns completion-report request lifecycle and routes loaded or
+fallback outcomes through explicit callbacks. `App` still owns the manager
+report queue, upload/replay execution, and their cross-request state until those
+field coordinators are extracted.
