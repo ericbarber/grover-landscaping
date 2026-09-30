@@ -126,5 +126,8 @@ hook similarly owns completion-report request lifecycle and routes loaded or
 fallback outcomes through explicit callbacks. The field job-collection hook
 owns initial loading and selection plus the fail-closed distinction between an
 authoritative API error and transport-only seed fallback. `App` still owns the
-manager report queue, upload/replay execution, and their cross-request state
-until those field coordinators are extracted.
+manager report queue and initiating new field mutations. Actor-scoped durable
+queue hydration, reconnect-triggered replay, per-queue replay locking, conflict
+classification, and post-replay job/evidence refresh now live in a dedicated
+field recovery hook. Conflict-review actions remain injected by `App` until the
+remaining mutation command boundary is extracted.

@@ -53,23 +53,12 @@ import {
   enqueueChecklistMutation,
   enqueueJobLifecycleMutation,
   enqueuePhotoUploadMutation,
-  getOfflinePhotoBlob,
-  isChecklistOfflineMutation,
-  isOfflineMutationConflict,
-  isJobLifecycleOfflineMutation,
-  isPhotoUploadOfflineMutation,
-  listOfflineMutationsForActor,
-  markOfflineMutationFailed,
   removeOfflineMutation,
   requestPersistentOfflineStorage,
   type ChecklistOfflineMutation,
   type JobLifecycleOfflineMutation,
   type PhotoUploadOfflineMutation,
 } from './domain/offlineMutationQueue';
-import {
-  MissingOfflinePhotoBlobError,
-  replayOfflinePhotoMutation,
-} from './domain/offlinePhotoReplay';
 import {
   assessPhotoQuality,
   photoQualityMessage,
@@ -127,6 +116,7 @@ import { useFieldJobSelection } from './workspaces/features/field/useFieldJobSel
 import { useFieldPhotoEvidence } from './workspaces/features/field/useFieldPhotoEvidence';
 import { useFieldCompletionReport } from './workspaces/features/field/useFieldCompletionReport';
 import { useFieldJobs } from './workspaces/features/field/useFieldJobs';
+import { useFieldOfflineRecovery } from './workspaces/features/field/useFieldOfflineRecovery';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { AssignedJobsPanel } from './components/AssignedJobsPanel';
 import { FieldOfflineRecoveryPanel } from './components/FieldOfflineRecoveryPanel';
@@ -852,15 +842,20 @@ export function App() {
     setCrewAdministrationInspectedDestinationTerritoryId,
   ] = useState<string>();
   const [crewAdministrationSelectionSignal, setCrewAdministrationSelectionSignal] = useState(0);
-  const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
-  const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
-  const [offlinePhotoMutations, setOfflinePhotoMutations] = useState<PhotoUploadOfflineMutation[]>([]);
-  const [isReplayingJobMutations, setIsReplayingJobMutations] = useState(false);
-  const [isReplayingChecklistMutations, setIsReplayingChecklistMutations] = useState(false);
-  const [isReplayingPhotoMutations, setIsReplayingPhotoMutations] = useState(false);
-  const jobReplayInProgress = useRef(false);
-  const checklistReplayInProgress = useRef(false);
-  const photoReplayInProgress = useRef(false);
+  const {
+    jobMutations: offlineJobMutations,
+    checklistMutations: offlineChecklistMutations,
+    photoMutations: offlinePhotoMutations,
+    setJobMutations: setOfflineJobMutations,
+    setChecklistMutations: setOfflineChecklistMutations,
+    setPhotoMutations: setOfflinePhotoMutations,
+    isReplayingJobs: isReplayingJobMutations,
+    isReplayingChecklist: isReplayingChecklistMutations,
+    isReplayingPhotos: isReplayingPhotoMutations,
+    replayJobs: replayJobLifecycleMutations,
+    replayChecklist: replayChecklistMutations,
+    replayPhotos: replayPhotoMutations,
+  } = useFieldOfflineRecovery(auth.userId, setJobs, setUploadTickets);
   const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
   const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
   const [managerWorkspaceSection, setManagerWorkspaceSection] =
@@ -1201,181 +1196,6 @@ export function App() {
     setManagerActivity([]);
     setIsManagerActivityPersisted(writeStoredManagerActivityItems([]));
   }
-
-  const replayJobLifecycleMutations = useCallback(async () => {
-    if (!auth.userId || !navigator.onLine || jobReplayInProgress.current) return;
-    jobReplayInProgress.current = true;
-    setIsReplayingJobMutations(true);
-    try {
-      const mutations = (await listOfflineMutationsForActor(auth.userId))
-        .filter(isJobLifecycleOfflineMutation);
-      for (const mutation of mutations) {
-        if (mutation.syncState === 'conflict') break;
-        try {
-          const result = mutation.action === 'start'
-            ? await startJob(mutation.jobId, mutation.id)
-            : await completeJob(mutation.jobId, mutation.id);
-          if (!result.persisted) {
-            await markOfflineMutationFailed(mutation, 'API used local fallback');
-            break;
-          }
-          await removeOfflineMutation(mutation.id);
-        } catch (error) {
-          await markOfflineMutationFailed(
-            mutation,
-            error instanceof Error ? error.message : 'Job lifecycle sync failed',
-            isOfflineMutationConflict(error) ? 'conflict' : 'failed',
-          );
-          break;
-        }
-      }
-      setOfflineJobMutations(
-        (await listOfflineMutationsForActor(auth.userId)).filter(isJobLifecycleOfflineMutation),
-      );
-    } catch {
-      // Keep the last durable queue snapshot visible.
-    } finally {
-      jobReplayInProgress.current = false;
-      setIsReplayingJobMutations(false);
-    }
-  }, [auth.userId]);
-
-  const replayChecklistMutations = useCallback(async () => {
-    if (!auth.userId || !navigator.onLine || checklistReplayInProgress.current) return;
-    checklistReplayInProgress.current = true;
-    setIsReplayingChecklistMutations(true);
-    try {
-      const mutations = (await listOfflineMutationsForActor(auth.userId))
-        .filter(isChecklistOfflineMutation);
-      for (const mutation of mutations) {
-        if (mutation.syncState === 'conflict') break;
-        try {
-          const result = await updateChecklistItem(
-            mutation.jobId,
-            mutation.checklistItemId,
-            mutation.completed,
-            mutation.id,
-          );
-          if (!result.persisted) {
-            await markOfflineMutationFailed(mutation, 'API used local fallback');
-            break;
-          }
-          await removeOfflineMutation(mutation.id);
-        } catch (error) {
-          await markOfflineMutationFailed(
-            mutation,
-            error instanceof Error ? error.message : 'Checklist sync failed',
-            isOfflineMutationConflict(error) ? 'conflict' : 'failed',
-          );
-          break;
-        }
-      }
-      setOfflineChecklistMutations(
-        (await listOfflineMutationsForActor(auth.userId)).filter(isChecklistOfflineMutation),
-      );
-    } catch {
-      // Keep the last durable queue snapshot visible.
-    } finally {
-      checklistReplayInProgress.current = false;
-      setIsReplayingChecklistMutations(false);
-    }
-  }, [auth.userId]);
-
-  const replayPhotoMutations = useCallback(async () => {
-    if (!auth.userId || !navigator.onLine || photoReplayInProgress.current) return;
-    photoReplayInProgress.current = true;
-    setIsReplayingPhotoMutations(true);
-    let replayedAny = false;
-    try {
-      const mutations = (await listOfflineMutationsForActor(auth.userId))
-        .filter(isPhotoUploadOfflineMutation);
-      for (const mutation of mutations) {
-        if (mutation.syncState === 'conflict') break;
-        try {
-          const ticket = await replayOfflinePhotoMutation(mutation, {
-            getBlob: getOfflinePhotoBlob,
-            createTicket: createPhotoUploadTicket,
-            upload: uploadPhotoToTicket,
-            readMetadata: readPhotoUploadMetadata,
-            complete: completePhotoUpload,
-            remove: removeOfflineMutation,
-          });
-          setUploadTickets((current) => [
-            ticket,
-            ...current.filter((item) => item.photoId !== ticket.photoId),
-          ]);
-          replayedAny = true;
-        } catch (error) {
-          await markOfflineMutationFailed(
-            mutation,
-            error instanceof Error ? error.message : 'Photo replay failed',
-            error instanceof MissingOfflinePhotoBlobError || isOfflineMutationConflict(error)
-              ? 'conflict'
-              : 'failed',
-          );
-          break;
-        }
-      }
-      setOfflinePhotoMutations(
-        (await listOfflineMutationsForActor(auth.userId)).filter(isPhotoUploadOfflineMutation),
-      );
-      if (replayedAny) setJobs(await fetchJobs());
-    } catch {
-      // Keep the last durable queue snapshot visible.
-    } finally {
-      photoReplayInProgress.current = false;
-      setIsReplayingPhotoMutations(false);
-    }
-  }, [auth.userId]);
-
-  useEffect(() => {
-    if (!auth.userId) {
-      setOfflineJobMutations([]);
-      setOfflineChecklistMutations([]);
-      setOfflinePhotoMutations([]);
-      return;
-    }
-    setOfflineJobMutations([]);
-    setOfflineChecklistMutations([]);
-    setOfflinePhotoMutations([]);
-    let active = true;
-    void listOfflineMutationsForActor(auth.userId)
-      .then((mutations) => {
-        if (!active) return;
-        const jobMutations = mutations.filter(isJobLifecycleOfflineMutation);
-        setOfflineJobMutations(jobMutations);
-        setOfflineChecklistMutations(mutations.filter(isChecklistOfflineMutation));
-        setOfflinePhotoMutations(mutations.filter(isPhotoUploadOfflineMutation));
-        if (jobMutations.length > 0 && navigator.onLine) void replayJobLifecycleMutations();
-        if (mutations.some(isChecklistOfflineMutation) && navigator.onLine) {
-          void replayChecklistMutations();
-        }
-        if (mutations.some(isPhotoUploadOfflineMutation) && navigator.onLine) {
-          void replayPhotoMutations();
-        }
-      })
-      .catch(() => {
-        if (!active) return;
-        setOfflineJobMutations([]);
-        setOfflineChecklistMutations([]);
-        setOfflinePhotoMutations([]);
-      });
-    const handleOnline = () => {
-      void replayJobLifecycleMutations();
-      void replayChecklistMutations();
-      void replayPhotoMutations();
-    };
-    window.addEventListener('online', handleOnline);
-    return () => {
-      active = false;
-      window.removeEventListener('online', handleOnline);
-    };
-  }, [
-    auth.userId,
-    replayChecklistMutations,
-    replayJobLifecycleMutations,
-    replayPhotoMutations,
-  ]);
 
   useEffect(() => {
     setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));

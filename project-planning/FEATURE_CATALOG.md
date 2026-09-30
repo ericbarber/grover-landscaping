@@ -108,6 +108,8 @@ boundary; inclusion here alone does not mean a feature shipped.
   authoritative-loaded or browser-local-fallback outcomes
 - Field job-collection coordinator owning initial loading and selection with
   fail-closed API-unavailable and explicit transport-fallback outcomes
+- Durable field recovery coordinator owning actor-scoped queue hydration,
+  reconnect replay, replay locks, conflict classification, and state refresh
 - Validated minimalist task-first design direction for all ten signed-in
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,

@@ -248,8 +248,11 @@ Current state:
   publishes authoritative snapshots/evidence or invokes the existing local
   fallback signal. The assigned-job collection hook now owns initial loading,
   selection, cancellation, and the persisted-unavailable versus transport-only
-  seed fallback distinction. Report-queue, upload/replay mutation, and other
-  data-loading/state coordinators remain later slices.
+  seed fallback distinction. A durable field recovery hook now owns actor-
+  scoped queue hydration, online-triggered replay, replay locks, conflict
+  classification, and refreshed job/evidence state across job, checklist, and
+  photo mutations. Enqueue/conflict-review actions, the manager report queue,
+  and other cross-workspace coordinators remain later slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

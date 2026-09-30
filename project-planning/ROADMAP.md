@@ -160,7 +160,9 @@ coordinator with explicit loaded/fallback outcomes. Manager report-queue reads
 and offline upload/replay mutation coordination remain bounded follow-on
 slices. Initial assigned-job collection loading and selection now also reside in
 the field boundary with authoritative-unavailable and seed-fallback outcomes
-kept distinct.
+kept distinct. Durable job, checklist, and photo queue hydration plus reconnect
+replay now reside in one field recovery coordinator; enqueue and reviewed-
+conflict commands remain the next bounded field extraction.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.

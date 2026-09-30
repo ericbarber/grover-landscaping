@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-30: Extracted durable field offline recovery from the application
+  shell. One actor-scoped hook now hydrates job/checklist/photo queues, serializes
+  replay per queue, retries on reconnect, classifies conflicts, and refreshes
+  job or photo state after successful replay.
 - 2026-09-30: Extracted initial assigned-job collection loading and selection
   from the application shell. The field jobs hook preserves the explicit
   persisted-unavailable response without substituting seed data and limits seed
