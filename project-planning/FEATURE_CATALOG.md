@@ -87,6 +87,8 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Extracted Home workspace feature policy containing shortcut composition,
   persona language access, progress/priority rules, protected-read continuity,
   and route-date interpretation independently of the React panel presentation
+- Core workspace-selection hook owning eligible-persona state, safe fallback
+  after access changes, and rollout resolution outside the application shell
 - Validated minimalist task-first design direction for all ten signed-in
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,

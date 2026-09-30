@@ -99,4 +99,7 @@ status derivation live under `workspaces/features/management`; the React menu
 contains rendering and interaction only. Home is the second extracted feature:
 shortcut composition, persona language access, progress/priority rules,
 protected-read continuity, and route-date interpretation live under
-`workspaces/features/home`; the React panel owns layout and interaction.
+`workspaces/features/home`; the React panel owns layout and interaction. The
+workspace-selection hook in `workspaces/core` now owns eligible-persona state,
+safe fallback when access changes, and rollout resolution; `App` consumes the
+resolved workspace instead of coordinating those persona rules itself.

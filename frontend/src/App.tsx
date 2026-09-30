@@ -80,11 +80,7 @@ import {
   requiredPhotoEvidence,
 } from './domain/photoQuality';
 import { workspaceGuidanceForRoles, workspaceRolesForAccess } from './domain/workspaceAccess';
-import {
-  resolveWorkspace,
-  workspacePersonasForRoles,
-} from './workspaces/core/resolveWorkspace';
-import type { WorkspacePersonaId } from './workspaces/core/types';
+import { useWorkspaceSelection } from './workspaces/core/useWorkspaceSelection';
 import {
   DesktopWorkspaceNavigation,
   MobileWorkspaceHeader,
@@ -1217,11 +1213,15 @@ export function App() {
     [auth.memberships, auth.roles],
   );
   const workspaceGuidance = workspaceGuidanceForRoles(workspaceRoles);
-  const availablePersonas = useMemo(
-    () => workspacePersonasForRoles(workspaceRoles),
-    [workspaceRoles],
-  );
-  const initialPersona = availablePersonas[0];
+  const {
+    activeWorkspace,
+    availablePersonas,
+    selectPersona: selectWorkspacePersona,
+  } = useWorkspaceSelection(workspaceRoles, auth.workspaceRollout);
+  const activePersona = activeWorkspace.persona;
+  const workspaceSurfaces = activeWorkspace.surfaces;
+  const managedPersonaUnit = activeWorkspace.rolloutUnit;
+  const fieldControls = activeWorkspace.fieldControls;
   const canManageDispatchHierarchy = workspaceRoles.includes('OrganizationOwner')
     || workspaceRoles.includes('SupportAdmin');
   const canReviewMarketingLeads = workspaceRoles.includes('SupportAdmin');
@@ -1234,11 +1234,8 @@ export function App() {
     () => filterAssignedJobs(jobs, jobSearch, jobStatusFilter),
     [jobSearch, jobStatusFilter, jobs],
   );
-  const [activePersonaId, setActivePersonaId] = useState<WorkspacePersonaId>(
-    initialPersona.id,
-  );
   const [mobileView, setMobileView] = useState<MobileWorkspaceView>(
-    initialPersona.defaultView,
+    activePersona.defaultView,
   );
   const [selectedJob, setSelectedJob] = useState<JobDetail | null>(null);
   const [jobDetailUnavailable, setJobDetailUnavailable] = useState(false);
@@ -1364,17 +1361,6 @@ export function App() {
   const jobDetailRef = useRef<HTMLDivElement>(null);
   const providerEntryOpened = useRef(false);
   const mobileScrollPositions = useRef<Partial<Record<MobileWorkspaceView, number>>>({});
-  const activePersonaWithoutRollout = availablePersonas.find(
-    (persona) => persona.id === activePersonaId,
-  ) ?? initialPersona;
-  const activeWorkspace = useMemo(
-    () => resolveWorkspace(activePersonaWithoutRollout.id, auth.workspaceRollout),
-    [activePersonaWithoutRollout, auth.workspaceRollout],
-  );
-  const activePersona = activeWorkspace.persona;
-  const workspaceSurfaces = activeWorkspace.surfaces;
-  const managedPersonaUnit = activeWorkspace.rolloutUnit;
-  const fieldControls = activeWorkspace.fieldControls;
   const homeCustomerVisits = activePersona.id === 'yard-owner'
     || activePersona.id === 'property-manager'
     ? customerPortalVisits : null;
@@ -1472,12 +1458,6 @@ export function App() {
     : activePersona.id === 'property-manager'
       ? 'Customer properties, reports, and portfolios'
       : 'Scheduling, customers, and recovery';
-
-  useEffect(() => {
-    if (availablePersonas.some((persona) => persona.id === activePersonaId)) return;
-    setActivePersonaId(initialPersona.id);
-    setMobileView(initialPersona.defaultView);
-  }, [activePersonaId, availablePersonas, initialPersona]);
 
   useEffect(() => {
     if (activePersona.navigation.some(({ view }) => view === mobileView)) return;
@@ -3180,9 +3160,8 @@ export function App() {
         availablePersonas={availablePersonas}
         onBackToJobs={() => changeMobileView('jobs')}
         onPersonaChange={(personaId) => {
-          const persona = availablePersonas.find((item) => item.id === personaId);
+          const persona = selectWorkspacePersona(personaId);
           if (!persona) return;
-          setActivePersonaId(persona.id);
           if (persona.defaultView === 'manager') {
             setManagerWorkspaceSection(null);
             setManagerWorkspaceTool(null);

@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-30: Moved authenticated persona selection into the workspace core.
+  The application shell now consumes eligible personas and a resolved active
+  workspace from one hook, while the core owns safe fallback after access
+  changes and rejects requests for personas the account cannot use.
 - 2026-09-30: Extracted authenticated Home policy from its React panel into a
   shared feature module. Persona shortcuts and language, progress and priority
   status, Yard Owner/Property Manager protected-read continuity, and crew route
