@@ -4,8 +4,8 @@ import {
   workspacePersonasForRoles,
   workspacePersonaForRollout,
   workspaceSurfacesForPersona,
-} from '../workspaces/core/resolveWorkspace';
-import type { WorkspaceRolloutProjection } from '../api/client';
+} from './resolveWorkspace';
+import type { WorkspaceRolloutProjection } from '../../api/client';
 
 function rollout(
   personaId: WorkspaceRolloutProjection['personas'][number]['personaId'],
