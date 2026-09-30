@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { WorkspaceCapability } from '../workspaces/core/types';
 import {
   managerWorkspaceActiveToolForPersona,
   managerWorkspaceSectionLabel,
@@ -110,6 +111,18 @@ describe('manager workspace menu', () => {
     expect(managerWorkspaceSectionsForPersona('company-owner', null)).toEqual([]);
     expect(managerWorkspaceSectionsForPersona('company-owner', 'unknown')).toEqual([]);
     expect(managerWorkspaceToolsForPersona('company-owner', 'overview', null)).toEqual([]);
+  });
+
+  it('uses resolved server capabilities instead of inferring every tool from the unit', () => {
+    const capabilities = new Set<WorkspaceCapability>(['company_readiness']);
+
+    expect(
+      managerWorkspaceSectionsForPersona('company-owner', 'o4', capabilities)
+        .map(({ id }) => id),
+    ).toEqual(['overview']);
+    expect(
+      managerWorkspaceToolsForPersona('company-owner', 'schedule', 'o4', capabilities),
+    ).toEqual([]);
   });
 
   it('prevents hidden or suspended tools from becoming active surfaces', () => {

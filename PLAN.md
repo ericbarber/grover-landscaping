@@ -209,6 +209,18 @@ Current state:
   report, activity, notification, or photo-recovery feeds. Only the exact
   selected authorized tool panel mounts, preventing hidden tools from running
   their own reads. No live cohort has been enabled.
+- Authenticated workspace composition now has a dedicated architecture boundary:
+  each persona owns one typed manifest for role eligibility, status, copy,
+  navigation, surfaces, rollout capabilities, and manager-tool requirements;
+  a shared resolver combines that presentation profile with the exact
+  server-derived capability projection. Home language, navigation, field
+  controls, manager tools, rollout metadata, and scope metadata now come from
+  the resolved workspace rather than parallel persona matrices. Explicit
+  all-false projections remain closed, Dispatcher/Billing are marked proposed,
+  and backend resource authorization remains authoritative. The legacy domain
+  module remains as a migration facade. Remaining internal work is to extract
+  feature/state families from the top-level React `App` and remove that facade
+  only after its callers have moved.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

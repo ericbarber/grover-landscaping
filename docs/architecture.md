@@ -41,6 +41,13 @@ before the server accepts traffic.
 - Private Yard Owner acquisition outside provider organization tenants, including
   provider connection, disclosure, assessment, and initial proposal contracts
 
+The authenticated React application uses capability-driven workspace
+composition. Roles and exact resource scopes remain backend security concepts;
+persona manifests define presentation and ordering only. The workspace resolver
+combines each manifest with the server-derived `/me/access` capability
+projection before rendering navigation, home language, field controls, or
+manager tools. See [`workspace-architecture.md`](workspace-architecture.md).
+
 Customer-safe projections, provider-private notes, general audit, and restricted
 support evidence are deliberately separate stores or response shapes. Cognito
 groups are coarse roles; PostgreSQL membership and resource ownership remain the

@@ -1,5 +1,14 @@
 # Version History
 
+- 2026-09-30: Introduced capability-driven authenticated workspace composition.
+  Each persona now owns a typed manifest for presentation, navigation, surfaces,
+  rollout capabilities, status, and manager-tool requirements. A central
+  resolver combines the selected manifest with the server `/me/access`
+  projection and supplies Home copy, destinations, field controls, manager
+  tools, rollout state, and scope metadata. Explicit all-false managed
+  projections fail closed, Dispatcher/Billing remain visibly proposed, and the
+  former domain module is retained only as a compatibility facade while
+  top-level feature/state extraction continues.
 - 2026-09-18: Replaced the tailnet's default allow-all grant with member access
   and a CI-only TCP/22 grant to the Pi. Confirmed that workstation ping, SSH,
   and HTTPS access still work after the policy change; tagged runner access

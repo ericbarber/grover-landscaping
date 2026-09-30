@@ -77,6 +77,10 @@ boundary; inclusion here alone does not mean a feature shipped.
 
 ## Persona Workspaces
 
+- Capability-driven authenticated workspace composition with one typed manifest
+  per persona, explicit authoritative/proposed/system status, a central resolver
+  that consumes server capability flags, and shared navigation, home, field,
+  and manager-tool outputs without granting API authority
 - Validated minimalist task-first design direction for all ten signed-in
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,

@@ -129,6 +129,15 @@ smoke now has a credential-safe executable contract for exact projection,
 cumulative/forbidden capabilities, authorized reads, and cross-resource denial.
 Manager Home now adds unit-bounded status and urgency while preventing later-
 unit feeds and inactive tool panels from mounting or loading in the background.
+The React workspace architecture now separates persona presentation from access
+and rollout composition. Ten persona manifests own identity, status, copy,
+navigation, surfaces, cumulative capability definitions, and manager-tool
+requirements; a central resolver consumes the server projection and produces
+the active workspace. Navigation, field controls, manager tools, home language,
+rollout metadata, and scope metadata use that resolved result. The next internal
+architecture slice is incremental extraction of shared feature/state modules
+from the top-level React `App`; it does not replace the external hosted cohort
+or Dispatcher/Billing authority gates.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.

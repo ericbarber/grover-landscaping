@@ -81,11 +81,8 @@ import {
 } from './domain/photoQuality';
 import { workspaceGuidanceForRoles, workspaceRolesForAccess } from './domain/workspaceAccess';
 import {
+  resolveWorkspace,
   workspacePersonasForRoles,
-  workspaceEnabledUnitForPersona,
-  workspaceFieldControlsForPersona,
-  workspacePersonaForRollout,
-  workspaceSurfacesForPersona,
   type WorkspacePersonaId,
 } from './domain/workspacePersona';
 import {
@@ -1366,18 +1363,14 @@ export function App() {
   const activePersonaWithoutRollout = availablePersonas.find(
     (persona) => persona.id === activePersonaId,
   ) ?? initialPersona;
-  const activePersona = useMemo(
-    () => workspacePersonaForRollout(activePersonaWithoutRollout, auth.workspaceRollout),
+  const activeWorkspace = useMemo(
+    () => resolveWorkspace(activePersonaWithoutRollout.id, auth.workspaceRollout),
     [activePersonaWithoutRollout, auth.workspaceRollout],
   );
-  const workspaceSurfaces = workspaceSurfacesForPersona(activePersona.id);
-  const managedPersonaUnit = auth.workspaceRollout?.enforcementMode === 'managed'
-    ? workspaceEnabledUnitForPersona(activePersona.id, auth.workspaceRollout)
-    : undefined;
-  const fieldControls = workspaceFieldControlsForPersona(
-    activePersona.id,
-    managedPersonaUnit,
-  );
+  const activePersona = activeWorkspace.persona;
+  const workspaceSurfaces = activeWorkspace.surfaces;
+  const managedPersonaUnit = activeWorkspace.rolloutUnit;
+  const fieldControls = activeWorkspace.fieldControls;
   const homeCustomerVisits = activePersona.id === 'yard-owner'
     || activePersona.id === 'property-manager'
     ? customerPortalVisits : null;
@@ -1392,18 +1385,24 @@ export function App() {
     ? () => void auth.signOut()
     : undefined;
   const enabledManagerTools = useMemo(() => new Set(
-    managerWorkspaceSectionsForPersona(activePersona.id, managedPersonaUnit).flatMap(
+    managerWorkspaceSectionsForPersona(
+      activePersona.id,
+      managedPersonaUnit,
+      activeWorkspace.capabilities,
+    ).flatMap(
       (section) => managerWorkspaceToolsForPersona(
         activePersona.id,
         section.id,
         managedPersonaUnit,
+        activeWorkspace.capabilities,
       ).map(({ id }) => id),
     ),
-  ), [activePersona.id, managedPersonaUnit]);
+  ), [activePersona.id, activeWorkspace.capabilities, managedPersonaUnit]);
   const activeAuthorizedManagerTool = managerWorkspaceActiveToolForPersona(
     activePersona.id,
     managedPersonaUnit,
     managerWorkspaceTool,
+    activeWorkspace.capabilities,
   );
   const canLoadCustomerPortalPreview = enabledManagerTools.has('customer-portal');
   const canLoadCompletionReportQueue = enabledManagerTools.has('completion-reports');
@@ -1436,9 +1435,11 @@ export function App() {
           ({ status }) => status === 'failed' || status === 'dead_letter',
         ).length,
       },
+      activeWorkspace.capabilities,
     ),
     [
       activePersona.id,
+      activeWorkspace.capabilities,
       completionReportSnapshots,
       canLoadPhotoProcessingHistory,
       canUsePhotoErasureRecovery,
@@ -1488,7 +1489,11 @@ export function App() {
   }, [activePersona.id, providerEntryMode]);
 
   useEffect(() => {
-    const sections = managerWorkspaceSectionsForPersona(activePersona.id, managedPersonaUnit);
+    const sections = managerWorkspaceSectionsForPersona(
+      activePersona.id,
+      managedPersonaUnit,
+      activeWorkspace.capabilities,
+    );
     if (
       managerWorkspaceSection
       && !sections.some((section) => section.id === managerWorkspaceSection)
@@ -1504,12 +1509,19 @@ export function App() {
         activePersona.id,
         managerWorkspaceSection,
         managedPersonaUnit,
+        activeWorkspace.capabilities,
       )
         .some((tool) => tool.id === managerWorkspaceTool)
     ) {
       setManagerWorkspaceTool(null);
     }
-  }, [activePersona.id, managedPersonaUnit, managerWorkspaceSection, managerWorkspaceTool]);
+  }, [
+    activePersona.id,
+    activeWorkspace.capabilities,
+    managedPersonaUnit,
+    managerWorkspaceSection,
+    managerWorkspaceTool,
+  ]);
 
   function changeMobileView(
     destination: MobileWorkspaceView,
@@ -3577,6 +3589,7 @@ export function App() {
           {managerWorkspaceSection === null ? (
             <ManagerWorkspaceMenu
               activeSection={managerWorkspaceSection}
+              capabilities={activeWorkspace.capabilities}
               onChange={(section) => {
                 setManagerWorkspaceSection(section);
                 setManagerWorkspaceTool(
@@ -3594,6 +3607,7 @@ export function App() {
           {managerWorkspaceSection ? (
             <ManagerWorkspaceToolMenu
               activeTool={managerWorkspaceTool}
+              capabilities={activeWorkspace.capabilities}
               onBack={() => {
                 setManagerWorkspaceSection(null);
                 setManagerWorkspaceTool(null);

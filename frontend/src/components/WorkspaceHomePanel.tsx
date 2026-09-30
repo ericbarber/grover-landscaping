@@ -31,33 +31,11 @@ export function homeGreeting(hour: number): string {
 }
 
 export function personaHomeHeadline(persona: WorkspacePersona): string {
-  if (persona.id === 'yard-owner') return 'Your yard, all in one place.';
-  if (persona.id === 'property-manager') return 'Keep every property moving.';
-  if (persona.id === 'crew-lead' || persona.id === 'crew-member') {
-    return 'A clear plan for the work ahead.';
-  }
-  if (persona.id === 'company-owner' || persona.id === 'company-manager') {
-    return 'Run today with confidence.';
-  }
-  if (persona.id === 'dispatcher') return 'Keep crews and schedules aligned.';
-  if (persona.id === 'billing-admin') return 'Keep completed work revenue-ready.';
-  if (persona.id === 'support') return 'Resolve what needs attention.';
-  return 'Everything you need for today.';
+  return persona.home.headline;
 }
 
 export function personaHomePromise(persona: WorkspacePersona): string {
-  if (persona.id === 'yard-owner') return 'See the care behind every visit—and the difference it makes.';
-  if (persona.id === 'property-manager') return 'One clear view from service plans to property-ready proof.';
-  if (persona.id === 'crew-lead' || persona.id === 'crew-member') {
-    return 'The right details at every stop, from arrival to finished work.';
-  }
-  if (persona.id === 'company-owner' || persona.id === 'company-manager') {
-    return 'Turn great field work into a business customers trust.';
-  }
-  if (persona.id === 'dispatcher') return 'Give every crew a clear route and every customer a reliable day.';
-  if (persona.id === 'billing-admin') return 'Move verified work from the field to revenue with confidence.';
-  if (persona.id === 'support') return 'Find the full story quickly and keep every relationship strong.';
-  return 'Bring every property, person, and promise into one clear view.';
+  return persona.home.promise;
 }
 
 export function personaProgressLanguage(persona: WorkspacePersona): {
@@ -67,34 +45,7 @@ export function personaProgressLanguage(persona: WorkspacePersona): {
   itemSingular: string;
   itemPlural: string;
 } {
-  if (persona.id === 'yard-owner') {
-    return {
-      eyebrow: 'Service progress', completed: 'visits complete', total: 'scheduled',
-      itemSingular: 'visit', itemPlural: 'visits',
-    };
-  }
-  if (persona.id === 'property-manager') {
-    return {
-      eyebrow: 'Portfolio progress', completed: 'services complete', total: 'scheduled',
-      itemSingular: 'service', itemPlural: 'services',
-    };
-  }
-  if (persona.id === 'crew-lead' || persona.id === 'crew-member') {
-    return {
-      eyebrow: 'Route progress', completed: 'stops finished', total: 'assigned',
-      itemSingular: 'stop', itemPlural: 'stops',
-    };
-  }
-  if (persona.id === 'billing-admin') {
-    return {
-      eyebrow: 'Revenue readiness', completed: 'jobs complete', total: 'to review',
-      itemSingular: 'job', itemPlural: 'jobs',
-    };
-  }
-  return {
-    eyebrow: 'Field delivery', completed: 'jobs complete', total: 'assigned',
-    itemSingular: 'job', itemPlural: 'jobs',
-  };
+  return persona.home.progress;
 }
 
 export function homePriorityStatus({
