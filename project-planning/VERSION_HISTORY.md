@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-30: Extracted initial assigned-job collection loading and selection
+  from the application shell. The field jobs hook preserves the explicit
+  persisted-unavailable response without substituting seed data and limits seed
+  fallback to transport failure.
 - 2026-09-30: Extracted selected completion-report loading from the application
   shell. The field report hook owns request cancellation and explicitly routes
   authoritative snapshots/evidence or the existing browser-local fallback

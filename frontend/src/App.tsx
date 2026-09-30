@@ -126,6 +126,7 @@ import {
 import { useFieldJobSelection } from './workspaces/features/field/useFieldJobSelection';
 import { useFieldPhotoEvidence } from './workspaces/features/field/useFieldPhotoEvidence';
 import { useFieldCompletionReport } from './workspaces/features/field/useFieldCompletionReport';
+import { useFieldJobs } from './workspaces/features/field/useFieldJobs';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { AssignedJobsPanel } from './components/AssignedJobsPanel';
 import { FieldOfflineRecoveryPanel } from './components/FieldOfflineRecoveryPanel';
@@ -179,13 +180,11 @@ import {
   getCustomerPropertyCount,
   getEnabledCrewCapacityMinutes,
   getEnabledCrewCount,
-  seedJobs,
   type CompanyProfile,
   type CrewProfile,
   type CustomerAccountProfile,
   type CustomerPortalWorkSummary,
   type CustomerPropertyProfile,
-  type YardCareJob,
 } from './domain/jobs';
 import {
   prependManagerActivity,
@@ -738,8 +737,15 @@ export function App() {
   const canManageDispatchHierarchy = workspaceRoles.includes('OrganizationOwner')
     || workspaceRoles.includes('SupportAdmin');
   const canReviewMarketingLeads = workspaceRoles.includes('SupportAdmin');
-  const [jobs, setJobs] = useState<YardCareJob[]>(seedJobs);
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(seedJobs[0]?.id ?? null);
+  const {
+    jobs,
+    setJobs,
+    selectedJobId,
+    setSelectedJobId,
+    readState: fieldJobsReadState,
+    isLoadingJobs,
+    jobsUnavailable,
+  } = useFieldJobs();
   const [requestedJobWorkflow, setRequestedJobWorkflow] = useState<JobWorkflowSection>('overview');
   const [mobileView, setMobileView] = useState<MobileWorkspaceView>(
     activePersona.defaultView,
@@ -758,8 +764,6 @@ export function App() {
     setUploadTickets,
     photoEvidenceUnavailable,
   } = useFieldPhotoEvidence(selectedJobId);
-  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
-  const [jobsUnavailable, setJobsUnavailable] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
   const [completionReportSnapshots, setCompletionReportSnapshots] = useState<Record<string, CompletionReportSnapshot>>({});
   const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
@@ -893,6 +897,21 @@ export function App() {
       });
     },
   });
+  useEffect(() => {
+    if (fieldJobsReadState === 'ready') {
+      setStatusMessage('Connected to the local API.');
+    } else if (fieldJobsReadState === 'unavailable') {
+      setStatusMessage('Persisted field work is unavailable. Seed jobs were not substituted.');
+    } else if (fieldJobsReadState === 'fallback') {
+      setStatusMessage('Using seed data because the local API is not reachable yet.');
+      recordManagerActivity({
+        title: 'Seed data fallback active',
+        message: 'The dashboard is using seed jobs because the API is not reachable.',
+        tone: 'warning',
+        source: 'sync',
+      });
+    }
+  }, [fieldJobsReadState, recordManagerActivity]);
   const jobDetailRef = useRef<HTMLDivElement>(null);
   const providerEntryOpened = useRef(false);
   const mobileScrollPositions = useRef<Partial<Record<MobileWorkspaceView, number>>>({});
@@ -1549,53 +1568,6 @@ export function App() {
     activePersona.id,
     canLoadCustomerPortalPreview,
   ]);
-
-  useEffect(() => {
-    let isMounted = true;
-    setJobsUnavailable(false);
-
-    fetchJobs()
-      .then((apiJobs) => {
-        if (!isMounted) {
-          return;
-        }
-
-        setJobs(apiJobs);
-        setSelectedJobId((current) => current ?? apiJobs[0]?.id ?? null);
-        setStatusMessage('Connected to the local API.');
-      })
-      .catch((error: unknown) => {
-        if (!isMounted) {
-          return;
-        }
-
-        if (error instanceof ApiRequestError) {
-          setJobs([]);
-          setSelectedJobId(null);
-          setJobsUnavailable(true);
-          setStatusMessage('Persisted field work is unavailable. Seed jobs were not substituted.');
-        } else {
-          setJobs(seedJobs);
-          setSelectedJobId((current) => current ?? seedJobs[0]?.id ?? null);
-          setStatusMessage('Using seed data because the local API is not reachable yet.');
-          recordManagerActivity({
-            title: 'Seed data fallback active',
-            message: 'The dashboard is using seed jobs because the API is not reachable.',
-            tone: 'warning',
-            source: 'sync',
-          });
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoadingJobs(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     if (!canLoadCompletionReportQueue || jobs.length === 0) {

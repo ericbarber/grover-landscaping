@@ -123,6 +123,8 @@ state, and the narrow transport fallback. A separate field evidence hook owns
 selected-job photo reads, unavailable state, stale-result cancellation, and
 merging authoritative evidence without dropping local work. A selected-report
 hook similarly owns completion-report request lifecycle and routes loaded or
-fallback outcomes through explicit callbacks. `App` still owns the manager
-report queue, upload/replay execution, and their cross-request state until those
-field coordinators are extracted.
+fallback outcomes through explicit callbacks. The field job-collection hook
+owns initial loading and selection plus the fail-closed distinction between an
+authoritative API error and transport-only seed fallback. `App` still owns the
+manager report queue, upload/replay execution, and their cross-request state
+until those field coordinators are extracted.

@@ -246,7 +246,9 @@ Current state:
   cancellation, evidence merging, and unavailable state while preserving local
   tickets. Selected completion-report loading now has its own field hook, which
   publishes authoritative snapshots/evidence or invokes the existing local
-  fallback signal. Report-queue, upload/replay mutation, and other
+  fallback signal. The assigned-job collection hook now owns initial loading,
+  selection, cancellation, and the persisted-unavailable versus transport-only
+  seed fallback distinction. Report-queue, upload/replay mutation, and other
   data-loading/state coordinators remain later slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing

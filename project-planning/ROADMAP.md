@@ -158,7 +158,9 @@ now have a matching evidence coordinator that preserves local work when server
 evidence arrives. Selected completion-report reads now also have a field
 coordinator with explicit loaded/fallback outcomes. Manager report-queue reads
 and offline upload/replay mutation coordination remain bounded follow-on
-slices.
+slices. Initial assigned-job collection loading and selection now also reside in
+the field boundary with authoritative-unavailable and seed-fallback outcomes
+kept distinct.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.
