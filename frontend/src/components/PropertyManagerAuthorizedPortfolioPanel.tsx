@@ -5,7 +5,7 @@ import {
   type CustomerPortalPropertySummary,
   type CustomerPortalVisitSummary,
 } from '../domain/customerPortalVisits';
-import type { PortalHomeReadState } from './WorkspaceHomePanel';
+import type { PortalHomeReadState } from '../workspaces/features/home/workspaceHome';
 import { CustomerVisitQuestions } from './YardOwnerPortalPanel';
 import { propertyManagerPortfolioCapabilities } from './PropertyManagerPortfolioPanel';
 import { WorkspaceStatusNotice } from './WorkspaceStatus';

@@ -140,8 +140,10 @@ from the top-level React `App`; it does not replace the external hosted cohort
 or Dispatcher/Billing authority gates.
 Management is now the first extracted feature module: catalog, capability
 filtering, active selection, and status derivation are independent of the React
-menu. Customer, field, recovery, and top-level data coordination remain bounded
-follow-on extractions.
+menu. Home is also extracted: actions, persona language, progress/priority,
+protected-read continuity, and route-date policy are independent of its React
+panel. Customer, field, recovery, and top-level data coordination remain
+bounded follow-on extractions.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.

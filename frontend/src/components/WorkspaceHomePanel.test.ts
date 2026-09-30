@@ -10,8 +10,8 @@ import {
   personaHomePromise,
   personaProgressLanguage,
   workspaceHomeActions,
-  WorkspaceHomePanel,
-} from './WorkspaceHomePanel';
+} from '../workspaces/features/home/workspaceHome';
+import { WorkspaceHomePanel } from './WorkspaceHomePanel';
 
 describe('workspace home actions', () => {
   it('shows field shortcuts for crew without duplicating Home', () => {

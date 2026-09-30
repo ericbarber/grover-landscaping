@@ -96,4 +96,7 @@ slices. Keep new persona policy in manifests and the resolver while that
 top-level orchestration is reduced. Management is the first extracted feature:
 its section/tool catalog, capability filtering, active-tool validation, and
 status derivation live under `workspaces/features/management`; the React menu
-contains rendering and interaction only.
+contains rendering and interaction only. Home is the second extracted feature:
+shortcut composition, persona language access, progress/priority rules,
+protected-read continuity, and route-date interpretation live under
+`workspaces/features/home`; the React panel owns layout and interaction.

@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-30: Extracted authenticated Home policy from its React panel into a
+  shared feature module. Persona shortcuts and language, progress and priority
+  status, Yard Owner/Property Manager protected-read continuity, and crew route
+  date interpretation are independently testable; the panel now owns layout
+  and interaction while related portfolio consumers import the shared read-state
+  contract directly.
 - 2026-09-30: Extracted management workspace policy from its React menu into a
   shared feature module. Section/tool catalogs, persona-manifest capability
   filtering, active-tool validation, and status/urgency derivation now remain

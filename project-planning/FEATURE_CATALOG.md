@@ -84,6 +84,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Extracted management workspace feature policy containing the shared section
   and tool catalog, manifest/capability filtering, active-tool validation, and
   status derivation independently of the React menu presentation
+- Extracted Home workspace feature policy containing shortcut composition,
+  persona language access, progress/priority rules, protected-read continuity,
+  and route-date interpretation independently of the React panel presentation
 - Validated minimalist task-first design direction for all ten signed-in
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,

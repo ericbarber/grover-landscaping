@@ -5,7 +5,7 @@ import type {
   CustomerPortalPropertySummary,
   CustomerPortalVisitSummary,
 } from '../domain/customerPortalVisits';
-import type { PortalHomeReadState } from './WorkspaceHomePanel';
+import type { PortalHomeReadState } from '../workspaces/features/home/workspaceHome';
 import { PropertyManagerAuthorizedPortfolioPanel } from './PropertyManagerAuthorizedPortfolioPanel';
 
 const properties: CustomerPortalPropertySummary[] = [

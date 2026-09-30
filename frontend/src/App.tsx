@@ -113,12 +113,14 @@ import {
   type CustomerHistoryView,
 } from './components/CustomerHistoryMenu';
 import {
+  WorkspaceHomePanel,
+} from './components/WorkspaceHomePanel';
+import {
   homeGreeting,
   personaHomeHeadline,
   personaHomePromise,
   personaProgressLanguage,
-  WorkspaceHomePanel,
-} from './components/WorkspaceHomePanel';
+} from './workspaces/features/home/workspaceHome';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
