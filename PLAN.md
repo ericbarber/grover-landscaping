@@ -254,8 +254,11 @@ Current state:
   photo mutations. The same field boundary now owns durable job, checklist, and
   photo enqueue commands, browser-storage persistence requests, reviewed-
   conflict deletion, authoritative server refresh, and post-review replay; the
-  application shell only maps typed outcomes to status copy. The manager report
-  queue and other cross-workspace coordinators remain later slices.
+  application shell only maps typed outcomes to status copy. The management
+  feature boundary now also owns completion-report queue loading, partial
+  per-job fallback, strict filtered refresh, loading state, snapshot indexing,
+  and report upserts shared with the selected field report. Remaining
+  cross-workspace action coordinators stay as later slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

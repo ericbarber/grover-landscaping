@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-30: Extracted the manager completion-report queue coordinator from
+  the application shell. A management hook now owns collection reads, partial
+  per-job initial fallback, strict filtered refresh, loading state, snapshot
+  indexing, and selected-report upserts while the shell retains navigation,
+  status copy, and manager activity recording.
 - 2026-09-30: Completed the field offline-command boundary. The field recovery
   hook now owns durable job, checklist, and photo enqueue, storage-persistence
   requests, reviewed-conflict deletion, server-state refresh, and post-review

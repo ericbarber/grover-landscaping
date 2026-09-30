@@ -8,7 +8,6 @@ import {
   deliverCompletionReport,
   eraseCustomerPhotoEvidence,
   fetchCompletionReport,
-  fetchCompletionReports,
   updateJobDispatchAssignment,
   fetchCustomerPrivacyExport,
   fetchNotificationHistory,
@@ -31,7 +30,6 @@ import {
   startCompletionReportReview,
   uploadPhotoToTicket,
   updateJobAddOnStatus,
-  type CompletionReportSnapshot,
   type CustomerPropertyRecord,
   type CustomerPhotoErasureSummary,
   type CustomerPrivacyExport,
@@ -128,9 +126,9 @@ import { ManagerMarketingConversionDashboard } from './components/ManagerMarketi
 import { ManagerDispatchWorkloadPanel } from './components/ManagerDispatchWorkloadPanel';
 import { ManagerDispatchHierarchyPanel } from './components/ManagerDispatchHierarchyPanel';
 import {
-  matchesCompletionReportOperationalFilters,
   type CompletionReportOperationalFilters,
 } from './domain/completionReportOperationalFilters';
+import { useManagerCompletionReportQueue } from './workspaces/features/management/useManagerCompletionReportQueue';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
@@ -748,8 +746,6 @@ export function App() {
     photoEvidenceUnavailable,
   } = useFieldPhotoEvidence(selectedJobId);
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
-  const [completionReportSnapshots, setCompletionReportSnapshots] = useState<Record<string, CompletionReportSnapshot>>({});
-  const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
   const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
   const [operationalActivity, setOperationalActivity] = useState<OperationalActivity[]>([]);
   const [operationalActivityUnavailable, setOperationalActivityUnavailable] = useState(false);
@@ -877,23 +873,6 @@ export function App() {
       }),
     );
   }, []);
-  const {
-    selectedCompletionReport,
-    setSelectedCompletionReport,
-  } = useFieldCompletionReport(selectedJobId, {
-    onLoaded: (report) => {
-      setCompletionReportSnapshots((current) => ({ ...current, [report.jobId]: report }));
-      setUploadTickets((current) => mergePhotoEvidence(current, report.jobId, report.photoEvidence));
-    },
-    onFallback: (jobId) => {
-      recordManagerActivity({
-        title: 'Completion report fallback active',
-        message: `${jobId} completion report is using browser-local evidence until the API is reachable.`,
-        tone: 'warning',
-        source: 'photo',
-      });
-    },
-  });
   useEffect(() => {
     if (fieldJobsReadState === 'ready') {
       setStatusMessage('Connected to the local API.');
@@ -953,6 +932,42 @@ export function App() {
   const canLoadOperationalActivity = enabledManagerTools.has('operations-activity');
   const canLoadPhotoProcessingHistory = enabledManagerTools.has('photo-processing');
   const canUsePhotoErasureRecovery = enabledManagerTools.has('photo-erasure');
+  const handlePartialManagerReportQueue = useCallback(() => {
+    recordManagerActivity({
+      title: 'Report queue partially loaded',
+      message: 'Some completion report snapshots could not be loaded for the manager review queue.',
+      tone: 'warning',
+      source: 'sync',
+    });
+  }, [recordManagerActivity]);
+  const {
+    reports: managerReportQueueReports,
+    snapshots: completionReportSnapshots,
+    isLoading: isLoadingReportQueue,
+    upsertReport: upsertManagerReport,
+    refresh: refreshManagerReports,
+  } = useManagerCompletionReportQueue({
+    enabled: canLoadCompletionReportQueue,
+    jobs,
+    onPartialLoad: handlePartialManagerReportQueue,
+  });
+  const {
+    selectedCompletionReport,
+    setSelectedCompletionReport,
+  } = useFieldCompletionReport(selectedJobId, {
+    onLoaded: (report) => {
+      upsertManagerReport(report);
+      setUploadTickets((current) => mergePhotoEvidence(current, report.jobId, report.photoEvidence));
+    },
+    onFallback: (jobId) => {
+      recordManagerActivity({
+        title: 'Completion report fallback active',
+        message: `${jobId} completion report is using browser-local evidence until the API is reachable.`,
+        tone: 'warning',
+        source: 'photo',
+      });
+    },
+  });
   const managerWorkspaceSignals = useMemo(
     () => managerWorkspaceSectionSignalsForPersona(
       activePersona.id,
@@ -1175,10 +1190,6 @@ export function App() {
     () => uploadTickets.filter((ticket) => ticket.jobId === selectedJobId),
     [selectedJobId, uploadTickets],
   );
-  const managerReportQueueReports = useMemo(
-    () => Object.values(completionReportSnapshots),
-    [completionReportSnapshots],
-  );
   const visibleManagerActivity = useMemo(
     () => [
       ...operationsToManagerActivity(operationalActivity),
@@ -1390,58 +1401,6 @@ export function App() {
     activePersona.id,
     canLoadCustomerPortalPreview,
   ]);
-
-  useEffect(() => {
-    if (!canLoadCompletionReportQueue || jobs.length === 0) {
-      setCompletionReportSnapshots({});
-      setIsLoadingReportQueue(false);
-      return;
-    }
-
-    let isMounted = true;
-    setIsLoadingReportQueue(true);
-    const applyReports = (reports: CompletionReportSnapshot[]) => {
-      setCompletionReportSnapshots((current) => {
-        const next = { ...current };
-        reports.forEach((report) => {
-          next[report.jobId] = report;
-        });
-        return next;
-      });
-    };
-
-    fetchCompletionReports()
-      .then((reports) => {
-        if (!isMounted) return;
-        applyReports(reports);
-      })
-      .catch(() =>
-        Promise.allSettled(jobs.map((job) => fetchCompletionReport(job.id))).then((results) => {
-          if (!isMounted) return;
-
-          const reports = results
-            .filter((result): result is PromiseFulfilledResult<CompletionReportSnapshot> => result.status === 'fulfilled')
-            .map((result) => result.value);
-          applyReports(reports);
-
-          if (results.some((result) => result.status === 'rejected')) {
-            recordManagerActivity({
-              title: 'Report queue partially loaded',
-              message: 'Some completion report snapshots could not be loaded for the manager review queue.',
-              tone: 'warning',
-              source: 'sync',
-            });
-          }
-        }),
-      )
-      .finally(() => {
-        if (isMounted) setIsLoadingReportQueue(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [canLoadCompletionReportQueue, jobs]);
 
   useEffect(() => {
     if (!canLoadNotificationHistory) {
@@ -1704,41 +1663,25 @@ export function App() {
   async function refreshCompletionReport(jobId: string) {
     const report = await fetchCompletionReport(jobId);
     setSelectedCompletionReport(report);
-    setCompletionReportSnapshots((current) => ({ ...current, [report.jobId]: report }));
+    upsertManagerReport(report);
     setUploadTickets((current) => mergePhotoEvidence(current, jobId, report.photoEvidence));
     return report;
   }
 
   async function refreshManagerReportQueue(filters: CompletionReportOperationalFilters = {}) {
-    if (jobs.length === 0) return;
-
-    setIsLoadingReportQueue(true);
-    try {
-      let reports: CompletionReportSnapshot[];
-      try {
-        reports = await fetchCompletionReports(filters);
-      } catch {
-        reports = await Promise.all(jobs.map((job) => fetchCompletionReport(job.id)));
-        reports = reports.filter((report) => matchesCompletionReportOperationalFilters(report, filters));
-      }
-      setCompletionReportSnapshots(
-        reports.reduce<Record<string, CompletionReportSnapshot>>((next, report) => {
-          next[report.jobId] = report;
-          return next;
-        }, {}),
-      );
+    const outcome = await refreshManagerReports(filters);
+    if (outcome === 'empty') return;
+    if (outcome === 'refreshed') {
       setStatusMessage('Completion report review queue refreshed.');
-    } catch {
-      setStatusMessage('Could not refresh every completion report. Check the API connection and try again.');
-      recordManagerActivity({
-        title: 'Report queue refresh failed',
-        message: 'The manager completion report queue could not refresh all job reports.',
-        tone: 'warning',
-        source: 'sync',
-      });
-    } finally {
-      setIsLoadingReportQueue(false);
+      return;
     }
+    setStatusMessage('Could not refresh every completion report. Check the API connection and try again.');
+    recordManagerActivity({
+      title: 'Report queue refresh failed',
+      message: 'The manager completion report queue could not refresh all job reports.',
+      tone: 'warning',
+      source: 'sync',
+    });
   }
 
   async function handleJobDispatchAssignment(
