@@ -11,6 +11,7 @@ import type {
   WorkspacePersonaId,
   WorkspacePersonaManifest,
   WorkspaceRoleId,
+  WorkspaceSurfaces,
 } from './types';
 
 function personaFromManifest(
@@ -52,6 +53,12 @@ export function workspacePersonasForRoles(roles: string[]): WorkspacePersona[] {
   return personas.length > 0
     ? personas
     : [personaFromManifest(workspacePersonaManifest('general'))];
+}
+
+export function workspaceSurfacesForPersona(
+  personaId: WorkspacePersonaId,
+): WorkspaceSurfaces {
+  return workspacePersonaManifest(personaId).surfaces;
 }
 
 export function workspaceEnabledUnitForPersona(

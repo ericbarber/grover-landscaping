@@ -5,8 +5,9 @@
 The React application now resolves authenticated workspaces through a
 capability-driven composition boundary. Each persona has one manifest under
 `frontend/src/workspaces/personas/`; shared resolution and types live under
-`frontend/src/workspaces/core/`. The existing `domain/workspacePersona.ts`
-module is a compatibility facade while remaining callers are migrated.
+`frontend/src/workspaces/core/`. Production components import that boundary
+directly; the former `domain/workspacePersona.ts` compatibility facade has been
+removed.
 
 This structure changes interface composition, not API authorization. Every
 protected backend route must continue to authorize the principal's persisted
@@ -91,5 +92,5 @@ Workspace tests must cover:
 The architecture boundary is active, but `frontend/src/App.tsx` still
 coordinates state and data loading for all workspace families. Continue by
 extracting shared feature modules and thin persona home compositions in small
-slices. Preserve the compatibility facade until all callers import workspace
-core types directly, then remove it in a separate review unit.
+slices. Keep new persona policy in manifests and the resolver while that
+top-level orchestration is reduced.

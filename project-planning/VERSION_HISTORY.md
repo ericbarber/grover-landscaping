@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-30: Completed the workspace compatibility migration by moving the
+  authenticated app, shell, Home, manager menu, and their tests onto workspace
+  core imports and removing the temporary legacy-domain facade. The next
+  internal boundary is feature/state extraction from the top-level React app.
 - 2026-09-30: Introduced capability-driven authenticated workspace composition.
   Each persona now owns a typed manifest for presentation, navigation, surfaces,
   rollout capabilities, status, and manager-tool requirements. A central

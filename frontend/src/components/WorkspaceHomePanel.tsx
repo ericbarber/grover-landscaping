@@ -1,4 +1,4 @@
-import type { WorkspacePersona } from '../domain/workspacePersona';
+import type { WorkspacePersona } from '../workspaces/core/types';
 import { classifyRouteDate, type CrewRouteOverview } from '../domain/dayPlans';
 import type { MobileWorkspaceView } from './MobileWorkspaceShell';
 import { GroverBrand } from './GroverBrand';

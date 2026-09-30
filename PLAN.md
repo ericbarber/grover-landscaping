@@ -217,10 +217,10 @@ Current state:
   controls, manager tools, rollout metadata, and scope metadata now come from
   the resolved workspace rather than parallel persona matrices. Explicit
   all-false projections remain closed, Dispatcher/Billing are marked proposed,
-  and backend resource authorization remains authoritative. The legacy domain
-  module remains as a migration facade. Remaining internal work is to extract
-  feature/state families from the top-level React `App` and remove that facade
-  only after its callers have moved.
+  and backend resource authorization remains authoritative. Production callers
+  now import the workspace core directly and the temporary legacy-domain facade
+  is removed. Remaining internal work is to extract feature/state families from
+  the top-level React `App`.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

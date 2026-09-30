@@ -1,9 +1,9 @@
-import type { WorkspacePersonaId } from '../domain/workspacePersona';
 import { workspaceCapabilitiesForUnit } from '../workspaces/core/resolveWorkspace';
 import type {
   ManagerWorkspaceSectionId,
   ManagerWorkspaceToolId,
   WorkspaceCapability,
+  WorkspacePersonaId,
 } from '../workspaces/core/types';
 import { workspacePersonaManifest } from '../workspaces/personas/registry';
 import { WorkspaceIcon } from './WorkspaceIcon';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { workspacePersonasForRoles } from '../domain/workspacePersona';
+import { workspacePersonasForRoles } from '../workspaces/core/resolveWorkspace';
 import {
   homeGreeting,
   homeContinuityStatus,

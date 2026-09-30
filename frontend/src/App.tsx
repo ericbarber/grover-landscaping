@@ -83,8 +83,8 @@ import { workspaceGuidanceForRoles, workspaceRolesForAccess } from './domain/wor
 import {
   resolveWorkspace,
   workspacePersonasForRoles,
-  type WorkspacePersonaId,
-} from './domain/workspacePersona';
+} from './workspaces/core/resolveWorkspace';
+import type { WorkspacePersonaId } from './workspaces/core/types';
 import {
   DesktopWorkspaceNavigation,
   MobileWorkspaceHeader,

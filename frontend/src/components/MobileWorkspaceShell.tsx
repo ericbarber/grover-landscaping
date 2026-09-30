@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
-import type { WorkspacePersona, WorkspacePersonaId } from '../domain/workspacePersona';
-import type { WorkspaceView } from '../workspaces/core/types';
+import type {
+  WorkspacePersona,
+  WorkspacePersonaId,
+  WorkspaceView,
+} from '../workspaces/core/types';
 import { classifyRouteDate, type CrewRouteOverview } from '../domain/dayPlans';
 import { GroverBrand } from './GroverBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
