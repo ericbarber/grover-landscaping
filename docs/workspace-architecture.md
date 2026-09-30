@@ -119,6 +119,8 @@ detail fallback, failed uploads can produce typed local evidence, and persisted
 evidence merges without discarding unsaved local or other-job photos. `App`
 no longer coordinates selected-job detail and add-on reads: a field selection
 hook owns request lifecycle, stale-result cancellation, loading/unavailable
-state, and the narrow transport fallback. `App` still owns photo/report reads,
-durable mutation execution, and their cross-request state until those field
-coordinators are extracted.
+state, and the narrow transport fallback. A separate field evidence hook owns
+selected-job photo reads, unavailable state, stale-result cancellation, and
+merging authoritative evidence without dropping local work. `App` still owns
+completion-report reads, upload/replay execution, and their cross-request state
+until those field coordinators are extracted.

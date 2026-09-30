@@ -102,6 +102,8 @@ boundary; inclusion here alone does not mean a feature shipped.
   photo evidence, and authoritative evidence merges that preserve unsaved work
 - Field job-selection coordinator owning detail and add-on request lifecycle,
   stale-result cancellation, and explicit authoritative-unavailable state
+- Field photo-evidence coordinator owning selected-job reads, stale-result
+  cancellation, unavailable state, and local-preserving evidence merges
 - Validated minimalist task-first design direction for all ten signed-in
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,

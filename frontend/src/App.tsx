@@ -12,7 +12,6 @@ import {
   updateJobDispatchAssignment,
   fetchCustomerPrivacyExport,
   fetchJobDetail,
-  fetchJobPhotoEvidence,
   fetchJobs,
   fetchNotificationHistory,
   fetchOperationalActivity,
@@ -125,6 +124,7 @@ import {
   type FieldPhotoType,
 } from './workspaces/features/field/fieldWorkspace';
 import { useFieldJobSelection } from './workspaces/features/field/useFieldJobSelection';
+import { useFieldPhotoEvidence } from './workspaces/features/field/useFieldPhotoEvidence';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { AssignedJobsPanel } from './components/AssignedJobsPanel';
 import { FieldOfflineRecoveryPanel } from './components/FieldOfflineRecoveryPanel';
@@ -752,11 +752,14 @@ export function App() {
     setSelectedJobAddOns,
     jobAddOnsUnavailable,
   } = useFieldJobSelection(selectedJobId, jobs);
-  const [photoEvidenceUnavailable, setPhotoEvidenceUnavailable] = useState(false);
+  const {
+    uploadTickets,
+    setUploadTickets,
+    photoEvidenceUnavailable,
+  } = useFieldPhotoEvidence(selectedJobId);
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
   const [jobsUnavailable, setJobsUnavailable] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
-  const [uploadTickets, setUploadTickets] = useState<PhotoUploadTicket[]>([]);
   const [selectedCompletionReport, setSelectedCompletionReport] = useState<CompletionReportSnapshot | null>(null);
   const [completionReportSnapshots, setCompletionReportSnapshots] = useState<Record<string, CompletionReportSnapshot>>({});
   const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
@@ -1577,29 +1580,6 @@ export function App() {
       isMounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (!selectedJobId) {
-      setPhotoEvidenceUnavailable(false);
-      return;
-    }
-
-    let isMounted = true;
-    setPhotoEvidenceUnavailable(false);
-    fetchJobPhotoEvidence(selectedJobId)
-      .then((photos) => {
-        if (isMounted) {
-          setUploadTickets((current) => mergePhotoEvidence(current, selectedJobId, photos));
-        }
-      })
-      .catch((error: unknown) => {
-        if (isMounted) setPhotoEvidenceUnavailable(error instanceof ApiRequestError);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedJobId]);
 
   useEffect(() => {
     if (!selectedJobId) {

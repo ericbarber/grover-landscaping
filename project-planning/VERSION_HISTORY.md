@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-09-30: Extracted selected-job photo-evidence reads from the application
+  shell. The field evidence hook now owns stale-result cancellation,
+  authoritative unavailability, and local-preserving server evidence merges
+  while upload and replay operations remain injected shell actions.
 - 2026-09-30: Extracted selected-job detail and add-on read coordination from
   the application shell. The field selection hook now owns loading state,
   stale-result cancellation, authoritative unavailability, and transport-only

@@ -153,8 +153,10 @@ Job-detail fallback, local photo evidence, and authoritative evidence-merge
 rules now also live in the field feature boundary; API and durable-mutation
 coordination remain the next internal extraction. Selected-job detail and add-on
 reads now form the first stateful field coordinator, including request
-cancellation and fail-closed API-unavailable handling. Photo/report reads and
-offline mutation coordination remain bounded follow-on slices.
+cancellation and fail-closed API-unavailable handling. Selected-job photo reads
+now have a matching evidence coordinator that preserves local work when server
+evidence arrives. Completion-report reads and offline upload/replay mutation
+coordination remain bounded follow-on slices.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.
