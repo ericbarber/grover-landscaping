@@ -10,16 +10,21 @@ import {
   completeJob,
   completePhotoUpload,
   createPhotoUploadTicket,
+  fetchJobDetail,
   fetchJobs,
   readPhotoUploadMetadata,
   startJob,
   updateChecklistItem,
   uploadPhotoToTicket,
+  type JobDetail,
   type PhotoUploadTicket,
 } from '../../../api/client';
 import type { YardCareJob } from '../../../domain/jobs';
 import {
   getOfflinePhotoBlob,
+  enqueueChecklistMutation,
+  enqueueJobLifecycleMutation,
+  enqueuePhotoUploadMutation,
   isChecklistOfflineMutation,
   isOfflineMutationConflict,
   isJobLifecycleOfflineMutation,
@@ -27,6 +32,7 @@ import {
   listOfflineMutationsForActor,
   markOfflineMutationFailed,
   removeOfflineMutation,
+  requestPersistentOfflineStorage,
   type ChecklistOfflineMutation,
   type JobLifecycleOfflineMutation,
   type OfflineMutation,
@@ -52,22 +58,92 @@ export function partitionFieldOfflineMutations(mutations: OfflineMutation[]): Fi
 }
 
 export interface FieldOfflineRecovery extends FieldOfflineQueues {
-  setJobMutations: Dispatch<SetStateAction<JobLifecycleOfflineMutation[]>>;
-  setChecklistMutations: Dispatch<SetStateAction<ChecklistOfflineMutation[]>>;
-  setPhotoMutations: Dispatch<SetStateAction<PhotoUploadOfflineMutation[]>>;
   isReplayingJobs: boolean;
   isReplayingChecklist: boolean;
   isReplayingPhotos: boolean;
   replayJobs: () => Promise<void>;
   replayChecklist: () => Promise<void>;
   replayPhotos: () => Promise<void>;
+  queueJobLifecycle: (
+    organizationId: string | null | undefined,
+    jobId: string,
+    action: JobLifecycleOfflineMutation['action'],
+  ) => Promise<boolean>;
+  queueChecklist: (
+    organizationId: string | null | undefined,
+    jobId: string,
+    checklistItemId: string,
+    completed: boolean,
+  ) => Promise<boolean>;
+  queuePhoto: (
+    organizationId: string | null | undefined,
+    jobId: string,
+    photoType: PhotoUploadOfflineMutation['photoType'],
+    file: File,
+  ) => Promise<boolean>;
+  discardJobConflict: (mutation: JobLifecycleOfflineMutation) => Promise<FieldConflictDiscardOutcome>;
+  discardChecklistConflict: (mutation: ChecklistOfflineMutation) => Promise<FieldConflictDiscardOutcome>;
+  discardPhotoConflict: (mutation: PhotoUploadOfflineMutation) => Promise<FieldConflictDiscardOutcome>;
 }
 
-export function useFieldOfflineRecovery(
-  actorId: string | null | undefined,
-  setJobs: Dispatch<SetStateAction<YardCareJob[]>>,
-  setUploadTickets: Dispatch<SetStateAction<PhotoUploadTicket[]>>,
-): FieldOfflineRecovery {
+export type FieldConflictDiscardOutcome =
+  | 'remove_failed'
+  | 'restored_server_state'
+  | 'server_refresh_unavailable';
+
+export interface FieldConflictDiscardResult<T> {
+  outcome: FieldConflictDiscardOutcome;
+  serverState: T | null;
+}
+
+export async function enqueueFieldOfflineMutation<T>(
+  enqueue: () => Promise<T>,
+  requestStorage: () => Promise<unknown> = requestPersistentOfflineStorage,
+): Promise<T | null> {
+  try {
+    const mutation = await enqueue();
+    void Promise.resolve().then(requestStorage).catch(() => undefined);
+    return mutation;
+  } catch {
+    return null;
+  }
+}
+
+export async function discardFieldOfflineConflict<T>(
+  mutationId: string,
+  refreshServerState: () => Promise<T>,
+  remove: (id: string) => Promise<void> = removeOfflineMutation,
+): Promise<FieldConflictDiscardResult<T>> {
+  try {
+    await remove(mutationId);
+  } catch {
+    return { outcome: 'remove_failed', serverState: null };
+  }
+  try {
+    return {
+      outcome: 'restored_server_state',
+      serverState: await refreshServerState(),
+    };
+  } catch {
+    return { outcome: 'server_refresh_unavailable', serverState: null };
+  }
+}
+
+interface FieldOfflineRecoveryOptions {
+  actorId: string | null | undefined;
+  selectedJobId: string | null;
+  setJobs: Dispatch<SetStateAction<YardCareJob[]>>;
+  setSelectedJob: Dispatch<SetStateAction<JobDetail | null>>;
+  setUploadTickets: Dispatch<SetStateAction<PhotoUploadTicket[]>>;
+}
+
+export function useFieldOfflineRecovery({
+  actorId,
+  selectedJobId,
+  setJobs,
+  setSelectedJob,
+  setUploadTickets,
+}: FieldOfflineRecoveryOptions): FieldOfflineRecovery {
   const [jobMutations, setJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [checklistMutations, setChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
   const [photoMutations, setPhotoMutations] = useState<PhotoUploadOfflineMutation[]>([]);
@@ -207,6 +283,120 @@ export function useFieldOfflineRecovery(
     }
   }, [actorId, setJobs, setUploadTickets]);
 
+  const queueJobLifecycle = useCallback(async (
+    organizationId: string | null | undefined,
+    jobId: string,
+    action: JobLifecycleOfflineMutation['action'],
+  ) => {
+    if (!actorId || !organizationId) return false;
+    const mutation = await enqueueFieldOfflineMutation(
+      () => enqueueJobLifecycleMutation({
+        organizationId,
+        actorId,
+        jobId,
+        action,
+      }),
+    );
+    if (!mutation) return false;
+    setJobMutations((current) => [...current, mutation].sort(
+      (left, right) => left.createdAt.localeCompare(right.createdAt),
+    ));
+    return true;
+  }, [actorId]);
+
+  const queueChecklist = useCallback(async (
+    organizationId: string | null | undefined,
+    jobId: string,
+    checklistItemId: string,
+    completed: boolean,
+  ) => {
+    if (!actorId || !organizationId) return false;
+    const mutation = await enqueueFieldOfflineMutation(
+      () => enqueueChecklistMutation({
+        organizationId,
+        actorId,
+        jobId,
+        checklistItemId,
+        completed,
+      }),
+    );
+    if (!mutation) return false;
+    setChecklistMutations((current) => [...current, mutation].sort(
+      (left, right) => left.createdAt.localeCompare(right.createdAt),
+    ));
+    return true;
+  }, [actorId]);
+
+  const queuePhoto = useCallback(async (
+    organizationId: string | null | undefined,
+    jobId: string,
+    photoType: PhotoUploadOfflineMutation['photoType'],
+    file: File,
+  ) => {
+    if (!actorId || !organizationId) return false;
+    const mutation = await enqueueFieldOfflineMutation(
+      () => enqueuePhotoUploadMutation({
+        organizationId,
+        actorId,
+        jobId,
+        photoType,
+        fileName: file.name,
+      }, file),
+    );
+    if (!mutation) return false;
+    setPhotoMutations((current) => [...current, mutation].sort(
+      (left, right) => left.createdAt.localeCompare(right.createdAt),
+    ));
+    return true;
+  }, [actorId]);
+
+  const discardJobConflict = useCallback(async (
+    mutation: JobLifecycleOfflineMutation,
+  ): Promise<FieldConflictDiscardOutcome> => {
+    const result = await discardFieldOfflineConflict(
+      mutation.id,
+      () => fetchJobDetail(mutation.jobId),
+    );
+    if (result.outcome === 'remove_failed') return result.outcome;
+    setJobMutations((current) => current.filter((item) => item.id !== mutation.id));
+    if (result.serverState) {
+      const serverJob = result.serverState;
+      setJobs((current) => current.map((job) => job.id === serverJob.id ? serverJob : job));
+      if (selectedJobId === serverJob.id) setSelectedJob(serverJob);
+    }
+    await replayJobs();
+    return result.outcome;
+  }, [replayJobs, selectedJobId, setJobs, setSelectedJob]);
+
+  const discardChecklistConflict = useCallback(async (
+    mutation: ChecklistOfflineMutation,
+  ): Promise<FieldConflictDiscardOutcome> => {
+    const result = await discardFieldOfflineConflict(
+      mutation.id,
+      () => fetchJobDetail(mutation.jobId),
+    );
+    if (result.outcome === 'remove_failed') return result.outcome;
+    setChecklistMutations((current) => current.filter((item) => item.id !== mutation.id));
+    if (result.serverState) {
+      const serverJob = result.serverState;
+      setJobs((current) => current.map((job) => job.id === serverJob.id ? serverJob : job));
+      if (selectedJobId === serverJob.id) setSelectedJob(serverJob);
+    }
+    await replayChecklist();
+    return result.outcome;
+  }, [replayChecklist, selectedJobId, setJobs, setSelectedJob]);
+
+  const discardPhotoConflict = useCallback(async (
+    mutation: PhotoUploadOfflineMutation,
+  ): Promise<FieldConflictDiscardOutcome> => {
+    const result = await discardFieldOfflineConflict(mutation.id, fetchJobs);
+    if (result.outcome === 'remove_failed') return result.outcome;
+    setPhotoMutations((current) => current.filter((item) => item.id !== mutation.id));
+    if (result.serverState) setJobs(result.serverState);
+    await replayPhotos();
+    return result.outcome;
+  }, [replayPhotos, setJobs]);
+
   useEffect(() => {
     if (!actorId) {
       setJobMutations([]);
@@ -253,14 +443,17 @@ export function useFieldOfflineRecovery(
     jobMutations,
     checklistMutations,
     photoMutations,
-    setJobMutations,
-    setChecklistMutations,
-    setPhotoMutations,
     isReplayingJobs,
     isReplayingChecklist,
     isReplayingPhotos,
     replayJobs,
     replayChecklist,
     replayPhotos,
+    queueJobLifecycle,
+    queueChecklist,
+    queuePhoto,
+    discardJobConflict,
+    discardChecklistConflict,
+    discardPhotoConflict,
   };
 }

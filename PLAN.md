@@ -251,8 +251,11 @@ Current state:
   seed fallback distinction. A durable field recovery hook now owns actor-
   scoped queue hydration, online-triggered replay, replay locks, conflict
   classification, and refreshed job/evidence state across job, checklist, and
-  photo mutations. Enqueue/conflict-review actions, the manager report queue,
-  and other cross-workspace coordinators remain later slices.
+  photo mutations. The same field boundary now owns durable job, checklist, and
+  photo enqueue commands, browser-storage persistence requests, reviewed-
+  conflict deletion, authoritative server refresh, and post-review replay; the
+  application shell only maps typed outcomes to status copy. The manager report
+  queue and other cross-workspace coordinators remain later slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-30: Completed the field offline-command boundary. The field recovery
+  hook now owns durable job, checklist, and photo enqueue, storage-persistence
+  requests, reviewed-conflict deletion, server-state refresh, and post-review
+  replay. The application shell retains user-facing outcome copy but no longer
+  mutates the three queue collections directly.
 - 2026-09-30: Hardened the local publication gate after adding the migration
   binary. Backend launchers now select the API binary explicitly, the
   change-aware validator can reuse a cached pinned Terraform executable, and
