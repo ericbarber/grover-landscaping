@@ -33,9 +33,13 @@ weakening production. Distinct fixed study owners and a create-once manifest
 preparer now lock owner scope and target/provenance before any record write. An
 atomic, exclusively locked fixture-state journal now preserves generated ID
 ownership, verified snapshots, forward-only manager delegation, and a
-zero-remaining reset receipt across future orchestration steps.
-Live execution, matched record creation, reset proof, and participant
-observation remain the next evidence phase.
+zero-remaining reset receipt across future orchestration steps. A tested,
+non-executable owner-foundation plan now pins both isolated owners' supported
+workspace/property/brief/invitation requests and recovers only one exact
+owner-scoped property across the non-idempotent create crash window. The
+remaining provider-to-field executor and exact-ID reset are the next repository
+slice; live execution, matched record creation, reset proof, and participant
+observation follow only after that pair is complete.
 Protected browser/runtime evidence remains blocked by protected infrastructure
 rather than by a product implementation decision; the local cross-browser gate
 is complete.

@@ -11,7 +11,7 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and B9 manifest, linked-target, and isolated invitation-handoff safety are published on `codex-review-feature`; field command coordination and the local cross-browser acceptance gate are complete | Design B9 seed/reset as one recoverable operation before any live fixture write |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and B9 manifest, linked-target, invitation-handoff, journal, and owner-foundation planning safety are published on `codex-review-feature`; field command coordination and the local cross-browser acceptance gate are complete | Implement the remaining B9 provider-to-field chain and exact-ID reset as one recoverable operation before any live fixture write |
 | Private review | Pi has an ARM64 runtime, healthy PostgreSQL, private HTTPS, and restricted CI SSH grant; deployment remains disabled and unhosted | Publish the workflow, run CI, then verify the first gated deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered; B1/B3 and repository-owned B7/B8 work are implemented, B6/B9 preparations are ready, and a bounded B10 decision packet awaits approval | Approve or revise B10 boundaries while B4/B5/B6/B8/B9 evidence proceeds in an authorized environment |
@@ -85,8 +85,14 @@ mode-0600 manifest with exact source/migration provenance before any record
 mutation. The prepared manifest now has an atomic, mode-0600, exclusive-lock
 state journal for idempotently recording generated IDs, verified snapshots,
 manager-delegation progression, and a zero-remaining reset receipt. It is a
-required recoverability primitive, not the still-pending API seeder or scoped
-database reset implementation.
+required recoverability primitive. A tested, non-executable owner-foundation
+plan now fixes the supported workspace, property, ready-brief, and invitation
+requests for both isolated owners and fails closed on cross-owner results,
+same-label collisions, duplicates, or stale journal IDs. Its exact-match
+recovery rule closes the non-idempotent property-create crash window without
+persisting invitation tokens. The provider-to-field executor and scoped
+database reset implementation remain pending, so no live fixture write is
+authorized yet.
 Repository validation is now deterministic in restricted development shells:
 the release-preflight contract supplies its own fake Terraform command, and
 protected-release evidence tests call the exported validator directly instead
@@ -232,7 +238,10 @@ to prove API-to-database linkage without exposing its connection string.
 Manifest schema 2 corrects the earlier caller-defined-ID assumption by keeping
 API IDs under their owning synthetic record and validating each supported table
 prefix. The fixture-only invitation handoff is rejected outside the exact study
-runtime and keeps the transient bearer value out of JSON and manifests.
+runtime and keeps the transient bearer value out of JSON and manifests. The
+owner-foundation plan now pins synthetic inputs and public API request shapes,
+including deterministic invitation keys and exact property discovery/recovery;
+it has no executable entry point and cannot seed records.
 The [separate local study database](modern-grover/fixtures/LOCAL_STUDY_ENV.md)
 is now created and migrated, with its own active local-review API on port 8081.
 It contains only migration baseline records, including a historical June

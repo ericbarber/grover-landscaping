@@ -54,7 +54,11 @@ verified. A tested fixture-state journal now serializes concurrent operations,
 atomically preserves generated record ownership and verified snapshots with
 private permissions, enforces forward-only manager-delegation state, and
 accepts reset completion only with a zero-remaining receipt. It performs no API
-write or database deletion; the complete seed/reset orchestrator remains next.
+write or database deletion. A CI-enforced, non-executable owner-foundation plan
+now fixes both owners' supported workspace/property/brief/invitation requests
+and closes the uncertain property-create recovery window with exact owner-scope,
+field, collision, duplicate, and journal checks. The provider-to-field executor
+and exact-ID reset remain next and must land together before live writes.
 The repository package, database, and infrastructure scopes pass in this shell.
 Release-preflight tests inject a deterministic Terraform double, and the
 protected-release evidence validator exports its pure contract so tests no

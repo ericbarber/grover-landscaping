@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7 quality contract, B8 search/share contract, and B9 manifest/linked-target/isolated-token safety are published on `codex-review-feature`; the bounded field command extraction and local browser gate are complete | First value, one-property delegation, stable public-hero entry, search/share delivery, field job/checklist/photo/add-on commands, and 86 cross-browser journeys pass alongside the frontend suite, production build, measured artifact budgets, strict Clippy, the 433-test backend command, live PostgreSQL migrations, and strict crawler/fixture contracts; deployed-origin evidence remains gated | Restart/preflight B9 only with a complete seed/reset utility, then seed/verify isolated records |
+| Repository | B0, B1, B3, the repository-owned B7 quality contract, B8 search/share contract, and B9 manifest/linked-target/token/journal/owner-plan safety are published on `codex-review-feature`; the bounded field command extraction and local browser gate are complete | First value, one-property delegation, stable public-hero entry, search/share delivery, field job/checklist/photo/add-on commands, and 86 cross-browser journeys pass alongside the frontend suite, production build, measured artifact budgets, strict Clippy, the 433-test backend command, live PostgreSQL migrations, and strict crawler/fixture contracts; deployed-origin evidence remains gated | Complete the B9 provider-to-field executor and exact-ID reset together, then preflight and seed/verify isolated records |
 | Design review | B9 study materials ready; matched live grants/fixtures incomplete | Ten persona profiles, responsive public-to-workspace preview, and matched comprehension tasks cover five core roles | Seed and verify the isolated fixtures, conduct participant sessions, and synthesize evidence before B2 expansion |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
@@ -171,14 +171,20 @@ Delivered preparation:
   record IDs, verified snapshot markers, forward-only manager delegation, and
   a zero-remaining reset receipt while retaining private file permissions. It
   is recoverability groundwork and does not perform seeding or deletion.
+- A tested owner-foundation plan derives the two owners' exact public API
+  workspace, property, ready-brief, and invitation requests. Its discovery rule
+  recovers one exact unjournaled property after an uncertain create response and
+  refuses owner-scope leaks, same-label field collisions, duplicates, or stale
+  journal IDs. The plan has no write entry point and retains no bearer token.
 
 Remaining gate:
 
 - Restart the isolated service with the updated backend and fixture mode, then
-  execute the linked boundary preflight. Run a purpose-built seeder through supported APIs,
-  validate exact reads and denials, reset twice, and conduct the counterbalanced
-  sessions. The current sandbox cannot reach that loopback API or database, and
-  no participant observation is claimed.
+  execute the linked boundary preflight only after the remaining provider-to-
+  field executor and exact-ID reset land together. Then run the purpose-built
+  seeder through supported APIs, validate exact reads and denials, reset twice,
+  and conduct the counterbalanced sessions. No participant observation is
+  claimed.
 
 ### B2, B4–B6, and B8–B10 — Remaining best-in-class delivery program
 

@@ -261,8 +261,11 @@ boundary; inclusion here alone does not mean a feature shipped.
   supported provider chain without returning tokens in production or JSON; an
   atomic, exclusively locked private manifest journal records generated IDs,
   verified snapshots, forward-only delegation state, and zero-record reset
-  receipts without performing live writes; it does not claim seeded records or
-  participant evidence
+  receipts without performing live writes; a CI-enforced owner-foundation plan
+  pins supported workspace/property/brief/invitation payloads and exact
+  discovery recovery for the non-idempotent property create while rejecting
+  scope leaks, collisions, duplicates, and stale ownership; neither component
+  claims seeded records or participant evidence
 - Repository release-contract tests are self-contained in restricted shells:
   Terraform behavior is represented by an injected test double and protected
   release evidence is validated in-process without changing operator-facing

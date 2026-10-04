@@ -96,6 +96,17 @@ is true, or make the fixture participant-ready; those remain responsibilities
 of the bounded seeder/reset orchestrator. Never pass an invitation token or
 protected content to this journal.
 
+[`owner-foundation-plan.mjs`](owner-foundation-plan.mjs) defines the next
+non-executable orchestration boundary. It derives separate public-API request
+plans for the Canyon and Sage workspaces, synthetic properties, ready briefs,
+and delivered provider invitations from a validated manifest. Before an
+eventual executor retries the non-idempotent property create, its recovery rule
+requires an owner-scoped discovery result to match every fixed synthetic field:
+one exact unjournaled match is recovered, zero matches permits creation, and scope
+leaks, same-label collisions, duplicates, or stale journal IDs fail closed.
+The plan marks the invitation header as same-process memory only. It does not
+perform network requests, expose a write command, or make reset optional.
+
 ## Target-boundary preflight
 
 Before any fixture seeder writes a record, run this fail-closed boundary

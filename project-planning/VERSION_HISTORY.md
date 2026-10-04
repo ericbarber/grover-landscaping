@@ -1,5 +1,14 @@
 # Version History
 
+- 2026-10-03: Added the non-executable B9 owner-foundation orchestration plan.
+  It derives separate supported workspace, synthetic-property, ready-brief, and
+  delivered-invitation requests for Canyon View and Sage Lane from the validated
+  manifest, marks the one-time invitation header as same-process memory only,
+  and maps generated property/brief/invitation IDs back to the journal. Exact
+  property discovery now safely recovers the non-idempotent create crash window
+  while rejecting cross-owner results, field collisions, duplicates, multiple
+  owned IDs, and stale journals. Four focused tests and local/CI enforcement are
+  included; there is no write entry point and no live record is claimed.
 - 2026-10-03: Added the recoverable B9 fixture-state journal required by the
   future seed/reset orchestrator. It exclusively locks the private manifest,
   atomically retains mode-0600 permissions while recording API-generated IDs
