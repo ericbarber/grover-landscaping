@@ -20,7 +20,7 @@ This is the short restart document. Execution order lives in
 
 ## Active and next work
 
-### Active: field command extraction; B9 live execution gated
+### Active: B9 seed/reset design; live execution gated
 
 [`BEST_IN_CLASS_DELIVERY_PLAN.md`](BEST_IN_CLASS_DELIVERY_PLAN.md) is the
 detailed plan for the approved ten-initiative quality program. B0, B1, B3, B7,
@@ -69,14 +69,15 @@ company, property-manager, crew, and Yard Owner campaign routes retain their
 dedicated entry stories. Persona tabs begin in the immediately following audience-
 review section, where they change supporting content without mutating the hero,
 URL, or canonical metadata; arrow/Home/End navigation remains supported. The
-detailed company planner remains in the Plan tour. Browser geometry coverage is
-prepared. The latest Playwright run reached Chromium, but the reused long-lived
-frontend service became unhealthy during its first navigation and the container
-watchdog terminated the in-container runner with exit 137. Use a fresh isolated
-web-server process for the next browser attempt. Git commit and push are
-available again; preserve the unrelated local files named above.
+detailed company planner remains in the Plan tour. The complete local Playwright
+matrix now passes 86 journeys with 2 intentional skips across mobile/desktop
+Chromium, desktop Firefox, and mobile WebKit. The responsive contract permits
+320px content to reflow at 200% zoom, measures load stability before deliberate
+interaction/zoom changes, and follows current marketing-tour copy and document
+geometry. Git commit and push are available; preserve the unrelated local files
+named above.
 
-Field mutation coordination is the current safe repository slice. Job lifecycle,
+Field mutation coordination is complete. Job lifecycle,
 checklist, reviewed-conflict, and photo commands now own server confirmation,
 quality rejection, upload/finalization, durable queue fallback, local evidence
 preservation, unresolved-tenant outcomes, and recovery language outside `App`.
@@ -164,8 +165,10 @@ The repository-owned all-persona rollout foundation and smoke contract are
 complete for the currently authoritative roles. Hosted per-unit execution waits
 on R2 identities, exact resource fixtures, and operator ownership. Dispatcher/
 Billing role creation and P2 concern/preference behavior each remain separate
-product decisions. The next safe repository UX slice is frontend truth/recovery
-adoption; it may not be represented as hosted rollout evidence.
+product decisions. Frontend truth/recovery adoption is already delivered. The
+next repository implementation gate is a complete, recoverable B9 seed/reset
+utility; no live matched-study write may precede it, and it may not be
+represented as hosted rollout evidence.
 
 Prototype reconciliation is complete. Start design review from
 [`../design/ARTIFACT_STATUS.md`](../design/ARTIFACT_STATUS.md): it separates

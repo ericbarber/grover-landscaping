@@ -198,6 +198,9 @@ unresolved-tenant handling, and recovery copy outside `App`. Add-on mutation and
 completion-report refresh now share that boundary and keep a successful write
 distinct from a failed follow-up read. The bounded field command extraction is
 complete; broader top-level manager/data coordination remains a separate slice.
+The local browser acceptance gate also passes 86 journeys with 2 intentional
+skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
+reflow and reconciling the marketing-tour assertions with the delivered UI.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.

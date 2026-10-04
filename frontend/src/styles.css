@@ -28,7 +28,6 @@
 }
 
 html {
-  min-width: 320px;
   scroll-behavior: smooth;
   scroll-padding-top: 5rem;
   background: var(--grover-bone);
@@ -36,7 +35,6 @@ html {
 
 body {
   margin: 0;
-  min-width: 320px;
   min-height: 100dvh;
   overflow-x: hidden;
   background: var(--grover-bone);

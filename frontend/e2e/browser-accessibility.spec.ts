@@ -43,6 +43,10 @@ test('the public route meets the versioned lab interaction, stability, and reflo
   expect(navigationReadyMs).toBeLessThanOrEqual(
     qualityBudgets.browserExperience.publicPrimaryContentReadyMs,
   );
+  const layoutShift = await page.evaluate(
+    () => (window as Window & { __groverLayoutShift?: number }).__groverLayoutShift ?? 0,
+  );
+  expect(layoutShift).toBeLessThanOrEqual(qualityBudgets.browserExperience.maxLayoutShift);
 
   const interactionResponseMs = await page.getByRole('tab', { name: 'Property manager' })
     .evaluate(async (element) => {
@@ -68,10 +72,6 @@ test('the public route meets the versioned lab interaction, stability, and reflo
   expect(horizontalOverflowPx).toBeLessThanOrEqual(
     qualityBudgets.browserExperience.maxHorizontalOverflowPx,
   );
-  const layoutShift = await page.evaluate(
-    () => (window as Window & { __groverLayoutShift?: number }).__groverLayoutShift ?? 0,
-  );
-  expect(layoutShift).toBeLessThanOrEqual(qualityBudgets.browserExperience.maxLayoutShift);
 });
 
 test('the Yard Owner entry preserves reflow, reduced motion, and keyboard focus', async ({ page }) => {
@@ -257,8 +257,8 @@ test('the second-section audience review changes the supporting story without re
   await expect(page.getByRole('heading', { level: 1, name: 'Plan the day. Guide the crew. Prove the work.' })).toBeVisible();
   await expect(page.getByTestId('persona-review-panel').getByRole('heading', { name: 'Move from your portfolio to the exact service record.' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Keep service records connected to the right address.' })).toBeVisible();
-  await expect(page.locator('#product').getByText('Portfolio readiness', { exact: true })).toBeVisible();
-  await expect(page.getByText('Revenue readiness', { exact: true })).not.toBeVisible();
+  await expect(page.locator('#product').getByText('Built for authorized multi-property care', { exact: true })).toBeVisible();
+  await expect(page.getByText('Designed around your operation', { exact: true })).not.toBeVisible();
 
   await page.getByRole('tab', { name: 'Crew lead' }).click();
   await expect(page).toHaveURL(/\/for-landscaping-companies$/);
@@ -290,9 +290,9 @@ test('persona switching in the second section leaves the complete hero unchanged
     const heroPreview = page.getByTestId('hero-entry-preview');
     const audienceControl = page.getByRole('tablist', { name: 'Choose your perspective' });
     const baseline = await Promise.all([
-      heroHeading.evaluate((element) => element.getBoundingClientRect().top),
+      heroHeading.evaluate((element) => Math.round(element.getBoundingClientRect().top + window.scrollY)),
       heroPreview.evaluate((element) => element.textContent),
-      audienceControl.evaluate((element) => element.getBoundingClientRect().top),
+      audienceControl.evaluate((element) => Math.round(element.getBoundingClientRect().top + window.scrollY)),
     ]);
 
     for (const persona of personas) {
@@ -302,9 +302,9 @@ test('persona switching in the second section leaves the complete hero unchanged
       await expect(panel.getByRole('heading', { name: persona.review })).toBeVisible();
 
       const current = await Promise.all([
-        heroHeading.evaluate((element) => element.getBoundingClientRect().top),
+        heroHeading.evaluate((element) => Math.round(element.getBoundingClientRect().top + window.scrollY)),
         heroPreview.evaluate((element) => element.textContent),
-        audienceControl.evaluate((element) => element.getBoundingClientRect().top),
+        audienceControl.evaluate((element) => Math.round(element.getBoundingClientRect().top + window.scrollY)),
       ]);
       expect(current).toEqual(baseline);
       expect(await audienceControl.evaluate((control, panelId) => {
@@ -440,17 +440,17 @@ test('every product-tour step stays within the selected persona', async ({ page 
     {
       id: 'property-manager',
       path: '/for-property-managers',
-      title: 'Move from portfolio readiness to owner-ready reporting.',
+      title: 'Move from an authorized portfolio to delivered proof.',
       steps: [
-        { tab: /01 · Prioritize/, preview: '14 of 16 properties ready' },
-        { tab: /02 · Monitor/, preview: '12 properties complete' },
-        { tab: /03 · Report/, preview: 'Owner-ready summary prepared' },
+        { tab: /01 · Access/, preview: '16 properties available' },
+        { tab: /02 · Review/, preview: 'Desert Willow Commons' },
+        { tab: /03 · Proof/, preview: '14 reports available' },
       ],
     },
     {
       id: 'company',
       path: '/for-landscaping-companies',
-      title: 'Follow one workday from plan to completed revenue.',
+      title: 'Follow one workday from plan to customer-ready proof.',
       steps: [
         { tab: /01 · Plan/, preview: 'Today’s operation' },
         { tab: /02 · Care/, preview: 'Desert Willow Commons' },

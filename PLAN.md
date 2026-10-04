@@ -11,7 +11,7 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and B9 manifest, linked-target, and isolated invitation-handoff safety are published on `codex-review-feature`; field job, checklist, conflict, photo, and add-on command coordination is complete | Re-run browser acceptance from an isolated web-server process and design B9 seed/reset as one recoverable operation before any live fixture write |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and B9 manifest, linked-target, and isolated invitation-handoff safety are published on `codex-review-feature`; field command coordination and the local cross-browser acceptance gate are complete | Design B9 seed/reset as one recoverable operation before any live fixture write |
 | Private review | Pi has an ARM64 runtime, healthy PostgreSQL, private HTTPS, and restricted CI SSH grant; deployment remains disabled and unhosted | Publish the workflow, run CI, then verify the first gated deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered; B1/B3 and repository-owned B7/B8 work are implemented, B6/B9 preparations are ready, and a bounded B10 decision packet awaits approval | Approve or revise B10 boundaries while B4/B5/B6/B8/B9 evidence proceeds in an authorized environment |
@@ -48,11 +48,13 @@ fail-closed removal, minimized pre-acceptance reads, and an audit trail. The
 complete gate passes 146 frontend files / 603 tests, TypeScript, the production
 build, strict Clippy, and the 433-test backend command. The Compose-backed run
 also completed live PostgreSQL tests, migrations, and both Terraform environment
-validations. The cross-browser matrix started, but its reused long-lived frontend
-service became unhealthy during the first navigation and the container watchdog
-terminated the runner with exit 137; browser acceptance therefore remains an
-environment/runtime gate rather than claimed evidence. The accumulated delivery
-was committed as `c3f7301` and pushed to `origin/codex-review-feature`.
+validations. Browser acceptance now passes 86 journeys with 2 intentional skips
+across mobile/desktop Chromium, desktop Firefox, and mobile WebKit. The recovery
+slice removed the 320px document floor that doubled under 200% CSS zoom,
+separated initial layout-shift measurement from intentional tab/zoom reflow,
+and aligned marketing-tour assertions with the shipped copy and document
+geometry. The accumulated delivery was committed as `c3f7301` and pushed to
+`origin/codex-review-feature`.
 
 B7 now adds a versioned production-artifact and browser-experience budget,
 privacy-bounded operational indicator contracts, an actionable validator with

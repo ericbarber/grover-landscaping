@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-10-03: Closed the local cross-browser acceptance gate with 86 passing
+  journeys and 2 intentional skips across mobile/desktop Chromium, desktop
+  Firefox, and mobile WebKit. Removed the global 320px document floor that
+  became 640px under the 200% reflow check, measured initial layout stability
+  before deliberate interaction and zoom changes, updated stale marketing-tour
+  copy/geometry assertions, and retained the hero image priority hint without a
+  React DOM warning. The frontend gate remains green at 147 files / 613 tests,
+  TypeScript, production build, and all artifact budgets.
 - 2026-10-03: Published the accumulated B0/B1/B3/B7/B8/B9 repository delivery
   on `codex-review-feature` as `c3f7301`, preserving the explicitly unrelated
   local changes. The full package gate passed 146 frontend files / 603 tests,

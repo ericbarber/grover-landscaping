@@ -466,7 +466,7 @@ export function PublicLandingPage({
           </div>
 
           <div className="relative h-[27rem] overflow-hidden rounded-[2rem] bg-forest shadow-grover-lg sm:h-[30rem] lg:h-[calc(100svh-9rem)] lg:min-h-[28rem] lg:max-h-[33rem]" data-testid="hero-visual">
-            <img alt="Landscape care team working in a Southwestern garden at sunrise" className="absolute inset-0 h-full w-full object-cover object-center" decoding="async" fetchPriority="high" height="688" src="/brand/grover-landscape-home-hero.webp" width="1440" />
+            <img alt="Landscape care team working in a Southwestern garden at sunrise" className="absolute inset-0 h-full w-full object-cover object-center" decoding="async" {...{ fetchpriority: 'high' }} height="688" src="/brand/grover-landscape-home-hero.webp" width="1440" />
             <span className="absolute inset-0 bg-gradient-to-t from-forest/45 via-forest/5 to-transparent" />
             <article className="absolute bottom-4 left-4 right-4 rounded-[1.35rem] border border-white/60 bg-paper/95 p-5 text-ink shadow-grover-lg backdrop-blur sm:bottom-7 sm:left-auto sm:right-7 sm:w-[min(29rem,calc(100%-3.5rem))] sm:p-6" data-testid="hero-entry-preview">
               <div className="flex items-center justify-between gap-3">
