@@ -258,8 +258,11 @@ boundary; inclusion here alone does not mean a feature shipped.
   identity, runtime provenance, fixed synthetic request namespaces, per-record
   API-generated ID ownership, lifecycle state, empty target namespaces, and
   scoped reset proof; an isolated-runtime-only invitation handoff enables the
-  supported provider chain without returning tokens in production or JSON; it
-  does not claim seeded records or participant evidence
+  supported provider chain without returning tokens in production or JSON; an
+  atomic, exclusively locked private manifest journal records generated IDs,
+  verified snapshots, forward-only delegation state, and zero-record reset
+  receipts without performing live writes; it does not claim seeded records or
+  participant evidence
 - Repository release-contract tests are self-contained in restricted shells:
   Terraform behavior is represented by an injected test double and protected
   release evidence is validated in-process without changing operator-facing

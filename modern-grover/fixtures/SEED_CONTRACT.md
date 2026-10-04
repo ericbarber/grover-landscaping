@@ -4,7 +4,11 @@ Status: implementation contract for a future seeder. A fail-closed manifest
 preparation utility now records the verified target, exact running commit, and
 distinct study-owner principals before any write. Customer-controlled
 Property Manager delegation and a strictly gated local-fixture invitation-token
-handoff are now available to that seeder. A separate local study database has
+handoff are now available to that seeder. An atomic, exclusively locked
+manifest journal can persist generated record ownership, verified snapshots,
+delegation lifecycle, and a zero-remaining reset receipt without exposing
+tokens or protected content. It does not yet perform the API transitions or
+database reset. A separate local study database has
 now been created and migrated, as recorded in
 [LOCAL_STUDY_ENV.md](LOCAL_STUDY_ENV.md); no Modern Grover fixture records have
 been written. Use the [matched facts](../MATCHED_FIXTURES.md)

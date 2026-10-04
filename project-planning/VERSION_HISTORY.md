@@ -1,5 +1,14 @@
 # Version History
 
+- 2026-10-03: Added the recoverable B9 fixture-state journal required by the
+  future seed/reset orchestrator. It exclusively locks the private manifest,
+  atomically retains mode-0600 permissions while recording API-generated IDs
+  and verified snapshots, enforces forward-only manager delegation, accepts
+  reset completion only with a zero-record receipt, and treats repeated state
+  observations idempotently. Focused tests cover invalid ID ownership,
+  incomplete two-record verification, lifecycle regression, incomplete reset,
+  private atomic replacement, and concurrent-writer refusal. No live API write,
+  database deletion, matched fixture, or participant evidence is claimed.
 - 2026-10-03: Closed the local cross-browser acceptance gate with 86 passing
   journeys and 2 intentional skips across mobile/desktop Chromium, desktop
   Firefox, and mobile WebKit. Removed the global 320px document floor that

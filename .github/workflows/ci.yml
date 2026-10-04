@@ -50,6 +50,7 @@ jobs:
           node --test modern-grover/fixtures/validate-manifest.test.mjs
           node --test modern-grover/fixtures/validate-target.test.mjs
           node --test modern-grover/fixtures/prepare-manifest.test.mjs
+          node --test modern-grover/fixtures/fixture-state.test.mjs
           node modern-grover/fixtures/validate-manifest.mjs --allow-template modern-grover/fixtures/fixture-manifest.example.json
           node --test scripts/smoke-workspace-rollout.test.mjs
           node --test scripts/validate-protected-release-evidence.test.mjs

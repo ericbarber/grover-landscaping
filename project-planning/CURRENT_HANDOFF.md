@@ -50,7 +50,11 @@ through the existing transition. Two fixed study-owner profiles keep owner
 scope distinct, and a tested create-once utility verifies those identities and
 the target before privately recording exact provenance. The updated study API
 still needs a restart and live preflight; no matched record has been seeded or
-verified.
+verified. A tested fixture-state journal now serializes concurrent operations,
+atomically preserves generated record ownership and verified snapshots with
+private permissions, enforces forward-only manager-delegation state, and
+accepts reset completion only with a zero-remaining receipt. It performs no API
+write or database deletion; the complete seed/reset orchestrator remains next.
 The repository package, database, and infrastructure scopes pass in this shell.
 Release-preflight tests inject a deterministic Terraform double, and the
 protected-release evidence validator exports its pure contract so tests no

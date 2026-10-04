@@ -72,6 +72,30 @@ exact reset ownership without pretending supported APIs accept caller-selected
 primary keys. Each record also pins its fixed local-review owner user ID so
 owner-scope denial checks and reset queries cannot conflate the two records.
 
+[`fixture-state.mjs`](fixture-state.mjs) is the crash-safe manifest journal for
+the future seeder/reset process. It takes an exclusive private lock, validates
+the current manifest before every change, writes API-generated IDs and verified
+snapshot markers through an atomic mode-`0600` replacement, rejects delegation
+lifecycle regressions, and records reset completion only with a zero-remaining
+receipt. Repeating the same ID, snapshot, or completed reset is idempotent. A
+leftover `.lock` file fails closed; remove it only after confirming that no
+fixture process still owns the recorded PID.
+
+The journal can be imported by the future orchestrator or exercised directly:
+
+```bash
+node modern-grover/fixtures/fixture-state.mjs \
+  .localdev/modern-grover/fixture-manifest.json \
+  record-id canyon owner_properties owner_property_<generated-id>
+```
+
+Other commands are `record-snapshot`, `record-delegation`, and
+`complete-reset`. The utility prints only counts and lifecycle state. It does
+not call application APIs, delete database records, verify that a reset count
+is true, or make the fixture participant-ready; those remain responsibilities
+of the bounded seeder/reset orchestrator. Never pass an invitation token or
+protected content to this journal.
+
 ## Target-boundary preflight
 
 Before any fixture seeder writes a record, run this fail-closed boundary

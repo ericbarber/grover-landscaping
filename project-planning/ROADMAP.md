@@ -30,12 +30,15 @@ link that preflight to the running API. Manifest schema 2 tracks normal
 API-generated IDs by synthetic owner, and the exact study runtime can expose a
 new invitation bearer once so the supported provider chain is seedable without
 weakening production. Distinct fixed study owners and a create-once manifest
-preparer now lock owner scope and target/provenance before any record write.
+preparer now lock owner scope and target/provenance before any record write. An
+atomic, exclusively locked fixture-state journal now preserves generated ID
+ownership, verified snapshots, forward-only manager delegation, and a
+zero-remaining reset receipt across future orchestration steps.
 Live execution, matched record creation, reset proof, and participant
 observation remain the next evidence phase.
-Protected browser/runtime evidence remains blocked by the current local service
-health or protected infrastructure rather than by a product implementation
-decision.
+Protected browser/runtime evidence remains blocked by protected infrastructure
+rather than by a product implementation decision; the local cross-browser gate
+is complete.
 
 The active delivery stage is the external protected-hosting boundary after
 Phase 6B post-development validation. Phases 6B1

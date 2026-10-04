@@ -82,7 +82,11 @@ local-review Property Owner principals, preventing their owner-scoped records
 from collapsing under one synthetic user. A tested create-once preparer runs
 the boundary preflight, verifies both principals, and writes the ignored
 mode-0600 manifest with exact source/migration provenance before any record
-mutation.
+mutation. The prepared manifest now has an atomic, mode-0600, exclusive-lock
+state journal for idempotently recording generated IDs, verified snapshots,
+manager-delegation progression, and a zero-remaining reset receipt. It is a
+required recoverability primitive, not the still-pending API seeder or scoped
+database reset implementation.
 Repository validation is now deterministic in restricted development shells:
 the release-preflight contract supplies its own fake Terraform command, and
 protected-release evidence tests call the exported validator directly instead

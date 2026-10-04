@@ -133,8 +133,7 @@ Validation:
   release-preflight tests use a deterministic Terraform double and protected
   evidence tests exercise the exported validator without child-process access.
 - Protected dashboards, alert delivery, and runtime baselines cannot be claimed
-  until B4 infrastructure exists; local browser execution is pending a healthy
-  isolated web-server process.
+  until B4 infrastructure exists; the local cross-browser matrix is complete.
 
 ### B9 — Matched participant evidence
 
@@ -168,6 +167,10 @@ Delivered preparation:
   isolation. A tested create-once preparer reruns the linked target check,
   verifies those exact profiles, and writes the ignored mode-0600 manifest with
   explicit running-commit, migration, and study-date provenance.
+- A tested, exclusively locked manifest journal atomically records generated
+  record IDs, verified snapshot markers, forward-only manager delegation, and
+  a zero-remaining reset receipt while retaining private file permissions. It
+  is recoverability groundwork and does not perform seeding or deletion.
 
 Remaining gate:
 
