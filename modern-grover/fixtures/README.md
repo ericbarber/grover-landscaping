@@ -112,6 +112,17 @@ version before a retry is skipped. The plan marks the invitation header as
 same-process memory only. It does not perform network requests, expose a write
 command, or make reset optional.
 
+[`reset-plan.mjs`](reset-plan.mjs) builds the non-executable direct ownership
+inventory for a future reset. It validates the manifest, refuses `prepared` or
+already-reset state, covers every allowlisted ID table, and orders each exact
+primary key child before parent. The only non-`id` key is the exact
+`owner_workspaces.owner_user_id` already owned by that manifest record. It emits
+neither SQL nor a free-form predicate and supports the earliest workspace-only
+partial run. The plan deliberately marks itself non-executable because API
+transitions also create event, delivery, conversation, operational, and other
+derived child rows. Those manifest-rooted selectors, one transaction, rollback
+behavior, and zero-remaining verification are still required before deletion.
+
 ## Target-boundary preflight
 
 Before any fixture seeder writes a record, run this fail-closed boundary

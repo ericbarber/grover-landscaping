@@ -43,6 +43,10 @@ const generatedIdPrefixes = new Map([
   ['day_plans', 'day_plan_'],
   ['day_plan_stops', 'stop_'],
 ]);
+
+export function fixtureOwnedIdTables() {
+  return [...generatedIdPrefixes.keys()];
+}
 const prohibitedKeyPattern = /(address|contact|email|message|note|payload|phone|photo|token)/i;
 const allowedSnapshots = new Set([
   'open_customer_decision',

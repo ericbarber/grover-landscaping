@@ -38,10 +38,12 @@ non-executable owner-foundation plan now pins both isolated owners' supported
 workspace/property/brief/invitation requests, journals the exact fixed workspace
 before property work, recovers only one exact owner-scoped property across the
 non-idempotent create crash window, and avoids replaying a matching persisted
-ready brief. The
-remaining provider-to-field executor and exact-ID reset are the next repository
-slice; live execution, matched record creation, reset proof, and participant
-observation follow only after that pair is complete.
+ready brief. The complete allowlist now also has a tested direct reset inventory
+with exact child-before-parent keys and no SQL or broad owner selector.
+Derived-child selectors are the next reset slice; the provider-to-field executor
+and transactional exact-ID reset must then land together. Live execution,
+matched record creation, reset proof, and participant observation follow only
+after that pair is complete.
 Protected browser/runtime evidence remains blocked by protected infrastructure
 rather than by a product implementation decision; the local cross-browser gate
 is complete.

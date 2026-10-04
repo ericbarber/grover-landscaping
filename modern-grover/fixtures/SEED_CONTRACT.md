@@ -46,6 +46,10 @@ and [authority map](../FIXTURE_READINESS.md) as the task source. The
   `backend/tests/owner_provider_invitation_persistence.rs` shows the
   dependency order for its own test records; its broad cleanup must not be
   used as a study reset against the shared database.
+- The direct reset inventory covers all manifest ID tables without SQL or broad
+  predicates, but it is intentionally non-executable. Derived child rows must
+  be selected through their manifest-owned parent IDs and deleted in the same
+  transaction before the direct child-to-parent order can run.
 
 ## Supported transition sequence
 

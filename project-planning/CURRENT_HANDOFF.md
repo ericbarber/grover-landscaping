@@ -60,7 +60,11 @@ and journals each fixed workspace identity before property work. Exact recovery
 now covers workspace, the uncertain property-create window, and persisted ready
 briefs with owner-scope, field, linkage, collision, duplicate, and journal
 checks. The provider-to-field executor and exact-ID reset remain next and must
-land together before live writes.
+land together before live writes. A tested direct reset inventory now covers
+the complete manifest table allowlist, orders exact keys child before parent,
+supports workspace-only partial state, and exposes no SQL or broad predicate.
+It remains explicitly non-executable until derived-child selectors,
+transactionality, rollback, and zero-remaining verification are implemented.
 The repository package, database, and infrastructure scopes pass in this shell.
 Release-preflight tests inject a deterministic Terraform double, and the
 protected-release evidence validator exports its pure contract so tests no

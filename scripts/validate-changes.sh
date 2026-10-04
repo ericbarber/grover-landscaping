@@ -311,6 +311,7 @@ for scope in "${ordered_scopes[@]}"; do
       node_command --test modern-grover/fixtures/prepare-manifest.test.mjs
       node_command --test modern-grover/fixtures/fixture-state.test.mjs
       node_command --test modern-grover/fixtures/owner-foundation-plan.test.mjs
+      node_command --test modern-grover/fixtures/reset-plan.test.mjs
       node_command modern-grover/fixtures/validate-manifest.mjs --allow-template modern-grover/fixtures/fixture-manifest.example.json
       run_command docker compose config --quiet
       ;;

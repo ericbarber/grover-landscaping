@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-10-04: Added the B9 direct reset ownership inventory. It validates
+  seeded/verified manifests, automatically fails if the manifest table
+  allowlist and reset order diverge, emits only exact primary-key records,
+  orders direct records child before parent, and supports a workspace-only
+  partial run. The inventory and its mirrored verification list contain no SQL
+  or broad owner predicate and are explicitly marked non-executable until
+  manifest-rooted derived-child cleanup and transaction verification land.
+  Three focused tests and local/CI enforcement are included; no deletion ran.
 - 2026-10-04: Closed the earliest B9 owner-foundation crash windows. The
   manifest now recognizes each record's exact fixed workspace identity as owned
   state, moving a workspace-only partial run out of `prepared`; mismatched or
