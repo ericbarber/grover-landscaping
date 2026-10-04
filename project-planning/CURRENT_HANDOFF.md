@@ -80,10 +80,11 @@ Field mutation coordination is the current safe repository slice. Job lifecycle,
 checklist, reviewed-conflict, and photo commands now own server confirmation,
 quality rejection, upload/finalization, durable queue fallback, local evidence
 preservation, unresolved-tenant outcomes, and recovery language outside `App`.
-Add-on mutation plus completion-report refresh remains the next bounded field
-command extraction. B9 live seeding must run through the isolated study API with
-a complete seed/reset utility; participant sessions remain a human evidence gate.
-The current frontend gate passes 147 files / 610 tests, TypeScript, the
+Add-on mutation and its authoritative completion-report refresh now share that
+boundary and distinguish a saved add-on from a later report-read failure. B9
+live seeding must run through the isolated study API with a complete seed/reset
+utility; participant sessions remain a human evidence gate.
+The current frontend gate passes 147 files / 613 tests, TypeScript, the
 production build, and every artifact budget.
 
 ### Delivered: F2 fast feedback orchestration

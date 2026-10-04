@@ -128,7 +128,8 @@ boundary; inclusion here alone does not mean a feature shipped.
   reconnect replay, replay locks, conflict classification, and state refresh
 - Field mutation command boundary owning job/checklist/photo server confirmation,
   photo quality and finalization, durable offline fallback, local evidence,
-  unresolved-tenant outcomes, and reviewed-conflict recovery language
+  unresolved-tenant outcomes, reviewed-conflict recovery language, add-on
+  persistence, and truthful post-write report-refresh recovery
 - Validated minimalist task-first design direction for all ten signed-in
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,

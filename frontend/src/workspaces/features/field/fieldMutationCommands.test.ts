@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   reviewedFieldConflictMessage,
   runChecklistMutationCommand,
+  runFieldAddOnMutationCommand,
   runFieldPhotoUploadCommand,
   runJobLifecycleMutationCommand,
 } from './fieldMutationCommands';
@@ -169,5 +170,65 @@ describe('field mutation commands', () => {
       jobId: 'job-2', photoType: 'before', file, existingPhotos: [], dependencies,
     });
     expect(localOnly).toMatchObject({ outcome: 'local_only', ticket: localTicket });
+  });
+
+  it('refreshes the authoritative report only after a completed add-on update', async () => {
+    const addOn = {
+      id: 'add-on-1', jobId: 'job-1', serviceName: 'Hedge shaping',
+      quantity: 1, unitPriceCents: 12_000, status: 'completed' as const,
+    };
+    const report = { reportId: 'report-1' };
+    const loadReport = vi.fn(async () => report as never);
+
+    await expect(runFieldAddOnMutationCommand({
+      jobId: 'job-1', addOnId: addOn.id, status: 'completed',
+      update: async () => addOn,
+      loadReport,
+    })).resolves.toMatchObject({
+      outcome: 'updated', addOn, report,
+      message: 'Hedge shaping marked completed.',
+    });
+    expect(loadReport).toHaveBeenCalledWith('job-1');
+
+    loadReport.mockClear();
+    await expect(runFieldAddOnMutationCommand({
+      jobId: 'job-1', addOnId: addOn.id, status: 'in_progress',
+      update: async () => ({ ...addOn, status: 'in_progress' }),
+      loadReport,
+    })).resolves.toMatchObject({ outcome: 'updated', report: null });
+    expect(loadReport).not.toHaveBeenCalled();
+  });
+
+  it('does not misreport a saved add-on when its report refresh fails', async () => {
+    const addOn = {
+      id: 'add-on-2', jobId: 'job-2', serviceName: 'Cleanup',
+      quantity: 1, unitPriceCents: 8_000, status: 'completed' as const,
+    };
+
+    await expect(runFieldAddOnMutationCommand({
+      jobId: 'job-2', addOnId: addOn.id, status: 'completed',
+      update: async () => addOn,
+      loadReport: async () => { throw new Error('report unavailable'); },
+    })).resolves.toEqual({
+      outcome: 'updated_report_unavailable',
+      message: 'Cleanup marked completed. The completion report could not refresh; retry the report when the API is available.',
+      addOn,
+      report: null,
+    });
+  });
+
+  it('keeps an add-on update failure separate from report recovery', async () => {
+    const loadReport = vi.fn();
+    await expect(runFieldAddOnMutationCommand({
+      jobId: 'job-3', addOnId: 'add-on-3', status: 'cancelled',
+      update: async () => { throw new Error('write unavailable'); },
+      loadReport,
+    })).resolves.toEqual({
+      outcome: 'update_failed',
+      message: 'Could not update add-on work. Check the API connection and try again.',
+      addOn: null,
+      report: null,
+    });
+    expect(loadReport).not.toHaveBeenCalled();
   });
 });

@@ -20,7 +20,6 @@ import {
   retryPhotoProcessingJob,
   startJob,
   updateChecklistItem,
-  updateJobAddOnStatus,
   type CustomerPropertyRecord,
   type CustomerPhotoErasureSummary,
   type CustomerPrivacyExport,
@@ -97,6 +96,7 @@ import { useFieldOfflineRecovery } from './workspaces/features/field/useFieldOff
 import {
   reviewedFieldConflictMessage,
   runChecklistMutationCommand,
+  runFieldAddOnMutationCommand,
   runFieldPhotoUploadCommand,
   runJobLifecycleMutationCommand,
 } from './workspaces/features/field/fieldMutationCommands';
@@ -1643,18 +1643,18 @@ export function App() {
   async function handleAddOnStatusChange(addOnId: string, status: JobAddOn['status']) {
     if (!selectedJobId) return;
 
-    try {
-      const updated = await updateJobAddOnStatus(selectedJobId, addOnId, status);
-      setSelectedJobAddOns((current) => current.map((addOn) => (addOn.id === updated.id ? updated : addOn)));
-      setStatusMessage(`${updated.serviceName} marked ${status.replace('_', ' ')}.`);
-
-      if (status === 'completed') {
-        const report = await fetchCompletionReport(selectedJobId);
-        setSelectedCompletionReport(report);
-      }
-    } catch {
-      setStatusMessage('Could not update add-on work. Check the API connection and try again.');
+    const result = await runFieldAddOnMutationCommand({
+      jobId: selectedJobId,
+      addOnId,
+      status,
+    });
+    if (result.addOn) {
+      setSelectedJobAddOns((current) => current.map(
+        (addOn) => addOn.id === result.addOn?.id ? result.addOn : addOn,
+      ));
     }
+    if (result.report) setSelectedCompletionReport(result.report);
+    setStatusMessage(result.message);
   }
 
   async function refreshCompletionReport(jobId: string) {

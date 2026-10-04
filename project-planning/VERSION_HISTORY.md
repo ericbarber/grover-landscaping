@@ -13,8 +13,10 @@
   recovery language in the field feature boundary. The follow-on photo command
   also owns quality rejection, upload-ticket execution, upload finalization,
   local evidence preservation, durable queue fallback, and activity messaging.
-  The widened frontend gate passes 147 files / 610 tests, TypeScript, production
-  build, and every artifact budget.
+  Add-on mutation and completion-report refresh now share the same boundary,
+  preventing a failed post-write report read from being presented as a failed
+  add-on update. The widened frontend gate passes 147 files / 613 tests,
+  TypeScript, production build, and every artifact budget.
 - 2026-10-03: Added a fail-closed B9 target-boundary preflight for matched
   fixture work. It permits only the dedicated port-8081 loopback or Tailscale
   study origin, requires local-review PostgreSQL readiness, verifies the

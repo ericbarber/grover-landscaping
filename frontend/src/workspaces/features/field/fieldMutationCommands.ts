@@ -1,9 +1,13 @@
 import {
   completePhotoUpload,
   createPhotoUploadTicket,
+  fetchCompletionReport,
   readPhotoUploadMetadata,
+  updateJobAddOnStatus,
   uploadPhotoToTicket,
   type CompletePhotoUploadMetadata,
+  type CompletionReportSnapshot,
+  type JobAddOn,
   type PhotoUploadTicket,
 } from '../../../api/client';
 import {
@@ -45,6 +49,18 @@ export interface FieldPhotoUploadCommandResult {
     tone: 'success' | 'warning';
     source: 'photo';
   } | null;
+}
+
+export type FieldAddOnMutationCommandOutcome =
+  | 'updated'
+  | 'updated_report_unavailable'
+  | 'update_failed';
+
+export interface FieldAddOnMutationCommandResult {
+  outcome: FieldAddOnMutationCommandOutcome;
+  message: string;
+  addOn: JobAddOn | null;
+  report: CompletionReportSnapshot | null;
 }
 
 interface FieldPhotoUploadCommandDependencies {
@@ -231,6 +247,52 @@ export async function runFieldPhotoUploadCommand({
         tone: 'warning',
         source: 'photo',
       },
+    };
+  }
+}
+
+export async function runFieldAddOnMutationCommand({
+  jobId,
+  addOnId,
+  status,
+  update = updateJobAddOnStatus,
+  loadReport = fetchCompletionReport,
+}: {
+  jobId: string;
+  addOnId: string;
+  status: JobAddOn['status'];
+  update?: (jobId: string, addOnId: string, status: JobAddOn['status']) => Promise<JobAddOn>;
+  loadReport?: (jobId: string) => Promise<CompletionReportSnapshot>;
+}): Promise<FieldAddOnMutationCommandResult> {
+  let addOn: JobAddOn;
+  try {
+    addOn = await update(jobId, addOnId, status);
+  } catch {
+    return {
+      outcome: 'update_failed',
+      message: 'Could not update add-on work. Check the API connection and try again.',
+      addOn: null,
+      report: null,
+    };
+  }
+
+  const updatedMessage = `${addOn.serviceName} marked ${status.replace('_', ' ')}.`;
+  if (status !== 'completed') {
+    return { outcome: 'updated', message: updatedMessage, addOn, report: null };
+  }
+  try {
+    return {
+      outcome: 'updated',
+      message: updatedMessage,
+      addOn,
+      report: await loadReport(jobId),
+    };
+  } catch {
+    return {
+      outcome: 'updated_report_unavailable',
+      message: `${updatedMessage} The completion report could not refresh; retry the report when the API is available.`,
+      addOn,
+      report: null,
     };
   }
 }
