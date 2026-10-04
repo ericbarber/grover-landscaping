@@ -103,6 +103,11 @@ import { useFieldPhotoEvidence } from './workspaces/features/field/useFieldPhoto
 import { useFieldCompletionReport } from './workspaces/features/field/useFieldCompletionReport';
 import { useFieldJobs } from './workspaces/features/field/useFieldJobs';
 import { useFieldOfflineRecovery } from './workspaces/features/field/useFieldOfflineRecovery';
+import {
+  reviewedFieldConflictMessage,
+  runChecklistMutationCommand,
+  runJobLifecycleMutationCommand,
+} from './workspaces/features/field/fieldMutationCommands';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { AssignedJobsPanel } from './components/AssignedJobsPanel';
 import { FieldOfflineRecoveryPanel } from './components/FieldOfflineRecoveryPanel';
@@ -1515,40 +1520,22 @@ export function App() {
 
   async function discardReviewedJobConflict(mutation: JobLifecycleOfflineMutation) {
     const outcome = await discardJobConflict(mutation);
-    if (outcome === 'remove_failed') {
-      setStatusMessage('The reviewed job conflict could not be removed from this phone. Try again.');
-      return;
-    }
-    if (outcome === 'server_refresh_unavailable') {
-      setStatusMessage(`Discarded the reviewed ${mutation.action} conflict; refresh when the API is available.`);
-      return;
-    }
-    setStatusMessage(`Discarded the reviewed ${mutation.action} conflict and restored server job state.`);
+    setStatusMessage(reviewedFieldConflictMessage('job', outcome, mutation.action));
   }
 
   async function handleChecklistItemChange(itemId: string, completed: boolean) {
     if (!selectedJobId || !selectedJob) return;
-    let outcome = 'Checklist updated.';
-    try {
-      const result = await updateChecklistItem(selectedJobId, itemId, completed);
-      if (!result.persisted) throw new Error('Checklist update used local fallback');
-    } catch {
-      if (selectedJob.organizationId && auth.userId) {
-        const queued = await queueChecklist(
+    const result = await runChecklistMutationCommand({
+      persist: () => updateChecklistItem(selectedJobId, itemId, completed),
+      queue: selectedJob.organizationId && auth.userId
+        ? () => queueChecklist(
           selectedJob.organizationId,
           selectedJobId,
           itemId,
           completed,
-        );
-        if (queued) {
-          outcome = 'Checklist change saved locally and queued offline.';
-        } else {
-          outcome = 'Checklist changed locally, but durable offline storage is unavailable.';
-        }
-      } else {
-        outcome = 'Checklist changed locally without a resolved tenant; reconnect before continuing.';
-      }
-    }
+        )
+        : undefined,
+    });
     const checklist = selectedJob.checklist.map(
       (item) => item.id === itemId ? { ...item, completed } : item,
     );
@@ -1557,33 +1544,17 @@ export function App() {
     setJobs((current) => current.map((job) => job.id === selectedJobId
       ? { ...job, completedChecklistItems }
       : job));
-    setStatusMessage(outcome);
+    setStatusMessage(result.message);
   }
 
   async function discardReviewedChecklistConflict(mutation: ChecklistOfflineMutation) {
     const outcome = await discardChecklistConflict(mutation);
-    if (outcome === 'remove_failed') {
-      setStatusMessage('The reviewed checklist conflict could not be removed from this phone.');
-      return;
-    }
-    if (outcome === 'server_refresh_unavailable') {
-      setStatusMessage('Discarded the reviewed checklist conflict; refresh when the API is available.');
-      return;
-    }
-    setStatusMessage('Discarded the reviewed checklist conflict and restored server state.');
+    setStatusMessage(reviewedFieldConflictMessage('checklist', outcome));
   }
 
   async function discardReviewedPhotoConflict(mutation: PhotoUploadOfflineMutation) {
     const outcome = await discardPhotoConflict(mutation);
-    if (outcome === 'remove_failed') {
-      setStatusMessage('The reviewed photo conflict could not be removed from this phone.');
-      return;
-    }
-    if (outcome === 'server_refresh_unavailable') {
-      setStatusMessage('Discarded the reviewed photo conflict; refresh when the API is available.');
-      return;
-    }
-    setStatusMessage('Discarded the reviewed photo conflict and refreshed server photo counts.');
+    setStatusMessage(reviewedFieldConflictMessage('photo', outcome));
   }
 
   async function handleStartJob() {
@@ -1591,19 +1562,18 @@ export function App() {
       return;
     }
 
-    try {
-      const result = await startJob(selectedJobId);
-      if (!result.persisted) throw new Error('Job start used local fallback');
-      setStatusMessage(`Started ${selectedJobId}.`);
-    } catch {
-      const organizationId = selectedJob?.organizationId
-        ?? jobs.find((job) => job.id === selectedJobId)?.organizationId;
-      const queued = await queueJobLifecycle(organizationId, selectedJobId, 'start');
-      setStatusMessage(
-        queued
-          ? `Started ${selectedJobId} locally; the change is queued offline.`
-          : `Started ${selectedJobId} locally, but durable offline storage is unavailable.`,
-      );
+    const organizationId = selectedJob?.organizationId
+      ?? jobs.find((job) => job.id === selectedJobId)?.organizationId;
+    const result = await runJobLifecycleMutationCommand({
+      jobId: selectedJobId,
+      action: 'start',
+      persist: () => startJob(selectedJobId),
+      queue: organizationId && auth.userId
+        ? () => queueJobLifecycle(organizationId, selectedJobId, 'start')
+        : undefined,
+    });
+    setStatusMessage(result.message);
+    if (result.outcome !== 'persisted') {
       recordManagerActivity({
         title: 'Job started locally',
         message: `${selectedJobId} was started in browser state because the API is not reachable.`,
@@ -1635,27 +1605,25 @@ export function App() {
       return;
     }
 
-    let persistedCompletion = false;
-    try {
-      const result = await completeJob(selectedJobId);
-      if (!result.persisted) throw new Error('Job completion used local fallback');
-      persistedCompletion = true;
-      setStatusMessage(`Completed ${selectedJobId}.`);
+    const organizationId = selectedJob?.organizationId
+      ?? jobs.find((job) => job.id === selectedJobId)?.organizationId;
+    const result = await runJobLifecycleMutationCommand({
+      jobId: selectedJobId,
+      action: 'complete',
+      persist: () => completeJob(selectedJobId),
+      queue: organizationId && auth.userId
+        ? () => queueJobLifecycle(organizationId, selectedJobId, 'complete')
+        : undefined,
+    });
+    setStatusMessage(result.message);
+    if (result.outcome === 'persisted') {
       recordManagerActivity({
         title: 'Job completion ready',
         message: `${selectedJobId} was completed and is ready for manager review.`,
         tone: 'success',
         source: 'job',
       });
-    } catch {
-      const organizationId = selectedJob?.organizationId
-        ?? jobs.find((job) => job.id === selectedJobId)?.organizationId;
-      const queued = await queueJobLifecycle(organizationId, selectedJobId, 'complete');
-      setStatusMessage(
-        queued
-          ? `Completed ${selectedJobId} locally; the change is queued offline.`
-          : `Completed ${selectedJobId} locally, but durable offline storage is unavailable.`,
-      );
+    } else {
       recordManagerActivity({
         title: 'Job completed locally',
         message: `${selectedJobId} was completed locally because the API is not reachable.`,
@@ -1675,7 +1643,7 @@ export function App() {
           }
         : current
     ));
-    if (persistedCompletion) {
+    if (result.outcome === 'persisted') {
       setFirstOwnerProgressRefreshSignal((current) => current + 1);
     }
   }

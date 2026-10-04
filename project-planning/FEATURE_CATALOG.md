@@ -126,6 +126,9 @@ boundary; inclusion here alone does not mean a feature shipped.
   fail-closed API-unavailable and explicit transport-fallback outcomes
 - Durable field recovery coordinator owning actor-scoped queue hydration,
   reconnect replay, replay locks, conflict classification, and state refresh
+- Field mutation command boundary owning job/checklist server confirmation,
+  durable offline fallback, unresolved-tenant outcomes, and reviewed-conflict
+  recovery language
 - Validated minimalist task-first design direction for all ten signed-in
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,

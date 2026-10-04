@@ -1,5 +1,16 @@
 # Version History
 
+- 2026-10-03: Published the accumulated B0/B1/B3/B7/B8/B9 repository delivery
+  on `codex-review-feature` as `c3f7301`, preserving the explicitly unrelated
+  local changes. The full package gate passed 146 frontend files / 603 tests,
+  production build and artifact budgets, strict Clippy, 433 backend tests, live
+  PostgreSQL migrations, and both Terraform environment validations. The
+  cross-browser run reached Playwright but the long-lived frontend service
+  became unhealthy during its first navigation and its watchdog terminated the
+  in-container runner, so that runtime evidence remains open. Continued field
+  extraction now centralizes job lifecycle and checklist server confirmation,
+  durable queue fallback, unresolved-tenant outcomes, and reviewed-conflict
+  recovery language in the field feature boundary.
 - 2026-10-03: Added a fail-closed B9 target-boundary preflight for matched
   fixture work. It permits only the dedicated port-8081 loopback or Tailscale
   study origin, requires local-review PostgreSQL readiness, verifies the

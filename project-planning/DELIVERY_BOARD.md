@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7 quality contract, B8 search/share contract, and B9 manifest/linked-target/isolated-token safety are package-validated in the working tree | First value, one-property delegation, stable public-hero entry, and search/share delivery pass 146 frontend files / 603 tests, strict Clippy, the 433-test backend command, production build, measured artifact budgets, and strict crawler/fixture contracts; live PostgreSQL, deployed-origin, and browser branches remain environment-gated | Restart/preflight the fixture-enabled B9 study API, then seed/verify isolated records; restore Git write access, run prepared database/browser/runtime gates in an allowed environment, and commit/push the validated slices |
+| Repository | B0, B1, B3, the repository-owned B7 quality contract, B8 search/share contract, and B9 manifest/linked-target/isolated-token safety are published on `codex-review-feature`; field command extraction is active | First value, one-property delegation, stable public-hero entry, and search/share delivery pass 146 frontend files / 603 tests, strict Clippy, the 433-test backend command, live PostgreSQL migrations, production build, measured artifact budgets, and strict crawler/fixture contracts; deployed-origin and stable browser runtime evidence remain gated | Complete photo upload command extraction; restart/preflight the fixture-enabled B9 study API only with a complete seed/reset utility, then seed/verify isolated records |
 | Design review | B9 study materials ready; matched live grants/fixtures incomplete | Ten persona profiles, responsive public-to-workspace preview, and matched comprehension tasks cover five core roles | Seed and verify the isolated fixtures, conduct participant sessions, and synthesize evidence before B2 expansion |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
@@ -25,8 +25,8 @@ for account access or live-service evidence.
 
 ### B0 — Best-in-class program handoff
 
-State: implementation validated; commit blocked by the active sandbox's
-read-only `.git` mount.
+State: implementation validated, committed, and published on
+`codex-review-feature`.
 
 The approved ten-initiative program, dependencies, acceptance evidence,
 measures, rollout, and rollback boundaries are defined in
@@ -34,27 +34,26 @@ measures, rollout, and rollback boundaries are defined in
 
 Immediate order:
 
-1. Commit the validated Yard-Owner-focused homepage and dedicated audience
-   routes as one public-website review unit.
-2. Commit the validated Manager Today service queue as a second review unit.
-3. Preserve the validated B1 company first-value onboarding slice.
-4. Preserve the validated B3 customer-controlled Property Manager access slice.
-5. Preserve the validated B7 artifact budgets and operational indicator contract.
-6. Run B9 matched participant sessions before expanding B2 service-thread
+1. Preserve the published B0/B1/B3/B7/B8/B9 repository delivery.
+2. Complete the bounded field command extraction, followed by photo upload
+   execution.
+3. Build complete B9 seed/reset tooling before making any isolated fixture
+   write; do not strand one-time invitation tokens in a partial seeder.
+4. Run B9 matched participant sessions before expanding B2 service-thread
    production composition.
-7. Continue B4 protected hosting independently when external inputs arrive.
+5. Continue B4 protected hosting independently when external inputs arrive.
 
 Exit evidence:
 
-- Both current slices are committed without the pre-existing unrelated staged
-  files.
+- Published slices exclude the pre-existing unrelated working-tree files.
+- Field command coordination is package-validated and separately reviewable.
 - The board names B9 live evidence as the next gate and B4 remains an external
   lane.
 
 ### B1 — Company first-value onboarding
 
-State: implementation complete and package-validated in the working tree;
-browser execution and commit/push are environment-blocked.
+State: implementation complete, package-validated, committed, and published;
+browser execution remains runtime-environment-gated.
 
 Delivered implementation:
 
@@ -75,13 +74,13 @@ Validation:
 - Rust formatting, strict Clippy, and 428 backend tests pass, including the
   PostgreSQL migration and all six persisted milestone projections.
 - Mobile/desktop Playwright coverage is implemented in `provider-entry.spec.ts`;
-  execution is pending because this sandbox rejects `127.0.0.1:5173` with
-  `EPERM`.
+  the latest matrix attempt reached Chromium but the reused frontend service
+  became unhealthy during navigation and its watchdog terminated the runner.
 
 ### B3 — Customer-controlled Property Manager access
 
-State: implementation complete and package-validated in the working tree;
-browser execution and commit/push are environment-blocked.
+State: implementation complete, package-validated, committed, and published;
+browser execution remains runtime-environment-gated.
 
 Delivered implementation:
 
@@ -97,14 +96,13 @@ Delivered implementation:
 
 Validation:
 
-- The complete 433-test backend command passes. PostgreSQL concurrency,
-  recipient binding, exact scope, portal visibility, revocation, and audit
-  coverage compiles, but its live branch needs `DATABASE_URL` and remains pending
-  in this shell.
+- The complete 433-test backend command passes, including the live Compose-backed
+  PostgreSQL concurrency, recipient binding, exact scope, portal visibility,
+  revocation, and audit branches.
 - The complete frontend suite passes 146 files / 603 tests, TypeScript, and the
   production build; strict Clippy also passes.
-- Owner and recipient Playwright journeys are implemented; execution is pending
-  because this sandbox rejects the loopback web-server bind.
+- Owner and recipient Playwright journeys are implemented; stable execution is
+  pending a fresh browser web-server process.
 
 ### B7 — Measured quality and performance budgets
 
@@ -130,12 +128,12 @@ Validation:
   chunk budgets.
 - TypeScript and repository contract tests pass. Cross-browser lab checks read
   the same readiness, response, layout-shift, phone, zoom, and overflow limits.
-- The full repository validation scope passes in a restricted shell: its
-  release-preflight test uses a deterministic Terraform double and protected
+- Repository package, database, and infrastructure scopes pass in this shell;
+  release-preflight tests use a deterministic Terraform double and protected
   evidence tests exercise the exported validator without child-process access.
 - Protected dashboards, alert delivery, and runtime baselines cannot be claimed
-  until B4 infrastructure exists; browser execution is also loopback-blocked in
-this sandbox.
+  until B4 infrastructure exists; local browser execution is pending a healthy
+  isolated web-server process.
 
 ### B9 — Matched participant evidence
 

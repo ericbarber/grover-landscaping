@@ -11,7 +11,7 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and B9 manifest, linked-target, and isolated invitation-handoff safety are validated in the working tree; commits are blocked by read-only `.git`, and browser runs are blocked because the sandbox cannot bind a loopback port | Restart/preflight the fixture-enabled B9 study API, then seed/verify isolated records; commit/push the validated slices when Git access returns and execute browser/runtime quality gates in an allowed environment |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and B9 manifest, linked-target, and isolated invitation-handoff safety are committed and published on `codex-review-feature`; field mutation persistence/fallback commands are the active follow-on slice | Complete the field command extraction and keep the B9 live seed/reset path gated on a healthy isolated study runtime |
 | Private review | Pi has an ARM64 runtime, healthy PostgreSQL, private HTTPS, and restricted CI SSH grant; deployment remains disabled and unhosted | Publish the workflow, run CI, then verify the first gated deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered; B1/B3 and repository-owned B7/B8 work are implemented, B6/B9 preparations are ready, and a bounded B10 decision packet awaits approval | Approve or revise B10 boundaries while B4/B5/B6/B8/B9 evidence proceeds in an authorized environment |
@@ -38,7 +38,7 @@ search/sharing readiness, and the gated Yard Owner concern boundary. The plan
 keeps repository implementation moving whenever its evidence and product gates
 are available while protected hosting waits in a parallel external lane.
 
-B0, B1, and B3 implementation are present in the working tree. Company setup now
+B0, B1, and B3 implementation are published on `codex-review-feature`. Company setup now
 preserves allowlisted campaign attribution, resumes from six server-confirmed
 milestones through delivered proof, fails closed on multiple memberships and
 persistence outages, and reports bounded stage telemetry. Customer-controlled
@@ -46,12 +46,13 @@ Property Manager delegation now adds owner invitation/revocation, verified-email
 recipient acceptance, exact-property membership and portal grants, immediate
 fail-closed removal, minimized pre-acceptance reads, and an audit trail. The
 complete gate passes 146 frontend files / 603 tests, TypeScript, the production
-build, strict Clippy, and the 433-test backend command. This shell has no
-`DATABASE_URL`, so PostgreSQL-backed test bodies compile but their live branches
-remain an external gate. The prepared mobile/desktop browser acceptance
-cannot execute because this sandbox rejects the Playwright web server's
-loopback bind with `EPERM`. These phases are not recorded as committed delivery
-because the same sandbox exposes `.git` read-only.
+build, strict Clippy, and the 433-test backend command. The Compose-backed run
+also completed live PostgreSQL tests, migrations, and both Terraform environment
+validations. The cross-browser matrix started, but its reused long-lived frontend
+service became unhealthy during the first navigation and the container watchdog
+terminated the runner with exit 137; browser acceptance therefore remains an
+environment/runtime gate rather than claimed evidence. The accumulated delivery
+was committed as `c3f7301` and pushed to `origin/codex-review-feature`.
 
 B7 now adds a versioned production-artifact and browser-experience budget,
 privacy-bounded operational indicator contracts, an actionable validator with

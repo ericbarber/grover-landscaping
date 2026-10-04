@@ -23,7 +23,7 @@ response semantics, retention, privacy/legal review, urgent handling, and
 notification scope still require explicit approval.
 
 B0, B1, and B3 implementation/package gates and the repository-owned B7 quality
-contract are complete in the working tree. B9 now has a tested, CI-enforced
+contract are published on `codex-review-feature`. B9 now has a tested, CI-enforced
 fixture-manifest safety contract plus a fail-closed target-boundary preflight.
 The local-review backend now supplies the minimal database identity needed to
 link that preflight to the running API. Manifest schema 2 tracks normal
@@ -33,8 +33,8 @@ weakening production. Distinct fixed study owners and a create-once manifest
 preparer now lock owner scope and target/provenance before any record write.
 Live execution, matched record creation, reset proof, and participant
 observation remain the next evidence phase.
-Browser/runtime evidence, commits, and publication remain blocked by the active
-sandbox or protected infrastructure rather than by a product implementation
+Protected browser/runtime evidence remains blocked by the current local service
+health or protected infrastructure rather than by a product implementation
 decision.
 
 The active delivery stage is the external protected-hosting boundary after
@@ -180,7 +180,7 @@ the first field slices now centralize offline queue status and replay gating and
 move assigned-job, selected-job, and offline-recovery presentation out of `App`.
 Job-detail fallback, local photo evidence, and authoritative evidence-merge
 rules now also live in the field feature boundary; API and durable-mutation
-coordination remain the next internal extraction. Selected-job detail and add-on
+coordination continue as bounded internal extractions. Selected-job detail and add-on
 reads now form the first stateful field coordinator, including request
 cancellation and fail-closed API-unavailable handling. Selected-job photo reads
 now have a matching evidence coordinator that preserves local work when server
@@ -190,8 +190,11 @@ and offline upload/replay mutation coordination remain bounded follow-on
 slices. Initial assigned-job collection loading and selection now also reside in
 the field boundary with authoritative-unavailable and seed-fallback outcomes
 kept distinct. Durable job, checklist, and photo queue hydration plus reconnect
-replay now reside in one field recovery coordinator; enqueue and reviewed-
-conflict commands remain the next bounded field extraction.
+replay now reside in one field recovery coordinator. Enqueue operations and
+reviewed-conflict refresh already belong to that coordinator; job lifecycle and
+checklist commands now also own server-persistence detection, durable fallback,
+unresolved-tenant handling, and recovery copy outside `App`. Photo upload
+execution remains the next bounded field command extraction.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.

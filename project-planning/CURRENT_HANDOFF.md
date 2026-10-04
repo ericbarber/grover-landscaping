@@ -20,18 +20,18 @@ This is the short restart document. Execution order lives in
 
 ## Active and next work
 
-### Active: B0/B1/B3/B7 closure and B9 fixture preparation
+### Active: field command extraction; B9 live execution gated
 
 [`BEST_IN_CLASS_DELIVERY_PLAN.md`](BEST_IN_CLASS_DELIVERY_PLAN.md) is the
-detailed plan for the approved ten-initiative quality program. B0, B1, and B3
-are implemented in the current working tree. B1 adds a six-stage persisted
+detailed plan for the approved ten-initiative quality program. B0, B1, B3, B7,
+B8, and the repository-owned B9 preparation are published on
+`codex-review-feature` through `c3f7301`. B1 adds a six-stage persisted
 company first-value path, attribution continuity, fail-closed membership selection, and
 bounded setup telemetry. B3 adds customer-issued, verified-email, one-property
 Property Manager invitation, acceptance, revocation, exact portal scope, and
 audit. The combined gate passes 146 frontend files / 603 tests, TypeScript,
-production build, strict Clippy, and the 433-test backend command. No
-`DATABASE_URL` is available in this shell, so live PostgreSQL test branches are
-still pending even though their targets compile.
+production build, strict Clippy, and the 433-test backend command. The latest
+Compose-backed run also completed the live PostgreSQL branches and migrations.
 B7 adds a versioned measured artifact baseline, stable chunk limits, browser
 experience thresholds, privacy-bounded operational indicator definitions, and
 tested local/CI enforcement. The current production build passes every artifact
@@ -51,7 +51,7 @@ scope distinct, and a tested create-once utility verifies those identities and
 the target before privately recording exact provenance. The updated study API
 still needs a restart and live preflight; no matched record has been seeded or
 verified.
-The complete repository validation scope now passes in the restricted shell.
+The repository package, database, and infrastructure scopes pass in this shell.
 Release-preflight tests inject a deterministic Terraform double, and the
 protected-release evidence validator exports its pure contract so tests no
 longer depend on a permitted child-process spawn. These are test-environment
@@ -70,15 +70,18 @@ dedicated entry stories. Persona tabs begin in the immediately following audienc
 review section, where they change supporting content without mutating the hero,
 URL, or canonical metadata; arrow/Home/End navigation remains supported. The
 detailed company planner remains in the Plan tour. Browser geometry coverage is
-prepared; the current local web server still cannot start in this sandbox and
-the cached headless Chromium also lacks `libnspr4.so`.
-Playwright coverage is prepared but cannot run because the sandbox rejects a
-loopback server bind with `EPERM`. The active sandbox also exposes `.git`
-read-only, so staging/committing still fails at `.git/index.lock`; pushing has
-no commit to publish. Restore Git access, create the narrow B0/B1/B3 commits without
-the pre-existing local files named above, run the browser gates, and push the
-branch. B9 live seeding must run through the isolated study API from an allowed
-operator environment; participant sessions remain a human evidence gate.
+prepared. The latest Playwright run reached Chromium, but the reused long-lived
+frontend service became unhealthy during its first navigation and the container
+watchdog terminated the in-container runner with exit 137. Use a fresh isolated
+web-server process for the next browser attempt. Git commit and push are
+available again; preserve the unrelated local files named above.
+
+Field mutation coordination is the current safe repository slice. Job lifecycle
+and checklist commands now own server confirmation, durable queue fallback,
+unresolved-tenant outcomes, and reviewed-conflict recovery language outside
+`App`; photo upload execution remains the next bounded extraction. B9 live
+seeding must run through the isolated study API with a complete seed/reset
+utility; participant sessions remain a human evidence gate.
 
 ### Delivered: F2 fast feedback orchestration
 
