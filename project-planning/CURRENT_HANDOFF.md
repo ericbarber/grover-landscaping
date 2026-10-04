@@ -76,12 +76,15 @@ watchdog terminated the in-container runner with exit 137. Use a fresh isolated
 web-server process for the next browser attempt. Git commit and push are
 available again; preserve the unrelated local files named above.
 
-Field mutation coordination is the current safe repository slice. Job lifecycle
-and checklist commands now own server confirmation, durable queue fallback,
-unresolved-tenant outcomes, and reviewed-conflict recovery language outside
-`App`; photo upload execution remains the next bounded extraction. B9 live
-seeding must run through the isolated study API with a complete seed/reset
-utility; participant sessions remain a human evidence gate.
+Field mutation coordination is the current safe repository slice. Job lifecycle,
+checklist, reviewed-conflict, and photo commands now own server confirmation,
+quality rejection, upload/finalization, durable queue fallback, local evidence
+preservation, unresolved-tenant outcomes, and recovery language outside `App`.
+Add-on mutation plus completion-report refresh remains the next bounded field
+command extraction. B9 live seeding must run through the isolated study API with
+a complete seed/reset utility; participant sessions remain a human evidence gate.
+The current frontend gate passes 147 files / 610 tests, TypeScript, the
+production build, and every artifact budget.
 
 ### Delivered: F2 fast feedback orchestration
 

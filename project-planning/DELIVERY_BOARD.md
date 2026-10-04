@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7 quality contract, B8 search/share contract, and B9 manifest/linked-target/isolated-token safety are published on `codex-review-feature`; field command extraction is active | First value, one-property delegation, stable public-hero entry, and search/share delivery pass 146 frontend files / 603 tests, strict Clippy, the 433-test backend command, live PostgreSQL migrations, production build, measured artifact budgets, and strict crawler/fixture contracts; deployed-origin and stable browser runtime evidence remain gated | Complete photo upload command extraction; restart/preflight the fixture-enabled B9 study API only with a complete seed/reset utility, then seed/verify isolated records |
+| Repository | B0, B1, B3, the repository-owned B7 quality contract, B8 search/share contract, and B9 manifest/linked-target/isolated-token safety are published on `codex-review-feature`; field command extraction is active | First value, one-property delegation, stable public-hero entry, search/share delivery, and field job/checklist/photo commands pass the frontend suite, production build, measured artifact budgets, strict Clippy, the 433-test backend command, live PostgreSQL migrations, and strict crawler/fixture contracts; deployed-origin and stable browser runtime evidence remain gated | Extract add-on mutation/report-refresh coordination; restart/preflight the fixture-enabled B9 study API only with a complete seed/reset utility, then seed/verify isolated records |
 | Design review | B9 study materials ready; matched live grants/fixtures incomplete | Ten persona profiles, responsive public-to-workspace preview, and matched comprehension tasks cover five core roles | Seed and verify the isolated fixtures, conduct participant sessions, and synthesize evidence before B2 expansion |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
@@ -35,8 +35,8 @@ measures, rollout, and rollback boundaries are defined in
 Immediate order:
 
 1. Preserve the published B0/B1/B3/B7/B8/B9 repository delivery.
-2. Complete the bounded field command extraction, followed by photo upload
-   execution.
+2. Continue the bounded field command extraction with add-on mutation and
+   completion-report refresh coordination.
 3. Build complete B9 seed/reset tooling before making any isolated fixture
    write; do not strand one-time invitation tokens in a partial seeder.
 4. Run B9 matched participant sessions before expanding B2 service-thread
@@ -46,7 +46,8 @@ Immediate order:
 Exit evidence:
 
 - Published slices exclude the pre-existing unrelated working-tree files.
-- Field command coordination is package-validated and separately reviewable.
+- Field job, checklist, conflict, and photo command coordination is
+  package-validated and separately reviewable.
 - The board names B9 live evidence as the next gate and B4 remains an external
   lane.
 

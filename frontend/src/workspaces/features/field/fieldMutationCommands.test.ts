@@ -2,8 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   reviewedFieldConflictMessage,
   runChecklistMutationCommand,
+  runFieldPhotoUploadCommand,
   runJobLifecycleMutationCommand,
 } from './fieldMutationCommands';
+import type { PhotoUploadTicket } from '../../../api/client';
 
 describe('field mutation commands', () => {
   it('keeps a confirmed server write out of the durable queue', async () => {
@@ -72,5 +74,100 @@ describe('field mutation commands', () => {
       .toBe('Discarded the reviewed checklist conflict and restored server state.');
     expect(reviewedFieldConflictMessage('photo', 'restored_server_state'))
       .toBe('Discarded the reviewed photo conflict and refreshed server photo counts.');
+  });
+
+  it('rejects an invalid photo before requesting an upload ticket', async () => {
+    const createTicket = vi.fn();
+    const file = { name: 'tiny.jpg', size: 100, type: 'image/jpeg' } as File;
+
+    await expect(runFieldPhotoUploadCommand({
+      jobId: 'job-1',
+      photoType: 'before',
+      file,
+      existingPhotos: [],
+      dependencies: {
+        readMetadata: async () => ({ fileSizeBytes: 100, imageWidthPx: 10, imageHeightPx: 10 }),
+        assessQuality: () => ({ accepted: false, issues: ['too_small'] }),
+        qualityMessage: () => 'the image is too small',
+        createTicket,
+        upload: vi.fn(),
+        complete: vi.fn(),
+        createLocalTicket: vi.fn(),
+      },
+    })).resolves.toEqual({
+      outcome: 'rejected',
+      message: 'Photo not added: the image is too small.',
+      ticket: null,
+      activity: null,
+    });
+    expect(createTicket).not.toHaveBeenCalled();
+  });
+
+  it('owns the complete persisted photo upload sequence', async () => {
+    const file = { name: 'after.jpg', size: 500_000, type: 'image/jpeg' } as File;
+    const createdTicket = {
+      status: 'created', jobId: 'job-1', photoId: 'photo-1', photoType: 'after',
+      fileName: file.name, contentType: file.type, uploadMode: 'signed',
+      uploadUrl: 'https://uploads.example.test/photo-1', objectKey: 'jobs/job-1/photo-1',
+    } satisfies PhotoUploadTicket;
+    const upload = vi.fn(async () => undefined);
+    const complete = vi.fn(async () => undefined);
+
+    const result = await runFieldPhotoUploadCommand({
+      jobId: 'job-1',
+      photoType: 'after',
+      file,
+      existingPhotos: [],
+      dependencies: {
+        readMetadata: async () => ({
+          fileSizeBytes: file.size, imageWidthPx: 1200, imageHeightPx: 900,
+        }),
+        assessQuality: () => ({ accepted: true, issues: [] }),
+        qualityMessage: vi.fn(),
+        createTicket: async () => createdTicket,
+        upload,
+        complete,
+        createLocalTicket: vi.fn(),
+      },
+    });
+
+    expect(upload).toHaveBeenCalledWith(createdTicket, file);
+    expect(complete).toHaveBeenCalledWith('job-1', 'photo-1', {
+      fileSizeBytes: file.size, imageWidthPx: 1200, imageHeightPx: 900,
+    });
+    expect(result.outcome).toBe('uploaded');
+    expect(result.ticket).toMatchObject({
+      status: 'uploaded', metadataSource: 'client_reported', imageWidthPx: 1200,
+    });
+  });
+
+  it('keeps a local photo and reports whether durable queueing succeeded', async () => {
+    const file = { name: 'before.jpg', size: 500_000, type: 'image/jpeg' } as File;
+    const localTicket = {
+      status: 'created', jobId: 'job-2', photoId: 'local-photo', photoType: 'before',
+      fileName: file.name, contentType: file.type, uploadMode: 'browser-local-placeholder',
+      uploadUrl: 'local://before.jpg', objectKey: 'browser/job-2/before.jpg',
+    } satisfies PhotoUploadTicket;
+    const dependencies = {
+      readMetadata: async () => ({ fileSizeBytes: file.size, imageWidthPx: 1000, imageHeightPx: 800 }),
+      assessQuality: () => ({ accepted: true, issues: [] as [] }),
+      qualityMessage: vi.fn(),
+      createTicket: async () => { throw new Error('API unavailable'); },
+      upload: vi.fn(),
+      complete: vi.fn(),
+      createLocalTicket: () => localTicket,
+    };
+
+    const queued = await runFieldPhotoUploadCommand({
+      jobId: 'job-2', photoType: 'before', file, existingPhotos: [],
+      queue: async () => true,
+      dependencies,
+    });
+    expect(queued).toMatchObject({ outcome: 'queued', ticket: localTicket });
+
+    const localOnly = await runFieldPhotoUploadCommand({
+      jobId: 'job-2', photoType: 'before', file, existingPhotos: [], dependencies,
+    });
+    expect(localOnly).toMatchObject({ outcome: 'local_only', ticket: localTicket });
   });
 });

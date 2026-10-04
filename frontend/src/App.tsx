@@ -3,8 +3,6 @@ import { ApiRequestError, isApiErrorCode } from './api/apiError';
 import {
   completeJob,
   completeDispatchCustomerNotification,
-  completePhotoUpload,
-  createPhotoUploadTicket,
   eraseCustomerPhotoEvidence,
   fetchCompletionReport,
   updateJobDispatchAssignment,
@@ -14,7 +12,6 @@ import {
   fetchPhotoErasureDeletionHistory,
   fetchPhotoProcessingHistory,
   fetchPropertyCompletionReports,
-  readPhotoUploadMetadata,
   resolveNotificationDelivery,
   resolvePhotoErasureDeletionJob,
   resolvePhotoProcessingJob,
@@ -23,7 +20,6 @@ import {
   retryPhotoProcessingJob,
   startJob,
   updateChecklistItem,
-  uploadPhotoToTicket,
   updateJobAddOnStatus,
   type CustomerPropertyRecord,
   type CustomerPhotoErasureSummary,
@@ -45,11 +41,7 @@ import type {
   JobLifecycleOfflineMutation,
   PhotoUploadOfflineMutation,
 } from './domain/offlineMutationQueue';
-import {
-  assessPhotoQuality,
-  photoQualityMessage,
-  requiredPhotoEvidence,
-} from './domain/photoQuality';
+import { requiredPhotoEvidence } from './domain/photoQuality';
 import { workspaceGuidanceForRoles, workspaceRolesForAccess } from './domain/workspaceAccess';
 import { useWorkspaceSelection } from './workspaces/core/useWorkspaceSelection';
 import {
@@ -93,7 +85,6 @@ import {
   type CustomerPortalReadState,
 } from './workspaces/features/customer/customerWorkspace';
 import {
-  createLocalPhotoTicket,
   fieldRecoveryState,
   mergePhotoEvidence,
   type FieldPhotoType,
@@ -106,6 +97,7 @@ import { useFieldOfflineRecovery } from './workspaces/features/field/useFieldOff
 import {
   reviewedFieldConflictMessage,
   runChecklistMutationCommand,
+  runFieldPhotoUploadCommand,
   runJobLifecycleMutationCommand,
 } from './workspaces/features/field/fieldMutationCommands';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
@@ -2079,54 +2071,19 @@ export function App() {
       return;
     }
 
-    const metadata = await readPhotoUploadMetadata(file);
-    const quality = assessPhotoQuality(file, metadata, selectedJobTickets);
-    if (!quality.accepted) {
-      setStatusMessage(`Photo not added: ${photoQualityMessage(quality)}.`);
-      return;
-    }
-
-    let ticket: PhotoUploadTicket;
-
-    try {
-      ticket = await createPhotoUploadTicket(selectedJobId, file, photoType);
-      await uploadPhotoToTicket(ticket, file);
-      await completePhotoUpload(selectedJobId, ticket.photoId, metadata);
-      ticket = {
-        ...ticket,
-        status: 'uploaded',
-        fileSizeBytes: metadata.fileSizeBytes,
-        imageWidthPx: metadata.imageWidthPx,
-        imageHeightPx: metadata.imageHeightPx,
-        metadataSource: 'client_reported',
-      };
-      setStatusMessage(`Uploaded ${photoType} photo evidence for ${file.name}.`);
-      recordManagerActivity({
-        title: 'Photo evidence uploaded',
-        message: `${photoType} photo evidence was uploaded for ${selectedJobId}.`,
-        tone: 'success',
-        source: 'photo',
-      });
-    } catch {
-      ticket = createLocalPhotoTicket(selectedJobId, file, photoType, metadata);
-      let queued = false;
-      if (selectedJob?.organizationId && auth.userId) {
-        queued = await queuePhoto(selectedJob.organizationId, selectedJobId, photoType, file);
-      }
-      setStatusMessage(
-        queued
-          ? `Saved ${photoType} photo in the durable offline queue.`
-          : `Prepared ${photoType} photo locally, but it could not be queued for offline upload.`,
-      );
-      recordManagerActivity({
-        title: queued ? 'Photo evidence queued offline' : 'Photo evidence saved locally',
-        message: queued
-          ? `${photoType} photo evidence for ${selectedJobId} is queued durably until the API is reachable.`
-          : `${photoType} photo evidence for ${selectedJobId} is browser-local until the API is reachable.`,
-        tone: 'warning',
-        source: 'photo',
-      });
-    }
+    const result = await runFieldPhotoUploadCommand({
+      jobId: selectedJobId,
+      photoType,
+      file,
+      existingPhotos: selectedJobTickets,
+      queue: selectedJob?.organizationId && auth.userId
+        ? () => queuePhoto(selectedJob.organizationId, selectedJobId, photoType, file)
+        : undefined,
+    });
+    setStatusMessage(result.message);
+    if (!result.ticket) return;
+    const ticket = result.ticket;
+    if (result.activity) recordManagerActivity(result.activity);
 
     setUploadTickets((current) => [ticket, ...current]);
     setJobs((current) =>

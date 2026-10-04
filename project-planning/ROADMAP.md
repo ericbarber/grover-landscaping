@@ -191,10 +191,11 @@ slices. Initial assigned-job collection loading and selection now also reside in
 the field boundary with authoritative-unavailable and seed-fallback outcomes
 kept distinct. Durable job, checklist, and photo queue hydration plus reconnect
 replay now reside in one field recovery coordinator. Enqueue operations and
-reviewed-conflict refresh already belong to that coordinator; job lifecycle and
-checklist commands now also own server-persistence detection, durable fallback,
-unresolved-tenant handling, and recovery copy outside `App`. Photo upload
-execution remains the next bounded field command extraction.
+reviewed-conflict refresh already belong to that coordinator; job lifecycle,
+checklist, and photo commands now also own server-persistence detection, photo
+quality rejection and upload finalization, durable fallback, local evidence,
+unresolved-tenant handling, and recovery copy outside `App`. Add-on mutation and
+completion-report refresh remain the next bounded field command extraction.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.

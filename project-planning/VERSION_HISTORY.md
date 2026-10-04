@@ -10,7 +10,11 @@
   in-container runner, so that runtime evidence remains open. Continued field
   extraction now centralizes job lifecycle and checklist server confirmation,
   durable queue fallback, unresolved-tenant outcomes, and reviewed-conflict
-  recovery language in the field feature boundary.
+  recovery language in the field feature boundary. The follow-on photo command
+  also owns quality rejection, upload-ticket execution, upload finalization,
+  local evidence preservation, durable queue fallback, and activity messaging.
+  The widened frontend gate passes 147 files / 610 tests, TypeScript, production
+  build, and every artifact budget.
 - 2026-10-03: Added a fail-closed B9 target-boundary preflight for matched
   fixture work. It permits only the dedicated port-8081 loopback or Tailscale
   study origin, requires local-review PostgreSQL readiness, verifies the
