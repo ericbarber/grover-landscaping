@@ -1,5 +1,14 @@
 # Version History
 
+- 2026-10-04: Added the B9 derived reset selector catalog. It maps acquisition
+  events; invitation delivery, recipient, claim, and capability children;
+  disclosure, assessment, proposal, activation, first-visit, and delegation
+  records; customer visit/recommendation state; and route/job/checklist/photo/
+  report/add-on/mutation/exception artifacts to exact manifest-owned roots using
+  declarative relation paths. Tests cover two-record foundation selection,
+  workspace-only partial state, and exact job/stop/plan operational roots. The
+  plan still emits no SQL and remains non-executable pending transaction and
+  zero-remaining verification; no deletion ran.
 - 2026-10-04: Added the B9 direct reset ownership inventory. It validates
   seeded/verified manifests, automatically fails if the manifest table
   allowlist and reset order diverge, emits only exact primary-key records,

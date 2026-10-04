@@ -47,9 +47,11 @@ and [authority map](../FIXTURE_READINESS.md) as the task source. The
   dependency order for its own test records; its broad cleanup must not be
   used as a study reset against the shared database.
 - The direct reset inventory covers all manifest ID tables without SQL or broad
-  predicates, but it is intentionally non-executable. Derived child rows must
-  be selected through their manifest-owned parent IDs and deleted in the same
-  transaction before the direct child-to-parent order can run.
+  predicates. Its derived selector catalog traces the current matched sequence's
+  acquisition, provider, delegation, visit/recommendation, and field-operation
+  children through declarative paths to exact manifest-owned parents. The plan
+  remains intentionally non-executable until those selectors are interpreted
+  and verified inside the same transaction as the direct child-to-parent order.
 
 ## Supported transition sequence
 

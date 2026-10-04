@@ -77,6 +77,27 @@ test('orders exact foundation IDs child before parent for both records', () => {
   );
   assert.deepEqual(plan.verification, plan.operations);
   assert.equal(plan.operations.every((operation) => !('where' in operation)), true);
+  assert.deepEqual(
+    plan.derivedSelectors
+      .filter(({ table }) => [
+        'owner_provider_invitation_delivery_attempts',
+        'owner_provider_invitation_recipient_checks',
+        'owner_acquisition_events',
+      ].includes(table))
+      .map(({ recordKey, table, rootTable }) => ({ recordKey, table, rootTable })),
+    [
+      { recordKey: 'canyon', table: 'owner_provider_invitation_delivery_attempts', rootTable: 'owner_provider_invitations' },
+      { recordKey: 'sage', table: 'owner_provider_invitation_delivery_attempts', rootTable: 'owner_provider_invitations' },
+      { recordKey: 'canyon', table: 'owner_provider_invitation_recipient_checks', rootTable: 'owner_provider_invitations' },
+      { recordKey: 'sage', table: 'owner_provider_invitation_recipient_checks', rootTable: 'owner_provider_invitations' },
+      { recordKey: 'canyon', table: 'owner_acquisition_events', rootTable: 'owner_workspaces' },
+      { recordKey: 'sage', table: 'owner_acquisition_events', rootTable: 'owner_workspaces' },
+    ],
+  );
+  assert.equal(
+    plan.derivedSelectors.every((selector) => selector.rootId && selector.path.length > 0),
+    true,
+  );
 });
 
 test('supports the earliest workspace-only partial run without broad selectors', () => {
@@ -86,12 +107,47 @@ test('supports the earliest workspace-only partial run without broad selectors',
     'owner_workspaces',
     'local-review-property-owner-canyon',
   );
-  assert.deepEqual(buildFixtureResetPlan(manifest).operations, [{
+  const plan = buildFixtureResetPlan(manifest);
+  assert.deepEqual(plan.operations, [{
     recordKey: 'canyon',
     table: 'owner_workspaces',
     keyColumn: 'owner_user_id',
     id: 'local-review-property-owner-canyon',
   }]);
+  assert.deepEqual(plan.derivedSelectors, [{
+    recordKey: 'canyon',
+    table: 'owner_acquisition_events',
+    rootTable: 'owner_workspaces',
+    rootKeyColumn: 'owner_user_id',
+    rootId: 'local-review-property-owner-canyon',
+    path: ['owner_user_id'],
+  }]);
+});
+
+test('roots operational cleanup in exact job, stop, and plan IDs', () => {
+  let manifest = journal(
+    preparedManifest(),
+    'canyon',
+    'owner_workspaces',
+    'local-review-property-owner-canyon',
+  );
+  manifest = journal(manifest, 'canyon', 'service_jobs', 'job_canyon123');
+  manifest = journal(manifest, 'canyon', 'day_plans', 'day_plan_canyon123');
+  manifest = journal(manifest, 'canyon', 'day_plan_stops', 'stop_canyon123');
+  const selectors = buildFixtureResetPlan(manifest).derivedSelectors;
+  for (const table of [
+    'job_completion_reports',
+    'job_photos',
+    'checklist_mutations',
+    'operational_exceptions',
+    'stop_progress_mutations',
+    'day_plan_amendment_requests',
+  ]) {
+    const selector = selectors.find((candidate) => candidate.table === table);
+    assert.ok(selector, `${table} selector should be planned`);
+    assert.equal(selector.recordKey, 'canyon');
+    assert.match(selector.rootId, /canyon123$/);
+  }
 });
 
 test('refuses prepared and already-reset manifests', () => {

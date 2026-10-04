@@ -11,7 +11,7 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and B9 manifest, linked-target, invitation-handoff, journal, owner-foundation recovery, and direct reset inventory safety are published on `codex-review-feature`; field command coordination and the local cross-browser acceptance gate are complete | Add derived-child reset selectors, then implement the remaining B9 provider-to-field chain and transactional reset together before any live fixture write |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and B9 manifest, linked-target, invitation-handoff, journal, owner-foundation recovery, and manifest-rooted reset planning are published on `codex-review-feature`; field command coordination and the local cross-browser acceptance gate are complete | Implement the remaining B9 provider-to-field chain and transactional reset/verification together before any live fixture write |
 | Private review | Pi has an ARM64 runtime, healthy PostgreSQL, private HTTPS, and restricted CI SSH grant; deployment remains disabled and unhosted | Publish the workflow, run CI, then verify the first gated deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered; B1/B3 and repository-owned B7/B8 work are implemented, B6/B9 preparations are ready, and a bounded B10 decision packet awaits approval | Approve or revise B10 boundaries while B4/B5/B6/B8/B9 evidence proceeds in an authorized environment |
@@ -95,9 +95,12 @@ saved ready brief without persisting invitation tokens. The provider-to-field
 executor and scoped database reset implementation remain pending. A tested reset
 inventory now covers every allowlisted manifest table, orders exact primary keys
 child before parent, supports a workspace-only partial run, and emits no SQL or
-broad owner predicate. It is explicitly non-executable until derived-child
-selectors and transactional verification are complete, so no live fixture write
-is authorized yet.
+broad owner predicate. Derived selectors now trace the owner/provider,
+delegation, visit/recommendation, and field-operation children back to exact
+manifest workspace, invitation, capability, assessment, proposal, activation,
+release, job, stop, or plan IDs. The plan remains explicitly non-executable
+until transactional interpretation, rollback, and zero-remaining verification
+are complete, so no live fixture write is authorized yet.
 Repository validation is now deterministic in restricted development shells:
 the release-preflight contract supplies its own fake Terraform command, and
 protected-release evidence tests call the exported validator directly instead

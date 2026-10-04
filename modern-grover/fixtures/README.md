@@ -120,8 +120,14 @@ primary key child before parent. The only non-`id` key is the exact
 neither SQL nor a free-form predicate and supports the earliest workspace-only
 partial run. The plan deliberately marks itself non-executable because API
 transitions also create event, delivery, conversation, operational, and other
-derived child rows. Those manifest-rooted selectors, one transaction, rollback
-behavior, and zero-remaining verification are still required before deletion.
+derived child rows. The plan now catalogs those selectors for acquisition
+events; invitation delivery, recipient, claim, and capability children;
+disclosure, assessment, proposal, activation, first-visit, delegation, release,
+visit, recommendation, route, job, checklist, photo, report, add-on, mutation,
+and operational-exception records. Each selector carries an exact manifest root
+ID and a declarative relation path, never SQL. Selector interpretation in one
+transaction, rollback behavior, and zero-remaining verification are still
+required before deletion.
 
 ## Target-boundary preflight
 

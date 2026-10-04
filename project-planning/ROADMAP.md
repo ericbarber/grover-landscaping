@@ -40,10 +40,11 @@ before property work, recovers only one exact owner-scoped property across the
 non-idempotent create crash window, and avoids replaying a matching persisted
 ready brief. The complete allowlist now also has a tested direct reset inventory
 with exact child-before-parent keys and no SQL or broad owner selector.
-Derived-child selectors are the next reset slice; the provider-to-field executor
-and transactional exact-ID reset must then land together. Live execution,
-matched record creation, reset proof, and participant observation follow only
-after that pair is complete.
+Declarative derived-child selectors now cover the current matched owner/provider,
+delegation, visit/recommendation, and field-operation families using exact
+manifest roots. The provider-to-field executor and transactional reset/verified
+receipt must land together next. Live execution, matched record creation, reset
+proof, and participant observation follow only after that pair is complete.
 Protected browser/runtime evidence remains blocked by protected infrastructure
 rather than by a product implementation decision; the local cross-browser gate
 is complete.

@@ -63,8 +63,13 @@ checks. The provider-to-field executor and exact-ID reset remain next and must
 land together before live writes. A tested direct reset inventory now covers
 the complete manifest table allowlist, orders exact keys child before parent,
 supports workspace-only partial state, and exposes no SQL or broad predicate.
-It remains explicitly non-executable until derived-child selectors,
-transactionality, rollback, and zero-remaining verification are implemented.
+It remains explicitly non-executable until transactionality, rollback, and
+zero-remaining verification are implemented. The derived selector catalog now
+roots acquisition events; provider invitation,
+assessment, proposal, activation, and visit children; delegation records;
+customer visit/recommendation records; and field job/route/proof artifacts in
+exact manifest IDs without emitting SQL. Transactional interpretation and
+verification are the remaining reset implementation boundary.
 The repository package, database, and infrastructure scopes pass in this shell.
 Release-preflight tests inject a deterministic Terraform double, and the
 protected-release evidence validator exports its pure contract so tests no

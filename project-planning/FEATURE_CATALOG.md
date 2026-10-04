@@ -268,7 +268,9 @@ boundary; inclusion here alone does not mean a feature shipped.
   duplicates, and stale ownership; neither component claims seeded records or
   participant evidence; a non-executable reset inventory covers every direct
   manifest table with exact child-before-parent keys while explicitly gating
-  derived-child selectors and transactional deletion
+  transactional deletion, and declarative derived selectors trace acquisition,
+  provider, delegation, visit/recommendation, and field-operation children to
+  exact manifest-owned parent IDs without emitting SQL
 - Repository release-contract tests are self-contained in restricted shells:
   Terraform behavior is represented by an injected test double and protected
   release evidence is validated in-process without changing operator-facing
