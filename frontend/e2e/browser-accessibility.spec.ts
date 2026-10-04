@@ -1,4 +1,78 @@
 import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+
+const qualityBudgets = JSON.parse(
+  readFileSync(new URL('../../quality-budgets.json', import.meta.url), 'utf8'),
+) as {
+  browserExperience: {
+    publicPrimaryContentReadyMs: number;
+    interactionResponseMs: number;
+    maxLayoutShift: number;
+    supportedPhoneWidthPx: number;
+    textZoomPercent: number;
+    maxHorizontalOverflowPx: number;
+  };
+};
+
+test('the public route meets the versioned lab interaction, stability, and reflow budgets', async ({ page }) => {
+  await page.addInitScript(() => {
+    const qualityWindow = window as Window & { __groverLayoutShift?: number };
+    qualityWindow.__groverLayoutShift = 0;
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries() as Array<PerformanceEntry & {
+        hadRecentInput: boolean;
+        value: number;
+      }>) {
+        if (!entry.hadRecentInput) {
+          qualityWindow.__groverLayoutShift = (qualityWindow.__groverLayoutShift ?? 0) + entry.value;
+        }
+      }
+    }).observe({ type: 'layout-shift', buffered: true });
+  });
+  await page.setViewportSize({ width: qualityBudgets.browserExperience.supportedPhoneWidthPx, height: 720 });
+  await page.goto('/for-landscaping-companies');
+  await expect(page.getByRole('heading', {
+    level: 1,
+    name: 'Plan the day. Guide the crew. Prove the work.',
+  })).toBeVisible();
+
+  const navigationReadyMs = await page.evaluate(() => {
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    return navigation.domContentLoadedEventEnd - navigation.startTime;
+  });
+  expect(navigationReadyMs).toBeLessThanOrEqual(
+    qualityBudgets.browserExperience.publicPrimaryContentReadyMs,
+  );
+
+  const interactionResponseMs = await page.getByRole('tab', { name: 'Property manager' })
+    .evaluate(async (element) => {
+      const startedAt = performance.now();
+      (element as HTMLButtonElement).click();
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      return performance.now() - startedAt;
+    });
+  await expect(page.getByRole('heading', { level: 1, name: 'Plan the day. Guide the crew. Prove the work.' })).toBeVisible();
+  await expect(page.getByTestId('persona-review-panel').getByRole('heading', {
+    name: 'Move from your portfolio to the exact service record.',
+  })).toBeVisible();
+  expect(interactionResponseMs).toBeLessThanOrEqual(
+    qualityBudgets.browserExperience.interactionResponseMs,
+  );
+
+  await page.evaluate((zoomPercent) => {
+    document.documentElement.style.zoom = String(zoomPercent / 100);
+  }, qualityBudgets.browserExperience.textZoomPercent);
+  const horizontalOverflowPx = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(horizontalOverflowPx).toBeLessThanOrEqual(
+    qualityBudgets.browserExperience.maxHorizontalOverflowPx,
+  );
+  const layoutShift = await page.evaluate(
+    () => (window as Window & { __groverLayoutShift?: number }).__groverLayoutShift ?? 0,
+  );
+  expect(layoutShift).toBeLessThanOrEqual(qualityBudgets.browserExperience.maxLayoutShift);
+});
 
 test('the Yard Owner entry preserves reflow, reduced motion, and keyboard focus', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -43,18 +117,22 @@ test('forced-colors mode retains a visible keyboard focus indicator', async ({ p
   expect(await focused.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none');
 });
 
-test('the hero offers direct yard and company signup paths', async ({ page }) => {
+test('the homepage hero remains focused on one yard while the audience review changes below it', async ({ page }) => {
   await page.goto('/');
 
-  const yardSignup = page.getByRole('link', { name: 'Sign up your yard' });
-  const companySignup = page
-    .getByLabel('Primary next steps')
-    .getByRole('link', { name: 'Sign up your company' });
+  const yardSignup = page
+    .getByLabel('Hero next steps')
+    .getByRole('link', { name: 'Sign up your yard' });
 
   await expect(yardSignup).toBeVisible();
   await expect(yardSignup).toHaveAttribute('href', '/app/yard-owner');
+  await page.getByRole('tab', { name: 'Landscaping company' }).click();
+  const companySignup = page.getByTestId('persona-review-panel')
+    .getByRole('link', { name: /Start company setup/ });
   await expect(companySignup).toBeVisible();
   await expect(companySignup).toHaveAttribute('href', '/providers/start');
+  await expect(yardSignup).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
 });
 
 test('the production homepage retains the validated prototype foundation', async ({ page }) => {
@@ -65,7 +143,7 @@ test('the production homepage retains the validated prototype foundation', async
     const main = document.querySelector('main');
     const heading = document.querySelector('h1');
     const primaryAction = Array.from(document.querySelectorAll('a'))
-      .find((element) => element.textContent?.includes('Sign up your company'));
+      .find((element) => element.textContent?.includes('Sign up your yard'));
     const brandMark = document.querySelector('.grover-brand-mark');
 
     if (!main || !heading || !primaryAction || !brandMark) {
@@ -99,11 +177,11 @@ test('each audience route presents a complete persona-specific landing view', as
     {
       path: '/for-yard-owners',
       title: 'Clearer yard care for homeowners | Grover',
-      headline: 'See the care behind your yard.',
+      headline: 'Your yard. Every visit. One clear story.',
       perspective: 'The service story—without the operations clutter.',
       trust: 'Confidence before and after care',
       proof: 'Yard care should never feel like a mystery.',
-      product: 'From finding care to understanding every visit.',
+      product: 'From connecting your provider to understanding every visit.',
       invitation: 'Make the next care decision with more confidence.',
       actionRole: 'link' as const,
       action: 'Sign up your yard',
@@ -111,26 +189,26 @@ test('each audience route presents a complete persona-specific landing view', as
     {
       path: '/for-property-managers',
       title: 'Landscaping oversight for property managers | Grover',
-      headline: 'Keep every property ready.',
-      perspective: 'Move from portfolio health to the property that needs you.',
-      trust: 'Portfolio clarity without the chase',
-      proof: 'Every address gets a clear next step.',
-      product: 'One operating view for every property you represent.',
-      invitation: 'Spend less time assembling status—and more time acting on it.',
+      headline: 'Keep your entire property portfolio in view.',
+      perspective: 'Move from your portfolio to the exact service record.',
+      trust: 'Portfolio clarity within approved access',
+      proof: 'Keep service records connected to the right address.',
+      product: 'One focused view for the properties you can access.',
+      invitation: 'Keep authorized property service easier to review.',
       actionRole: 'button' as const,
       action: 'Discuss my portfolio',
     },
     {
       path: '/for-landscaping-companies',
       title: 'Landscaping operations software | Grover',
-      headline: 'Plan every visit. Care with confidence. Prove the work.',
-      perspective: 'Keep office, field, customer, and revenue work aligned.',
+      headline: 'Plan the day. Guide the crew. Prove the work.',
+      perspective: 'Keep office, field, and customer work aligned.',
       trust: 'One shared view of the work',
       proof: 'Run the day without losing the service story.',
-      product: 'A calmer system from morning plan to completed revenue.',
+      product: 'A calmer system from morning plan to customer-ready proof.',
       invitation: 'Give every team one connected way to plan, care, and prove.',
       actionRole: 'link' as const,
-      action: 'Sign up your company',
+      action: 'Start company setup',
     },
     {
       path: '/for-crew-leads',
@@ -150,7 +228,10 @@ test('each audience route presents a complete persona-specific landing view', as
   for (const persona of personas) {
     await page.goto(persona.path);
     await expect(page).toHaveTitle(persona.title);
-    await expect(page.getByRole('heading', { level: 1, name: persona.headline })).toBeVisible();
+    await expect(page.getByRole('heading', {
+      level: 1,
+      name: persona.headline,
+    })).toBeVisible();
     await expect(page.getByRole('heading', { name: persona.perspective })).toBeVisible();
     await expect(page.getByRole('heading', { name: persona.trust })).toBeVisible();
     await expect(page.getByRole('heading', { name: persona.proof })).toBeVisible();
@@ -162,36 +243,37 @@ test('each audience route presents a complete persona-specific landing view', as
   }
 });
 
-test('the audience control switches the complete landing-page story and URL', async ({ page }) => {
+test('the second-section audience review changes the supporting story without replacing the entry page', async ({ page }) => {
   await page.goto('/for-landscaping-companies');
-  await expect(page.getByRole('heading', { level: 1, name: 'Plan every visit. Care with confidence. Prove the work.' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Plan the day. Guide the crew. Prove the work.' })).toBeVisible();
   expect(await page.evaluate(() => {
+    const hero = document.querySelector('[data-testid="marketing-hero"]');
     const selector = document.querySelector('[role="tablist"][aria-label="Choose your perspective"]');
-    const actions = document.querySelector('[aria-label="Primary next steps"]');
-    return Boolean(selector && actions && selector.getBoundingClientRect().top < actions.getBoundingClientRect().top);
+    return Boolean(hero && selector && hero.getBoundingClientRect().bottom <= selector.getBoundingClientRect().top);
   })).toBe(true);
   await page.getByRole('tab', { name: 'Property manager' }).click();
 
-  await expect(page).toHaveURL(/\/for-property-managers$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'Keep every property ready.' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Every address gets a clear next step.' })).toBeVisible();
+  await expect(page).toHaveURL(/\/for-landscaping-companies$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Plan the day. Guide the crew. Prove the work.' })).toBeVisible();
+  await expect(page.getByTestId('persona-review-panel').getByRole('heading', { name: 'Move from your portfolio to the exact service record.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Keep service records connected to the right address.' })).toBeVisible();
   await expect(page.locator('#product').getByText('Portfolio readiness', { exact: true })).toBeVisible();
   await expect(page.getByText('Revenue readiness', { exact: true })).not.toBeVisible();
 
   await page.getByRole('tab', { name: 'Crew lead' }).click();
-  await expect(page).toHaveURL(/\/for-crew-leads$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'Know the next stop—and what done looks like.' })).toBeVisible();
+  await expect(page).toHaveURL(/\/for-landscaping-companies$/);
+  await expect(page.getByTestId('persona-review-panel').getByRole('heading', { name: 'Give crews the context to finish each stop well.' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'The next stop should already make sense.' })).toBeVisible();
   await expect(page.locator('#proof').getByText('Field resilience', { exact: true })).toBeVisible();
   await expect(page.getByText('Portfolio readiness', { exact: true })).not.toBeVisible();
 });
 
-test('persona switching keeps the hero title section stable', async ({ page }) => {
+test('persona switching in the second section leaves the complete hero unchanged', async ({ page }) => {
   const personas = [
-    { tab: 'Yard owner', headline: 'See the care behind your yard.' },
-    { tab: 'Property manager', headline: 'Keep every property ready.' },
-    { tab: 'Landscaping company', headline: 'Plan every visit. Care with confidence. Prove the work.' },
-    { tab: 'Crew lead', headline: 'Know the next stop—and what done looks like.' },
+    { tab: 'Yard owner', review: 'The service story—without the operations clutter.' },
+    { tab: 'Property manager', review: 'Move from your portfolio to the exact service record.' },
+    { tab: 'Landscaping company', review: 'Keep office, field, and customer work aligned.' },
+    { tab: 'Crew lead', review: 'Give crews the context to finish each stop well.' },
   ];
 
   for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 720 }]) {
@@ -201,58 +283,85 @@ test('persona switching keeps the hero title section stable', async ({ page }) =
       await document.fonts.ready;
     });
 
-    const heroCopy = page.getByTestId('hero-persona-copy');
+    const heroHeading = page.getByRole('heading', {
+      level: 1,
+      name: 'Plan the day. Guide the crew. Prove the work.',
+    });
+    const heroPreview = page.getByTestId('hero-entry-preview');
     const audienceControl = page.getByRole('tablist', { name: 'Choose your perspective' });
     const baseline = await Promise.all([
-      heroCopy.evaluate((element) => element.getBoundingClientRect().height),
+      heroHeading.evaluate((element) => element.getBoundingClientRect().top),
+      heroPreview.evaluate((element) => element.textContent),
       audienceControl.evaluate((element) => element.getBoundingClientRect().top),
     ]);
 
     for (const persona of personas) {
       await page.getByRole('tab', { name: persona.tab }).click();
-      await expect(page.getByRole('heading', { level: 1, name: persona.headline })).toBeVisible();
+      await expect(heroHeading).toBeVisible();
+      const panel = page.getByTestId('persona-review-panel');
+      await expect(panel.getByRole('heading', { name: persona.review })).toBeVisible();
 
       const current = await Promise.all([
-        heroCopy.evaluate((element) => element.getBoundingClientRect().height),
+        heroHeading.evaluate((element) => element.getBoundingClientRect().top),
+        heroPreview.evaluate((element) => element.textContent),
         audienceControl.evaluate((element) => element.getBoundingClientRect().top),
       ]);
       expect(current).toEqual(baseline);
+      expect(await audienceControl.evaluate((control, panelId) => {
+        const panel = document.getElementById(String(panelId));
+        return Boolean(control.compareDocumentPosition(panel!) & Node.DOCUMENT_POSITION_FOLLOWING);
+      }, 'persona-review-panel')).toBe(true);
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+      await expect(page).toHaveURL(/\/for-landscaping-companies$/);
     }
   }
+});
+
+test('the audience tabs support arrow, Home, and End keyboard navigation', async ({ page }) => {
+  await page.goto('/for-landscaping-companies');
+
+  const companyTab = page.getByRole('tab', { name: 'Landscaping company' });
+  await companyTab.focus();
+  await companyTab.press('ArrowRight');
+  const crewTab = page.getByRole('tab', { name: 'Crew lead' });
+  await expect(crewTab).toBeFocused();
+  await expect(crewTab).toHaveAttribute('aria-selected', 'true');
+  await expect(page).toHaveURL(/\/for-landscaping-companies$/);
+
+  await crewTab.press('End');
+  const managerTab = page.getByRole('tab', { name: 'Property manager' });
+  await expect(managerTab).toBeFocused();
+  await expect(managerTab).toHaveAttribute('aria-selected', 'true');
+
+  await managerTab.press('Home');
+  await expect(companyTab).toBeFocused();
+  await expect(companyTab).toHaveAttribute('aria-selected', 'true');
 });
 
 test('the complete desktop hero stays within the first viewport', async ({ page }, testInfo) => {
   test.skip(Boolean(testInfo.project.use.isMobile), 'Desktop hero geometry requires a desktop browser context.');
 
   const personas = [
-    { tab: 'Yard owner', graphic: 'Your latest service is ready' },
-    { tab: 'Property manager', graphic: '14 of 16 properties on track' },
-    { tab: 'Landscaping company', graphic: 'Today’s operation' },
-    { tab: 'Crew lead', graphic: 'Oak Street residence' },
+    { path: '/for-yard-owners', graphic: 'Your latest service is ready' },
+    { path: '/for-property-managers', graphic: '14 of 16 properties on track' },
+    { path: '/for-landscaping-companies', graphic: '6 of 8 properties complete' },
+    { path: '/for-crew-leads', graphic: 'Oak Street residence' },
   ];
 
   for (const viewport of [{ width: 1024, height: 720 }, { width: 1280, height: 720 }]) {
     await page.setViewportSize(viewport);
-    await page.goto('/for-landscaping-companies');
-    await page.evaluate(async () => {
-      await document.fonts.ready;
-    });
-
     for (const persona of personas) {
-      await page.getByRole('tab', { name: persona.tab }).click();
+      await page.goto(persona.path);
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+      });
       await expect(page.getByText(persona.graphic, { exact: true }).first()).toBeVisible();
 
-      const bounds = await page.evaluate((activeTab) => {
+      const bounds = await page.evaluate(() => {
         const header = document.querySelector('header')?.getBoundingClientRect();
-        const hero = document.querySelector('main > section')?.getBoundingClientRect();
-        const graphic = document.querySelector('main > section > div:last-child')?.getBoundingClientRect();
-        const visual = activeTab === 'Landscaping company'
-          ? document.querySelector('[aria-labelledby="marketing-operations-planner-title"]')?.getBoundingClientRect()
-          : document.querySelector('main > section > div:last-child article')?.getBoundingClientRect();
-        const controls = document.querySelector('[role="tablist"][aria-label="Choose your perspective"]')?.getBoundingClientRect();
-        const actions = document.querySelector('[aria-label="Primary next steps"]')?.getBoundingClientRect();
-        const directSignup = document.querySelector('[aria-label="Direct signup options"]')?.getBoundingClientRect();
+        const hero = document.querySelector('[data-testid="marketing-hero"]')?.getBoundingClientRect();
+        const graphic = document.querySelector('[data-testid="hero-visual"]')?.getBoundingClientRect();
+        const visual = document.querySelector('[data-testid="hero-visual"] article')?.getBoundingClientRect();
 
         return {
           headerBottom: header?.bottom,
@@ -262,12 +371,9 @@ test('the complete desktop hero stays within the first viewport', async ({ page 
           graphicBottom: graphic?.bottom,
           visualTop: visual?.top,
           visualBottom: visual?.bottom,
-          controlsBottom: controls?.bottom,
-          actionsBottom: actions?.bottom,
-          directSignupBottom: directSignup?.bottom,
           viewportBottom: window.innerHeight,
         };
-      }, persona.tab);
+      });
 
       expect(bounds.heroTop).toBe(bounds.headerBottom);
       expect(bounds.heroBottom).toBeLessThanOrEqual(bounds.viewportBottom + 1);
@@ -275,42 +381,25 @@ test('the complete desktop hero stays within the first viewport', async ({ page 
       expect(bounds.graphicBottom).toBeLessThanOrEqual(bounds.viewportBottom + 1);
       expect(bounds.visualTop).toBeGreaterThanOrEqual(bounds.graphicTop! - 1);
       expect(bounds.visualBottom).toBeLessThanOrEqual(bounds.graphicBottom! + 1);
-      expect(bounds.controlsBottom).toBeLessThanOrEqual(bounds.viewportBottom);
-      expect(bounds.actionsBottom).toBeLessThanOrEqual(bounds.viewportBottom);
-      expect(bounds.directSignupBottom).toBeLessThanOrEqual(bounds.viewportBottom);
     }
   }
 });
 
-test('the landscaping-company hero demonstrates route workload balancing', async ({ page }) => {
+test('the compact entry hero stays fixed while the second-section perspective changes', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/for-landscaping-companies');
 
-  const planner = page.locator('section[aria-labelledby="marketing-operations-planner-title"]');
-  await expect(planner.getByRole('heading', { name: 'Today’s operation' })).toBeVisible();
-  await expect(planner.getByText('8 / 9', { exact: true })).toBeVisible();
-  await expect(planner.getByText('46%', { exact: true })).toBeVisible();
-  await expect(planner.getByText('1 stop needs assignment', { exact: true })).toBeVisible();
-  await expect(planner.getByText('Illustrative planning only. Live counts are sample data; no route or schedule is saved.')).toBeVisible();
-
-  const assignmentGroup = planner.getByRole('group', { name: 'Dispatch focus · Copper Ridge HOA · 90 min' });
-  await assignmentGroup.getByText('North crew', { exact: true }).click();
-  await expect(planner.getByRole('radio', { name: 'North crew' })).toBeChecked();
-  await expect(planner.getByText('North crew is 10 minutes over capacity', { exact: true })).toBeVisible();
-  await expect(planner.getByText('Over capacity', { exact: true })).toBeVisible();
-  await expect(planner.getByText('5 stops · 430 planned minutes', { exact: true })).toBeVisible();
-  await expect(planner.getByText('4', { exact: true })).toBeVisible();
-
-  await planner.getByRole('button', { name: 'Use suggested balance' }).click();
-  await expect(planner.getByRole('radio', { name: 'West crew' })).toBeChecked();
-  await expect(planner.getByText('Balanced plan · all 8 stops assigned', { exact: true })).toBeVisible();
-  await expect(planner.getByText('5 stops · 430 planned minutes', { exact: true })).not.toBeVisible();
+  const visual = page.getByTestId('hero-visual');
+  await expect(visual.getByRole('heading', { name: '6 of 8 properties complete' })).toBeVisible();
+  await expect(visual.getByText('Illustrative landscaping company view', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   await page.getByRole('tab', { name: 'Yard owner' }).click();
-  await expect(page.locator('section[aria-labelledby="marketing-operations-planner-title"]')).not.toBeVisible();
-  await expect(page.locator('section[aria-labelledby="marketing-tour-operations-planner-title"]')).not.toBeVisible();
-  await expect(page.getByText('Your latest service is ready', { exact: true })).toBeVisible();
+  await expect(visual.getByRole('heading', { name: '6 of 8 properties complete' })).toBeVisible();
+  await expect(visual.getByText('Illustrative landscaping company view', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('persona-review-panel').getByRole('heading', {
+    name: 'The service story—without the operations clutter.',
+  })).toBeVisible();
   await expect(page.getByTestId('product-tour-owner-plan-preview')).toContainText('Tuesday · 8:00–10:00 AM');
 });
 

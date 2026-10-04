@@ -11,7 +11,9 @@ import {
   workspaceHomeActions,
 } from '../workspaces/features/home/workspaceHome';
 import type { CustomerPortalReadState } from '../workspaces/features/customer/customerWorkspace';
+import type { ManagerTodayQueueItem } from '../domain/managerTodayQueue';
 import { GroverBrand } from './GroverBrand';
+import { ManagerTodayQueue, type ManagerTodayQueueState } from './ManagerTodayQueue';
 import { WorkspaceIcon } from './WorkspaceIcon';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
 
@@ -20,6 +22,7 @@ export function WorkspaceHomePanel({
   completedJobCount,
   hasSelectedJob,
   hasWorkspaceRole,
+  managerTodayQueue,
   onOpen,
   pendingChangeCount,
   persona,
@@ -31,6 +34,12 @@ export function WorkspaceHomePanel({
   completedJobCount: number;
   hasSelectedJob: boolean;
   hasWorkspaceRole: boolean;
+  managerTodayQueue?: {
+    items: ManagerTodayQueueItem[];
+    state: ManagerTodayQueueState;
+    onOpenAll: () => void;
+    onOpenItem: (item: ManagerTodayQueueItem) => void;
+  };
   onOpen: (view: WorkspaceView) => void;
   pendingChangeCount: number;
   persona: WorkspacePersona;
@@ -92,6 +101,11 @@ export function WorkspaceHomePanel({
 
   return (
     <section className="space-y-4 lg:grid lg:grid-cols-12 lg:gap-4 lg:space-y-0">
+      {managerTodayQueue ? (
+        <div className="lg:col-span-12">
+          <ManagerTodayQueue {...managerTodayQueue} />
+        </div>
+      ) : null}
       <article className="relative min-h-[19rem] overflow-hidden rounded-2xl bg-emerald-950 p-5 text-white shadow-grover-md lg:hidden">
         <img
           alt=""

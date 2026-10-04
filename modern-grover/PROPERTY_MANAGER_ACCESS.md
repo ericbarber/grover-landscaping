@@ -1,8 +1,10 @@
 # Customer-controlled Property Manager access contract
 
 Status: product authority decided under [MG-D6](PRODUCT_DECISIONS.md).
-Invitation/grant schema and accepted-invitation read checks are delivered;
-customer issuance, recipient acceptance, revocation routes, and UI are not.
+Invitation/grant schema, accepted-invitation read checks, customer issuance,
+verified-recipient acceptance, revocation routes, and bounded UI are implemented
+and package-validated in the working tree. Live study grants and participant
+validation remain open.
 
 ## Customer action and timing
 
@@ -64,17 +66,17 @@ and matching manager membership. A revoked invitation fails closed even if
 its old grant still says `active`.
 
 The activation transaction still creates only a `property_owner` grant.
-Customer invitation creation, verified-recipient acceptance, grant/membership
-issuance, customer revocation, audit writes, and the Yard Owner UI remain the
-next implementation work. Those writes must lock and recheck the active
-relationship and customer authority before committing.
+Customer invitation creation separately locks and rechecks the active
+relationship and customer authority. Verified-recipient acceptance atomically
+creates the exact-property membership and grant; customer revocation removes
+both access paths, and immutable events retain the lifecycle.
 
-The first UI slice belongs in the Yard Owner's activated provider relationship
-view: “People with access” lists property, recipient, pending/active/revoked
-state, and revoke action. Property Manager Home and Portfolio already withhold
-details without a valid protected read; they should show the newly authorized
-property only after recipient acceptance. The provider view may show status
-without offering an access-grant control.
+The first UI slice is delivered in the Yard Owner's activated provider
+relationship view: “People with access” lists recipient and
+pending/active/revoked state with invite/revoke actions. The minimized Property
+Manager invitation inbox reveals no property details until acceptance, and Home
+and Portfolio withhold details without a valid protected read. The provider
+view does not receive an access-grant control.
 
 ## Acceptance checks before matched study use
 

@@ -15,14 +15,19 @@ boundary; inclusion here alone does not mean a feature shipped.
   acquisition-progress, and authenticated-destination models without changing
   their common brand treatment
 - Public outcome-led homepage with direct workspace entry
-- Persistent hero invitations for private Yard Owner signup and authenticated
-  landscaping-company onboarding
+- Yard-Owner-focused root hero for one private property, with a direct yard
+  signup conversion and no portfolio or provider-operations framing
+- Dedicated company, property-manager, crew, and Yard Owner campaign routes
+  retain their own focused entry actions and capability-checked language that
+  does not imply billing, payment, open discovery, or broad vendor governance
+- Route-specific entry-hero invitations for private Yard Owner signup,
+  landscaping-company onboarding, portfolio discussion, and crew demo
 - Complete persona-specific landing narratives for yard owners, property
   managers, landscaping companies, and crew leads, spanning hero actions,
   previews, trust signals, outcomes, proof, capabilities, and final invitations
-- Prototype-aligned “Today’s operation” landscaping-company hero overview with
-  executive day signals, crew schedule/capacity, interactive dispatch
-  assignment, suggested balancing, and an explicit non-persistent boundary
+- Compact route-specific public hero with a fixed entry action and preview,
+  followed by a dedicated audience-review section with company-first keyboard
+  tabs, role-specific narratives, outcomes, and actions
 - Plan-Care-Proof product narrative with the interactive “Today’s operation”
   company dashboard embedded in Plan and representative Care and Prove previews
 - Responsive product capability and trust sections
@@ -35,6 +40,13 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Evidence standard and trust cards grounded in delivered offline, audit, access, evidence, reporting, and bid workflows
 - First-party conversion events for visits, personas, tour steps, CTAs, form starts, submissions, and failures
 - Anonymous per-tab measurement with UTM attribution, an explicit event allowlist, and no third-party tracking
+- Company first-value onboarding with allowlisted campaign handoff, six
+  server-confirmed milestones from organization profile through delivered
+  proof, exact prerequisite/action/outcome guidance, fail-closed
+  multi-membership handling, and resumable unavailable-state recovery
+- Privacy-minimized company setup telemetry limited to allowlisted stage IDs,
+  with support reporting for stage views, starts, completions, failures, and
+  resumed sessions
 - Support-admin platform lead inbox with contact, intent, attribution, status
   filtering, ownership, follow-up scheduling, and explicit unavailable versus
   empty persistence states
@@ -87,6 +99,10 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Extracted Home workspace feature policy containing shortcut composition,
   persona language access, progress/priority rules, protected-read continuity,
   and route-date interpretation independently of the React panel presentation
+- Company Owner and Company Manager Today queue reducing authorized job and
+  completion-report state to one prioritized handoff per service, with direct
+  Job/Report navigation and explicit loading, unavailable, empty, and bounded
+  list states
 - Core workspace-selection hook owning eligible-persona state, safe fallback
   after access changes, and rollout resolution outside the application shell
 - Extracted customer workspace policy distinguishing Yard Owner and Property
@@ -224,10 +240,37 @@ boundary; inclusion here alone does not mean a feature shipped.
   the minimized persisted confirmed-visit read and fail-closed Yard Owner
   Home/Visits adoption are delivered with loading, valid-empty, missing-access,
   inconsistent-access, unavailable, and retry states and no illustrative fallback
-- Customer-controlled Property Manager delegation persistence now separates
-  the owner activation grant from property-scoped manager grants and requires
-  an accepted matching invitation on protected reads; customer invitation,
-  acceptance, and revocation APIs/UI remain planned
+- Delivered customer-controlled Property Manager delegation now separates the
+  owner activation grant from property-scoped manager grants, requires a
+  verified-email acceptance on protected reads, exposes minimized recipient and
+  owner access UI, and revokes the exact grant and membership immediately with
+  an immutable audit trail
+- Versioned release-quality budgets now enforce production JavaScript, CSS,
+  total-build, public-image, and stable chunk boundaries locally and in CI;
+  browser experience thresholds and privacy-bounded API/worker/offline indicator
+  contracts are prepared without claiming unavailable protected telemetry
+- B9 matched-fixture preparation now includes a strict non-secret manifest
+  template and tested local/CI validators for linked local-review API/database
+  identity, runtime provenance, fixed synthetic request namespaces, per-record
+  API-generated ID ownership, lifecycle state, empty target namespaces, and
+  scoped reset proof; an isolated-runtime-only invitation handoff enables the
+  supported provider chain without returning tokens in production or JSON; it
+  does not claim seeded records or participant evidence
+- Repository release-contract tests are self-contained in restricted shells:
+  Terraform behavior is represented by an injected test double and protected
+  release evidence is validated in-process without changing operator-facing
+  preflight or command-line enforcement
+- B6 trust-center preparation now has an internal claim-to-evidence contract
+  covering identity, access, customer/provider separation, offline storage,
+  photos, notifications, recovery, retention/privacy actions, incidents, and
+  enabled providers; publication and unsupported assurances remain gated
+- B8 search/share repository delivery now enforces public-route and crawler-
+  exclusion policy through a dependency-free local/CI validator. The production
+  frontend server returns durable 404s outside its explicit SPA/static entry
+  allowlist, emits audience-specific copy and metadata in initial HTML, and
+  generates absolute canonical/share, sitemap, and robots URLs from a required
+  exact HTTPS public origin; deployed final-origin, preview/crawler, browser,
+  and approved-content evidence remain gated
 - Delivered immutable provider service-release and customer-status persistence
   linking the exact confirmed first visit, accepted service scope, current
   organization/account/property relationship, authorized provider membership,
@@ -457,7 +500,8 @@ here does not mean every capability has been delivered.
 
 - Cognito authentication and role-aware access
 - Development-only local reviewer identities with fixed role assignments,
-  virtual demo-organization memberships, and per-tab switching
+  virtual demo-organization memberships, per-tab switching, and separate
+  Canyon View/Sage Lane study-owner principals
 - Organization memberships and invitations
 - Tenant-aware resource boundaries
 - Customer, property, crew, manager, and organization onboarding

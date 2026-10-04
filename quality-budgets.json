@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "baselineDate": "2026-10-01",
+  "baselineEnvironment": "Node 24 local production build; CI remains pinned to Node 22",
+  "frontendArtifacts": {
+    "maxLargestJavaScriptChunkBytes": 350000,
+    "maxTotalJavaScriptBytes": 1200000,
+    "maxTotalJavaScriptGzipBytes": 320000,
+    "maxTotalCssBytes": 70000,
+    "maxTotalCssGzipBytes": 15000,
+    "maxTotalDistBytes": 1400000,
+    "maxLargestPublicImageBytes": 115000,
+    "requiredChunkMaximums": {
+      "App-": 290000,
+      "manager-workspaces-": 350000,
+      "PublicLandingPage-": 65000
+    }
+  },
+  "browserExperience": {
+    "publicPrimaryContentReadyMs": 5000,
+    "interactionResponseMs": 500,
+    "maxLayoutShift": 0.1,
+    "supportedPhoneWidthPx": 320,
+    "textZoomPercent": 200,
+    "maxHorizontalOverflowPx": 1
+  },
+  "operationalIndicators": [
+    {
+      "name": "grover_readiness_duration_ms",
+      "kind": "histogram",
+      "allowedDimensions": ["environment", "outcome"],
+      "owner": "engineering_on_call",
+      "runbook": "docs/quality-budgets.md#release-response",
+      "protectedStatus": "external_pending"
+    },
+    {
+      "name": "grover_api_request_duration_ms",
+      "kind": "histogram",
+      "allowedDimensions": ["environment", "route_family", "method", "status_class"],
+      "owner": "engineering_on_call",
+      "runbook": "docs/quality-budgets.md#release-response",
+      "protectedStatus": "external_pending"
+    },
+    {
+      "name": "grover_persistence_unavailable_total",
+      "kind": "counter",
+      "allowedDimensions": ["environment", "route_family", "outcome"],
+      "owner": "engineering_on_call",
+      "runbook": "docs/quality-budgets.md#release-response",
+      "protectedStatus": "external_pending"
+    },
+    {
+      "name": "grover_worker_queue_age_seconds",
+      "kind": "gauge",
+      "allowedDimensions": ["environment", "worker_kind", "outcome"],
+      "owner": "workflow_operator",
+      "runbook": "docs/quality-budgets.md#release-response",
+      "protectedStatus": "external_pending"
+    },
+    {
+      "name": "grover_worker_outcomes_total",
+      "kind": "counter",
+      "allowedDimensions": ["environment", "worker_kind", "outcome"],
+      "owner": "workflow_operator",
+      "runbook": "docs/quality-budgets.md#release-response",
+      "protectedStatus": "external_pending"
+    },
+    {
+      "name": "grover_offline_mutation_outcomes_total",
+      "kind": "counter",
+      "allowedDimensions": ["environment", "queue_kind", "outcome"],
+      "owner": "field_operations_owner",
+      "runbook": "docs/quality-budgets.md#release-response",
+      "protectedStatus": "real_user_measurement_not_approved"
+    }
+  ],
+  "metricPrivacy": {
+    "allowedDimensions": [
+      "environment",
+      "route_family",
+      "method",
+      "status_class",
+      "outcome",
+      "queue_kind",
+      "worker_kind"
+    ],
+    "forbiddenDimensions": [
+      "tenant_id",
+      "organization_id",
+      "account_id",
+      "property_id",
+      "user_id",
+      "token",
+      "request_body",
+      "mutation_content"
+    ],
+    "realUserMeasurementStatus": "not_approved"
+  }
+}

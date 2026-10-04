@@ -7,8 +7,28 @@ export function isProviderEntryPath(pathname: string): boolean {
   return normalized === PROVIDER_ENTRY_PATH;
 }
 
-export function providerWorkspaceHref(path: Extract<ProviderEntryPath, 'owner-operator' | 'company-owner'>): string {
-  return `/app?provider-entry=${path}`;
+function approvedAttributionParams(search: string): URLSearchParams {
+  const source = new URLSearchParams(search);
+  const approved = new URLSearchParams();
+  for (const key of ['utm_source', 'utm_medium', 'utm_campaign']) {
+    const value = source.get(key)?.trim();
+    if (value) approved.set(key, value.slice(0, 120));
+  }
+  return approved;
+}
+
+export function providerEntryHref(search = ''): string {
+  const attribution = approvedAttributionParams(search).toString();
+  return attribution ? `${PROVIDER_ENTRY_PATH}?${attribution}` : PROVIDER_ENTRY_PATH;
+}
+
+export function providerWorkspaceHref(
+  path: Extract<ProviderEntryPath, 'owner-operator' | 'company-owner'>,
+  search = '',
+): string {
+  const params = approvedAttributionParams(search);
+  params.set('provider-entry', path);
+  return `/app?${params.toString()}`;
 }
 
 export function providerEntryModeFromSearch(search: string): Extract<ProviderEntryPath, 'owner-operator' | 'company-owner'> | null {

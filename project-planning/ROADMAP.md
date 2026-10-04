@@ -8,6 +8,35 @@ Current execution order and phase exit evidence live in
 are strategic scope and delivered context; section order is not an active work
 queue.
 
+The approved best-in-class product program is detailed in
+[`BEST_IN_CLASS_DELIVERY_PLAN.md`](BEST_IN_CLASS_DELIVERY_PLAN.md). It adds a
+repository sequence for company first-value onboarding, customer-controlled
+Property Manager access, measurable quality, participant-gated service-thread
+adoption, verified product evidence, public trust, and search/sharing readiness
+without replacing the parallel protected-hosting gates or the concern-boundary
+product decision.
+
+The B10 concern/preference gate now has a decision-ready bounded proposal in
+[`B10_CONCERN_BOUNDARY_DECISION.md`](B10_CONCERN_BOUNDARY_DECISION.md). It does
+not authorize implementation; provider ownership, category/exclusion policy,
+response semantics, retention, privacy/legal review, urgent handling, and
+notification scope still require explicit approval.
+
+B0, B1, and B3 implementation/package gates and the repository-owned B7 quality
+contract are complete in the working tree. B9 now has a tested, CI-enforced
+fixture-manifest safety contract plus a fail-closed target-boundary preflight.
+The local-review backend now supplies the minimal database identity needed to
+link that preflight to the running API. Manifest schema 2 tracks normal
+API-generated IDs by synthetic owner, and the exact study runtime can expose a
+new invitation bearer once so the supported provider chain is seedable without
+weakening production. Distinct fixed study owners and a create-once manifest
+preparer now lock owner scope and target/provenance before any record write.
+Live execution, matched record creation, reset proof, and participant
+observation remain the next evidence phase.
+Browser/runtime evidence, commits, and publication remain blocked by the active
+sandbox or protected infrastructure rather than by a product implementation
+decision.
+
 The active delivery stage is the external protected-hosting boundary after
 Phase 6B post-development validation. Phases 6B1
 through 6B3 align the local Compose helper and hosted CI with the embedded SQLx
@@ -229,13 +258,16 @@ preceding UX priority—a complete persona-specific public landing experience—
 delivered. Yard Owner, property-manager, landscaping-company, and crew-lead
 routes now carry their audience through tailored hero actions, previews, trust
 signals, outcome stories, proof, capabilities, and final invitations instead of
-changing only first-screen copy. The landscaping-company route now makes its
-operations promise tangible by adapting the approved “Today’s operation”
-schedule concept into an interactive, explicitly non-persistent hero overview
-of executive day signals, crew capacity, dispatch focus, and suggested
-balancing. The Plan step of the shared product tour now embeds the same dashboard
-and interactions, giving every audience a concrete view of the landscaping
-company’s operating workspace before the Care and Prove steps. The
+changing only first-screen copy. Each public route now opens with a compact,
+route-specific hero whose headline, action, and preview stay fixed to the entry
+path. Audience comparison begins in the immediately following section, where
+company-first keyboard tabs change the supporting story without changing the
+hero, URL, or canonical metadata. The landscaping-company Plan step makes
+its operations promise tangible by adapting the approved “Today’s operation”
+schedule concept into an interactive, explicitly non-persistent dashboard of
+executive day signals, crew capacity, dispatch focus, and suggested balancing.
+Keeping that detailed interaction in the tour gives every audience a compact,
+predictable first screen before the Plan, Care, and Prove detail. The
 source-controlled [`../design/`](../design/)
 workspace mirrors the public, access, field, manager, customer, revenue, and
 future product areas. Its first low-fidelity set contains twenty SVG wireframes,
@@ -557,15 +589,17 @@ Reviews should approve page composition and responsive behavior before producing
 high-fidelity screens or beginning the corresponding UI slice. Back-end and
 infrastructure work without a visual consequence can continue independently.
 
-The public root homepage now introduces Grover through an outcome-led hero,
-persona-selectable benefits for yard owners, property managers, landscaping
-companies, and crew leads, the Plan-Care-Proof workflow, a product preview,
-capability proof points, and clear workspace calls to action. `/app` remains the
-direct workspace entry.
-The hero now presents both acquisition invitations at once: private Yard Owner
-signup enters `/app/yard-owner`, while company signup enters `/app` for identity
-and first-organization onboarding. Persona selection changes emphasis, not
-access to either path.
+The public root homepage now introduces Grover through a single-property Yard
+Owner hero, followed by persona-selectable benefits for yard owners, property
+managers, landscaping companies, and crew leads, the Plan-Care-Proof workflow,
+a product preview, capability proof points, and clear workspace calls to action.
+`/app` remains the direct workspace entry.
+The entry hero presents the action for its direct route: private Yard Owner
+signup enters `/app/yard-owner`, while company signup enters the provider path
+for identity and first-organization onboarding. The keyboard-accessible persona
+selector begins in the second section and updates supporting content and its
+role-specific action without changing the entry hero, URL, or canonical
+metadata.
 Persona-specific conversion actions now open a consent-based request flow for
 demos, portfolio discussions, or early access. Production requests persist with
 audience, intent, landing path, and UTM attribution; local preview mode reports
@@ -623,9 +657,10 @@ have separate loading/recovery states. Protected navigation stays hidden until
 access succeeds; membership roles determine personas; Support and first-owner
 bootstrap remain explicit exceptions; and unscoped accounts receive Home only.
 Development review no longer requires an AWS identity deployment: a
-production-rejected local-review runtime provides seven fixed role identities,
-virtual demo-organization memberships, and per-tab account switching while
-leaving Cognito as the hosted authentication path.
+production-rejected local-review runtime provides seven fixed base role
+identities plus two isolated study-owner identities, virtual demo-organization
+memberships, and per-tab account switching while leaving Cognito as the hosted
+authentication path.
 Desktop review now honors the selected persona across the full workspace:
 customer roles receive property and portfolio content, crews receive route and
 job execution, company operators receive field and office operations, and

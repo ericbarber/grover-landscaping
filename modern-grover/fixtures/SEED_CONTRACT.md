@@ -1,7 +1,11 @@
 # Isolated matched-record seed contract
 
-Status: implementation contract for a future seeder. A separate local study
-database has now been created and migrated, as recorded in
+Status: implementation contract for a future seeder. A fail-closed manifest
+preparation utility now records the verified target, exact running commit, and
+distinct study-owner principals before any write. Customer-controlled
+Property Manager delegation and a strictly gated local-fixture invitation-token
+handoff are now available to that seeder. A separate local study database has
+now been created and migrated, as recorded in
 [LOCAL_STUDY_ENV.md](LOCAL_STUDY_ENV.md); no Modern Grover fixture records have
 been written. Use the [matched facts](../MATCHED_FIXTURES.md)
 and [authority map](../FIXTURE_READINESS.md) as the task source. The
@@ -23,6 +27,9 @@ and [authority map](../FIXTURE_READINESS.md) as the task source. The
   commit, migration revision, synthetic user IDs, generated record IDs,
   phase, as-of date, and creation time. Keep invitation tokens and any private
   connection data out of logs and committed files.
+- Attribute each API-generated ID to its Canyon View or Sage Lane manifest
+  record. Request/idempotency keys use the reserved namespace; generated IDs
+  retain the supported API's own prefix and must never be fabricated.
 - Reset only records created by the manifest in reverse dependency order,
   verify the counts afterward, and refuse an unknown or partial manifest.
   `backend/tests/owner_provider_invitation_persistence.rs` shows the
@@ -55,11 +62,12 @@ either a controlled test clock or an updated prototype/service-day fixture;
 otherwise the current app would present the route as historical and the task
 would not be comparable.
 
-The activation write creates only a Property Owner membership and portal
-grant. [MG-D6](../PRODUCT_DECISIONS.md) now assigns Property Manager access
-to customer-controlled delegation after relationship activation, but the
-issuance/revocation workflow does not yet exist. Do not fabricate a manager
-grant by SQL and claim the delegation task works. Company Owner
+The activation write creates the Property Owner membership and portal grant.
+[MG-D6](../PRODUCT_DECISIONS.md) assigns Property Manager access to a separate
+customer-controlled invitation after relationship activation; that invitation,
+verified-recipient acceptance, and revocation workflow is implemented. The
+seeder must exercise it separately for Canyon View and Sage Lane. Do not
+fabricate a manager grant by SQL and claim the delegation task works. Company Owner
 accountability, provider-originated property access
 questions, and Plan 8/9 exact revision semantics also need product/API
 decisions before they can be scored as equivalent completion tasks.
@@ -77,3 +85,7 @@ decisions before they can be scored as equivalent completion tasks.
 4. A session record captures fixture revision, app commit, device/viewport,
    displayed date, and network condition. Only then can a supported task be
    compared to the simulated prototype.
+
+Manifest preparation satisfies none of the write, reset, or matched-state
+acceptance gates by itself. It is deliberately a create-once prerequisite so a
+stale or ambiguous provenance record cannot be silently replaced.

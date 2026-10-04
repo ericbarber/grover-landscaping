@@ -1,5 +1,119 @@
 # Version History
 
+- 2026-10-03: Added a fail-closed B9 target-boundary preflight for matched
+  fixture work. It permits only the dedicated port-8081 loopback or Tailscale
+  study origin, requires local-review PostgreSQL readiness, verifies the
+  operator-selected `grover_modern_study` database and successful migration
+  ledger, and rejects occupied Canyon View or Sage Lane namespaces without
+  exposing connection details or record values. Contract tests and local/CI
+  repository gates cover safe and rejected boundaries. The API now reports its
+  database name only with ready PostgreSQL persistence in local-review mode,
+  allowing the preflight to require API/operator linkage. Live execution,
+  seeding, reset proof, and participant evidence remain open. Manifest schema 2
+  also replaces the impossible caller-defined-primary-key assumption with
+  per-record API ID ownership and allowlisted table prefixes. A separate
+  disabled-by-default fixture mode is startup-rejected outside non-production
+  local review on `grover_modern_study`; on that exact target it records a new
+  namespaced invitation's normal delivered transition and returns the bearer
+  once in a response header, never JSON or the manifest. Separate fixed Canyon
+  View and Sage Lane Property Owner reviewers now preserve user-level isolation
+  between the two matched records while retaining the same role contract. A
+  tested create-once manifest preparer reruns target checks, verifies those
+  exact profiles, requires the running source commit and study date, writes with
+  private permissions, and refuses replacement before any application write.
+- 2026-10-02: Separated the public entry hero from audience comparison. Each
+  direct route now opens with its own compact headline, fixed primary action,
+  and capped preview; persona tabs and their supporting narrative, outcomes,
+  and role-specific action begin in the second section. Reviewing another
+  audience no longer mutates the hero, URL, canonical metadata, or original
+  conversion path. The root homepage now leads with one Yard Owner and one yard,
+  while dedicated company, property-manager, crew, and Yard Owner routes retain
+  their focused entry stories. The detailed company planner remains in the Plan tour,
+  keyboard tabs retain arrow/Home/End navigation, and initial server HTML emits
+  the correct route-specific H1. TypeScript, 146 frontend files / 603 tests,
+  production build, artifact budgets, and focused public-site server tests pass;
+  browser execution remains environment-blocked.
+- 2026-10-01: Delivered the B8 search/share repository implementation. Robots
+  guidance excludes authenticated, callback, diagnostics, invitation,
+  shared-token, and design/review routes while preserving the five public
+  audience paths. A dependency-free validator with four contract tests runs
+  locally and in CI. The production server now allowlists real SPA entries,
+  returns durable 404s outside them, emits audience-specific copy and metadata
+  in initial HTML, and generates absolute canonical/share, sitemap, and robots
+  URLs from a required exact HTTPS `PUBLIC_APP_URL`. Final-origin deployment,
+  preview/crawler, browser, captures, and approved-content evidence remain open.
+- 2026-10-01: Drafted the B6 public trust-center content contract without
+  publishing unverified security claims. It maps plain-language access,
+  customer/provider separation, offline, photo, notification, availability,
+  recovery, retention, privacy-action, incident, and provider statements to
+  repository sources, protected evidence, functional owners, correction
+  triggers, prohibited claims, and a publication approval record. Protected
+  runtime facts, named owners, exercises, and approvals remain external gates.
+- 2026-10-01: Prepared the B10 Yard Owner concern/preference decision packet.
+  It recommends an exact delivered-service entry point, three bounded
+  categories, text-only first release, accountable provider assignment,
+  customer-safe lifecycle, separate provider-private work, truthful response
+  and notification semantics, reopen/escalation boundaries, and explicit
+  urgent, billing, privacy, appreciation, and review exclusions. Retention and
+  legal/privacy/operations approvals remain required; no concern feature is
+  authorized or implemented.
+- 2026-10-01: Made repository release-quality validation deterministic in the
+  restricted development environment. Release-preflight contract tests now
+  inject a local Terraform double rather than requiring installed or cached
+  infrastructure tooling, while the protected-release evidence validator
+  exports its pure validation contract so tests do not require child-process
+  permission. The complete repository scope now passes without weakening the
+  real operator preflight or CLI behavior.
+- 2026-10-01: Added the B9 matched-fixture manifest safety contract. The
+  non-secret template reserves separate Canyon View and Sage Lane namespaces,
+  and the dependency-free validator requires the isolated study database,
+  local-review mode, real runtime provenance, fixed reviewer identities,
+  namespace-owned generated IDs, lifecycle evidence, and complete reset proof.
+  Six contract tests plus local/CI repository gates reject shared targets,
+  placeholder runtime metadata, unknown fields, ID leakage, and incomplete
+  seeded/reset state. No matched record or participant result is claimed.
+- 2026-10-01: Added the B7 repository quality contract. A versioned budget file
+  records measured production artifact limits, browser experience thresholds,
+  and privacy-minimized operational indicators. A tested validator reports exact
+  byte regressions and stable-chunk loss, runs after local and CI builds, and the
+  current build passes every limit. The existing cross-browser suite now reads
+  the same readiness, interaction, layout-shift, phone, zoom, and overflow
+  targets. Protected dashboards, alerts, and real-user measurement remain
+  explicitly external/unapproved gates.
+- 2026-10-01: Implemented B3 customer-controlled Property Manager access in
+  the working tree. Yard Owners can issue and revoke exact-property invitations
+  after provider activation; verified recipients accept through a minimized
+  inbox before property details appear. Acceptance atomically creates the
+  property-scoped membership and portal grant, revocation removes both access
+  paths, and immutable events record the lifecycle. PostgreSQL concurrency and
+  isolation coverage compiles, while the 430-test backend command, 146 frontend
+  files / 602 tests, TypeScript, strict Clippy, and the production build pass.
+  The live PostgreSQL branch needs an unavailable `DATABASE_URL`; prepared
+  browser journeys and commit/push remain sandbox-blocked.
+- 2026-10-01: Implemented B1 company first-value onboarding in the working tree.
+  Approved campaign attribution now survives the provider-entry handoff, and
+  one server-derived six-stage path resumes from company profile through active
+  crew, customer/property, published route, completed service, and delivered
+  proof. Multiple memberships and persistence outages fail closed. Bounded
+  transition telemetry feeds a support-only setup-stage dashboard. Package
+  validation passes; browser execution and commit/push remain sandbox-blocked.
+- 2026-10-01: Planned the B0–B10 best-in-class delivery program. The ordered
+  phases cover company first-value onboarding, customer-controlled Property
+  Manager access, measured quality budgets, participant-gated service-thread
+  expansion, protected hosting, verified product captures, a public trust
+  center, search/sharing readiness, and the Yard Owner concern decision gate.
+  The plan records dependencies, non-goals, acceptance evidence, measures, and
+  rollout boundaries without claiming the planned behavior is delivered.
+- 2026-10-01: Added a service-centered Manager Today queue to Company Owner and
+  Company Manager Home. Authorized job and completion-report state is reduced to
+  one prioritized item per service, with direct Job/Report handoff and explicit
+  loading, unavailable, empty, and bounded-list states.
+- 2026-10-01: Established the company-first public website contract. Company
+  setup is now the consistent primary conversion, guided review is secondary,
+  and marketing copy describes delivered planning, field execution, reviewed
+  proof, and follow-through without implying invoicing or payment capability.
+  The landing page also publishes complete hero-image share metadata and image
+  dimensions.
 - 2026-09-30: Extracted completion-report notification delivery from the
   application shell. The management feature boundary now owns queue writes,
   shared busy state, and best-effort history refresh while preserving successful

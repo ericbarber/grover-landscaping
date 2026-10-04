@@ -58,6 +58,20 @@ pub fn local_reviewer_profiles() -> Vec<LocalReviewerProfile> {
             AccessRole::PropertyOwner,
         ),
         profile(
+            "property-owner-canyon",
+            "local-review-property-owner-canyon",
+            "Canyon — Study Property Owner",
+            "property.owner.canyon.local@example.test",
+            AccessRole::PropertyOwner,
+        ),
+        profile(
+            "property-owner-sage",
+            "local-review-property-owner-sage",
+            "Sage — Study Property Owner",
+            "property.owner.sage.local@example.test",
+            AccessRole::PropertyOwner,
+        ),
+        profile(
             "support-admin",
             "local-review-support-admin",
             "Sam — Support Administrator",
@@ -121,9 +135,18 @@ mod tests {
 
         assert_eq!(reviewer_ids.len(), profiles.len());
         assert_eq!(user_ids.len(), profiles.len());
+        assert_eq!(profiles.len(), 9);
         assert_eq!(
             local_reviewer_by_id("crew-member").unwrap().roles,
             vec![crate::access_control::AccessRole::CrewMember]
+        );
+        assert_eq!(
+            local_reviewer_by_id("property-owner-canyon").unwrap().roles,
+            vec![crate::access_control::AccessRole::PropertyOwner]
+        );
+        assert_eq!(
+            local_reviewer_by_id("property-owner-sage").unwrap().roles,
+            vec![crate::access_control::AccessRole::PropertyOwner]
         );
     }
 }

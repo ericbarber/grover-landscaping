@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 2,
+  "manifestKind": "template_only",
+  "fixtureRevision": "modern-grover-matched-v1",
+  "targetDatabaseName": "grover_modern_study",
+  "apiMode": "local_review",
+  "sourceCommit": "0000000000000000000000000000000000000000",
+  "migrationCount": 0,
+  "asOfDate": "2026-10-01",
+  "createdAt": "2026-10-01T00:00:00Z",
+  "phase": "prepared",
+  "records": [
+    {
+      "key": "canyon",
+      "syntheticLabel": "Canyon View",
+      "requestNamespace": "modern_study_canyon_",
+      "ownerReviewerId": "property-owner-canyon",
+      "ownerUserId": "local-review-property-owner-canyon",
+      "managerReviewerId": "property-manager",
+      "crewReviewerId": "crew-lead",
+      "managerDelegationStatus": "not_created",
+      "generatedRecordIds": {},
+      "snapshots": []
+    },
+    {
+      "key": "sage",
+      "syntheticLabel": "Sage Lane",
+      "requestNamespace": "modern_study_sage_",
+      "ownerReviewerId": "property-owner-sage",
+      "ownerUserId": "local-review-property-owner-sage",
+      "managerReviewerId": "property-manager",
+      "crewReviewerId": "crew-lead",
+      "managerDelegationStatus": "not_created",
+      "generatedRecordIds": {},
+      "snapshots": []
+    }
+  ],
+  "resetVerification": {
+    "attemptedAt": null,
+    "remainingManifestRecords": null
+  }
+}

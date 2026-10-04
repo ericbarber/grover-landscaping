@@ -16,13 +16,13 @@ is available at `/modern-grover/`. It is served separately from `/design/`.
 | --- | --- | --- |
 | [Workplan](WORKPLAN.md) | Planning and development sequence, phase exits, and immediate work | Active |
 | [Product decisions](PRODUCT_DECISIONS.md) | Questions that require a product choice before public or role adoption | MG-D6 decided; MG-D1–D5 open |
-| [Property Manager access contract](PROPERTY_MANAGER_ACCESS.md) | Customer-controlled delegation after provider relationship activation | MG-D6 rule decided; API/UI not delivered |
+| [Property Manager access contract](PROPERTY_MANAGER_ACCESS.md) | Customer-controlled delegation after provider relationship activation | API/UI delivered in the working tree; live study grant pending |
 | [Independent personas](personas/README.md) | Five first-wave task and authority hypotheses plus secondary/recovery perspectives | Research hypotheses; not participant findings |
 | [Public claim inventory](CLAIM_INVENTORY.md) | First-pass copy-to-capability audit and wording to test | Source audit; product copy unapproved |
 | [Current journey trace](CURRENT_JOURNEYS.md) | Phone review of normal entry paths and protected-read repairs | Local-review observation; matched records pending |
 | [Matched fixture specification](MATCHED_FIXTURES.md) | Two equivalent synthetic services for fair comparison | Specified; not seeded |
 | [Current-app fixture and authority map](FIXTURE_READINESS.md) | Route, permission, data-chain, and comparison prerequisites | Source review; direct fixture checks pending |
-| [Local-review fixture probe](fixtures/README.md) | Read-only statuses and counts from the private review API | Available; records not seeded |
+| [Local-review fixture probe and manifest contract](fixtures/README.md) | Privacy-minimized readiness probe plus structural manifest validation | Available; seeder and records not delivered |
 | [Isolated seed contract](fixtures/SEED_CONTRACT.md) | Transition order, reset ownership, and date/role gates for matched records | Specified; no seeder or records yet |
 | [Local study environment](fixtures/LOCAL_STUDY_ENV.md) | Separate database, API, and migration baseline | Study API prepared on this host; no matched fixture or reset |
 | [Formative session protocol](research/SESSION_PROTOCOL.md) and [notes template](research/SESSION_NOTES_TEMPLATE.md) | Neutral public and five-role tasks, comparison eligibility, and evidence capture | Prepared; no participant sessions |

@@ -11,11 +11,11 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | R3 production-smoke safety and persistence contract is delivered | Await R2 external access or the P2 product-boundary decision |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and B9 manifest, linked-target, and isolated invitation-handoff safety are validated in the working tree; commits are blocked by read-only `.git`, and browser runs are blocked because the sandbox cannot bind a loopback port | Restart/preflight the fixture-enabled B9 study API, then seed/verify isolated records; commit/push the validated slices when Git access returns and execute browser/runtime quality gates in an allowed environment |
 | Private review | Pi has an ARM64 runtime, healthy PostgreSQL, private HTTPS, and restricted CI SSH grant; deployment remains disabled and unhosted | Publish the workflow, run CI, then verify the first gated deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
-| Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Prior concepts remain review inputs; Modern Grover M1 remains open and eight M2 task moments are simulated | Prepare matched proposal/portal fixtures, resolve entry choices, then run participant sessions |
+| Product | Core workflows plus activity-to-Recovery exception handoff are delivered; B1/B3 and repository-owned B7/B8 work are implemented, B6/B9 preparations are ready, and a bounded B10 decision packet awaits approval | Approve or revise B10 boundaries while B4/B5/B6/B8/B9 evidence proceeds in an authorized environment |
+| Design | Prior concepts remain review inputs; Modern Grover M1 remains open and eight M2 task moments are simulated | Complete matched access/fixture prerequisites and run B9 participant sessions before B2 expansion |
 
 ## Status Legend
 
@@ -27,6 +27,99 @@ infer execution order from section position.
 | Backlog | Valuable but not part of the next delivery slice |
 
 ## In Progress
+
+### Best-in-class product delivery program
+
+The approved [B0–B10 delivery plan](project-planning/BEST_IN_CLASS_DELIVERY_PLAN.md)
+orders company first-value onboarding, customer-controlled Property Manager
+access, measurable quality budgets, participant evidence, service-thread
+expansion, protected hosting, verified product captures, a public trust center,
+search/sharing readiness, and the gated Yard Owner concern boundary. The plan
+keeps repository implementation moving whenever its evidence and product gates
+are available while protected hosting waits in a parallel external lane.
+
+B0, B1, and B3 implementation are present in the working tree. Company setup now
+preserves allowlisted campaign attribution, resumes from six server-confirmed
+milestones through delivered proof, fails closed on multiple memberships and
+persistence outages, and reports bounded stage telemetry. Customer-controlled
+Property Manager delegation now adds owner invitation/revocation, verified-email
+recipient acceptance, exact-property membership and portal grants, immediate
+fail-closed removal, minimized pre-acceptance reads, and an audit trail. The
+complete gate passes 146 frontend files / 603 tests, TypeScript, the production
+build, strict Clippy, and the 433-test backend command. This shell has no
+`DATABASE_URL`, so PostgreSQL-backed test bodies compile but their live branches
+remain an external gate. The prepared mobile/desktop browser acceptance
+cannot execute because this sandbox rejects the Playwright web server's
+loopback bind with `EPERM`. These phases are not recorded as committed delivery
+because the same sandbox exposes `.git` read-only.
+
+B7 now adds a versioned production-artifact and browser-experience budget,
+privacy-bounded operational indicator contracts, an actionable validator with
+failure tests, and local/CI enforcement after production builds. The measured
+B0/B1/B3 build passes every artifact limit. Protected dashboards, alert routing,
+runtime browser measurements, and real-user measurement approval remain external
+gates and are not claimed. B9 matched study fixtures are the next live evidence
+phase when an isolated study API is reachable. B9 preparation now includes
+a strict, versioned, privacy-minimized fixture-manifest template and validator
+in local and CI repository gates. It rejects the shared database, non-review
+API mode, placeholder runtime provenance, records outside the Canyon/Sage
+namespaces, unknown fields, duplicate identifiers, and incomplete reset proof.
+A second tested preflight restricts the API origin, requires the local-review
+API to report its exact database identity, and independently checks that same
+database's migration ledger and empty reserved namespaces without printing
+connection details. Manifest schema 2 attributes normal API-generated IDs to
+their Canyon View or Sage Lane owner while reserving the synthetic namespace
+for request/idempotency keys. A disabled-by-default fixture runtime can return a
+newly created provider invitation token once, outside JSON, only after proving
+non-production local-review PostgreSQL on `grover_modern_study`; it also records
+the normal delivered transition. No record has been seeded; the updated API
+must be restarted and the preflight run before writes, followed by exact access
+and denial verification. Canyon View and Sage Lane now have separate fixed
+local-review Property Owner principals, preventing their owner-scoped records
+from collapsing under one synthetic user. A tested create-once preparer runs
+the boundary preflight, verifies both principals, and writes the ignored
+mode-0600 manifest with exact source/migration provenance before any record
+mutation.
+Repository validation is now deterministic in restricted development shells:
+the release-preflight contract supplies its own fake Terraform command, and
+protected-release evidence tests call the exported validator directly instead
+of spawning a child Node process. The complete repository scope—including
+shell contracts, smoke/evidence/budget/manifest tests, and Compose
+configuration—passes without treating unavailable external tooling as a test
+failure.
+
+B6 preparation now includes an internal
+[public trust-center content contract](docs/public-trust-center-content-contract.md).
+It maps plain-language identity, authorization, customer/provider separation,
+offline, photo, notification, availability, recovery, retention, export,
+erasure, incident, and provider statements to repository sources and required
+protected evidence. It explicitly withholds unsupported compliance, uptime,
+encryption, deletion, backup, provider-enablement, and response promises. No
+public route is approved until B4 evidence and accountable owner reviews exist.
+
+B8 repository delivery now enforces a tested crawler policy for the five public
+routes and excludes authenticated, auth-callback, diagnostics, invitation,
+shared-token, design-review, and Modern Grover review paths. The production
+server returns durable 404 responses for unknown, invalid nested marketing,
+missing-asset, and unshipped review paths. It also emits route-specific copy and
+metadata in initial HTML and generates absolute canonical/share URLs, robots,
+and a five-route sitemap from a production-required exact HTTPS
+`PUBLIC_APP_URL`. The
+[search/sharing readiness contract](docs/search-sharing-readiness.md) records
+the remaining B4 final-origin, deployed preview/crawler, browser, and B5/B6
+approval evidence gates.
+
+The public hero is now a compact, route-specific introduction with no persona
+controls. The root homepage focuses on one Yard Owner and one yard; dedicated
+audience routes retain their own headline, primary action, and preview. Those
+entry details remain fixed to the page the visitor entered. A dedicated
+audience-review section follows immediately, where
+company-first keyboard tabs change the supporting narrative, outcomes, and
+role-specific action without rewriting the hero, URL, canonical metadata, or
+original conversion path. The oversized company planning surface remains in the
+Plan product-tour step. A shorter capped hero visual and prepared phone/desktop
+geometry coverage make the first screen calmer without removing any audience
+route or conversion path.
 
 ### Raspberry Pi development hosting
 
@@ -84,11 +177,11 @@ uses the loaded route date and stop count rather than assigned-job totals.
 The route header also shows the loaded service date. Property Manager Home and
 Portfolio now use the protected customer visit collection; inactive or failed
 access withholds the former preview properties and progress. The local reviewer
-has no valid portal grant, so an authorized two-property task still requires
-fixtures. Next, prepare consistent service fixtures and resolve the open
-audience and role-context choices. The current activation write issues only a
-Property Owner portal grant; the approved Property Manager delegation
-workflow must be implemented before that role's matched task can be scored. The
+still needs matched multi-property grants for the two-property study task.
+Next, prepare consistent service fixtures and resolve the open audience and
+role-context choices. Customer-controlled one-property Property Manager
+invitation, acceptance, and revocation are implemented; B9 still requires
+matched study fixtures before that role's task can be scored. The
 [linked Yard Owner, Company Manager, and Crew Lead prototypes](modern-grover/prototype/README.md)
 are interactive and clearly simulated: they cover proposal acceptance,
 customer consequence, crew fit, exact-version release, field access questions,
@@ -122,6 +215,17 @@ Property Manager, a past two-stop Crew Lead route, and no open manager
 exceptions. It makes fixture gaps reproducible without changing shared data.
 The [isolated fixture seed contract](modern-grover/fixtures/SEED_CONTRACT.md)
 now defines supported owner transitions, reset ownership, and date/role gates.
+Its non-secret working-tree manifest template and tested validator establish the
+allowed record namespaces, provenance, lifecycle, and reset receipt, while
+explicitly remaining structural evidence. A separate tested boundary preflight
+now checks the allowed API origin/mode and the operator-selected study database,
+migrations, and empty namespaces. The backend reports database identity only
+for ready PostgreSQL persistence in local-review mode, allowing the preflight
+to prove API-to-database linkage without exposing its connection string.
+Manifest schema 2 corrects the earlier caller-defined-ID assumption by keeping
+API IDs under their owning synthetic record and validating each supported table
+prefix. The fixture-only invitation handoff is rejected outside the exact study
+runtime and keeps the transient bearer value out of JSON and manifests.
 The [separate local study database](modern-grover/fixtures/LOCAL_STUDY_ENV.md)
 is now created and migrated, with its own active local-review API on port 8081.
 It contains only migration baseline records, including a historical June
@@ -131,11 +235,11 @@ The [MG-D6 product decision](modern-grover/PRODUCT_DECISIONS.md) now assigns
 Property Manager access to the customer after the provider relationship is
 active. The [delegation contract](modern-grover/PROPERTY_MANAGER_ACCESS.md)
 requires property-scoped invitation, recipient acceptance, customer
-revocation, and protected read checks. The invitation/grant schema and
-accepted-invitation protected-read gate are now delivered, while customer
-issuance, recipient acceptance, and revocation routes are not. The current
-activation path still cannot issue that role's grant, so this comparison task stays out of
-completion scoring until the workflow and matched fixture are delivered.
+revocation, and protected read checks. The invitation/grant schema, customer
+issuance, recipient acceptance, revocation routes, minimized UI, and
+accepted-invitation protected-read gate are implemented in the working tree.
+This comparison task stays out of completion scoring until those paths create
+and verify both matched study grants in the isolated runtime.
 The customer portal property and visit read now also requires the provider
 relationship behind an active grant to remain active. An ended relationship
 with a stale active grant fails closed; the isolated database lifecycle test
@@ -156,6 +260,21 @@ Goal: keep current-state evidence separate from future design direction, then
 resolve the most consequential continuity flaws in reviewable design slices.
 
 Current state:
+
+- The public website now has an approved company-first positioning boundary:
+  landscaping company owners/managers are the primary buyer, company setup is
+  the primary conversion, and planning, field progress, customer-ready proof,
+  and accountable follow-through form the supported promise. Billing/payment,
+  open provider discovery, and generalized vendor-governance claims remain
+  explicitly outside the launch promise. Audience-specific secondary paths are
+  retained, and social metadata uses the production hero asset.
+- Company Owner and Company Manager Home now begins with a short, service-
+  centered Today queue derived from already-authorized job and completion-report
+  reads. It prioritizes requested proof corrections, report review, evidence
+  blockers, active field work, and past/today schedule attention; each item opens
+  the exact Job workflow instead of sending the manager through a tool directory.
+  Loading and unavailable reads remain explicit and never become a false empty
+  or all-clear queue.
 
 - A validated [current frontend mirror](design/prototypes/current-frontend-review/README.md)
   represents eight public, company, crew, Yard Owner, and property-manager
@@ -1081,35 +1200,35 @@ its work, decisions, evidence needs, and most relevant next step.
 Current state:
 
 - Yard Owner, property-manager, landscaping-company, and crew-lead campaign
-  routes now personalize the hero, action hierarchy, product preview,
+  routes now open with a route-specific hero and fixed entry action before
+  personalizing the focused audience panel,
   perspective introduction, trust signals, outcome story, product tour, proof
   cards, capability set, and final invitation.
-- The landscaping-company hero now adapts the approved “Today’s operation”
+- The landscaping-company Plan tour adapts the approved “Today’s operation”
   prototype into a responsive, non-persistent owner overview with crews active,
   route progress, unassigned and at-risk signals, crew schedule/capacity, and an
-  interactive dispatch decision. Visitors can expose capacity risk and apply a
-  suggested balance without changing a real schedule.
+  interactive dispatch decision. Keeping this detailed interaction in the tour
+  lets the hero use the same compact preview structure for every audience.
 - Every public product-tour heading, step, explanation, outcome, and preview now
   follows the active audience. Yard Owners see upcoming care, visit progress,
   and controlled review; property managers see portfolio readiness, exceptions,
   and reporting; crews see routes, stop work, and handoff. The interactive
   “Today’s operation” dispatch dashboard remains exclusive to companies.
-- The audience selector switches the complete page story and canonical route
-  without a reload while retaining campaign query parameters and first-party
-  measurement.
-- The hero copy reserves the tallest persona composition at each responsive
-  width, so changing audiences does not move the selector or surrounding title
-  layout while only the selected persona remains visible and accessible.
-- The two-column desktop hero now occupies the viewport remaining below the
-  sticky header. Responsive type, spacing, and an intermediate-width planner
-  density keep the persona selector, actions, and complete visual together
-  above the fold at 1024 px and wider laptop layouts.
-- Yard and company signup remain visible from every persona view; the primary
-  action instead follows the active audience through private yard setup,
-  company onboarding, a portfolio discussion, or a field-workflow demo.
-- Responsive browser coverage verifies all four direct routes, page-level
-  persona continuity, canonical metadata, live audience switching, the embedded
-  operations tour, and mobile reflow.
+- A dedicated audience-review section immediately after the hero changes the
+  supporting page story without a reload while retaining the entry URL,
+  canonical metadata, campaign query parameters, and fixed hero action.
+- The active review panel is connected to its tab, and arrow, Home, and End keys
+  move both focus and selection in company-first order.
+- The two-column entry hero uses intrinsic content height and a capped visual
+  instead of forcing a tall full-viewport planner. Prepared geometry coverage
+  checks the complete hero at 1024 px and wider laptop layouts.
+- The second-section action follows the reviewed audience through private yard
+  setup, company onboarding, a portfolio discussion, or a field-workflow demo;
+  the hero action remains tied to the route the visitor entered.
+- Responsive browser coverage is prepared for all four direct routes,
+  entry-hero continuity, canonical metadata, live audience review, the embedded
+  operations tour, and mobile reflow. Browser execution remains environment-
+  blocked.
 
 Next slices:
 
@@ -1835,18 +1954,17 @@ or crew assignment.
 ### Public product experience
 
 - Public root homepage introduces Grover without requiring authentication
-- Outcome-led hero positions Grover around the plan, field care, and customer-ready proof
-- Hero signup invitations now keep both acquisition paths visible: Yard Owners
+- The root hero focuses on one Yard Owner, one yard, and the story across its
+  visits; multi-property and provider operations remain in their dedicated routes
+- Each direct public route opens with its own focused hero action: Yard Owners
   enter the private yard workspace and landscaping companies enter authenticated
-  organization onboarding without first changing the audience selector
-- Interactive audience selector tailors the complete landing-page narrative for
-  yard owners, property managers, landscaping companies, and crew leads,
-  including the hero, trust, proof, capabilities, and final invitation
-- Persona-specific hero copy shares one responsive intrinsic-height region, so
-  switching audiences does not cause the title or selector to jump
-- The complete two-column desktop hero fits below the sticky header in the
-  first viewport, keeping persona controls, actions, and the full visual panel
-  visible together at supported laptop widths
+  organization onboarding without first using an audience selector
+- The audience selector begins in the second section and tailors the supporting
+  narrative for yard owners, property managers, landscaping companies, and crew
+  leads without changing the entry hero, URL, or canonical metadata
+- Route-specific hero copy shares one responsive intrinsic-height region, so
+  the complete two-column hero fits below the sticky header at supported laptop
+  widths without placing persona controls in the first screen
 - Product preview, Plan-Care-Proof workflow, capability story, trust cues, and repeated workspace calls to action create a complete marketing narrative
 - `/app` remains the direct authenticated or auth-disabled workspace entry, while callbacks, invitations, diagnostics, shared bids, and shared reports retain dedicated routing
 - Installed application sessions now start directly at `/app`

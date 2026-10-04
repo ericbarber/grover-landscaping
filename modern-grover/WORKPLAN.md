@@ -83,8 +83,7 @@ work. No actual photo is supplied. All six moments pass 320, 390, and 1440px
 state, privacy, focus, and overflow checks. The current-app route/API authority
 review is recorded in the [fixture map](FIXTURE_READINESS.md), and separate
 Property Manager and Company Owner task perspectives are available for study.
-Matched records, role delegation implementation, and participant evidence remain
-before React adoption.
+Matched records and participant evidence remain before React adoption.
 
 The separate Property Manager and Company Owner task concepts now cover an
 authorized two-property scan, a versioned access-guidance response, company
@@ -96,17 +95,32 @@ manager exception path. Property Manager Portfolio and Home now read the
 protected visit collection; the local reviewer has no valid grant, so sample
 properties are withheld. The earlier preview-only Proof and Approvals tabs
 are not claimed in this protected workspace. These moments cannot be scored
-as matched task completion by seeding records alone. The activation path only
-issues a Property Owner portal grant; Property Manager delegation/issuance
-needs implementation before that role's matched fixture. Next safe
+as matched task completion by seeding records alone. The activation path issues
+a Property Owner portal grant; the separate customer-controlled Property
+Manager invitation, acceptance, and revocation lifecycle is implemented. The
+matched fixture must exercise it rather than insert grants directly. Next safe
 slice: prepare repeatable Yard Owner proposal/portal fixture copies and verify
 their grant, scope, and normal entry before a participant comparison.
 The [isolated seed contract](fixtures/SEED_CONTRACT.md) now fixes the target
 database boundary, transition order, reset ownership, and acceptance checks.
 The [local study database](fixtures/LOCAL_STUDY_ENV.md) has been created and
-migrated twice with 124 successful migrations. A separate local-review study
+migrated twice with 125 successful migrations as of the recorded environment
+check. A separate local-review study
 API now runs on port 8081 and reports the expected baseline through the
-read-only probe. Seeder, reset, and matched-record validation remain open.
+read-only probe. A tested, privacy-minimized target-boundary preflight now
+rejects the shared database, non-local API origins or mode, missing migrations,
+and occupied fixture namespaces. The backend returns its database name only
+from ready PostgreSQL responses in `local_review` mode, and the preflight
+requires that API identity to match the independently inspected study database.
+Manifest schema 2 now records supported API-generated IDs under the synthetic
+record that owns them instead of requiring impossible caller-defined primary
+keys. A fixture-only, production-rejected runtime handoff advances a new
+namespaced provider invitation through its delivered transition and returns the
+bearer value once outside JSON. Canyon View and Sage Lane now use distinct
+fixed Property Owner principals, and a create-once preparation utility verifies
+those profiles plus target/provenance before writing the private manifest. Live
+preflight execution, record seeding, reset, and matched-record validation remain
+open.
 
 The first read-only fixture probe on the September 16 as-of date found zero
 Yard Owner acquisition properties, 403 portal reads for both customer roles,
@@ -118,13 +132,13 @@ The customer-controlled Property Manager delegation rule is now decided in
 [MG-D6](PRODUCT_DECISIONS.md): the customer may delegate one property after
 the company relationship is active, and may revoke that access. The
 [access contract](PROPERTY_MANAGER_ACCESS.md) defines the required API and
-recipient checks. Its invitation/grant migration and accepted-invitation read
-gate are delivered; issuance/revocation endpoints, UI, and matched fixture
-remain development work. The local environment has an active shared review API and a
+recipient checks. Its invitation/grant migration, accepted-invitation read
+gate, issuance/revocation endpoints, and bounded UI are implemented; matched
+study grants remain open. The local environment has an active shared review API and a
 separate migrated study database/API, but no fixture reset path. The next
-writable fixture slice must verify the study target identity and prove
-manifest-owned reset before
-any participant use.
+writable fixture slice must restart the study API, run the boundary preflight
+in the live study environment, and prove manifest-owned reset before any
+participant use.
 The fresh migrations add a June 15 sample route, which remains baseline data
 and cannot be mistaken for a matched current-day record.
 

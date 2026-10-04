@@ -52,6 +52,7 @@ require_files() {
     backend/Cargo.lock \
     backend/src/auth.rs \
     backend/src/main.rs \
+    backend/src/public_site.rs \
     frontend/package-lock.json \
     infra/terraform/environments/dev/.terraform.lock.hcl \
     infra/terraform/environments/dev/main.tf \
@@ -120,11 +121,13 @@ validate_production_guards() {
   rg -q 'production && matches!\(mode, "disabled" \| "local_review"\)' backend/src/auth.rs || errors=$((errors + 1))
   rg -q 'production Cognito URLs must use HTTPS' backend/src/auth.rs || errors=$((errors + 1))
   rg -q 'unsafe_development_auth_modes_are_rejected_in_production' backend/src/auth.rs || errors=$((errors + 1))
+  rg -q 'PUBLIC_APP_URL is required when APP_ENV=production' backend/src/public_site.rs || errors=$((errors + 1))
+  rg -q 'PUBLIC_APP_URL must be an exact HTTPS origin in production' backend/src/public_site.rs || errors=$((errors + 1))
 
   if ((errors)); then
-    failed "production persistence/authentication guard contract is incomplete (${errors} missing assertion(s))"
+    failed "production persistence/authentication/public-origin guard contract is incomplete (${errors} missing assertion(s))"
   else
-    ready "production requires PostgreSQL and rejects unsafe auth modes or non-HTTPS Cognito URLs"
+    ready "production requires PostgreSQL and an exact HTTPS public origin, and rejects unsafe auth modes or non-HTTPS Cognito URLs"
   fi
 }
 

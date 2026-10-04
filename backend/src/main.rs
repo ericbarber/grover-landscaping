@@ -2,10 +2,10 @@ use axum::{
     extract::{Extension, Path, Query, State},
     http::{
         header::{AUTHORIZATION, CONTENT_TYPE},
-        HeaderMap, HeaderName, HeaderValue, Method, StatusCode,
+        HeaderMap, HeaderName, HeaderValue, Method, StatusCode, Uri,
     },
     middleware,
-    response::{IntoResponse, Response},
+    response::{Html, IntoResponse, Response},
     routing::{delete, get, post, put},
     Json, Router,
 };
@@ -36,6 +36,11 @@ use grover_landscaping_api::{
         CompletionReportResponse,
     },
     customer_portal_access::{CustomerPortalAccessRepository, CustomerPortalVisitReadResult},
+    customer_property_manager_access::{
+        validate_create_request as validate_customer_property_manager_invitation_request,
+        CreateCustomerPropertyManagerInvitationRequest, CustomerPropertyManagerAccessRepository,
+        InvitationCollectionResult, InvitationWriteResult,
+    },
     customer_visit_communication::{
         validate_customer_question_request, validate_provider_response_request,
         CreateCustomerVisitQuestionRequest, CreateProviderVisitResponseRequest,
@@ -148,18 +153,19 @@ use grover_landscaping_api::{
         OwnerProviderInitialServiceProposalDecisionResult,
         OwnerProviderInitialServiceProposalMessageWriteResult,
         OwnerProviderInitialServiceProposalWriteResult, OwnerProviderInvitationAbuseReportResult,
-        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
-        OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
-        OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
-        OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
-        OwnerProviderProgressResult, OwnerProviderRelationshipActivationResult,
-        OwnerProviderResponseCapabilityResult, OwnerReadResult,
-        PreviewOwnerProviderInvitationRequest, ProposeProviderAssessmentWindowRequest,
-        ProposeProviderFirstVisitRequest, ProviderAssessmentWindowProposalResult,
-        PublishOwnerProviderInitialServiceProposalRequest,
-        ReportOwnerProviderInvitationAbuseRequest, RevokeOwnerProviderDisclosureGrantRequest,
-        SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
-        TransitionOwnerProviderAssessmentRequest, VerifyOwnerProviderInvitationRecipientRequest,
+        OwnerProviderInvitationCreateResult, OwnerProviderInvitationDeliveryResult,
+        OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
+        OwnerProviderInvitationRecipientCheckResult, OwnerProviderOpportunityResponseResult,
+        OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
+        OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
+        OwnerProviderRelationshipActivationResult, OwnerProviderResponseCapabilityResult,
+        OwnerReadResult, PreviewOwnerProviderInvitationRequest,
+        ProposeProviderAssessmentWindowRequest, ProposeProviderFirstVisitRequest,
+        ProviderAssessmentWindowProposalResult, PublishOwnerProviderInitialServiceProposalRequest,
+        RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
+        RevokeOwnerProviderDisclosureGrantRequest, SaveOwnerWorkspaceRequest,
+        SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
+        VerifyOwnerProviderInvitationRecipientRequest,
     },
     photo_processing::{start_photo_processing_worker, PhotoProcessingWorkerConfig},
     photo_storage,
@@ -189,6 +195,7 @@ use grover_landscaping_api::{
         CustomerPropertyPortfolioReadResult, PropertyPortfolioListResult,
         PropertyPortfolioMutationResult, PropertyPortfolioRepository,
     },
+    public_site::PublicSite,
     service_mobilization::{
         validate_release_request, validate_service_day_event_request,
         CustomerServiceDayEventRecord, CustomerServiceDayEventWriteResult,
@@ -260,10 +267,14 @@ struct AppState {
     marketing_events: MarketingEventRepository,
     owner_acquisition: OwnerAcquisitionRepository,
     customer_portal: CustomerPortalAccessRepository,
+    property_manager_access: CustomerPropertyManagerAccessRepository,
     service_mobilization: ServiceMobilizationRepository,
     customer_visit_communication: CustomerVisitCommunicationRepository,
     customer_visit_recommendations: CustomerVisitRecommendationRepository,
+    local_fixture_mode: bool,
 }
+
+const LOCAL_FIXTURE_INVITATION_TOKEN_HEADER: &str = "x-grover-local-fixture-invitation-token";
 
 macro_rules! organization_ids_or_return {
     ($result:expr) => {
@@ -279,6 +290,8 @@ struct HealthResponse {
     status: &'static str,
     service: &'static str,
     persistence: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    database_name: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -535,6 +548,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         accounts,
         owner_acquisition,
         customer_portal,
+        property_manager_access,
         service_mobilization,
         customer_visit_communication,
         customer_visit_recommendations,
@@ -558,6 +572,8 @@ async fn app_from_env() -> Result<Router, DynError> {
             let marketing_leads = MarketingLeadRepository::from_pool(pool.clone());
             let marketing_events = MarketingEventRepository::from_pool(pool.clone());
             let customer_portal = CustomerPortalAccessRepository::from_pool(pool.clone());
+            let property_manager_access =
+                CustomerPropertyManagerAccessRepository::from_pool(pool.clone());
             let service_mobilization = ServiceMobilizationRepository::from_pool(pool.clone());
             let customer_visit_communication =
                 CustomerVisitCommunicationRepository::from_pool(pool.clone());
@@ -583,6 +599,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 accounts,
                 owner_acquisition,
                 customer_portal,
+                property_manager_access,
                 service_mobilization,
                 customer_visit_communication,
                 customer_visit_recommendations,
@@ -609,6 +626,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             AccountRepository::new(),
             OwnerAcquisitionRepository::new(),
             CustomerPortalAccessRepository::default(),
+            CustomerPropertyManagerAccessRepository::default(),
             ServiceMobilizationRepository::default(),
             CustomerVisitCommunicationRepository::default(),
             CustomerVisitRecommendationRepository::default(),
@@ -626,6 +644,20 @@ async fn app_from_env() -> Result<Router, DynError> {
         .map_err(configuration_error)?;
 
     let auth = AuthService::from_env(production).await?;
+    let local_fixture_mode_value = std::env::var("MODERN_GROVER_FIXTURE_MODE").ok();
+    let local_fixture_database_name = if local_fixture_mode_value.as_deref() == Some("enabled") {
+        jobs.database_name().await
+    } else {
+        None
+    };
+    let local_fixture_mode = validate_local_fixture_mode(
+        local_fixture_mode_value.as_deref(),
+        production,
+        auth.is_local_review(),
+        persistence,
+        local_fixture_database_name.as_deref(),
+    )
+    .map_err(configuration_error)?;
     let organizations = if auth.is_local_review() {
         organizations.with_local_reviewers()
     } else {
@@ -636,11 +668,14 @@ async fn app_from_env() -> Result<Router, DynError> {
     let frontend_dist = PathBuf::from(
         std::env::var("FRONTEND_DIST_DIR").unwrap_or_else(|_| "../frontend/dist".to_string()),
     );
+    let public_site = PublicSite::from_environment(frontend_dist.clone(), production)
+        .map_err(|error| configuration_error(error.to_string()))?;
 
     tracing::info!(
         environment = %app_environment,
         persistence,
         auth_mode = ?public_auth_config.mode,
+        local_fixture_mode,
         frontend_dist = %frontend_dist.display(),
         "application runtime configured"
     );
@@ -661,28 +696,35 @@ async fn app_from_env() -> Result<Router, DynError> {
             marketing_events,
             owner_acquisition,
             customer_portal,
+            property_manager_access,
             service_mobilization,
             customer_visit_communication,
             customer_visit_recommendations,
+            local_fixture_mode,
         }),
         persistence,
         persistence == "postgres",
         cors,
         auth,
         frontend_dist,
+        public_site,
         production,
     ))
 }
 
 #[cfg(test)]
 fn app_with_state(state: Arc<AppState>, persistence: &'static str) -> Router {
+    let frontend_dist = PathBuf::from("../frontend/dist");
+    let public_site = PublicSite::new(frontend_dist.clone(), "http://localhost:5173", false)
+        .expect("test public-site configuration should be valid");
     app_with_runtime(
         state,
         persistence,
         false,
         Some(CorsLayer::permissive()),
         AuthService::disabled(),
-        PathBuf::from("../frontend/dist"),
+        frontend_dist,
+        public_site,
         false,
     )
 }
@@ -695,16 +737,20 @@ fn app_with_runtime(
     cors: Option<CorsLayer>,
     auth: AuthService,
     frontend_dist: PathBuf,
+    public_site: PublicSite,
     production: bool,
 ) -> Router {
     let readiness_state = Arc::clone(&state);
+    let expose_database_identity =
+        should_expose_database_identity(production, database_required, &auth);
     let auth = auth.with_organization_repository(state.organizations.clone());
+    let public_site = Arc::new(public_site);
     let public_auth_config = auth.public_config();
     let index_file = frontend_dist.join("index.html");
+    let frontend_index = ServeFile::new(index_file.clone());
     let shared_bid_frontend = ServeFile::new(index_file.clone());
     let shared_report_frontend = ServeFile::new(index_file.clone());
-    let frontend_service =
-        ServeDir::new(frontend_dist).not_found_service(ServeFile::new(index_file));
+    let frontend_service = ServeDir::new(frontend_dist);
 
     let mut router = Router::new()
         .route("/health", get(move || health(persistence)))
@@ -820,6 +866,23 @@ fn app_with_runtime(
         .route(
             "/owner-properties/{property_id}/provider-relationships/{activation_id}/first-visit/decision",
             post(decide_owner_provider_first_visit),
+        )
+        .route(
+            "/owner-properties/{property_id}/provider-relationships/{activation_id}/manager-invitations",
+            get(list_customer_property_manager_invitations)
+                .post(create_customer_property_manager_invitation),
+        )
+        .route(
+            "/owner-properties/{property_id}/provider-relationships/{activation_id}/manager-invitations/{invitation_id}/revoke",
+            post(revoke_customer_property_manager_invitation),
+        )
+        .route(
+            "/customer-property-manager-invitations",
+            get(list_recipient_customer_property_manager_invitations),
+        )
+        .route(
+            "/customer-property-manager-invitations/{invitation_id}/accept",
+            post(accept_customer_property_manager_invitation),
         )
         .route(
             "/owner-properties/{property_id}/provider-disclosure-grants/{grant_id}/revoke",
@@ -1012,7 +1075,14 @@ fn app_with_runtime(
         )
         .route(
             "/health/ready",
-            get(move || readiness(Arc::clone(&readiness_state), persistence, database_required)),
+            get(move || {
+                readiness(
+                    Arc::clone(&readiness_state),
+                    persistence,
+                    database_required,
+                    expose_database_identity,
+                )
+            }),
         )
         .route("/reports/{share_token}", get(get_shared_completion_report))
         .route("/shared-bids/{share_token}", get(get_shared_project_bid))
@@ -1262,8 +1332,29 @@ fn app_with_runtime(
         )
         .route_service("/bid-review/{share_token}", shared_bid_frontend)
         .route_service("/report-view/{share_token}", shared_report_frontend)
+        .route("/", get(public_marketing_page))
+        .route("/for-landscaping-companies", get(public_marketing_page))
+        .route("/for-landscaping-companies/", get(public_marketing_page))
+        .route("/for-yard-owners", get(public_marketing_page))
+        .route("/for-yard-owners/", get(public_marketing_page))
+        .route("/for-property-managers", get(public_marketing_page))
+        .route("/for-property-managers/", get(public_marketing_page))
+        .route("/for-crew-leads", get(public_marketing_page))
+        .route("/for-crew-leads/", get(public_marketing_page))
+        .route("/robots.txt", get(public_robots))
+        .route("/sitemap.xml", get(public_sitemap))
+        .route_service("/app", frontend_index.clone())
+        .route_service("/app/", frontend_index.clone())
+        .route_service("/app/{*path}", frontend_index.clone())
+        .route_service("/auth/callback", frontend_index.clone())
+        .route_service("/diagnostics", frontend_index.clone())
+        .route_service(
+            "/organization-invitations/{token}",
+            frontend_index.clone(),
+        )
         .fallback_service(frontend_service)
         .with_state(state)
+        .layer(Extension(public_site))
         .layer(SetResponseHeaderLayer::if_not_present(
             HeaderName::from_static("x-content-type-options"),
             HeaderValue::from_static("nosniff"),
@@ -1294,11 +1385,83 @@ fn app_with_runtime(
     router
 }
 
+fn should_expose_database_identity(
+    production: bool,
+    database_required: bool,
+    auth: &AuthService,
+) -> bool {
+    !production && database_required && auth.is_local_review()
+}
+
+fn validate_local_fixture_mode(
+    value: Option<&str>,
+    production: bool,
+    local_review: bool,
+    persistence: &str,
+    database_name: Option<&str>,
+) -> Result<bool, String> {
+    match value {
+        None | Some("disabled") => Ok(false),
+        Some("enabled")
+            if !production
+                && local_review
+                && persistence == "postgres"
+                && database_name == Some("grover_modern_study") =>
+        {
+            Ok(true)
+        }
+        Some("enabled") => Err(
+            "MODERN_GROVER_FIXTURE_MODE=enabled requires non-production local_review auth and PostgreSQL database grover_modern_study"
+                .to_string(),
+        ),
+        Some(_) => Err(
+            "MODERN_GROVER_FIXTURE_MODE must be exactly enabled or disabled".to_string(),
+        ),
+    }
+}
+
+async fn public_marketing_page(
+    Extension(public_site): Extension<Arc<PublicSite>>,
+    uri: Uri,
+) -> Response {
+    match public_site.render(uri.path()) {
+        Ok(Some(html)) => Html(html).into_response(),
+        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Err(error) => {
+            tracing::error!(reason = %error, "public entry HTML could not be rendered");
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+async fn public_robots(Extension(public_site): Extension<Arc<PublicSite>>) -> Response {
+    match public_site.robots() {
+        Ok(policy) => ([(CONTENT_TYPE, "text/plain; charset=utf-8")], policy).into_response(),
+        Err(error) => {
+            tracing::error!(reason = %error, "crawler policy could not be rendered");
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+async fn public_sitemap(Extension(public_site): Extension<Arc<PublicSite>>) -> Response {
+    match public_site.sitemap() {
+        Ok(sitemap) => {
+            ([(CONTENT_TYPE, "application/xml; charset=utf-8")], sitemap).into_response()
+        }
+        Err(error) => {
+            tracing::error!(reason = %error, "public sitemap could not be rendered");
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
 async fn health(persistence: &'static str) -> impl IntoResponse {
     Json(HealthResponse {
         status: "ok",
         service: "grover-landscaping-api",
         persistence,
+        database_name: None,
     })
 }
 
@@ -1432,23 +1595,31 @@ async fn readiness(
     state: Arc<AppState>,
     persistence: &'static str,
     database_required: bool,
+    expose_database_identity: bool,
 ) -> Response {
-    if database_required && !state.jobs.is_database_healthy().await {
-        return (
-            StatusCode::SERVICE_UNAVAILABLE,
-            Json(HealthResponse {
-                status: "unavailable",
-                service: "grover-landscaping-api",
-                persistence,
-            }),
-        )
-            .into_response();
-    }
+    let database_name = if database_required {
+        let Some(database_name) = state.jobs.database_name().await else {
+            return (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(HealthResponse {
+                    status: "unavailable",
+                    service: "grover-landscaping-api",
+                    persistence,
+                    database_name: None,
+                }),
+            )
+                .into_response();
+        };
+        expose_database_identity.then_some(database_name)
+    } else {
+        None
+    };
 
     Json(HealthResponse {
         status: "ok",
         service: "grover-landscaping-api",
         persistence,
+        database_name,
     })
     .into_response()
 }
@@ -2113,6 +2284,202 @@ async fn activate_owner_provider_relationship(
                 "Provider setup could not be confirmed. No partial setup is reported; reload activation status before retrying.",
             )
         }
+    }
+}
+
+async fn list_customer_property_manager_invitations(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, activation_id)): Path<(String, String)>,
+) -> Response {
+    match state
+        .property_manager_access
+        .list_for_owner(&principal.subject, &property_id, &activation_id)
+        .await
+    {
+        InvitationCollectionResult::Loaded(invitations) => Json(invitations).into_response(),
+        InvitationCollectionResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_property_manager_invitations_unavailable",
+            "Property manager access could not be loaded. Existing access remains unchanged.",
+        ),
+    }
+}
+
+async fn create_customer_property_manager_invitation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, activation_id)): Path<(String, String)>,
+    Json(request): Json<CreateCustomerPropertyManagerInvitationRequest>,
+) -> Response {
+    if !validate_customer_property_manager_invitation_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "customer_property_manager_invitation_invalid",
+                message: "Enter a valid recipient email and a stable retry key before inviting a property manager."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .property_manager_access
+        .create_invitation(&principal.subject, &property_id, &activation_id, request)
+        .await
+    {
+        InvitationWriteResult::Created(invitation) => {
+            (StatusCode::CREATED, Json(invitation)).into_response()
+        }
+        InvitationWriteResult::Replayed(invitation) => Json(invitation).into_response(),
+        InvitationWriteResult::NotFound => resource_not_found_response(
+            "customer_property_manager_relationship_not_found",
+            "The active provider relationship was not found for this property.",
+        ),
+        InvitationWriteResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_property_manager_invitation_not_ready",
+                message: "Property manager access can be granted only while this exact provider relationship and owner access are active."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        InvitationWriteResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_property_manager_invitation_conflict",
+                message: "This invitation conflicts with an existing recipient or retry. Reload access before trying again."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        InvitationWriteResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_property_manager_invitation_unavailable",
+            "The invitation could not be confirmed. Existing property access remains unchanged.",
+        ),
+    }
+}
+
+async fn list_recipient_customer_property_manager_invitations(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> Response {
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "A verified email is required to view property manager invitations."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .property_manager_access
+        .list_for_recipient(verified_email)
+        .await
+    {
+        InvitationCollectionResult::Loaded(invitations) => Json(invitations).into_response(),
+        InvitationCollectionResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_property_manager_invitations_unavailable",
+            "Property manager invitations could not be loaded. No property details were disclosed.",
+        ),
+    }
+}
+
+async fn accept_customer_property_manager_invitation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(invitation_id): Path<String>,
+) -> Response {
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "A verified email is required to accept this invitation.".to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .property_manager_access
+        .accept_invitation(&invitation_id, &principal.subject, verified_email)
+        .await
+    {
+        InvitationWriteResult::Created(invitation)
+        | InvitationWriteResult::Replayed(invitation) => Json(invitation).into_response(),
+        InvitationWriteResult::NotFound => resource_not_found_response(
+            "customer_property_manager_invitation_not_found",
+            "No invitation is available for this verified email.",
+        ),
+        InvitationWriteResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_property_manager_invitation_not_active",
+                message: "This invitation is expired, revoked, or no longer connected to an active provider relationship."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        InvitationWriteResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_property_manager_invitation_conflict",
+                message: "This invitation has already been accepted by another account."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        InvitationWriteResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_property_manager_invitation_unavailable",
+            "Acceptance could not be confirmed. Property access remains unavailable until a retry succeeds.",
+        ),
+    }
+}
+
+async fn revoke_customer_property_manager_invitation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, activation_id, invitation_id)): Path<(String, String, String)>,
+) -> Response {
+    match state
+        .property_manager_access
+        .revoke_invitation(
+            &principal.subject,
+            &property_id,
+            &activation_id,
+            &invitation_id,
+        )
+        .await
+    {
+        InvitationWriteResult::Created(invitation)
+        | InvitationWriteResult::Replayed(invitation) => Json(invitation).into_response(),
+        InvitationWriteResult::NotFound => resource_not_found_response(
+            "customer_property_manager_invitation_not_found",
+            "The invitation was not found for this property relationship.",
+        ),
+        InvitationWriteResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_property_manager_invitation_not_revocable",
+                message: "This invitation is no longer pending or active.".to_string(),
+            }),
+        )
+            .into_response(),
+        InvitationWriteResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_property_manager_invitation_conflict",
+                message: "Property manager access changed. Reload before trying again.".to_string(),
+            }),
+        )
+            .into_response(),
+        InvitationWriteResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_property_manager_invitation_unavailable",
+            "Revocation could not be confirmed. Treat existing access as unchanged and retry.",
+        ),
     }
 }
 
@@ -3292,13 +3659,75 @@ async fn create_owner_provider_invitation(
         )
             .into_response();
     }
+    if state.local_fixture_mode && !is_modern_grover_fixture_key(&request.idempotency_key) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_local_fixture_namespace",
+                message:
+                    "Isolated fixture writes require a Canyon View or Sage Lane request namespace."
+                        .to_string(),
+            }),
+        )
+            .into_response();
+    }
     match state
         .owner_acquisition
         .create_provider_invitation(&principal.subject, &property_id, request)
         .await
     {
         OwnerProviderInvitationCreateResult::Created(creation) => {
-            (StatusCode::ACCEPTED, Json(creation.invitation)).into_response()
+            if !state.local_fixture_mode {
+                return (StatusCode::ACCEPTED, Json(creation.invitation)).into_response();
+            }
+
+            let delivery_token = creation.delivery_token().to_string();
+            let invitation_id = creation.invitation.invitation_id.clone();
+            match state
+                .owner_acquisition
+                .record_provider_invitation_delivery(
+                    &invitation_id,
+                    1,
+                    RecordOwnerProviderInvitationDeliveryRequest {
+                        outcome: "delivered".to_string(),
+                        provider_message_id: Some(format!(
+                            "modern-grover-fixture-{invitation_id}"
+                        )),
+                        failure_code: None,
+                    },
+                )
+                .await
+            {
+                OwnerProviderInvitationDeliveryResult::Saved(invitation) => {
+                    let Ok(header_value) = HeaderValue::from_str(&delivery_token) else {
+                        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+                    };
+                    let mut response =
+                        (StatusCode::ACCEPTED, Json(invitation)).into_response();
+                    response.headers_mut().insert(
+                        HeaderName::from_static(LOCAL_FIXTURE_INVITATION_TOKEN_HEADER),
+                        header_value,
+                    );
+                    response
+                }
+                OwnerProviderInvitationDeliveryResult::Unavailable => {
+                    persisted_resource_unavailable_response(
+                        "local_fixture_invitation_delivery_unavailable",
+                        "The isolated fixture invitation could not be marked delivered. Reset the fixture before retrying.",
+                    )
+                }
+                OwnerProviderInvitationDeliveryResult::NotFound
+                | OwnerProviderInvitationDeliveryResult::Invalid
+                | OwnerProviderInvitationDeliveryResult::InvalidState(_) => (
+                    StatusCode::CONFLICT,
+                    Json(ErrorResponse {
+                        error: "local_fixture_invitation_delivery_conflict",
+                        message: "The isolated fixture invitation was created without a recoverable delivered state. Reset the fixture before retrying."
+                            .to_string(),
+                    }),
+                )
+                    .into_response(),
+            }
         }
         OwnerProviderInvitationCreateResult::Replayed(invitation) => {
             Json(invitation).into_response()
@@ -3337,6 +3766,11 @@ async fn create_owner_provider_invitation(
             )
         }
     }
+}
+
+fn is_modern_grover_fixture_key(value: &str) -> bool {
+    let value = value.trim();
+    value.starts_with("modern_study_canyon_") || value.starts_with("modern_study_sage_")
 }
 
 async fn revoke_owner_provider_invitation(
@@ -10370,6 +10804,79 @@ mod tests {
         assert!(!valid_service_date("07/19/2026"));
     }
 
+    #[test]
+    fn database_identity_is_exposed_only_for_local_review_persistence() {
+        assert!(should_expose_database_identity(
+            false,
+            true,
+            &AuthService::local_review(),
+        ));
+        assert!(!should_expose_database_identity(
+            true,
+            true,
+            &AuthService::local_review(),
+        ));
+        assert!(!should_expose_database_identity(
+            false,
+            false,
+            &AuthService::local_review(),
+        ));
+        assert!(!should_expose_database_identity(
+            false,
+            true,
+            &AuthService::disabled(),
+        ));
+    }
+
+    #[test]
+    fn local_fixture_mode_requires_the_isolated_nonproduction_runtime() {
+        assert_eq!(
+            validate_local_fixture_mode(
+                Some("enabled"),
+                false,
+                true,
+                "postgres",
+                Some("grover_modern_study"),
+            ),
+            Ok(true),
+        );
+        for rejected in [
+            validate_local_fixture_mode(
+                Some("enabled"),
+                true,
+                true,
+                "postgres",
+                Some("grover_modern_study"),
+            ),
+            validate_local_fixture_mode(
+                Some("enabled"),
+                false,
+                false,
+                "postgres",
+                Some("grover_modern_study"),
+            ),
+            validate_local_fixture_mode(
+                Some("enabled"),
+                false,
+                true,
+                "postgres",
+                Some("grover_landscaping"),
+            ),
+            validate_local_fixture_mode(Some("true"), false, true, "postgres", None),
+        ] {
+            assert!(rejected.is_err());
+        }
+        assert_eq!(
+            validate_local_fixture_mode(None, true, false, "seed-local", None),
+            Ok(false),
+        );
+        assert!(is_modern_grover_fixture_key(
+            "modern_study_canyon_invitation"
+        ));
+        assert!(is_modern_grover_fixture_key("modern_study_sage_invitation"));
+        assert!(!is_modern_grover_fixture_key("ordinary-request"));
+    }
+
     fn seed_state() -> Arc<AppState> {
         Arc::new(AppState {
             jobs: JobRepository::default(),
@@ -10386,9 +10893,11 @@ mod tests {
             marketing_events: MarketingEventRepository::default(),
             owner_acquisition: OwnerAcquisitionRepository::new(),
             customer_portal: CustomerPortalAccessRepository::default(),
+            property_manager_access: CustomerPropertyManagerAccessRepository::default(),
             service_mobilization: ServiceMobilizationRepository::default(),
             customer_visit_communication: CustomerVisitCommunicationRepository::default(),
             customer_visit_recommendations: CustomerVisitRecommendationRepository::default(),
+            local_fixture_mode: false,
         })
     }
 
@@ -10397,6 +10906,8 @@ mod tests {
     }
 
     fn seed_app_with_frontend(frontend_dist: PathBuf) -> Router {
+        let public_site = PublicSite::new(frontend_dist.clone(), "https://grover.example", true)
+            .expect("test public-site configuration should be valid");
         app_with_runtime(
             seed_state(),
             "seed-local",
@@ -10404,8 +10915,87 @@ mod tests {
             Some(CorsLayer::permissive()),
             AuthService::disabled(),
             frontend_dist,
+            public_site,
             false,
         )
+    }
+
+    #[tokio::test]
+    async fn property_manager_access_api_validates_and_fails_closed_without_persistence() {
+        let app = seed_app();
+        let owner_collection =
+            "/owner-properties/property-1/provider-relationships/activation-1/manager-invitations";
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(owner_collection)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(owner_collection)
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "recipient_email": "manager@example.com",
+                            "idempotency_key": "property-manager-api-001"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(owner_collection)
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "recipient_email": "invalid",
+                            "idempotency_key": "short"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        for request in [
+            Request::builder()
+                .uri("/customer-property-manager-invitations")
+                .body(Body::empty())
+                .unwrap(),
+            Request::builder()
+                .method("POST")
+                .uri("/customer-property-manager-invitations/invitation-1/accept")
+                .body(Body::empty())
+                .unwrap(),
+            Request::builder()
+                .method("POST")
+                .uri("/owner-properties/property-1/provider-relationships/activation-1/manager-invitations/invitation-1/revoke")
+                .body(Body::empty())
+                .unwrap(),
+        ] {
+            let response = app.clone().oneshot(request).await.unwrap();
+            assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        }
     }
 
     #[tokio::test]
@@ -10668,6 +11258,134 @@ mod tests {
         assert!(value.get("organization_id").is_none());
         assert!(value.get("customer_account_id").is_none());
         assert!(value.get("customer_property_id").is_none());
+    }
+
+    #[tokio::test]
+    async fn local_fixture_mode_returns_one_delivered_invitation_token_outside_json() {
+        let mut state = (*seed_state()).clone();
+        state.local_fixture_mode = true;
+        let app = app_with_state(Arc::new(state), "seed-local");
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method(Method::PUT)
+                    .uri("/owner-workspace")
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(r#"{"display_name":"Fixture Owner"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/owner-properties")
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "display_name": "Canyon View",
+                            "address_line_1": "100 Fixture Way",
+                            "address_line_2": null,
+                            "city": "Phoenix",
+                            "region": "AZ",
+                            "postal_code": "85004",
+                            "country_code": "US",
+                            "coarse_area": "Central Phoenix",
+                            "address_status": "owner_confirmed",
+                            "authority_attested": true
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::CREATED);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let property: Value = serde_json::from_slice(&body).unwrap();
+        let property_id = property["property_id"].as_str().unwrap();
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method(Method::PUT)
+                    .uri(format!("/owner-properties/{property_id}/yard-brief"))
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "status": "ready",
+                            "yard_areas": ["Front yard"],
+                            "care_goals": ["One-time cleanup"],
+                            "cadence_preference": "one_time",
+                            "considerations": "Synthetic fixture; no access code."
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri(format!(
+                        "/owner-properties/{property_id}/provider-invitations"
+                    ))
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "provider_name": "Fixture Yard Care",
+                            "recipient_business_email": "owner.local@example.test",
+                            "expires_in_days": 7,
+                            "idempotency_key": "modern_study_canyon_invitation"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::ACCEPTED);
+        let token = response
+            .headers()
+            .get(LOCAL_FIXTURE_INVITATION_TOKEN_HEADER)
+            .expect("fixture response should carry its transient token")
+            .to_str()
+            .unwrap()
+            .to_string();
+        assert!(token.starts_with("owner_provider_"));
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let invitation: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(invitation["status"], "delivered");
+        assert_eq!(invitation["delivery_status"], "delivered");
+        assert!(invitation.get("delivery_token").is_none());
+        assert!(invitation.get("token_hash").is_none());
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/provider-invitations/preview")
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(
+                        serde_json::json!({ "token": token }).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
     }
 
     #[tokio::test]
@@ -12076,6 +12794,27 @@ mod tests {
             .unwrap();
         assert_eq!(response.status(), StatusCode::ACCEPTED);
 
+        let setup_event = serde_json::json!({
+            "session_id": "ms_123456789",
+            "event_name": "setup_stage_completed",
+            "persona": "landscaping_company",
+            "detail": "first_route",
+            "campaign": "phoenix_launch",
+            "landing_path": "/app?provider-entry=company-owner"
+        });
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/marketing-events")
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(setup_event.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::ACCEPTED);
+
         let invalid = serde_json::json!({
             "session_id": "ms_123456789",
             "event_name": "fingerprint",
@@ -12113,6 +12852,8 @@ mod tests {
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["window_days"], 30);
         assert_eq!(json["totals"]["page_views"], 0);
+        assert_eq!(json["company_setup_stages"], serde_json::json!([]));
+        assert_eq!(json["company_setup_resumes"], 0);
     }
 
     #[tokio::test]
@@ -12132,6 +12873,18 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["persistence"], "seed-local");
+        assert!(json.get("database_name").is_none());
+    }
+
+    #[tokio::test]
+    async fn readiness_withholds_identity_when_required_database_is_unavailable() {
+        let response = readiness(seed_state(), "postgres", true, true).await;
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["status"], "unavailable");
+        assert!(json.get("database_name").is_none());
     }
 
     #[tokio::test]
@@ -12595,7 +13348,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json.as_array().unwrap().len(), 7);
+        assert_eq!(json.as_array().unwrap().len(), 9);
         assert!(json.as_array().unwrap().iter().any(|membership| {
             membership["id"] == "membership_local_review_organization_owner"
                 && membership["role"] == "OrganizationOwner"
@@ -13305,7 +14058,12 @@ mod tests {
         std::fs::create_dir_all(&frontend_dist).unwrap();
         std::fs::write(
             frontend_dist.join("index.html"),
-            "<!doctype html><title>Grover production</title>",
+            "<!doctype html><html><head><title>Grover production</title><meta name=\"description\" content=\"Fallback\" /><meta property=\"og:title\" content=\"Fallback\" /><meta property=\"og:description\" content=\"Fallback\" /><meta property=\"og:image\" content=\"/fallback.webp\" /><meta name=\"twitter:title\" content=\"Fallback\" /><meta name=\"twitter:description\" content=\"Fallback\" /><meta name=\"twitter:image\" content=\"/fallback.webp\" /></head><body><div id=\"root\"></div></body></html>",
+        )
+        .unwrap();
+        std::fs::write(
+            frontend_dist.join("robots.txt"),
+            "User-agent: *\nAllow: /\nDisallow: /app\n",
         )
         .unwrap();
 
@@ -13316,7 +14074,87 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::OK);
         let body = response.into_body().collect().await.unwrap().to_bytes();
-        assert!(String::from_utf8_lossy(&body).contains("Grover production"));
+        let body = String::from_utf8_lossy(&body);
+        assert!(body.contains("Your yard. Every visit. One clear story."));
+        assert!(body.contains("<link rel=\"canonical\" href=\"https://grover.example/\""));
+        assert!(body.contains(
+            "<meta property=\"og:image\" content=\"https://grover.example/brand/grover-landscape-home-hero.webp\""
+        ));
+
+        for route in [
+            "/for-landscaping-companies",
+            "/for-yard-owners/",
+            "/for-property-managers",
+            "/for-crew-leads",
+            "/app",
+            "/app/yard-owner",
+            "/auth/callback",
+            "/diagnostics",
+            "/organization-invitations/invitation-token",
+        ] {
+            let response = seed_app_with_frontend(frontend_dist.clone())
+                .oneshot(Request::builder().uri(route).body(Body::empty()).unwrap())
+                .await
+                .unwrap();
+            assert_eq!(response.status(), StatusCode::OK, "route {route}");
+        }
+
+        let owner_response = seed_app_with_frontend(frontend_dist.clone())
+            .oneshot(
+                Request::builder()
+                    .uri("/for-yard-owners")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let owner_body = owner_response
+            .into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes();
+        let owner_body = String::from_utf8_lossy(&owner_body);
+        assert!(owner_body.contains("Your yard. Every visit. One clear story."));
+        assert!(owner_body.contains("https://grover.example/for-yard-owners"));
+
+        let sitemap_response = seed_app_with_frontend(frontend_dist.clone())
+            .oneshot(
+                Request::builder()
+                    .uri("/sitemap.xml")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(sitemap_response.status(), StatusCode::OK);
+        let sitemap_body = sitemap_response
+            .into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes();
+        let sitemap_body = String::from_utf8_lossy(&sitemap_body);
+        assert!(sitemap_body.contains("https://grover.example/for-crew-leads"));
+        assert!(!sitemap_body.contains("/app"));
+
+        let robots_response = seed_app_with_frontend(frontend_dist.clone())
+            .oneshot(
+                Request::builder()
+                    .uri("/robots.txt")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let robots_body = robots_response
+            .into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes();
+        assert!(String::from_utf8_lossy(&robots_body)
+            .contains("Sitemap: https://grover.example/sitemap.xml"));
 
         let shared_bid_response = seed_app_with_frontend(frontend_dist.clone())
             .oneshot(
@@ -13353,6 +14191,20 @@ mod tests {
             .unwrap()
             .to_bytes();
         assert!(String::from_utf8_lossy(&shared_report_body).contains("Grover production"));
+
+        for route in [
+            "/not-a-real-route",
+            "/for-yard-owners/not-a-real-route",
+            "/modern-grover/",
+            "/design/",
+            "/assets/missing.js",
+        ] {
+            let response = seed_app_with_frontend(frontend_dist.clone())
+                .oneshot(Request::builder().uri(route).body(Body::empty()).unwrap())
+                .await
+                .unwrap();
+            assert_eq!(response.status(), StatusCode::NOT_FOUND, "route {route}");
+        }
 
         std::fs::remove_dir_all(frontend_dist).unwrap();
     }

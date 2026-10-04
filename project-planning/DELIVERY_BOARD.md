@@ -15,13 +15,196 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
-| Design review | SX4 comparison and modern website review guide ready | Ten persona profiles, responsive public-to-workspace preview, and matched comprehension tasks cover five core roles | Conduct participant sessions and synthesize evidence before React adoption |
+| Repository | B0, B1, B3, the repository-owned B7 quality contract, B8 search/share contract, and B9 manifest/linked-target/isolated-token safety are package-validated in the working tree | First value, one-property delegation, stable public-hero entry, and search/share delivery pass 146 frontend files / 603 tests, strict Clippy, the 433-test backend command, production build, measured artifact budgets, and strict crawler/fixture contracts; live PostgreSQL, deployed-origin, and browser branches remain environment-gated | Restart/preflight the fixture-enabled B9 study API, then seed/verify isolated records; restore Git write access, run prepared database/browser/runtime gates in an allowed environment, and commit/push the validated slices |
+| Design review | B9 study materials ready; matched live grants/fixtures incomplete | Ten persona profiles, responsive public-to-workspace preview, and matched comprehension tasks cover five core roles | Seed and verify the isolated fixtures, conduct participant sessions, and synthesize evidence before B2 expansion |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
-| Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
+| Product expansion | B10 decision packet prepared | Core workflows plus exact activity-to-Recovery exception handoff are delivered; the bounded concern proposal remains unapproved | Approve or revise concern ownership, response, retention, privacy, categories, urgent handling, and notification scope before implementation |
 
 ## Execution queue
+
+### B0 — Best-in-class program handoff
+
+State: implementation validated; commit blocked by the active sandbox's
+read-only `.git` mount.
+
+The approved ten-initiative program, dependencies, acceptance evidence,
+measures, rollout, and rollback boundaries are defined in
+[`BEST_IN_CLASS_DELIVERY_PLAN.md`](BEST_IN_CLASS_DELIVERY_PLAN.md).
+
+Immediate order:
+
+1. Commit the validated Yard-Owner-focused homepage and dedicated audience
+   routes as one public-website review unit.
+2. Commit the validated Manager Today service queue as a second review unit.
+3. Preserve the validated B1 company first-value onboarding slice.
+4. Preserve the validated B3 customer-controlled Property Manager access slice.
+5. Preserve the validated B7 artifact budgets and operational indicator contract.
+6. Run B9 matched participant sessions before expanding B2 service-thread
+   production composition.
+7. Continue B4 protected hosting independently when external inputs arrive.
+
+Exit evidence:
+
+- Both current slices are committed without the pre-existing unrelated staged
+  files.
+- The board names B9 live evidence as the next gate and B4 remains an external
+  lane.
+
+### B1 — Company first-value onboarding
+
+State: implementation complete and package-validated in the working tree;
+browser execution and commit/push are environment-blocked.
+
+Delivered implementation:
+
+- Allowlisted UTM attribution survives the landing page, provider path, and
+  authenticated company-setup handoff without carrying arbitrary query data.
+- One server-derived six-stage model covers organization profile, active crew,
+  customer/property, published route, completed service, and delivered proof.
+- The current prerequisite, exact action, and next unlocked outcome are visible;
+  optional team invitation does not block an owner-operator's first value.
+- Fresh, partial, complete, missing-authority, multi-membership conflict,
+  bootstrap conflict, and persistence-unavailable states remain distinct.
+- Transition-based telemetry accepts only allowlisted stage identifiers and the
+  Support dashboard reports views, starts, completions, failures, and resumes.
+
+Validation:
+
+- 144 frontend test files / 595 tests, TypeScript, and production build pass.
+- Rust formatting, strict Clippy, and 428 backend tests pass, including the
+  PostgreSQL migration and all six persisted milestone projections.
+- Mobile/desktop Playwright coverage is implemented in `provider-entry.spec.ts`;
+  execution is pending because this sandbox rejects `127.0.0.1:5173` with
+  `EPERM`.
+
+### B3 — Customer-controlled Property Manager access
+
+State: implementation complete and package-validated in the working tree;
+browser execution and commit/push are environment-blocked.
+
+Delivered implementation:
+
+- A Yard Owner can issue or revoke a verified-email invitation only for the
+  exact property and active provider relationship they control.
+- Acceptance atomically creates an exact-property Property Manager membership
+  and portal grant; retry, duplicate, expired, changed, wrong-recipient, and
+  unavailable states fail closed.
+- The recipient inbox reveals no property details before acceptance, while the
+  owner can distinguish pending, active, revoked, and expired access.
+- Revocation immediately revokes the grant, suspends the exact membership, and
+  records an immutable invited/accepted/revoked audit sequence.
+
+Validation:
+
+- The complete 433-test backend command passes. PostgreSQL concurrency,
+  recipient binding, exact scope, portal visibility, revocation, and audit
+  coverage compiles, but its live branch needs `DATABASE_URL` and remains pending
+  in this shell.
+- The complete frontend suite passes 146 files / 603 tests, TypeScript, and the
+  production build; strict Clippy also passes.
+- Owner and recipient Playwright journeys are implemented; execution is pending
+  because this sandbox rejects the loopback web-server bind.
+
+### B7 — Measured quality and performance budgets
+
+State: repository contract and deterministic artifact baseline complete;
+protected runtime evidence remains externally gated.
+
+Delivered implementation:
+
+- `quality-budgets.json` versions measured JavaScript, CSS, total-build,
+  public-image, and stable chunk limits plus shared browser thresholds.
+- A dependency-free validator reports exact measurements and fails oversized or
+  missing artifacts; contract tests cover success, byte regressions, missing
+  chunk boundaries, and unsafe metric dimensions.
+- Frontend CI and the change-aware local validator enforce budgets after the
+  production build.
+- Operational API, readiness, persistence, worker, and offline indicators have
+  bounded dimensions, named owners, and runbook links. Real-user collection is
+  explicitly unapproved.
+
+Validation:
+
+- The current production build passes all raw, gzip, image, total, and stable
+  chunk budgets.
+- TypeScript and repository contract tests pass. Cross-browser lab checks read
+  the same readiness, response, layout-shift, phone, zoom, and overflow limits.
+- The full repository validation scope passes in a restricted shell: its
+  release-preflight test uses a deterministic Terraform double and protected
+  evidence tests exercise the exported validator without child-process access.
+- Protected dashboards, alert delivery, and runtime baselines cannot be claimed
+  until B4 infrastructure exists; browser execution is also loopback-blocked in
+this sandbox.
+
+### B9 — Matched participant evidence
+
+State: repository preparation delivered; live record seeding, runtime
+verification, and participant sessions are environment/human gated.
+
+Delivered preparation:
+
+- A `template_only` working-tree manifest defines the two fixed Canyon View and
+  Sage Lane namespaces without tokens, connection data, or protected content.
+- A dependency-free validator requires the isolated `grover_modern_study`
+  target, `local_review` API mode, real runtime commit/migration provenance,
+  fixed reviewers, per-record API-generated IDs with allowlisted table
+  prefixes, valid lifecycle snapshots, and a complete zero-remaining-record
+  reset receipt.
+- Contract tests and local/CI repository checks reject shared-database targets,
+  placeholder runtime provenance, unknown private-data fields, out-of-namespace
+  IDs, incomplete seeded state, and incomplete reset proof.
+- A privacy-minimized target-boundary preflight restricts the API to the
+  port-8081 loopback/Tailscale study origin, requires local-review PostgreSQL
+  readiness with the exact study database identity, and rejects a mismatched
+  operator-selected database, missing migrations, or occupied fixture
+  namespaces. Database identity is included in readiness only in local-review
+  mode.
+- A disabled-by-default fixture runtime is startup-rejected unless it is
+  non-production local review on the exact study database. It accepts only the
+  Canyon/Sage request namespaces, records the existing invitation-delivered
+  transition, and returns the one-time bearer value outside JSON without
+  persisting it in the manifest.
+- Separate fixed Canyon and Sage Property Owner principals preserve user-level
+  isolation. A tested create-once preparer reruns the linked target check,
+  verifies those exact profiles, and writes the ignored mode-0600 manifest with
+  explicit running-commit, migration, and study-date provenance.
+
+Remaining gate:
+
+- Restart the isolated service with the updated backend and fixture mode, then
+  execute the linked boundary preflight. Run a purpose-built seeder through supported APIs,
+  validate exact reads and denials, reset twice, and conduct the counterbalanced
+  sessions. The current sandbox cannot reach that loopback API or database, and
+  no participant observation is claimed.
+
+### B2, B4–B6, and B8–B10 — Remaining best-in-class delivery program
+
+State: planned or externally gated; B9 live fixture execution is the next
+evidence gate.
+
+B6 now has an internal trust-center content contract mapping draft wording to
+repository sources, protected evidence, functional approvals, correction
+triggers, and prohibited claims. Publication remains gated on B4 runtime facts,
+named owners, retention/provider decisions, backup/restore and incident-contact
+exercises, and review approval.
+
+B8 now has a dependency-free local/CI crawler-policy gate. It preserves all five
+public marketing paths while requiring exclusions for authenticated, tokenized,
+diagnostic, invitation, and design/review routes. The production server
+allowlists real SPA entries; returns 404 for unknown paths, invalid nested
+marketing paths, missing assets, and unshipped review content; emits
+route-specific initial copy and metadata; and derives absolute canonical/share,
+sitemap, and robots URLs from a production-required exact HTTPS
+`PUBLIC_APP_URL`. Final-origin deployment, preview/crawler, browser, and B5/B6
+approved-content evidence remain gated and are not claimed.
+
+The phase order is B1 company first value, B3 Property Manager access, B7
+quality budgets, B9 participant evidence, and evidence-gated B2 service-thread
+expansion. B4 protected pilot runs in parallel when credentials exist. B6 trust,
+B5 captures, and B8 search/sharing follow stable protected behavior. B10 remains
+a product-decision gate. Refer to the detailed plan rather than inferring scope
+from this summary.
 
 ### F1 — Planning and handoff reset
 
@@ -214,12 +397,16 @@ Delivery evidence:
 
 ### P2 — Yard Owner concern and preference boundary
 
-State: product decision required before implementation.
+State: decision packet prepared; product/operations/privacy/legal approval is
+required before implementation.
 
 Decide support ownership, response expectations, retention, privacy, escalation,
 and the boundary between service concerns, safety events, billing disputes, and
-general communication. Appreciation and external review links remain backlog
-until this boundary and verified provider destinations exist.
+general communication. The bounded recommendation, exclusions, approval fields,
+implementation contract, and acceptance evidence are recorded in
+[`B10_CONCERN_BOUNDARY_DECISION.md`](B10_CONCERN_BOUNDARY_DECISION.md).
+Appreciation and external review links remain backlog until this boundary and
+verified provider destinations exist.
 
 ### UX1 — All-persona manager continuity
 

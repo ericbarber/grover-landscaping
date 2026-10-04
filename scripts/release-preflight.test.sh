@@ -3,8 +3,17 @@ set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 preflight="${repository_root}/scripts/release-preflight.sh"
+test_bin="$(mktemp -d /tmp/grover-release-preflight-test.XXXXXX)"
 
-repository_output="$(bash "${preflight}" --repository-only)"
+cleanup() {
+  rm -rf -- "${test_bin}"
+}
+trap cleanup EXIT
+
+printf '%s\n' '#!/usr/bin/env bash' 'exit 0' >"${test_bin}/terraform"
+chmod +x "${test_bin}/terraform"
+
+repository_output="$(PATH="${test_bin}:${PATH}" bash "${preflight}" --repository-only)"
 [[ "${repository_output}" == *'PREFLIGHT RESULT: READY'* ]]
 [[ "${repository_output}" == *'Failed checks: 0'* ]]
 

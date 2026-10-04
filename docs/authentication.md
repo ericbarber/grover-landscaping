@@ -72,9 +72,10 @@ next cohort-control phases.
 
 The default Docker Compose and mobile-review runtimes use
 `AUTH_MODE=local_review`. The API publishes a fixed allowlist of development
-reviewers, and the authenticated application displays a `Review as` selector for
+reviewers. The authenticated application displays a `Review as` selector for
 Organization Owner, Manager, Crew Lead, Crew Member, Property Manager, Property
-Owner, and Support Administrator.
+Owner, and Support Administrator, plus two clearly labeled synthetic Property
+Owner identities reserved for the Canyon View and Sage Lane comparison records.
 
 The selected reviewer is stored in browser session storage, so separate tabs or
 browsers can review different roles. API requests carry only the selected fixed
@@ -83,8 +84,10 @@ identity and single role from its own allowlist, and overlays an organization
 membership for the local demo organization. No reviewer rows are added to a
 production database.
 
-The local browser matrix covers all seven fixed identities, including separate
-Crew Lead and Crew Member paths, across phone and desktop compositions.
+The local browser matrix covers all seven base role identities, including
+separate Crew Lead and Crew Member paths, across phone and desktop
+compositions. The two study owners share the Property Owner authorization
+contract but retain separate user IDs and records.
 
 Start the complete local stack with:
 

@@ -38,12 +38,23 @@ pub struct MarketingFunnelSegment {
     pub submissions: i64,
 }
 
+#[derive(Clone, Debug, Serialize, sqlx::FromRow)]
+pub struct CompanySetupStageCounts {
+    pub stage: String,
+    pub views: i64,
+    pub starts: i64,
+    pub completions: i64,
+    pub failures: i64,
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub struct MarketingDashboardResponse {
     pub window_days: i32,
     pub totals: MarketingFunnelCounts,
     pub by_persona: Vec<MarketingFunnelSegment>,
     pub by_campaign: Vec<MarketingFunnelSegment>,
+    pub company_setup_stages: Vec<CompanySetupStageCounts>,
+    pub company_setup_resumes: i64,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -97,6 +108,8 @@ impl MarketingEventRepository {
                 },
                 by_persona: Vec::new(),
                 by_campaign: Vec::new(),
+                company_setup_stages: Vec::new(),
+                company_setup_resumes: 0,
             });
         };
         let totals = sqlx::query_as::<_, MarketingFunnelCounts>(
@@ -115,19 +128,70 @@ impl MarketingEventRepository {
         ))
         .fetch_all(pool)
         .await?;
+        let company_setup_stages = sqlx::query_as::<_, CompanySetupStageCounts>(
+            r#"
+            SELECT
+                detail AS stage,
+                COUNT(*) FILTER (WHERE event_name = 'setup_stage_viewed')::bigint AS views,
+                COUNT(*) FILTER (WHERE event_name = 'setup_stage_started')::bigint AS starts,
+                COUNT(*) FILTER (WHERE event_name = 'setup_stage_completed')::bigint AS completions,
+                COUNT(*) FILTER (WHERE event_name = 'setup_stage_failed')::bigint AS failures
+            FROM marketing_conversion_events
+            WHERE occurred_at >= NOW() - INTERVAL '30 days'
+              AND persona = 'landscaping_company'
+              AND event_name IN (
+                  'setup_stage_viewed', 'setup_stage_started',
+                  'setup_stage_completed', 'setup_stage_failed'
+              )
+              AND detail IS NOT NULL
+            GROUP BY detail
+            ORDER BY MIN(occurred_at), detail
+            "#,
+        )
+        .fetch_all(pool)
+        .await?;
+        let company_setup_resumes = sqlx::query_scalar::<_, i64>(
+            r#"
+            SELECT COUNT(*)::bigint
+            FROM marketing_conversion_events
+            WHERE occurred_at >= NOW() - INTERVAL '30 days'
+              AND persona = 'landscaping_company'
+              AND event_name = 'setup_resumed'
+            "#,
+        )
+        .fetch_one(pool)
+        .await?;
         Ok(MarketingDashboardResponse {
             window_days: 30,
             totals,
             by_persona,
             by_campaign,
+            company_setup_stages,
+            company_setup_resumes,
         })
     }
 }
 
 pub fn validate_marketing_event(request: &CreateMarketingEventRequest) -> bool {
+    let event_name = request.event_name.trim();
+    let detail = request.detail.as_deref().map(str::trim);
+    let setup_detail_valid = !event_name.starts_with("setup_")
+        || matches!(
+            detail,
+            Some(
+                "organization"
+                    | "organization_profile"
+                    | "first_crew"
+                    | "first_customer_property"
+                    | "first_route"
+                    | "first_service"
+                    | "first_report"
+                    | "first_value"
+            )
+        );
     (8..=100).contains(&request.session_id.trim().len())
         && matches!(
-            request.event_name.trim(),
+            event_name,
             "page_view"
                 | "persona_selected"
                 | "tour_step_selected"
@@ -135,6 +199,11 @@ pub fn validate_marketing_event(request: &CreateMarketingEventRequest) -> bool {
                 | "form_started"
                 | "form_submitted"
                 | "form_failed"
+                | "setup_stage_viewed"
+                | "setup_stage_started"
+                | "setup_stage_completed"
+                | "setup_stage_failed"
+                | "setup_resumed"
         )
         && matches!(
             request.persona.trim(),
@@ -145,6 +214,7 @@ pub fn validate_marketing_event(request: &CreateMarketingEventRequest) -> bool {
             .as_deref()
             .map(|v| v.trim().len() <= 120)
             .unwrap_or(true)
+        && setup_detail_valid
         && request.landing_path.trim().starts_with('/')
         && request.landing_path.trim().len() <= 500
         && [
@@ -182,8 +252,19 @@ mod tests {
         assert!(validate_marketing_event(&request));
         let invalid = CreateMarketingEventRequest {
             event_name: "fingerprint".into(),
-            ..request
+            ..request.clone()
         };
         assert!(!validate_marketing_event(&invalid));
+        let setup_event = CreateMarketingEventRequest {
+            event_name: "setup_stage_completed".into(),
+            detail: Some("first_route".into()),
+            ..request
+        };
+        assert!(validate_marketing_event(&setup_event));
+        let unsafe_setup_detail = CreateMarketingEventRequest {
+            detail: Some("customer@example.com".into()),
+            ..setup_event
+        };
+        assert!(!validate_marketing_event(&unsafe_setup_detail));
     }
 }

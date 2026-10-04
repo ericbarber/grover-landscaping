@@ -111,7 +111,10 @@ pub struct FirstOwnerSetupProgress {
     pub organization_profile_complete: bool,
     pub team_invitation_created: bool,
     pub crew_configured: bool,
+    pub customer_property_created: bool,
     pub first_route_published: bool,
+    pub first_service_completed: bool,
+    pub first_report_delivered: bool,
     pub completed_steps: i32,
     pub total_steps: i32,
     pub persisted: bool,
@@ -1155,11 +1158,31 @@ async fn first_owner_setup_progress(
             ) AS crew_configured,
             EXISTS (
                 SELECT 1
+                FROM customer_properties property
+                WHERE property.organization_id = organization.id
+                  AND property.status <> 'archived'
+            ) AS customer_property_created,
+            EXISTS (
+                SELECT 1
                 FROM day_plans plan
                 JOIN crews crew ON crew.id = plan.crew_id
                 WHERE crew.organization_id = organization.id
                   AND plan.status IN ('published', 'completed')
-            ) AS first_route_published
+            ) AS first_route_published,
+            EXISTS (
+                SELECT 1
+                FROM service_jobs job
+                WHERE job.organization_id = organization.id
+                  AND job.status = 'completed'
+            ) AS first_service_completed,
+            EXISTS (
+                SELECT 1
+                FROM job_completion_reports report
+                JOIN service_jobs job ON job.id = report.job_id
+                WHERE job.organization_id = organization.id
+                  AND report.report_status = 'delivered'
+                  AND report.delivered_at IS NOT NULL
+            ) AS first_report_delivered
         FROM organizations organization
         WHERE organization.id = $1
           AND organization.status = 'active'
@@ -1173,12 +1196,17 @@ async fn first_owner_setup_progress(
         let organization_profile_complete = row.get("organization_profile_complete");
         let team_invitation_created = row.get("team_invitation_created");
         let crew_configured = row.get("crew_configured");
+        let customer_property_created = row.get("customer_property_created");
         let first_route_published = row.get("first_route_published");
+        let first_service_completed = row.get("first_service_completed");
+        let first_report_delivered = row.get("first_report_delivered");
         let completed_steps = [
             organization_profile_complete,
-            team_invitation_created,
             crew_configured,
+            customer_property_created,
             first_route_published,
+            first_service_completed,
+            first_report_delivered,
         ]
         .into_iter()
         .filter(|complete| *complete)
@@ -1188,9 +1216,12 @@ async fn first_owner_setup_progress(
             organization_profile_complete,
             team_invitation_created,
             crew_configured,
+            customer_property_created,
             first_route_published,
+            first_service_completed,
+            first_report_delivered,
             completed_steps,
-            total_steps: 4,
+            total_steps: 6,
             persisted: true,
         }
     }))
@@ -2984,7 +3015,15 @@ mod tests {
             panic!("local reviewer team should load");
         };
 
-        assert_eq!(memberships.len(), 7);
+        assert_eq!(memberships.len(), 9);
+        assert!(memberships.iter().any(|membership| {
+            membership.user_id == "local-review-property-owner-canyon"
+                && membership.role == AccessRole::PropertyOwner
+        }));
+        assert!(memberships.iter().any(|membership| {
+            membership.user_id == "local-review-property-owner-sage"
+                && membership.role == AccessRole::PropertyOwner
+        }));
         assert!(memberships
             .iter()
             .any(|membership| membership.role == AccessRole::CrewLead));

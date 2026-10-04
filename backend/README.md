@@ -103,6 +103,15 @@ rejected and the mode cannot start with `APP_ENV=production`. The API exposes
 runtime configuration at `GET /auth/config`. See
 [`../docs/authentication.md`](../docs/authentication.md).
 
+The isolated Modern Grover study runtime may additionally set
+`MODERN_GROVER_FIXTURE_MODE=enabled`. Startup rejects that setting unless the
+runtime is non-production, uses `local_review`, has PostgreSQL persistence, and
+is connected to the exact `grover_modern_study` database. In that mode only,
+new Canyon View or Sage Lane provider-invitation requests are marked delivered
+through the normal repository transition and return their one-time bearer value
+in `x-grover-local-fixture-invitation-token`. The token remains absent from JSON,
+logs, manifests, ordinary local review, and every production configuration.
+
 ## Production runtime
 
 The production binary:
@@ -112,6 +121,8 @@ The production binary:
 - verifies access-token signature, issuer, client ID, expiry, and token use;
 - enforces coarse roles plus active PostgreSQL organization membership;
 - exposes `/health/live` and database-backed `/health/ready`;
+- adds the current database name to ready responses only in non-production
+  `local_review` mode so isolated study tooling can verify its target;
 - serves the SPA from `FRONTEND_DIST_DIR`;
 - runs bounded notification and photo-processing workers when configured; and
 - handles `SIGTERM` for graceful shutdown.

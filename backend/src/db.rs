@@ -341,15 +341,15 @@ impl JobRepository {
         Self { pool: Some(pool) }
     }
 
-    pub async fn is_database_healthy(&self) -> bool {
+    pub async fn database_name(&self) -> Option<String> {
         let Some(pool) = &self.pool else {
-            return false;
+            return None;
         };
 
-        sqlx::query_scalar::<_, i32>("SELECT 1")
+        sqlx::query_scalar::<_, String>("SELECT current_database()")
             .fetch_one(pool)
             .await
-            .is_ok()
+            .ok()
     }
 
     pub async fn organization_id_for_job(&self, job_id: &str) -> ResourceOwnershipResult {

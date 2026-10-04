@@ -15,8 +15,9 @@ describe('provider readiness', () => {
       supportedLanguages: ['en', 'es'],
       setupProgress: {
         organizationId: 'org_1', organizationProfileComplete: false,
-        teamInvitationCreated: false, crewConfigured: true, firstRoutePublished: false,
-        completedSteps: 1, totalSteps: 4, persisted: true,
+        teamInvitationCreated: false, crewConfigured: true, customerPropertyCreated: false,
+        firstRoutePublished: false, firstServiceCompleted: false, firstReportDelivered: false,
+        completedSteps: 1, totalSteps: 6, persisted: true,
       },
     });
 

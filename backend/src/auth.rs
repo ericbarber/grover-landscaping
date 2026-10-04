@@ -498,6 +498,8 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/me/access"
         || path == "/customer-portal/visits"
         || path.starts_with("/customer-portal/visits/")
+        || path == "/customer-property-manager-invitations"
+        || path.starts_with("/customer-property-manager-invitations/")
         || path == "/owner-workspace"
         || path == "/owner-properties"
         || path.starts_with("/owner-properties/")
@@ -584,6 +586,12 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     }
     if path.starts_with("/customer-portal/visits/") && path.ends_with("/proof") {
         return principal.verified_email.is_some() && *method == Method::GET;
+    }
+    if path == "/customer-property-manager-invitations" {
+        return principal.verified_email.is_some() && *method == Method::GET;
+    }
+    if path.starts_with("/customer-property-manager-invitations/") && path.ends_with("/accept") {
+        return principal.verified_email.is_some() && *method == Method::POST;
     }
     if path == "/owner-workspace" {
         return principal.verified_email.is_some()
@@ -731,6 +739,15 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
             || (segment_count == 5
                 && owner_property_suffix.contains("/provider-relationships/")
                 && owner_property_suffix.ends_with("/first-visit/decision")
+                && *method == Method::POST)
+            || (segment_count == 4
+                && owner_property_suffix.contains("/provider-relationships/")
+                && owner_property_suffix.ends_with("/manager-invitations")
+                && (*method == Method::GET || *method == Method::POST))
+            || (segment_count == 6
+                && owner_property_suffix.contains("/provider-relationships/")
+                && owner_property_suffix.contains("/manager-invitations/")
+                && owner_property_suffix.ends_with("/revoke")
                 && *method == Method::POST)
             || (segment_count == 3
                 && owner_property_suffix.contains("/provider-invitations/")
@@ -2037,6 +2054,11 @@ mod tests {
         for (method, path) in [
             (Method::GET, "/me/access"),
             (Method::GET, "/customer-portal/visits"),
+            (Method::GET, "/customer-property-manager-invitations"),
+            (
+                Method::POST,
+                "/customer-property-manager-invitations/invitation-1/accept",
+            ),
             (Method::GET, "/owner-workspace"),
             (Method::PUT, "/owner-workspace"),
             (Method::GET, "/owner-properties"),
@@ -2117,6 +2139,18 @@ mod tests {
             (
                 Method::POST,
                 "/owner-properties/property-1/provider-relationships/activation-1/first-visit/decision",
+            ),
+            (
+                Method::GET,
+                "/owner-properties/property-1/provider-relationships/activation-1/manager-invitations",
+            ),
+            (
+                Method::POST,
+                "/owner-properties/property-1/provider-relationships/activation-1/manager-invitations",
+            ),
+            (
+                Method::POST,
+                "/owner-properties/property-1/provider-relationships/activation-1/manager-invitations/invitation-1/revoke",
             ),
             (
                 Method::POST,
@@ -2212,6 +2246,11 @@ mod tests {
             &unverified,
             &Method::GET,
             "/customer-portal/visits"
+        ));
+        assert!(!is_authorized(
+            &unverified,
+            &Method::GET,
+            "/customer-property-manager-invitations"
         ));
     }
 

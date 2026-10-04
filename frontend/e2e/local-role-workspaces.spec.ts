@@ -347,6 +347,70 @@ test('property manager portfolio uses protected visits and withholds them after 
   }
 });
 
+test('property manager accepts a minimized invitation before property details appear', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'property-manager');
+  });
+  let accepted = false;
+  await page.route('http://localhost:8080/customer-property-manager-invitations', (route) => (
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(accepted ? [{
+        invitation_id: 'manager_invitation_1', status: 'accepted', expires_at_epoch_seconds: 1_899_000_000,
+      }] : [{
+        invitation_id: 'manager_invitation_1', status: 'pending', expires_at_epoch_seconds: 1_899_000_000,
+      }]),
+    })
+  ));
+  await page.route(
+    'http://localhost:8080/customer-property-manager-invitations/manager_invitation_1/accept',
+    async (route) => {
+      accepted = true;
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          invitation_id: 'manager_invitation_1', activation_id: 'activation_1',
+          owner_property_id: 'owner_property_1', organization_id: 'org_demo_landscaping',
+          account_id: 'account_1', property_id: 'canyon', owner_user_id: 'owner_1',
+          recipient_email: 'property-manager@example.test', status: 'accepted',
+          accepted_user_id: 'local-review-property-manager', created_at_epoch_seconds: 1_800_000_000,
+          expires_at_epoch_seconds: 1_899_000_000, accepted_at_epoch_seconds: 1_800_000_100,
+          revoked_at_epoch_seconds: null, persisted: true,
+        }),
+      });
+    },
+  );
+  await page.route('http://localhost:8080/customer-portal/visits', (route) => {
+    if (!accepted) {
+      return route.fulfill({
+        status: 403, contentType: 'application/json',
+        body: JSON.stringify({ error: 'customer_portal_access_required', message: 'No active access.' }),
+      });
+    }
+    return route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        properties: [{
+          organization_id: 'org_demo_landscaping', account_id: 'account_1',
+          property_id: 'canyon', property_display_name: 'Canyon View',
+        }],
+        visits: [],
+      }),
+    });
+  });
+
+  await page.goto('/app');
+  await page.getByRole('navigation', { name: 'Desktop workspace' })
+    .getByRole('button', { name: 'Portfolio', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'Review access before property details are shown' })).toBeVisible();
+  await expect(page.getByText('Canyon View')).toHaveCount(0);
+  await expect(page.getByText('One-property access invitation')).toBeVisible();
+  await page.getByRole('button', { name: 'Accept one-property access' }).click();
+  await expect(page.getByText('Invitation accepted. Your protected portfolio is being refreshed.')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Canyon View/ })).toBeVisible();
+});
+
 test('organization owner Team opens the responsive team and access command center', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {

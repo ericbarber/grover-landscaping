@@ -2,6 +2,10 @@ use grover_landscaping_api::customer_portal_access::{
     CustomerPortalAccessRepository, CustomerPortalPropertyAccessResult,
     CustomerPortalVisitReadResult,
 };
+use grover_landscaping_api::customer_property_manager_access::{
+    CreateCustomerPropertyManagerInvitationRequest, CustomerPropertyManagerAccessRepository,
+    InvitationCollectionResult, InvitationWriteResult,
+};
 use grover_landscaping_api::customer_visit_communication::{
     CreateCustomerVisitQuestionRequest, CreateProviderVisitResponseRequest,
     CustomerVisitCommunicationRepository, CustomerVisitMessageWriteResult,
@@ -271,6 +275,20 @@ async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[
     .await
     .expect("test activation events should reset");
     sqlx::query(
+        "DELETE FROM customer_property_manager_access_events
+         WHERE invitation_id IN (
+             SELECT invitation.id
+             FROM customer_property_manager_invitations invitation
+             JOIN owner_provider_relationship_activations activation
+               ON activation.id = invitation.activation_id
+             WHERE activation.owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test customer property manager access events should reset");
+    sqlx::query(
         "DELETE FROM owner_provider_active_relationships
          WHERE activation_id IN (
              SELECT id FROM owner_provider_relationship_activations
@@ -292,6 +310,33 @@ async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[
     .execute(pool)
     .await
     .expect("test portal access should reset");
+    sqlx::query(
+        "DELETE FROM organization_memberships membership
+         USING customer_property_manager_invitations invitation,
+               owner_provider_relationship_activations activation
+         WHERE invitation.activation_id = activation.id
+           AND activation.owner_user_id = ANY($1)
+           AND invitation.accepted_user_id = membership.user_id
+           AND invitation.organization_id = membership.organization_id
+           AND membership.role = 'property_manager'
+           AND membership.scope_type = 'property'
+           AND membership.scope_id = invitation.property_id",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test customer property manager memberships should reset");
+    sqlx::query(
+        "DELETE FROM customer_property_manager_invitations
+         WHERE activation_id IN (
+             SELECT id FROM owner_provider_relationship_activations
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test customer property manager invitations should reset");
     sqlx::query(
         "DELETE FROM owner_provider_relationship_activations
          WHERE owner_user_id = ANY($1)",
@@ -3580,91 +3625,108 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .execute(&pool)
     .await
     .is_err());
-    let manager_invitation_id = "customer_pm_schema_probe_invitation";
-    let manager_grant_id = "customer_pm_schema_probe_grant";
     let manager_user_id = "customer-pm-schema-probe-user";
-    sqlx::query("DELETE FROM customer_portal_access_grants WHERE id = $1")
-        .bind(manager_grant_id)
-        .execute(&pool)
-        .await
-        .expect("prior manager schema probe grant should reset");
-    sqlx::query("DELETE FROM customer_property_manager_invitations WHERE id = $1")
-        .bind(manager_invitation_id)
-        .execute(&pool)
-        .await
-        .expect("prior manager schema probe invitation should reset");
-    assert!(
-        sqlx::query(
-            "INSERT INTO customer_portal_access_grants (
-             id, activation_id, organization_id, account_id, property_id,
-             user_id, access_role, status, scope_type, scope_id
-         ) VALUES ($1, $2, $3, $4, $5, $6,
-                   'property_manager', 'active', 'property', $5)",
-        )
-        .bind(manager_grant_id)
-        .bind(&activation.activation_id)
-        .bind(&activation.organization_id)
-        .bind(&activation.customer_account_id)
-        .bind(&activation.customer_property_id)
-        .bind(manager_user_id)
-        .execute(&pool)
-        .await
-        .is_err(),
-        "manager grant without a customer invitation must fail"
+    let manager_email = "manager-schema@example.test";
+    let manager_access = CustomerPropertyManagerAccessRepository::from_pool(pool.clone());
+    let manager_invitation_request = CreateCustomerPropertyManagerInvitationRequest {
+        recipient_email: manager_email.to_string(),
+        idempotency_key: "manager-schema-probe-001".to_string(),
+    };
+    assert!(matches!(
+        manager_access
+            .create_invitation(
+                owner_b,
+                &property.property_id,
+                &activation.activation_id,
+                manager_invitation_request.clone(),
+            )
+            .await,
+        InvitationWriteResult::InvalidState
+    ));
+    let (first_manager_invitation, second_manager_invitation) = tokio::join!(
+        manager_access.create_invitation(
+            owner_a,
+            &property.property_id,
+            &activation.activation_id,
+            manager_invitation_request.clone(),
+        ),
+        manager_access.create_invitation(
+            owner_a,
+            &property.property_id,
+            &activation.activation_id,
+            manager_invitation_request.clone(),
+        ),
     );
-    sqlx::query(
-        "INSERT INTO customer_property_manager_invitations (
-             id, activation_id, organization_id, account_id, property_id,
-             owner_user_id, recipient_email, status, idempotency_key,
-             accepted_user_id, expires_at, accepted_at
-         ) VALUES ($1, $2, $3, $4, $5, $6,
-                   'manager-schema@example.test', 'accepted',
-                   'manager-schema-probe-001', $7,
-                   NOW() + INTERVAL '7 days', NOW())",
-    )
-    .bind(manager_invitation_id)
-    .bind(&activation.activation_id)
-    .bind(&activation.organization_id)
-    .bind(&activation.customer_account_id)
-    .bind(&activation.customer_property_id)
-    .bind(owner_a)
-    .bind(manager_user_id)
-    .execute(&pool)
-    .await
-    .expect("customer manager invitation should persist beside the owner grant");
-    sqlx::query(
-        "INSERT INTO customer_portal_access_grants (
-             id, activation_id, organization_id, account_id, property_id,
-             user_id, access_role, status, scope_type, scope_id,
-             delegation_invitation_id
-         ) VALUES ($1, $2, $3, $4, $5, $6,
-                   'property_manager', 'active', 'property', $5, $7)",
-    )
-    .bind(manager_grant_id)
-    .bind(&activation.activation_id)
-    .bind(&activation.organization_id)
-    .bind(&activation.customer_account_id)
-    .bind(&activation.customer_property_id)
-    .bind(manager_user_id)
-    .bind(manager_invitation_id)
-    .execute(&pool)
-    .await
-    .expect("customer manager grant should coexist with owner grant");
-    let manager_membership_id = "customer_pm_schema_probe_membership";
-    sqlx::query(
-        "INSERT INTO organization_memberships (
-             id, organization_id, user_id, display_name, role,
-             status, scope_type, scope_id
-         ) VALUES ($1, $2, $3, 'Study manager',
-                   'property_manager', 'active', 'property', $4)",
-    )
-    .bind(manager_membership_id)
-    .bind(&activation.organization_id)
-    .bind(manager_user_id)
-    .bind(&activation.customer_property_id)
-    .execute(&pool)
-    .await
-    .expect("manager membership should match the invited property");
+    let manager_invitation = match (first_manager_invitation, second_manager_invitation) {
+        (InvitationWriteResult::Created(created), InvitationWriteResult::Replayed(replayed))
+        | (InvitationWriteResult::Replayed(replayed), InvitationWriteResult::Created(created)) => {
+            assert_eq!(created, replayed);
+            created
+        }
+        (first, second) => panic!(
+            "concurrent exact manager invitation should create once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert!(manager_invitation.persisted);
+    assert_eq!(manager_invitation.status, "pending");
+    assert!(matches!(
+        manager_access
+            .create_invitation(
+                owner_a,
+                &property.property_id,
+                &activation.activation_id,
+                manager_invitation_request,
+            )
+            .await,
+        InvitationWriteResult::Replayed(ref invitation)
+            if invitation.invitation_id == manager_invitation.invitation_id
+    ));
+    assert!(matches!(
+        manager_access
+            .list_for_owner(owner_a, &property.property_id, &activation.activation_id)
+            .await,
+        InvitationCollectionResult::Loaded(ref invitations)
+            if invitations.iter().any(|invitation| invitation.invitation_id == manager_invitation.invitation_id)
+    ));
+    assert!(matches!(
+        manager_access.list_for_recipient(manager_email).await,
+        InvitationCollectionResult::Loaded(ref invitations)
+            if invitations.iter().any(|invitation|
+                invitation.invitation_id == manager_invitation.invitation_id
+                    && invitation.status == "pending")
+    ));
+    assert!(matches!(
+        manager_access
+            .accept_invitation(
+                &manager_invitation.invitation_id,
+                manager_user_id,
+                "different@example.test",
+            )
+            .await,
+        InvitationWriteResult::NotFound
+    ));
+    assert!(matches!(
+        manager_access
+            .accept_invitation(
+                &manager_invitation.invitation_id,
+                manager_user_id,
+                manager_email,
+            )
+            .await,
+        InvitationWriteResult::Created(ref invitation)
+            if invitation.status == "accepted"
+                && invitation.accepted_user_id.as_deref() == Some(manager_user_id)
+    ));
+    assert!(matches!(
+        manager_access
+            .accept_invitation(
+                &manager_invitation.invitation_id,
+                manager_user_id,
+                manager_email,
+            )
+            .await,
+        InvitationWriteResult::Replayed(_)
+    ));
     let manager_portal_access = CustomerPortalAccessRepository::from_pool(pool.clone());
     let manager_properties = manager_portal_access
         .list_authorized_properties(manager_user_id)
@@ -3696,48 +3758,55 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             &proposal_v2.proposal_id,
         )
         .await;
-    sqlx::query(
-        "UPDATE customer_property_manager_invitations
-         SET status = 'revoked', revoked_at = NOW()
-         WHERE id = $1",
-    )
-    .bind(manager_invitation_id)
-    .execute(&pool)
-    .await
-    .expect("customer invitation should revoke");
+    assert!(matches!(
+        manager_access
+            .revoke_invitation(
+                owner_a,
+                &property.property_id,
+                &activation.activation_id,
+                &manager_invitation.invitation_id,
+            )
+            .await,
+        InvitationWriteResult::Created(ref invitation) if invitation.status == "revoked"
+    ));
+    assert!(matches!(
+        manager_access
+            .revoke_invitation(
+                owner_a,
+                &property.property_id,
+                &activation.activation_id,
+                &manager_invitation.invitation_id,
+            )
+            .await,
+        InvitationWriteResult::Replayed(_)
+    ));
     assert!(matches!(
         manager_portal_access
             .list_authorized_properties(manager_user_id)
             .await,
-        CustomerPortalPropertyAccessResult::InvalidAuthorization
+        CustomerPortalPropertyAccessResult::NotAuthorized
     ));
     assert!(matches!(
         manager_visit_communication
             .get_customer_thread(manager_user_id, "missing-manager-visit")
             .await,
-        CustomerVisitThreadReadResult::InvalidAuthorization
+        CustomerVisitThreadReadResult::NotAuthorized
     ));
     assert!(matches!(
         manager_recommendations
             .list_for_visit(manager_user_id, "missing-manager-visit")
             .await,
-        CustomerRecommendationListResult::InvalidAuthorization
+        CustomerRecommendationListResult::NotAuthorized
     ));
-    sqlx::query("DELETE FROM customer_portal_access_grants WHERE id = $1")
-        .bind(manager_grant_id)
-        .execute(&pool)
-        .await
-        .expect("manager schema probe grant should reset");
-    sqlx::query("DELETE FROM organization_memberships WHERE id = $1")
-        .bind(manager_membership_id)
-        .execute(&pool)
-        .await
-        .expect("manager schema probe membership should reset");
-    sqlx::query("DELETE FROM customer_property_manager_invitations WHERE id = $1")
-        .bind(manager_invitation_id)
-        .execute(&pool)
-        .await
-        .expect("manager schema probe invitation should reset");
+    let manager_audit_kinds = sqlx::query_scalar::<_, String>(
+        "SELECT event_kind FROM customer_property_manager_access_events
+         WHERE invitation_id = $1 ORDER BY event_kind",
+    )
+    .bind(&manager_invitation.invitation_id)
+    .fetch_all(&pool)
+    .await
+    .expect("customer property manager audit trail should load");
+    assert_eq!(manager_audit_kinds, vec!["accepted", "invited", "revoked"]);
     assert!(matches!(
         owner_activation_with_delegate,
         OwnerReadResult::Loaded(record)

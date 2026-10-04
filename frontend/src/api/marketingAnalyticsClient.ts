@@ -8,7 +8,12 @@ export type MarketingEventName =
   | 'cta_clicked'
   | 'form_started'
   | 'form_submitted'
-  | 'form_failed';
+  | 'form_failed'
+  | 'setup_stage_viewed'
+  | 'setup_stage_started'
+  | 'setup_stage_completed'
+  | 'setup_stage_failed'
+  | 'setup_resumed';
 
 const sessionKey = 'grover.marketing-session.v1';
 let memorySessionId: string | undefined;

@@ -62,6 +62,27 @@ describe('workspace home actions', () => {
       .toContain('business customers trust');
   });
 
+  it('puts the exact manager service queue before generic workspace summaries', () => {
+    const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
+      assignedJobCount: 3, completedJobCount: 1, hasSelectedJob: false,
+      hasWorkspaceRole: true, onOpen: () => undefined, pendingChangeCount: 0,
+      persona: workspacePersonasForRoles(['Manager'])[0], signedInName: 'Manager',
+      managerTodayQueue: {
+        items: [{
+          jobId: 'job-1', customerName: 'Sample Customer', propertyAddress: '123 Oak Street',
+          scheduledDate: '2026-10-01', title: 'Completion proof is ready for review',
+          detail: 'Review submitted proof.', statusLabel: 'Manager review', tone: 'review',
+          workflow: 'report', priority: 1,
+        }],
+        state: 'ready', onOpenAll: () => undefined, onOpenItem: () => undefined,
+      },
+    }));
+
+    expect(markup.indexOf('Services that need the next handoff'))
+      .toBeLessThan(markup.indexOf('Field delivery'));
+    expect(markup).toContain('Open report');
+  });
+
   it('describes progress in language that matches the active persona', () => {
     expect(personaProgressLanguage(workspacePersonasForRoles(['PropertyOwner'])[0]))
       .toEqual({

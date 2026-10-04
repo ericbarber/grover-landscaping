@@ -44,6 +44,13 @@ jobs:
           bash scripts/release-preflight.test.sh
           bash scripts/smoke-production.test.sh
           bash scripts/deploy-pi.test.sh
+          node --test scripts/validate-quality-budgets.test.mjs
+          node --test scripts/validate-crawler-policy.test.mjs
+          node scripts/validate-crawler-policy.mjs
+          node --test modern-grover/fixtures/validate-manifest.test.mjs
+          node --test modern-grover/fixtures/validate-target.test.mjs
+          node --test modern-grover/fixtures/prepare-manifest.test.mjs
+          node modern-grover/fixtures/validate-manifest.mjs --allow-template modern-grover/fixtures/fixture-manifest.example.json
           node --test scripts/smoke-workspace-rollout.test.mjs
           node --test scripts/validate-protected-release-evidence.test.mjs
 
@@ -165,6 +172,13 @@ jobs:
           /usr/bin/time -f
           'frontend_build elapsed=%e user=%U system=%S max_rss_kb=%M'
           npm run build
+        working-directory: frontend
+
+      - name: Enforce production artifact budgets
+        run: >-
+          /usr/bin/time -f
+          'frontend_quality_budgets elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm run quality:budgets
         working-directory: frontend
 
   browser-journeys:

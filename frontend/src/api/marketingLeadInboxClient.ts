@@ -26,6 +26,10 @@ export interface MarketingDashboard {
   totals: MarketingFunnelCounts;
   by_persona: MarketingFunnelSegment[];
   by_campaign: MarketingFunnelSegment[];
+  company_setup_stages: Array<{
+    stage: string; views: number; starts: number; completions: number; failures: number;
+  }>;
+  company_setup_resumes: number;
 }
 
 export async function getMarketingDashboard(): Promise<MarketingDashboard> {

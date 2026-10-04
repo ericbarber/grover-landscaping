@@ -35,10 +35,11 @@ defines the isolation and reset gate. Until then, use the tasks below for
 completion `not comparable` where its record or action is absent. Never count a
 prototype click as a backend write.
 
-The Property Manager decision cannot be a completion comparison until a
-supported grant and delegation workflow implements the decided
-[MG-D6](../PRODUCT_DECISIONS.md) rule.
-The Plan 8/9 revision and Crew Lead access-question transfer also lack
+The Property Manager grant and delegation workflow now implements the decided
+[MG-D6](../PRODUCT_DECISIONS.md) rule, but cannot be a completion comparison
+until separate Canyon View and Sage Lane grants are created and verified
+through it. The provider-originated access-question response remains
+unsupported. The Plan 8/9 revision and Crew Lead access-question transfer also lack
 equivalent current-app transitions. Test whether people understand those
 proposed concepts, but do not score them as comparative task completion.
 
@@ -67,7 +68,7 @@ proposed concepts, but do not score them as comparative task completion.
 | MG-P1 | Yard Owner visitor: “You want to know what happens before and after a yard visit. Show where you would start, and tell me what service you expect to find.” | Owner path; known-provider connection versus open marketplace; what is private before sharing. | Entry comprehension can run now; claim approval remains MG-D1/D2. |
 | MG-P2 | Provider visitor: “Your company already works with a customer. Show where you would start to coordinate the office and field, and tell me what Grover would do with billing.” | Provider path; scheduling/field/proof capabilities; no assumed invoice or payment. | Entry and claim comprehension can run now. |
 | MG-Y1 | Yard Owner: “Find the service that needs your decision. Explain the scope, total, what your choice does, and who acts next. Later, show what proves the work was delivered.” | Current proposal v3 and $420; acceptance requests planning, not scheduling or charging; only manager-reviewed delivered proof is customer-visible. | Directional only until separate proposal and delivered-proof snapshots exist. |
-| MG-PM1 | Property Manager: “One of your properties needs an access answer. Find it, respond with what you know, and explain who can restart the affected work.” | Exact authorized property/request; guidance versus verification; Company Manager owns field instruction; no gate secret or provider-private route. | Prototype comprehension only; grant and question handoff unsupported. |
+| MG-PM1 | Property Manager: “One of your properties needs an access answer. Find it, respond with what you know, and explain who can restart the affected work.” | Exact authorized property/request; guidance versus verification; Company Manager owns field instruction; no gate secret or provider-private route. | Delegation exists but matched grants are unseeded; provider question handoff remains prototype-only. |
 | MG-O1 | Company Owner: “A customer commitment is at risk. Find who owns the response and tell me whether you need to edit today's route.” | Business impact; named accountable manager; assignment is not route release. | Directional navigation only until a linked business-risk record is prepared. |
 | MG-M1 | Company Manager: “Find the accepted service and decide what must happen before work is released. A field access question then arrives; show who verifies it and what can be sent back.” | Accepted scope, draft/released state, crew fit, exact version; field question held for verification; no silent plan change. | Proposal/release portion needs fixture; Plan 8/9 and crew handoff are prototype comprehension only. |
 | MG-C1 | Crew Lead: “At the assigned stop, coverage drops. Show what you can keep doing, what has reached the office, and what you do when the plan changes.” | Current assigned stop; device-held versus sent; safe pause and manager ownership of a plan conflict; no customer price. | Offline/route portion needs current-day fixture; access-question handoff and version replay are prototype comprehension only. |

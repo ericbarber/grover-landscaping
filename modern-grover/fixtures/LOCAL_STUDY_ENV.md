@@ -4,6 +4,15 @@ Status: local database and separate study API prepared on 2026-09-16; no
 Modern Grover fixture records or reset tool exists yet. This is an environment
 record, not a portable connection string or a completed study endpoint.
 
+A repository-owned, fail-closed boundary preflight is now available in
+[`validate-target.mjs`](validate-target.mjs). It checks the permitted API
+origin and mode plus the operator-selected database name, migrations, and
+reserved namespaces without exposing connection details. It has contract-test
+coverage, but has not been run against the recorded local service from the
+current restricted sandbox. The backend now exposes its database name only on
+ready PostgreSQL responses in `local_review` mode, so the preflight can require
+the API and operator inspection to identify the same isolated database.
+
 The private review API still uses `grover_landscaping` on the local PostgreSQL
 cluster. A separate `grover_modern_study` database was created from
 `template0`, owned by the local `grover` role. No password, connection URL,
@@ -35,14 +44,19 @@ intact. Never count the seeded June route as Canyon View or Sage Lane.
 
 ## Next environment gate
 
-1. Implement a seeder with the [manifest and reset contract](SEED_CONTRACT.md).
+1. Restart the study API with the updated backend and
+   `MODERN_GROVER_FIXTURE_MODE=enabled`, then run the target boundary preflight
+   against the recorded service. Startup must reject any database other than
+   `grover_modern_study`.
+2. Implement a seeder with the [manifest and reset contract](SEED_CONTRACT.md).
    Refuse the shared database name and any target without the expected study
    identity and empty reserved fixture namespace. Do not use a broad cleanup
    from backend persistence tests.
-2. Verify owner/grant/scope denial, exact proposal version, confirmed visit,
+3. Verify owner/grant/scope denial, exact proposal version, confirmed visit,
    current-day route, and delivered-only proof through that study API before
-   recording a matched task. Property Manager grant issuance still requires
-   implementation of the decided [MG-D6](../PRODUCT_DECISIONS.md) rule.
+   recording a matched task. Exercise the implemented [MG-D6](../PRODUCT_DECISIONS.md)
+   invitation, verified-recipient acceptance, and revocation workflow for each
+   Property Manager grant; a direct SQL grant is not equivalent evidence.
 
 The API is reachable over the private Tailscale address at
 `http://100.88.21.105:8081`; it is a data-isolation endpoint, not a separate

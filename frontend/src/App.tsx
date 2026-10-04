@@ -109,6 +109,7 @@ import { FieldOfflineRecoveryPanel } from './components/FieldOfflineRecoveryPane
 import { JobDetailPanel } from './components/JobDetailPanel';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { PropertyManagerAuthorizedPortfolioPanel } from './components/PropertyManagerAuthorizedPortfolioPanel';
+import { PropertyManagerInvitationInbox } from './components/PropertyManagerInvitationInbox';
 import { YardOwnerPortalPanel } from './components/YardOwnerPortalPanel';
 import { providerEntryModeFromSearch } from './domain/providerEntryRoute';
 import { DayPlanPanel } from './components/DayPlanPanel';
@@ -126,6 +127,7 @@ import {
 import { useManagerCompletionReportQueue } from './workspaces/features/management/useManagerCompletionReportQueue';
 import { useManagerCompletionReportActions } from './workspaces/features/management/useManagerCompletionReportActions';
 import { useManagerCompletionReportNotifications } from './workspaces/features/management/useManagerCompletionReportNotifications';
+import { buildManagerTodayQueue } from './domain/managerTodayQueue';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
@@ -947,6 +949,20 @@ export function App() {
     jobs,
     onPartialLoad: handlePartialManagerReportQueue,
   });
+  const showManagerTodayQueue = activePersona.id === 'company-owner'
+    || activePersona.id === 'company-manager';
+  const managerTodayItems = useMemo(
+    () => showManagerTodayQueue
+      ? buildManagerTodayQueue(jobs, managerReportQueueReports)
+      : [],
+    [jobs, managerReportQueueReports, showManagerTodayQueue],
+  );
+  const managerTodayState = isLoadingJobs
+    || (canLoadCompletionReportQueue && isLoadingReportQueue)
+    ? 'loading' as const
+    : jobsUnavailable
+      ? 'unavailable' as const
+      : 'ready' as const;
   const {
     selectedCompletionReport,
     setSelectedCompletionReport,
@@ -1165,11 +1181,13 @@ export function App() {
   }
 
   function openFirstOwnerSetupStep(
-    target: 'operational-profile' | 'service-setup' | 'day-plan' | 'team-invitations',
+    target: 'operational-profile' | 'service-setup' | 'customer-accounts' | 'day-plan' | 'completion-reports' | 'team-invitations',
   ) {
     setManagerWorkspaceSection(
       target === 'day-plan'
         ? 'schedule'
+        : target === 'completion-reports'
+          ? 'reports'
         : target === 'team-invitations'
           ? 'team'
           : 'customers',
@@ -1177,8 +1195,12 @@ export function App() {
     setManagerWorkspaceTool(
       target === 'day-plan'
         ? 'day-plan'
+        : target === 'completion-reports'
+          ? 'completion-reports'
         : target === 'team-invitations'
           ? 'team-invitations'
+          : target === 'customer-accounts'
+            ? 'customer-accounts'
           : target === 'operational-profile'
             ? 'property-profile'
             : 'property-service',
@@ -1613,9 +1635,11 @@ export function App() {
       return;
     }
 
+    let persistedCompletion = false;
     try {
       const result = await completeJob(selectedJobId);
       if (!result.persisted) throw new Error('Job completion used local fallback');
+      persistedCompletion = true;
       setStatusMessage(`Completed ${selectedJobId}.`);
       recordManagerActivity({
         title: 'Job completion ready',
@@ -1651,6 +1675,9 @@ export function App() {
           }
         : current
     ));
+    if (persistedCompletion) {
+      setFirstOwnerProgressRefreshSignal((current) => current + 1);
+    }
   }
 
   async function handleAddOnStatusChange(addOnId: string, status: JobAddOn['status']) {
@@ -2038,6 +2065,7 @@ export function App() {
       return;
     }
     setStatusMessage(`${result.action.reportId} delivered to the customer portal.`);
+    setFirstOwnerProgressRefreshSignal((current) => current + 1);
   }
 
   async function handleQueueReportDeliveryNotification(
@@ -2270,6 +2298,16 @@ export function App() {
               completedJobCount={homeWorkSummary.completed}
               hasSelectedJob={Boolean(selectedJobId)}
               hasWorkspaceRole={workspaceRoles.length > 0}
+              managerTodayQueue={showManagerTodayQueue ? {
+                items: managerTodayItems,
+                state: managerTodayState,
+                onOpenAll: () => changeMobileView('jobs', true),
+                onOpenItem: (item) => {
+                  setSelectedJobId(item.jobId);
+                  setRequestedJobWorkflow(item.workflow);
+                  changeMobileView('job', true);
+                },
+              } : undefined}
               onOpen={(view) => {
                 if (view === 'manager') {
                   setManagerWorkspaceSection(null);
@@ -2328,14 +2366,19 @@ export function App() {
 
           <div className={workspaceSurfaces.customerCare && mobileView === 'customer' ? 'space-y-6' : 'hidden'} id="customer-workspace">
             {customerWorkspaceMode === 'portfolio' ? (
-              <PropertyManagerAuthorizedPortfolioPanel
-                rolloutUnit={managedPersonaUnit}
-                properties={customerPortalProperties}
-                visits={customerPortalVisits}
-                readState={portalHomeReadState}
-                onRetry={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
-                onReturnHome={() => changeMobileView('home', true)}
-              />
+              <div className="space-y-6">
+                <PropertyManagerInvitationInbox
+                  onAccepted={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
+                />
+                <PropertyManagerAuthorizedPortfolioPanel
+                  rolloutUnit={managedPersonaUnit}
+                  properties={customerPortalProperties}
+                  visits={customerPortalVisits}
+                  readState={portalHomeReadState}
+                  onRetry={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
+                  onReturnHome={() => changeMobileView('home', true)}
+                />
+              </div>
             ) : customerWorkspaceMode === 'yard' ? (
               <YardOwnerPortalPanel
                 customerDisplayName={auth.displayName}
@@ -2563,6 +2606,7 @@ export function App() {
           <ManagerToolSurface
             activeTool={activeAuthorizedManagerTool}
             className="mt-6"
+            id="first-owner-customer-accounts"
             tool="customer-accounts"
           >
             <ManagerCustomerAccountOnboardingPanel
@@ -2572,6 +2616,7 @@ export function App() {
               onPropertiesLoaded={registerManagerProperties}
               onPropertyCreated={(property) => {
                 registerManagerProperties([property]);
+                setFirstOwnerProgressRefreshSignal((current) => current + 1);
                 setStatusMessage(`${property.displayName} is ready for operational onboarding.`);
               }}
             />
@@ -2900,6 +2945,7 @@ export function App() {
           <ManagerToolSurface
             activeTool={activeAuthorizedManagerTool}
             className="mt-6"
+            id="first-owner-completion-reports"
             tool="completion-reports"
           >
             <ManagerCompletionReportQueuePanel

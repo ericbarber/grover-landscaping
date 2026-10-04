@@ -6,7 +6,7 @@ This is the short restart document. Execution order lives in
 
 ## Restart point
 
-- Branch: `main`
+- Branch: `codex-review-feature`
 - Resolve the current commit with `git log -1 --oneline`; do not pin a stale hash
   here.
 - Phase 6B8 is published and the latest main-branch CI gate passes.
@@ -19,6 +19,66 @@ This is the short restart document. Execution order lives in
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
 ## Active and next work
+
+### Active: B0/B1/B3/B7 closure and B9 fixture preparation
+
+[`BEST_IN_CLASS_DELIVERY_PLAN.md`](BEST_IN_CLASS_DELIVERY_PLAN.md) is the
+detailed plan for the approved ten-initiative quality program. B0, B1, and B3
+are implemented in the current working tree. B1 adds a six-stage persisted
+company first-value path, attribution continuity, fail-closed membership selection, and
+bounded setup telemetry. B3 adds customer-issued, verified-email, one-property
+Property Manager invitation, acceptance, revocation, exact portal scope, and
+audit. The combined gate passes 146 frontend files / 603 tests, TypeScript,
+production build, strict Clippy, and the 433-test backend command. No
+`DATABASE_URL` is available in this shell, so live PostgreSQL test branches are
+still pending even though their targets compile.
+B7 adds a versioned measured artifact baseline, stable chunk limits, browser
+experience thresholds, privacy-bounded operational indicator definitions, and
+tested local/CI enforcement. The current production build passes every artifact
+budget; protected dashboards and runtime evidence remain external gates.
+B9 repository preparation adds a strict non-secret fixture-manifest template,
+tested validator, and local/CI enforcement. It refuses the shared database,
+placeholder runtime provenance, unknown fields, IDs with invalid API prefixes,
+and incomplete reset receipts. Schema 2 associates normal
+API-generated IDs with their Canyon View or Sage Lane owner and validates known
+table prefixes. A second tested preflight requires a port-8081 local-review API
+and an independently inspected database to report the same
+`grover_modern_study` identity, successful migrations, and empty reserved
+namespaces. A disabled-by-default fixture runtime now provides the transient
+provider invitation value only on that isolated target and records delivery
+through the existing transition. Two fixed study-owner profiles keep owner
+scope distinct, and a tested create-once utility verifies those identities and
+the target before privately recording exact provenance. The updated study API
+still needs a restart and live preflight; no matched record has been seeded or
+verified.
+The complete repository validation scope now passes in the restricted shell.
+Release-preflight tests inject a deterministic Terraform double, and the
+protected-release evidence validator exports its pure contract so tests no
+longer depend on a permitted child-process spawn. These are test-environment
+repairs; they do not claim Terraform or protected hosting is available.
+B8 repository delivery adds a tested crawler policy and production SPA-entry
+allowlist. Public audience and known application/token routes receive the
+frontend, while unknown, invalid nested marketing, missing-asset, and unshipped
+design/review paths return 404. The server emits audience-specific initial HTML
+and derives absolute canonical/share URLs, sitemap, and robots output from a
+production-required exact HTTPS `PUBLIC_APP_URL`. Final-origin protected-release,
+deployed preview/crawler, browser, and approved-content evidence remain open.
+The public hero is now a compact route-specific introduction with a fixed entry
+action and preview. The root route leads with one Yard Owner and one yard;
+company, property-manager, crew, and Yard Owner campaign routes retain their
+dedicated entry stories. Persona tabs begin in the immediately following audience-
+review section, where they change supporting content without mutating the hero,
+URL, or canonical metadata; arrow/Home/End navigation remains supported. The
+detailed company planner remains in the Plan tour. Browser geometry coverage is
+prepared; the current local web server still cannot start in this sandbox and
+the cached headless Chromium also lacks `libnspr4.so`.
+Playwright coverage is prepared but cannot run because the sandbox rejects a
+loopback server bind with `EPERM`. The active sandbox also exposes `.git`
+read-only, so staging/committing still fails at `.git/index.lock`; pushing has
+no commit to publish. Restore Git access, create the narrow B0/B1/B3 commits without
+the pre-existing local files named above, run the browser gates, and push the
+branch. B9 live seeding must run through the isolated study API from an allowed
+operator environment; participant sessions remain a human evidence gate.
 
 ### Delivered: F2 fast feedback orchestration
 
@@ -85,8 +145,11 @@ the measured fixed-navigation height. Chromium and WebKit pass the reusable
 
 Dispatcher and Billing Administrator remain design-only role keys because the
 authoritative backend/API role union does not contain them. Do not synthesize
-either from Manager. Concern/preferences and appreciation/external reviews
-retain their separate product gates.
+either from Manager. The bounded
+[`B10_CONCERN_BOUNDARY_DECISION.md`](B10_CONCERN_BOUNDARY_DECISION.md) packet is
+ready for product/operations/privacy/legal approval; no concern implementation
+is authorized. Appreciation/external reviews retain their separate product
+gate.
 
 ### Next input boundary
 

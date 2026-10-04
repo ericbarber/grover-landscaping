@@ -115,6 +115,15 @@ The repository includes internal delivered/failed mapping, retry, and expiry
 operations. An authenticated messaging adapter/callback is not yet selected or
 exposed; production must not claim delivery until that integration records it.
 
+The isolated Modern Grover study runtime has one explicit non-production
+exception. When `MODERN_GROVER_FIXTURE_MODE=enabled` passes startup checks for
+`local_review`, PostgreSQL, and the exact `grover_modern_study` database, a new
+Canyon View or Sage Lane request is advanced through the same delivered
+repository transition and its bearer value is returned once in the
+`x-grover-local-fixture-invitation-token` response header. The value stays out
+of JSON, persistence, logs, and fixture manifests. The setting is rejected in
+production and on every other database; it is not a delivery-adapter claim.
+
 ## Checked-recipient organization assessment
 
 After recipient binding, both organization routes require an authenticated

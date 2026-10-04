@@ -275,9 +275,9 @@ validate_markdown_links() {
 
 print_scope_commands() {
   case "$1" in
-    repository) echo "  git diff --check; bash -n scripts/*.sh; shell, rollout-smoke, and release-evidence contract tests; docker compose config --quiet" ;;
+    repository) echo "  git diff --check; bash -n scripts/*.sh; shell, rollout-smoke, release-evidence, quality-budget, crawler-policy, and matched-fixture contract tests; docker compose config --quiet" ;;
     docs) echo "  validate changed Markdown links and delivery records" ;;
-    frontend) echo "  npm run typecheck; npm test; npm run build" ;;
+    frontend) echo "  npm run typecheck; npm test; npm run build; npm run quality:budgets" ;;
     backend) echo "  cargo fmt --all -- --check; cargo clippy --all-targets --all-features -- -D warnings; cargo test --all" ;;
     database) echo "  bash scripts/apply-local-migrations.sh" ;;
     infra) echo "  terraform fmt -check -recursive and validate dev/prod modules" ;;
@@ -303,6 +303,13 @@ for scope in "${ordered_scopes[@]}"; do
       run_command bash scripts/smoke-production.test.sh
       node_command --test scripts/smoke-workspace-rollout.test.mjs
       node_command --test scripts/validate-protected-release-evidence.test.mjs
+      node_command --test scripts/validate-quality-budgets.test.mjs
+      node_command --test scripts/validate-crawler-policy.test.mjs
+      node_command scripts/validate-crawler-policy.mjs
+      node_command --test modern-grover/fixtures/validate-manifest.test.mjs
+      node_command --test modern-grover/fixtures/validate-target.test.mjs
+      node_command --test modern-grover/fixtures/prepare-manifest.test.mjs
+      node_command modern-grover/fixtures/validate-manifest.mjs --allow-template modern-grover/fixtures/fixture-manifest.example.json
       run_command docker compose config --quiet
       ;;
     docs)
@@ -313,6 +320,7 @@ for scope in "${ordered_scopes[@]}"; do
       frontend_command run typecheck
       frontend_command test
       frontend_command run build
+      frontend_command run quality:budgets
       ;;
     backend)
       backend_command fmt --all -- --check

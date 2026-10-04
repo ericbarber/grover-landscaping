@@ -12,7 +12,7 @@ inputs; no wording or layout from them is automatically adopted here.
 | Perspective | First question on normal entry | Task moment to observe | Current comparison boundary |
 | --- | --- | --- | --- |
 | [Yard Owner](yard-owner.md) | “What decision or visit needs me?” | Exact proposal decision and later reviewed outcome | Owner proposal and portal need separate authorized fixture snapshots. |
-| [Property Manager](property-manager.md) | “Which authorized property needs an answer?” | Portfolio access guidance and next owner | Grant delegation and provider question handoff are unsupported. |
+| [Property Manager](property-manager.md) | “Which authorized property needs an answer?” | Portfolio access guidance and next owner | Delegation is implemented but matched grants are unseeded; provider question handoff is unsupported. |
 | [Company Owner](company-owner.md) | “Which customer commitment is at risk, and who owns it?” | Assign accountable operator without editing the route | A linked business-risk record is not prepared. |
 | [Company Manager](company-manager.md) | “Which exact service can I safely release or deliver?” | Accepted scope, plan release, field recovery, proof review | Plan 8/9 revision and field access transfer are proposed concepts. |
 | [Crew Lead](crew-lead.md) | “What is my released stop, and what is safe now?” | Work through weak coverage and conflict | Current route is historical; access question is not an office exception write. |
