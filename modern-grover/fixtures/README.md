@@ -65,12 +65,14 @@ application records. Do not substitute the current Git commit unless that is
 the exact source running on port 8081.
 
 Manifest schema 2 keeps API-generated IDs under the Canyon View or Sage Lane
-record that owns them. It accepts only an allowlisted table and that API's
-normal ID prefix; the `modern_study_canyon_` and `modern_study_sage_` values are
-request/idempotency namespaces, not fabricated database IDs. This preserves
-exact reset ownership without pretending supported APIs accept caller-selected
-primary keys. Each record also pins its fixed local-review owner user ID so
-owner-scope denial checks and reset queries cannot conflate the two records.
+record that owns them and now journals the fixed workspace owner ID under the
+same record before property work begins. It accepts only an allowlisted table
+and the table's exact ID rule; the `modern_study_canyon_` and
+`modern_study_sage_` values are request/idempotency namespaces, not fabricated
+database IDs. This preserves exact reset ownership without pretending supported
+APIs accept caller-selected primary keys. Each record also pins its fixed
+local-review owner user ID so owner-scope denial checks and reset queries cannot
+conflate the two records.
 
 [`fixture-state.mjs`](fixture-state.mjs) is the crash-safe manifest journal for
 the future seeder/reset process. It takes an exclusive private lock, validates
@@ -100,12 +102,15 @@ protected content to this journal.
 non-executable orchestration boundary. It derives separate public-API request
 plans for the Canyon and Sage workspaces, synthetic properties, ready briefs,
 and delivered provider invitations from a validated manifest. Before an
-eventual executor retries the non-idempotent property create, its recovery rule
-requires an owner-scoped discovery result to match every fixed synthetic field:
-one exact unjournaled match is recovered, zero matches permits creation, and scope
-leaks, same-label collisions, duplicates, or stale journal IDs fail closed.
-The plan marks the invitation header as same-process memory only. It does not
-perform network requests, expose a write command, or make reset optional.
+eventual executor writes a property, the fixed workspace must be discovered,
+matched, and journaled. Property recovery requires an owner-scoped discovery
+result to match every fixed synthetic field: one exact unjournaled match is
+recovered, zero matches permits creation, and scope leaks, same-label
+collisions, duplicates, or stale journal IDs fail closed. Ready-brief recovery
+likewise requires the exact journaled property, content, API ID, and persisted
+version before a retry is skipped. The plan marks the invitation header as
+same-process memory only. It does not perform network requests, expose a write
+command, or make reset optional.
 
 ## Target-boundary preflight
 

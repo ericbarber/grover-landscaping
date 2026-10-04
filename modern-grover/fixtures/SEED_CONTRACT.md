@@ -9,11 +9,13 @@ manifest journal can persist generated record ownership, verified snapshots,
 delegation lifecycle, and a zero-remaining reset receipt without exposing
 tokens or protected content. It does not yet perform the API transitions or
 database reset. A tested owner-foundation plan now pins the exact
-workspace/property/brief/invitation requests and recovers only a single exact
-owner-scoped property after an uncertain create response; it rejects scope
-leaks, collisions, duplicates, and stale journal IDs and retains no invitation
-token. The remaining provider-to-field executor and exact-ID reset must still
-be completed together before live fixture writes. A separate local study
+workspace/property/brief/invitation requests, journals the fixed workspace
+identity before property work, recovers only a single exact owner-scoped
+property after an uncertain create response, and avoids replaying an exact
+persisted ready brief. It rejects scope leaks, collisions, duplicates, broken
+linkage, and stale journal IDs and retains no invitation token. The remaining
+provider-to-field executor and exact-ID reset must still be completed together
+before live fixture writes. A separate local study
 database has now been created and migrated, as recorded in
 [LOCAL_STUDY_ENV.md](LOCAL_STUDY_ENV.md); no Modern Grover fixture records have
 been written. Use the [matched facts](../MATCHED_FIXTURES.md)

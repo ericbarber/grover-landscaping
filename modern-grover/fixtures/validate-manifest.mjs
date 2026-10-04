@@ -19,6 +19,7 @@ const expectedRecords = new Map([
   }],
 ]);
 const generatedIdPrefixes = new Map([
+  ['owner_workspaces', 'local-review-property-owner-'],
   ['owner_properties', 'owner_property_'],
   ['owner_yard_briefs', 'owner_brief_'],
   ['owner_provider_invitations', 'owner_provider_invitation_'],
@@ -193,6 +194,26 @@ export function validateFixtureManifest(manifest, { allowTemplate = false } = {}
         if (allGeneratedIds.has(id)) fail(`generated ID is duplicated: ${id}`);
         allGeneratedIds.add(id);
       }
+      if (table === 'owner_workspaces'
+        && (ids.length !== 1 || ids[0] !== record.ownerUserId)) {
+        fail(`record ${record.key} workspace ownership must equal its fixed ownerUserId`);
+      }
+      if (['owner_properties', 'owner_yard_briefs', 'owner_provider_invitations'].includes(table)
+        && ids.length !== 1) {
+        fail(`record ${record.key} must own exactly one ${table} foundation ID`);
+      }
+    }
+    const generated = record.generatedRecordIds;
+    const hasWorkspace = generated.owner_workspaces?.[0] === record.ownerUserId;
+    if (Object.keys(generated).some((table) => table !== 'owner_workspaces') && !hasWorkspace) {
+      fail(`record ${record.key} must journal its workspace before dependent records`);
+    }
+    if ((generated.owner_yard_briefs || generated.owner_provider_invitations)
+      && !generated.owner_properties) {
+      fail(`record ${record.key} must journal its property before brief or invitation records`);
+    }
+    if (generated.owner_provider_invitations && !generated.owner_yard_briefs) {
+      fail(`record ${record.key} must journal its brief before invitation records`);
     }
   }
   if (!manifest.resetVerification || typeof manifest.resetVerification !== 'object') {

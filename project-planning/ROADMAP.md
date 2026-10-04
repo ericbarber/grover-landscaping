@@ -35,8 +35,10 @@ atomic, exclusively locked fixture-state journal now preserves generated ID
 ownership, verified snapshots, forward-only manager delegation, and a
 zero-remaining reset receipt across future orchestration steps. A tested,
 non-executable owner-foundation plan now pins both isolated owners' supported
-workspace/property/brief/invitation requests and recovers only one exact
-owner-scoped property across the non-idempotent create crash window. The
+workspace/property/brief/invitation requests, journals the exact fixed workspace
+before property work, recovers only one exact owner-scoped property across the
+non-idempotent create crash window, and avoids replaying a matching persisted
+ready brief. The
 remaining provider-to-field executor and exact-ID reset are the next repository
 slice; live execution, matched record creation, reset proof, and participant
 observation follow only after that pair is complete.

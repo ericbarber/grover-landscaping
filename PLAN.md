@@ -89,8 +89,9 @@ required recoverability primitive. A tested, non-executable owner-foundation
 plan now fixes the supported workspace, property, ready-brief, and invitation
 requests for both isolated owners and fails closed on cross-owner results,
 same-label collisions, duplicates, or stale journal IDs. Its exact-match
-recovery rule closes the non-idempotent property-create crash window without
-persisting invitation tokens. The provider-to-field executor and scoped
+recovery rules journal and resume the fixed workspace identity, close the
+non-idempotent property-create crash window, and avoid replaying an already
+saved ready brief without persisting invitation tokens. The provider-to-field executor and scoped
 database reset implementation remain pending, so no live fixture write is
 authorized yet.
 Repository validation is now deterministic in restricted development shells:
@@ -240,8 +241,9 @@ API IDs under their owning synthetic record and validating each supported table
 prefix. The fixture-only invitation handoff is rejected outside the exact study
 runtime and keeps the transient bearer value out of JSON and manifests. The
 owner-foundation plan now pins synthetic inputs and public API request shapes,
-including deterministic invitation keys and exact property discovery/recovery;
-it has no executable entry point and cannot seed records.
+including deterministic invitation keys and exact workspace, property, and
+ready-brief discovery/recovery; it has no executable entry point and cannot
+seed records.
 The [separate local study database](modern-grover/fixtures/LOCAL_STUDY_ENV.md)
 is now created and migrated, with its own active local-review API on port 8081.
 It contains only migration baseline records, including a historical June

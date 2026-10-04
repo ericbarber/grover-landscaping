@@ -1,5 +1,14 @@
 # Version History
 
+- 2026-10-04: Closed the earliest B9 owner-foundation crash windows. The
+  manifest now recognizes each record's exact fixed workspace identity as owned
+  state, moving a workspace-only partial run out of `prepared`; mismatched or
+  cross-record workspace IDs fail validation. The owner plan discovers and
+  exactly recovers persisted workspaces, requires that journal before property
+  recovery, and discovers an exact linked ready brief before deciding whether
+  to save or recover it. Focused tests cover absent, unjournaled, journaled,
+  mismatched, cross-scope, broken-link, and stale-journal states. No API write
+  or study record is claimed.
 - 2026-10-03: Added the non-executable B9 owner-foundation orchestration plan.
   It derives separate supported workspace, synthetic-property, ready-brief, and
   delivered-invitation requests for Canyon View and Sage Lane from the validated

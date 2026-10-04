@@ -173,9 +173,11 @@ Delivered preparation:
   is recoverability groundwork and does not perform seeding or deletion.
 - A tested owner-foundation plan derives the two owners' exact public API
   workspace, property, ready-brief, and invitation requests. Its discovery rule
-  recovers one exact unjournaled property after an uncertain create response and
-  refuses owner-scope leaks, same-label field collisions, duplicates, or stale
-  journal IDs. The plan has no write entry point and retains no bearer token.
+  journals and recovers each fixed workspace before property work, recovers one
+  exact unjournaled property after an uncertain create response, and avoids
+  replaying an exact persisted ready brief. It refuses owner-scope leaks,
+  same-label field collisions, broken linkage, duplicates, or stale journal
+  IDs. The plan has no write entry point and retains no bearer token.
 
 Remaining gate:
 

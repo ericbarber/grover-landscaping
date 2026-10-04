@@ -40,12 +40,22 @@ const preparedManifest = () => buildPreparedManifest({
 });
 
 function seedBothRecords(manifest = preparedManifest()) {
-  const canyon = recordGeneratedId(manifest, {
+  const canyonWorkspace = recordGeneratedId(manifest, {
+    recordKey: 'canyon',
+    table: 'owner_workspaces',
+    id: 'local-review-property-owner-canyon',
+  });
+  const canyon = recordGeneratedId(canyonWorkspace, {
     recordKey: 'canyon',
     table: 'owner_properties',
     id: 'owner_property_canyon123',
   });
-  return recordGeneratedId(canyon, {
+  const sageWorkspace = recordGeneratedId(canyon, {
+    recordKey: 'sage',
+    table: 'owner_workspaces',
+    id: 'local-review-property-owner-sage',
+  });
+  return recordGeneratedId(sageWorkspace, {
     recordKey: 'sage',
     table: 'owner_properties',
     id: 'owner_property_sage123',
@@ -65,12 +75,26 @@ test('journals generated IDs idempotently and rejects invalid ownership metadata
     ['owner_property_canyon123'],
   );
   assert.throws(
-    () => recordGeneratedId(seeded, {
+    () => recordGeneratedId(preparedManifest(), {
       recordKey: 'canyon',
       table: 'owner_properties',
       id: 'property_wrong_prefix',
     }),
     /does not match the API prefix/,
+  );
+  const workspace = recordGeneratedId(preparedManifest(), {
+    recordKey: 'canyon',
+    table: 'owner_workspaces',
+    id: 'local-review-property-owner-canyon',
+  });
+  assert.equal(workspace.phase, 'seeded');
+  assert.throws(
+    () => recordGeneratedId(preparedManifest(), {
+      recordKey: 'canyon',
+      table: 'owner_workspaces',
+      id: 'local-review-property-owner-sage',
+    }),
+    /workspace ownership/,
   );
 });
 
@@ -147,6 +171,14 @@ test('updates the private manifest atomically and refuses a concurrent writer', 
   const manifestPath = join(directory, 'fixture-manifest.json');
   try {
     await writeFile(manifestPath, `${JSON.stringify(preparedManifest(), null, 2)}\n`, { mode: 0o600 });
+    await updateFixtureManifest(
+      manifestPath,
+      (manifest) => recordGeneratedId(manifest, {
+        recordKey: 'canyon',
+        table: 'owner_workspaces',
+        id: 'local-review-property-owner-canyon',
+      }),
+    );
     const updated = await updateFixtureManifest(
       manifestPath,
       (manifest) => recordGeneratedId(manifest, {

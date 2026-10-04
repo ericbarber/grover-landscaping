@@ -3,11 +3,13 @@ import { validateFixtureManifest } from './validate-manifest.mjs';
 const fixtureDefinitions = new Map([
   ['canyon', {
     workspaceDisplayName: 'Canyon Study Owner',
+    verifiedEmail: 'property.owner.canyon.local@example.test',
     addressLine1: '100 Modern Grover Fixture Way',
     postalCode: '85001',
   }],
   ['sage', {
     workspaceDisplayName: 'Sage Study Owner',
+    verifiedEmail: 'property.owner.sage.local@example.test',
     addressLine1: '200 Modern Grover Fixture Way',
     postalCode: '85002',
   }],
@@ -54,9 +56,14 @@ function buildRecordPlan(record) {
     syntheticLabel: record.syntheticLabel,
     requestNamespace: record.requestNamespace,
     requests: {
-      saveWorkspace: request(record.ownerReviewerId, 'PUT', '/owner-workspace', {
-        display_name: definition.workspaceDisplayName,
-      }),
+      discoverWorkspace: request(record.ownerReviewerId, 'GET', '/owner-workspace'),
+      saveWorkspace: request(
+        record.ownerReviewerId,
+        'PUT',
+        '/owner-workspace',
+        { display_name: definition.workspaceDisplayName },
+        { table: 'owner_workspaces', responseIdField: 'owner_user_id' },
+      ),
       discoverProperties: request(record.ownerReviewerId, 'GET', '/owner-properties'),
       createProperty: request(
         record.ownerReviewerId,
@@ -64,6 +71,11 @@ function buildRecordPlan(record) {
         '/owner-properties',
         property,
         { table: 'owner_properties', responseIdField: 'property_id' },
+      ),
+      discoverReadyBrief: request(
+        record.ownerReviewerId,
+        'GET',
+        '/owner-properties/{property_id}/yard-brief',
       ),
       saveReadyBrief: request(
         record.ownerReviewerId,
@@ -101,6 +113,42 @@ function buildRecordPlan(record) {
   };
 }
 
+function findRecordPlan(manifest, recordKey) {
+  const plan = buildOwnerFoundationPlan(manifest).find(
+    (candidate) => candidate.recordKey === recordKey,
+  );
+  if (!plan) fail(`unsupported record key ${recordKey}`);
+  const record = manifest.records.find((candidate) => candidate.key === recordKey);
+  return { plan, record };
+}
+
+export function resolveOwnerWorkspaceRecovery(manifest, recordKey, workspace) {
+  const { plan, record } = findRecordPlan(manifest, recordKey);
+  const journaledWorkspaceIds = record.generatedRecordIds.owner_workspaces ?? [];
+  if (journaledWorkspaceIds.length > 1) {
+    fail(`${plan.syntheticLabel} must own at most one journaled workspace`);
+  }
+  if (workspace === null) {
+    if (journaledWorkspaceIds.length > 0) {
+      fail(`${plan.syntheticLabel} journaled workspace is missing`);
+    }
+    return { action: 'save' };
+  }
+  const definition = fixtureDefinitions.get(recordKey);
+  if (!workspace || typeof workspace !== 'object'
+    || workspace.owner_user_id !== plan.ownerUserId
+    || workspace.verified_email !== definition.verifiedEmail
+    || workspace.display_name !== definition.workspaceDisplayName
+    || workspace.status !== 'active'
+    || workspace.persisted !== true) {
+    fail(`${plan.syntheticLabel} workspace does not exactly match the fixture owner`);
+  }
+  if (journaledWorkspaceIds.length === 1) {
+    return { action: 'reuse_journaled', workspaceId: plan.ownerUserId };
+  }
+  return { action: 'recover_unjournaled', workspaceId: plan.ownerUserId };
+}
+
 export function buildOwnerFoundationPlan(manifest) {
   validateFixtureManifest(manifest);
   if (manifest.phase === 'reset') fail('a reset manifest cannot plan new writes');
@@ -126,12 +174,14 @@ export function resolveOwnerPropertyRecovery(
   manifest,
   recordKey,
   properties,
-  journaledPropertyIds = [],
 ) {
-  const plan = buildOwnerFoundationPlan(manifest).find(
-    (candidate) => candidate.recordKey === recordKey,
-  );
-  if (!plan) fail(`unsupported record key ${recordKey}`);
+  const { plan, record } = findRecordPlan(manifest, recordKey);
+  const journaledWorkspaceIds = record.generatedRecordIds.owner_workspaces ?? [];
+  const journaledPropertyIds = record.generatedRecordIds.owner_properties ?? [];
+  if (journaledWorkspaceIds.length !== 1
+    || journaledWorkspaceIds[0] !== plan.ownerUserId) {
+    fail(`${plan.syntheticLabel} workspace must be journaled before property recovery`);
+  }
   if (!Array.isArray(properties)) fail(`${plan.syntheticLabel} property discovery must return an array`);
   if (!Array.isArray(journaledPropertyIds) || journaledPropertyIds.length > 1) {
     fail(`${plan.syntheticLabel} must own at most one journaled owner property`);
@@ -167,4 +217,47 @@ export function resolveOwnerPropertyRecovery(
     return { action: 'recover_unjournaled', propertyId: exactMatches[0].property_id };
   }
   return { action: 'create' };
+}
+
+export function resolveOwnerReadyBriefRecovery(manifest, recordKey, propertyId, brief) {
+  const { plan, record } = findRecordPlan(manifest, recordKey);
+  const propertyIds = record.generatedRecordIds.owner_properties ?? [];
+  const journaledBriefIds = record.generatedRecordIds.owner_yard_briefs ?? [];
+  if (propertyIds.length !== 1 || propertyIds[0] !== propertyId) {
+    fail(`${plan.syntheticLabel} exact property must be journaled before brief recovery`);
+  }
+  if (journaledBriefIds.length > 1) {
+    fail(`${plan.syntheticLabel} must own at most one journaled yard brief`);
+  }
+  if (brief === null) {
+    if (journaledBriefIds.length > 0) {
+      fail(`${plan.syntheticLabel} journaled yard brief is missing`);
+    }
+    return { action: 'save' };
+  }
+  const expected = plan.requests.saveReadyBrief.body;
+  if (!brief || typeof brief !== 'object'
+    || typeof brief.brief_id !== 'string'
+    || !brief.brief_id.startsWith('owner_brief_')
+    || brief.brief_id.length > 180
+    || brief.owner_user_id !== plan.ownerUserId
+    || brief.property_id !== propertyId
+    || !Number.isInteger(brief.version)
+    || brief.version < 1
+    || brief.status !== expected.status
+    || JSON.stringify(brief.yard_areas) !== JSON.stringify(expected.yard_areas)
+    || JSON.stringify(brief.care_goals) !== JSON.stringify(expected.care_goals)
+    || brief.cadence_preference !== expected.cadence_preference
+    || brief.considerations !== expected.considerations
+    || brief.author_source !== 'yard_owner'
+    || brief.persisted !== true) {
+    fail(`${plan.syntheticLabel} yard brief does not exactly match the ready fixture brief`);
+  }
+  if (journaledBriefIds.length === 1) {
+    if (journaledBriefIds[0] !== brief.brief_id) {
+      fail(`${plan.syntheticLabel} journaled yard brief is missing or no longer matches`);
+    }
+    return { action: 'reuse_journaled', briefId: brief.brief_id };
+  }
+  return { action: 'recover_unjournaled', briefId: brief.brief_id };
 }

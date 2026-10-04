@@ -41,7 +41,10 @@ test('accepts API-generated IDs only under their owning record and known table p
     phase: 'seeded',
     records: example().records.map((record) => record.key === 'canyon' ? {
       ...record,
-      generatedRecordIds: { owner_properties: ['owner_property_12345678'] },
+      generatedRecordIds: {
+        owner_workspaces: ['local-review-property-owner-canyon'],
+        owner_properties: ['owner_property_12345678'],
+      },
     } : record),
   };
   assert.equal(validateFixtureManifest(manifest).phase, 'seeded');
@@ -51,6 +54,19 @@ test('accepts API-generated IDs only under their owning record and known table p
   const unknownTable = structuredClone(manifest);
   unknownTable.records[0].generatedRecordIds.unknown_records = ['unknown_12345678'];
   assert.throws(() => validateFixtureManifest(unknownTable), /allowed table/);
+  const exactWorkspace = structuredClone(manifest);
+  exactWorkspace.records[0].generatedRecordIds.owner_workspaces = [
+    'local-review-property-owner-canyon',
+  ];
+  assert.equal(validateFixtureManifest(exactWorkspace).phase, 'seeded');
+  const wrongWorkspace = structuredClone(exactWorkspace);
+  wrongWorkspace.records[0].generatedRecordIds.owner_workspaces = [
+    'local-review-property-owner-sage',
+  ];
+  assert.throws(() => validateFixtureManifest(wrongWorkspace), /workspace ownership/);
+  const missingWorkspace = structuredClone(manifest);
+  delete missingWorkspace.records[0].generatedRecordIds.owner_workspaces;
+  assert.throws(() => validateFixtureManifest(missingWorkspace), /workspace before dependent/);
 });
 
 test('rejects secret or protected-content fields anywhere in the manifest', () => {
@@ -75,7 +91,10 @@ test('accepts a complete reset receipt and rejects incomplete reset proof', () =
     phase: 'reset',
     records: example().records.map((record) => record.key === 'canyon' ? {
       ...record,
-      generatedRecordIds: { owner_properties: ['owner_property_12345678'] },
+      generatedRecordIds: {
+        owner_workspaces: ['local-review-property-owner-canyon'],
+        owner_properties: ['owner_property_12345678'],
+      },
     } : record),
     resetVerification: {
       attemptedAt: '2026-10-01T18:00:00Z',
