@@ -1,5 +1,19 @@
 # Version History
 
+- 2026-10-06: Simplified the public entry hero to one persona-specific
+  conversion and one product-tour action, added a tracked three-stage sample for
+  every campaign, strengthened the Yard Owner promise, and improved the hero
+  photography focus. The authenticated phone Home now uses a compact greeting
+  and places its recommended task before progress and continuity summaries.
+  Company setup, sign-in/access recovery, the manager attention queue, and
+  Property Manager portfolio access now use direct role-appropriate language.
+  Crew workflows consistently call checklist work "tasks," explain offline
+  work as saved on the phone, distinguish sync retry from manager review, and
+  describe photo requirements without internal evidence terminology. Customer
+  report previews no longer display backend report IDs, object keys, upload
+  modes, or lifecycle labels. Focused unit and browser assertions cover the new
+  hierarchy and language; execution was unavailable in the current shell
+  because neither Node/npm nor Docker access was available.
 - 2026-10-04: Added the B9 derived reset selector catalog. It maps acquisition
   events; invitation delivery, recipient, claim, and capability children;
   disclosure, assessment, proposal, activation, first-visit, and delegation

@@ -97,7 +97,7 @@ test('the Yard Owner entry preserves reflow, reduced motion, and keyboard focus'
       .toBe(true);
   }
 
-  await expect(page.getByRole('link', { name: 'Sign up your yard' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Create my private yard' })).toBeVisible();
   await page.keyboard.press('Tab');
   const focused = page.locator(':focus-visible');
   await expect(focused).toBeVisible();
@@ -106,7 +106,7 @@ test('the Yard Owner entry preserves reflow, reduced motion, and keyboard focus'
 
 test('forced-colors mode retains a visible keyboard focus indicator', async ({ page }) => {
   await page.goto('/for-yard-owners');
-  await expect(page.getByRole('link', { name: 'Sign up your yard' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Create my private yard' })).toBeVisible();
   await page.keyboard.press('Tab');
   const focused = page.locator(':focus-visible');
   await expect(focused).toBeVisible();
@@ -122,7 +122,7 @@ test('the homepage hero remains focused on one yard while the audience review ch
 
   const yardSignup = page
     .getByLabel('Hero next steps')
-    .getByRole('link', { name: 'Sign up your yard' });
+    .getByRole('link', { name: 'Create my private yard' });
 
   await expect(yardSignup).toBeVisible();
   await expect(yardSignup).toHaveAttribute('href', '/app/yard-owner');
@@ -143,7 +143,7 @@ test('the production homepage retains the validated prototype foundation', async
     const main = document.querySelector('main');
     const heading = document.querySelector('h1');
     const primaryAction = Array.from(document.querySelectorAll('a'))
-      .find((element) => element.textContent?.includes('Sign up your yard'));
+      .find((element) => element.textContent?.includes('Create my private yard'));
     const brandMark = document.querySelector('.grover-brand-mark');
 
     if (!main || !heading || !primaryAction || !brandMark) {
@@ -177,14 +177,14 @@ test('each audience route presents a complete persona-specific landing view', as
     {
       path: '/for-yard-owners',
       title: 'Clearer yard care for homeowners | Grover',
-      headline: 'Your yard. Every visit. One clear story.',
+      headline: 'Know what happened—without chasing an update.',
       perspective: 'The service story—without the operations clutter.',
       trust: 'Confidence before and after care',
       proof: 'Yard care should never feel like a mystery.',
       product: 'From connecting your provider to understanding every visit.',
       invitation: 'Make the next care decision with more confidence.',
       actionRole: 'link' as const,
-      action: 'Sign up your yard',
+      action: 'Create my private yard',
     },
     {
       path: '/for-property-managers',
@@ -342,10 +342,10 @@ test('the complete desktop hero stays within the first viewport', async ({ page 
   test.skip(Boolean(testInfo.project.use.isMobile), 'Desktop hero geometry requires a desktop browser context.');
 
   const personas = [
-    { path: '/for-yard-owners', graphic: 'Your latest service is ready' },
-    { path: '/for-property-managers', graphic: '14 of 16 properties on track' },
-    { path: '/for-landscaping-companies', graphic: '6 of 8 properties complete' },
-    { path: '/for-crew-leads', graphic: 'Oak Street residence' },
+    { path: '/for-yard-owners', graphic: 'Tuesday · 8:00–10:00 AM' },
+    { path: '/for-property-managers', graphic: '16 properties available' },
+    { path: '/for-landscaping-companies', graphic: '8 ordered stops' },
+    { path: '/for-crew-leads', graphic: '8 ordered stops' },
   ];
 
   for (const viewport of [{ width: 1024, height: 720 }, { width: 1280, height: 720 }]) {
@@ -390,13 +390,15 @@ test('the compact entry hero stays fixed while the second-section perspective ch
   await page.goto('/for-landscaping-companies');
 
   const visual = page.getByTestId('hero-visual');
+  await expect(visual.getByRole('heading', { name: '8 ordered stops' })).toBeVisible();
+  await expect(visual.getByText('Sample landscaping company workspace', { exact: true })).toBeVisible();
+  await visual.getByRole('button', { name: 'Care' }).click();
   await expect(visual.getByRole('heading', { name: '6 of 8 properties complete' })).toBeVisible();
-  await expect(visual.getByText('Illustrative landscaping company view', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   await page.getByRole('tab', { name: 'Yard owner' }).click();
   await expect(visual.getByRole('heading', { name: '6 of 8 properties complete' })).toBeVisible();
-  await expect(visual.getByText('Illustrative landscaping company view', { exact: true })).toBeVisible();
+  await expect(visual.getByText('Sample landscaping company workspace', { exact: true })).toBeVisible();
   await expect(page.getByTestId('persona-review-panel').getByRole('heading', {
     name: 'The service story—without the operations clutter.',
   })).toBeVisible();

@@ -28,6 +28,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Compact route-specific public hero with a fixed entry action and preview,
   followed by a dedicated audience-review section with company-first keyboard
   tabs, role-specific narratives, outcomes, and actions
+- Simplified entry-hero conversion hierarchy with one primary action, one
+  product-tour path, improved photography focus, and a tracked three-stage
+  sample spanning upcoming work, active care, and delivered proof
 - Plan-Care-Proof product narrative with the interactive “Today’s operation”
   company dashboard embedded in Plan and representative Care and Prove previews
 - Responsive product capability and trust sections
@@ -99,6 +102,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Extracted Home workspace feature policy containing shortcut composition,
   persona language access, progress/priority rules, protected-read continuity,
   and route-date interpretation independently of the React panel presentation
+- Plain-language first-use and access recovery across sign-in, company setup,
+  manager attention, and Property Manager portfolio surfaces, with internal
+  claim, membership, persistence, and rollout terms withheld from users
 - Company Owner and Company Manager Today queue reducing authorized job and
   completion-report state to one prioritized handoff per service, with direct
   Job/Report navigation and explicit loading, unavailable, empty, and bounded
@@ -112,8 +118,12 @@ boundary; inclusion here alone does not mean a feature shipped.
   summaries plus one online/idle/conflict-free replay gate
 - Dedicated assigned-jobs and offline-recovery presentation components owning
   field filtering and conflict-confirmation UI outside the application shell
-- Dedicated selected-job presentation component for overview, checklist,
-  evidence capture, approved add-ons, and completion-report workflow
+- Dedicated selected-job presentation component for overview, tasks, job
+  photos, approved add-ons, and completion-report workflow
+- Consistent crew recovery language that distinguishes work saved on the phone,
+  another sync attempt, and manager review without exposing queue-state values
+- Customer-report previews and delivered proof use task/photo language and hide
+  internal report IDs, storage object keys, upload modes, and lifecycle labels
 - Centralized field-data continuity policy for job-detail fallbacks, typed local
   photo evidence, and authoritative evidence merges that preserve unsaved work
 - Field job-selection coordinator owning detail and add-on request lifecycle,
@@ -178,6 +188,8 @@ boundary; inclusion here alone does not mean a feature shipped.
   wordmark, editorial greeting hierarchy, warm/paper materials, forest manager
   navigation, mobile header and bottom-navigation surfaces, and exact style
   regression coverage
+- Task-first phone Home with a compact branded greeting and the persona-specific
+  recommended action ahead of progress and continuity summaries
 - Compressed hosted application shell with account controls consolidated into
   the desktop rail or mobile account menu, local-review-only diagnostic chrome,
   duplicate Home identity removed, and measured final-action clearance above

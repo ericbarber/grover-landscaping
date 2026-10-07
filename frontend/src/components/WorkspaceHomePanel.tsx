@@ -100,13 +100,13 @@ export function WorkspaceHomePanel({
     : primaryAction;
 
   return (
-    <section className="space-y-4 lg:grid lg:grid-cols-12 lg:gap-4 lg:space-y-0">
+    <section className="grid gap-4 lg:grid-cols-12">
       {managerTodayQueue ? (
         <div className="lg:col-span-12">
           <ManagerTodayQueue {...managerTodayQueue} />
         </div>
       ) : null}
-      <article className="relative min-h-[19rem] overflow-hidden rounded-2xl bg-emerald-950 p-5 text-white shadow-grover-md lg:hidden">
+      <article className="relative min-h-[10.5rem] overflow-hidden rounded-2xl bg-emerald-950 p-4 text-white shadow-grover-md lg:hidden">
         <img
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center"
@@ -114,7 +114,7 @@ export function WorkspaceHomePanel({
         />
         <span className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-emerald-950/10" />
         <span className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-slate-950/80 to-transparent" />
-        <div className="relative flex min-h-[16.5rem] flex-col">
+        <div className="relative flex min-h-[8.5rem] flex-col">
           <div className="flex items-center justify-between gap-3">
             <GroverBrand className="text-sand" />
             <p className="rounded-lg border border-white/15 bg-slate-950/30 px-2.5 py-1 text-xs font-semibold text-slate-100 backdrop-blur-sm">
@@ -122,29 +122,42 @@ export function WorkspaceHomePanel({
             </p>
           </div>
           <div className="mt-auto max-w-sm">
-            <p className="text-sm font-semibold text-emerald-200">
+            <p className="text-xs font-semibold text-emerald-200">
               {homeGreeting(now.getHours())}, {firstName}
             </p>
-            <h2 className="mt-2 max-w-xs font-display text-3xl font-bold leading-[1.02] tracking-tight">
+            <h2 className="mt-1 max-w-sm font-display text-2xl font-bold leading-tight tracking-tight">
               {personaHomeHeadline(persona)}
             </h2>
-            <p className="mt-3 max-w-xs text-sm font-medium leading-5 text-slate-100">
+            <p className="mt-1 line-clamp-2 max-w-sm text-xs font-medium leading-5 text-slate-100">
               {personaHomePromise(persona)}
             </p>
-            <div className="mt-4 flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-white">
-              <span className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1.5 backdrop-blur-sm">
-                {persona.label}
-              </span>
-              <span className="text-emerald-300" aria-hidden="true">•</span>
-              <span>Plan</span>
-              <span className="text-emerald-300" aria-hidden="true">•</span>
-              <span>Care</span>
-              <span className="text-emerald-300" aria-hidden="true">•</span>
-              <span>Proof</span>
-            </div>
           </div>
         </div>
       </article>
+
+      {primaryAction ? (
+        <button
+          className="group flex min-h-24 w-full items-center justify-between gap-4 rounded-2xl bg-emerald-800 p-4 text-left text-white shadow-lg shadow-emerald-950/15 lg:col-span-4"
+          onClick={() => onOpen(primaryAction.view)}
+          type="button"
+        >
+          <span>
+            <span className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-200">
+              Recommended next
+            </span>
+            <span className="mt-1 block text-xl font-black">{primaryAction.label}</span>
+            <span className="mt-1 block text-xs leading-5 text-emerald-100">
+              {actionDescription}
+            </span>
+          </span>
+          <span
+            aria-hidden="true"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/15 text-2xl transition-transform group-hover:translate-x-1"
+          >
+            <WorkspaceIcon className="size-6" name="forward" />
+          </span>
+        </button>
+      ) : null}
 
       <article className="grover-card p-4 lg:col-span-4">
         <div className="flex items-end justify-between gap-3">
@@ -209,30 +222,6 @@ export function WorkspaceHomePanel({
           </button>
         ) : null}
       </WorkspaceStatusNotice>
-
-      {primaryAction ? (
-        <button
-          className="group flex min-h-24 w-full items-center justify-between gap-4 rounded-2xl bg-emerald-800 p-4 text-left text-white shadow-lg shadow-emerald-950/15 lg:col-span-4"
-          onClick={() => onOpen(primaryAction.view)}
-          type="button"
-        >
-          <span>
-            <span className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-200">
-              Recommended next
-            </span>
-            <span className="mt-1 block text-xl font-black">{primaryAction.label}</span>
-            <span className="mt-1 block text-xs leading-5 text-emerald-100">
-              {actionDescription}
-            </span>
-          </span>
-          <span
-            aria-hidden="true"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/15 text-2xl transition-transform group-hover:translate-x-1"
-          >
-            <WorkspaceIcon className="size-6" name="forward" />
-          </span>
-        </button>
-      ) : null}
 
       {secondaryActions.length > 0 ? (
         <section className="grover-card p-4 lg:col-span-12">

@@ -19,7 +19,7 @@ export function jobWorkflowItems({
     { id: 'overview', label: 'Overview', context: 'At a glance' },
     {
       id: 'checklist',
-      label: 'Checklist',
+      label: 'Tasks',
       context: `${checklistComplete}/${checklistTotal}`,
     },
     { id: 'photos', label: 'Photos', context: `${photoCount}` },

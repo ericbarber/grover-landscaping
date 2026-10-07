@@ -14,6 +14,13 @@ import {
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
 import type { FieldPhotoType } from '../workspaces/features/field/fieldWorkspace';
 
+function photoStatusLabel(status: string): string {
+  return status
+    .split(/[_-]/)
+    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+    .join(' ');
+}
+
 export function JobDetailPanel({
   job,
   executionEnabled,
@@ -79,7 +86,7 @@ export function JobDetailPanel({
   if (isLoading) {
     return (
       <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-        <p className="text-sm font-semibold text-slate-500">Loading job details...</p>
+        <p className="text-sm font-semibold text-slate-500">Loading job details…</p>
       </aside>
     );
   }
@@ -87,7 +94,7 @@ export function JobDetailPanel({
   if (!job) {
     return (
       <aside className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-slate-600 sm:p-5">
-        Select a job to view checklist, workflow actions, and local photo upload placeholders.
+        Choose a job to see its tasks, photos, approved extras, and service report.
       </aside>
     );
   }
@@ -112,25 +119,25 @@ export function JobDetailPanel({
     addOn.status === 'scheduled' || addOn.status === 'in_progress'
   )).length;
   const nextAction = !executionEnabled
-    ? 'This rollout unit provides read-only job status. Field actions remain with the assigned crew.'
+    ? 'You can review this job here. Only the assigned crew can make field changes.'
     : job.status === 'scheduled'
       ? 'Start this job when the crew is ready to begin.'
       : !fieldEvidenceEnabled
-        ? 'Continue stop progress from Today’s route; proof actions are outside this rollout unit.'
+        ? 'Continue this stop from Today’s route. Photos and completion are not available for this account.'
         : missingRequiredEvidence.length > 0
-          ? `Capture ${missingRequiredEvidence.join(' and ')} photo evidence before completing this job.`
+          ? `Add ${missingRequiredEvidence.join(' and ')} ${missingRequiredEvidence.length === 1 ? 'photo' : 'photos'} before completing this job.`
           : pendingAddOns > 0
             ? `Finish ${pendingAddOns} approved add-on${pendingAddOns === 1 ? '' : 's'} before the customer report is ready.`
             : checklistProgress < 100
-              ? `Finish ${job.checklist.length - completedChecklistItems} checklist item${job.checklist.length - completedChecklistItems === 1 ? '' : 's'} before customer handoff.`
-              : 'Required field evidence is ready. Complete the job when service is finished.';
+              ? `Finish ${job.checklist.length - completedChecklistItems} task${job.checklist.length - completedChecklistItems === 1 ? '' : 's'} before customer handoff.`
+              : 'Required photos are ready. Complete the job when service is finished.';
 
   return (
     <div className="space-y-4">
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-800">Current service target</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-800">Current job</p>
             <h2 className="mt-2 font-display text-3xl font-black text-forest">{job.customerName}</h2>
             <p className="mt-1 text-sm text-slate-600">{job.propertyAddress}</p>
             <p className="mt-1 text-xs font-semibold text-slate-500">Scheduled {job.scheduledDate}</p>
@@ -148,8 +155,8 @@ export function JobDetailPanel({
               {!fieldEvidenceEnabled
                 ? 'Execution enabled'
                 : missingRequiredEvidence.length === 0
-                  ? 'Evidence ready'
-                  : `${missingRequiredEvidence.length} evidence gap${missingRequiredEvidence.length === 1 ? '' : 's'}`}
+                  ? 'Photos ready'
+                  : `${missingRequiredEvidence.length} ${missingRequiredEvidence.length === 1 ? 'photo' : 'photos'} needed`}
             </WorkspaceStatusBadge>
           </div>
           <div className="mt-3 grid gap-3 min-[380px]:grid-cols-2">
@@ -174,8 +181,8 @@ export function JobDetailPanel({
           <WorkspaceStatusNotice
             className="mt-5"
             compact
-            detail="Progress, checklist, photo, add-on, and completion actions remain hidden."
-            title="Job oversight is read only."
+            detail="Only the assigned crew can change progress, tasks, photos, extras, or completion."
+            title="This job is view only."
             tone="info"
           />
         )}
@@ -200,7 +207,7 @@ export function JobDetailPanel({
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-xl bg-paper p-3">
               <p className="text-2xl font-black text-forest">{checklistProgress}%</p>
-              <p className="text-xs font-bold text-slate-500">Checklist</p>
+              <p className="text-xs font-bold text-slate-500">Tasks</p>
             </div>
             <div className="rounded-xl bg-paper p-3">
               <p className="text-2xl font-black text-forest">{beforePhotos}</p>
@@ -230,7 +237,7 @@ export function JobDetailPanel({
           role="tabpanel"
         >
           <div className="flex min-h-12 items-center justify-between gap-3 text-sm font-semibold uppercase tracking-wide text-slate-600">
-            Checklist
+            Tasks
             <span className="rounded-full bg-white px-2 py-1 text-xs tracking-normal text-slate-600">
               {completedChecklistItems}/{job.checklist.length} complete
             </span>
@@ -311,9 +318,9 @@ export function JobDetailPanel({
           id="job-workflow-panel-photos"
           role="tabpanel"
         >
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Photo evidence</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Job photos</h3>
           <p className="mt-2 text-sm text-slate-600">
-            Use a previewable JPEG, PNG, GIF, or WebP image at least 640×480. Duplicate files are blocked, and both before and after evidence are required to complete the job.
+            Add a clear before and after photo to complete the job. You can use a JPEG, PNG, GIF, or WebP image at least 640×480; duplicate files are blocked.
           </p>
 
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -328,7 +335,7 @@ export function JobDetailPanel({
               <option value="extra">Extra photo</option>
             </select>
             <label className="flex-1 cursor-pointer rounded-xl border border-dashed border-slate-400 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-100">
-              Choose Photo
+              Choose photo
               <input
                 className="sr-only"
                 type="file"
@@ -355,11 +362,9 @@ export function JobDetailPanel({
                       <p className="capitalize">{ticket.photoType} photo</p>
                     </div>
                     <span className="rounded-full bg-slate-100 px-2 py-1 font-semibold uppercase text-slate-500">
-                      {ticket.status}
+                      {photoStatusLabel(ticket.status)}
                     </span>
                   </div>
-                  <p className="mt-2">{ticket.uploadMode}</p>
-                  <p className="break-all">{ticket.objectKey}</p>
                 </div>
               ))}
             </div>

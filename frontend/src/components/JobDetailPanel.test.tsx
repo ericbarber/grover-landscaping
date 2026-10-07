@@ -53,22 +53,22 @@ describe('JobDetailPanel', () => {
 
     expect(markup).toContain('North Yard');
     expect(markup).toContain('Start Job');
-    expect(markup).toContain('2 evidence gaps');
+    expect(markup).toContain('2 photos needed');
     expect(markup).toContain('Start this job when the crew is ready to begin.');
-    expect(markup).toContain('Checklist');
+    expect(markup).toContain('Tasks');
     expect(markup).toContain('Photos');
   });
 
   it('keeps job oversight read only when execution is unavailable', () => {
     const markup = render({ executionEnabled: false, fieldEvidenceEnabled: false });
 
-    expect(markup).toContain('Job oversight is read only.');
+    expect(markup).toContain('This job is view only.');
     expect(markup).not.toContain('Start Job');
-    expect(markup).not.toContain('Choose Photo');
+    expect(markup).not.toContain('Choose photo');
   });
 
   it('renders explicit loading and no-selection states', () => {
-    expect(render({ isLoading: true })).toContain('Loading job details...');
-    expect(render({ job: null })).toContain('Select a job to view checklist');
+    expect(render({ isLoading: true })).toContain('Loading job details…');
+    expect(render({ job: null })).toContain('Choose a job to see its tasks');
   });
 });

@@ -85,7 +85,7 @@ export function providerReadinessFacts(input: ProviderReadinessInput): ProviderR
     {
       id: 'crew',
       label: 'Crew setup',
-      detail: input.setupProgress?.crewConfigured ? 'At least one crew is configured.' : 'Configure the first crew before route planning.',
+      detail: input.setupProgress?.crewConfigured ? 'At least one crew is ready.' : 'Add a crew before planning your first route.',
       state: input.setupProgress?.crewConfigured ? 'operational' : 'missing',
     },
     {

@@ -122,10 +122,10 @@ test('workspace access verification fails closed and recovers without a reload',
   });
 
   await page.goto('/app');
-  await expect(page.getByRole('heading', { name: 'Unable to safely open your workspace' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your information is still protected' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Desktop workspace' })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Retry access verification' }).click();
+  await page.getByRole('button', { name: 'Check access again' }).click();
 
   await expect(page.getByLabel('Local reviewer account')).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Desktop workspace' })).toBeVisible();
@@ -256,6 +256,16 @@ test('mobile Home keeps its final action clear of fixed navigation', async ({ pa
   ]) {
     await page.setViewportSize(viewport);
     await page.goto('/app');
+    const recommendedAction = page.getByRole('button', { name: /Recommended next/ });
+    const progressLabel = page.getByText('Field delivery', { exact: true });
+    await expect(recommendedAction).toBeVisible();
+    const recommendedTop = await recommendedAction.evaluate(
+      (element) => element.getBoundingClientRect().top,
+    );
+    const progressTop = await progressLabel.evaluate(
+      (element) => element.getBoundingClientRect().top,
+    );
+    expect(recommendedTop).toBeLessThan(progressTop);
     const workspaceActions = page.locator('section.grover-card').filter({
       has: page.getByText('Your workspace', { exact: true }),
     });
@@ -340,7 +350,7 @@ test('property manager portfolio uses protected visits and withholds them after 
     await expect(portfolio.getByText('Property portfolio access is not active.')).toBeVisible();
     await expect(portfolio.getByText('Canyon View')).toHaveCount(0);
     await expect(portfolio.getByText('Sage Lane')).toHaveCount(0);
-    await expect(portfolio.getByRole('button', { name: 'Retry protected read' })).toBeVisible();
+    await expect(portfolio.getByRole('button', { name: 'Try again' })).toBeVisible();
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(1);
@@ -1009,27 +1019,27 @@ test('field Job keeps context and primary actions while opening one workflow pan
   await page.goto('/app');
   await page.getByRole('navigation', { name: 'Mobile workspace' })
     .getByRole('button', { name: 'Jobs', exact: true }).click();
-  await page.getByRole('button', { name: 'Open Job', exact: true }).click();
+  await page.getByRole('button', { name: 'Open job', exact: true }).click();
 
   const detail = page.locator('#job-detail');
-  await expect(detail.getByText('Current service target', { exact: true })).toBeVisible();
+  await expect(detail.getByText('Current job', { exact: true })).toBeVisible();
   await expect(detail.getByRole('heading', { name: 'Oak Street Residence' })).toBeVisible();
   await expect(detail.getByRole('button', { name: 'Complete Job' })).toBeDisabled();
-  await expect(detail.getByText('2 evidence gaps', { exact: true })).toBeVisible();
+  await expect(detail.getByText('2 photos needed', { exact: true })).toBeVisible();
   await expect(detail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
-  await expect(detail.getByRole('tabpanel', { name: /Checklist/ })).toBeHidden();
+  await expect(detail.getByRole('tabpanel', { name: /Tasks/ })).toBeHidden();
 
-  await detail.getByRole('tab', { name: /Checklist/ }).click();
+  await detail.getByRole('tab', { name: /Tasks/ }).click();
   await expect(detail.getByRole('button', { name: 'Complete Job' })).toBeVisible();
   await expect(detail.getByRole('tabpanel', { name: /Overview/ })).toBeHidden();
-  await expect(detail.getByRole('tabpanel', { name: /Checklist/ })).toBeVisible();
+  await expect(detail.getByRole('tabpanel', { name: /Tasks/ })).toBeVisible();
   await expect(detail.getByText('Confirm arrival', { exact: true })).toBeVisible();
 
   const photosTab = detail.getByRole('tab', { name: /Photos/ });
   await photosTab.click();
-  await expect(detail.getByRole('tabpanel', { name: /Checklist/ })).toBeHidden();
+  await expect(detail.getByRole('tabpanel', { name: /Tasks/ })).toBeHidden();
   await expect(detail.getByRole('tabpanel', { name: /Photos/ })).toBeVisible();
-  await expect(detail.getByText('Photo evidence', { exact: true })).toBeVisible();
+  await expect(detail.getByText('Job photos', { exact: true })).toBeVisible();
   await photosTab.press('End');
   await expect(detail.getByRole('tabpanel', { name: /Photos/ })).toBeHidden();
   await expect(detail.getByRole('tabpanel', { name: /Report/ })).toBeVisible();

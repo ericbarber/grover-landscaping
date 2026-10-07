@@ -89,18 +89,18 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (state === 'authentication-error') {
     return (
       <FullScreenMessage>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-400">Authentication error</p>
-        <h1 className="mt-4 text-2xl font-bold text-white">Unable to initialize sign-in</h1>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-400">Sign-in is temporarily unavailable</p>
+        <h1 className="mt-4 text-2xl font-bold text-white">We couldn’t start sign-in</h1>
         <p className="mt-3 text-sm text-slate-300">{auth.error}</p>
         <p className="mt-3 text-xs text-slate-400">
-          If the local API was still starting, wait a moment and retry without reloading the page.
+          Wait a moment, then try again. You do not need to reload this page.
         </p>
         <button
           className="mt-6 w-full rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-500"
           onClick={auth.retryInitialization}
           type="button"
         >
-          Retry authentication
+          Try sign-in again
         </button>
       </FullScreenMessage>
     );
@@ -123,7 +123,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
           className="mt-7 w-full rounded-xl bg-emerald-500 px-5 py-3 font-black text-emerald-950 shadow-lg shadow-emerald-950/30 transition hover:bg-emerald-400"
           onClick={() => void auth.signIn()}
         >
-          Open my workspace
+          Sign in
         </button>
         <p className="mt-4 text-xs text-slate-400">Secure access keeps customer and property details protected.</p>
       </FullScreenMessage>
@@ -133,14 +133,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (state === 'access-loading') {
     return (
       <FullScreenMessage>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">Verifying workspace access</p>
-        <h1 className="mt-4 text-2xl font-bold text-white">Checking your active organization and role…</h1>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">Checking your access</p>
+        <h1 className="mt-4 text-2xl font-bold text-white">Making sure you see the right work…</h1>
         <p className="mt-3 text-sm leading-6 text-slate-300">
-          Protected workspace navigation stays hidden until access verification completes.
+          We’ll only show the companies, properties, and tools connected to your account.
         </p>
         <div className="mx-auto mt-7 h-1.5 w-24 overflow-hidden rounded-full bg-white/10" role="status">
           <span className="block h-full w-2/3 animate-pulse rounded-full bg-emerald-400" />
-          <span className="sr-only">Verifying active organization access</span>
+          <span className="sr-only">Checking company and property access</span>
         </div>
       </FullScreenMessage>
     );
@@ -149,17 +149,17 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (state === 'access-unavailable') {
     return (
       <FullScreenMessage>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">Access verification unavailable</p>
-        <h1 className="mt-4 text-2xl font-bold text-white">Unable to safely open your workspace</h1>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">We couldn’t confirm your access</p>
+        <h1 className="mt-4 text-2xl font-bold text-white">Your information is still protected</h1>
         <p className="mt-3 text-sm leading-6 text-slate-300">
-          {auth.accessError ?? 'Active organization access could not be verified.'} No role or workspace data is being assumed.
+          Grover couldn’t confirm which company or properties this account can open. Nothing has been shown or changed.
         </p>
         <button
           className="mt-6 w-full rounded-xl bg-emerald-500 px-5 py-3 font-black text-emerald-950 hover:bg-emerald-400"
           onClick={() => void auth.refreshAccess()}
           type="button"
         >
-          Retry access verification
+          Check access again
         </button>
       </FullScreenMessage>
     );

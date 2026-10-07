@@ -24,10 +24,10 @@ const partialProgress: FirstOwnerSetupProgress = {
 
 describe('company first value', () => {
   it('maps each authoritative milestone to its exact workflow', () => {
-    expect(firstOwnerSetupTarget('Create the first customer and property')).toBe('customer-accounts');
-    expect(firstOwnerSetupTarget('Publish the first route')).toBe('day-plan');
-    expect(firstOwnerSetupTarget('Complete the first service')).toBe('day-plan');
-    expect(firstOwnerSetupTarget('Deliver the first completion report')).toBe('completion-reports');
+    expect(firstOwnerSetupTarget('Add your first customer and property')).toBe('customer-accounts');
+    expect(firstOwnerSetupTarget('Publish your first route')).toBe('day-plan');
+    expect(firstOwnerSetupTarget('Complete your first service')).toBe('day-plan');
+    expect(firstOwnerSetupTarget('Send your first service report')).toBe('completion-reports');
   });
 
   it('resumes at the first incomplete server-confirmed milestone', () => {

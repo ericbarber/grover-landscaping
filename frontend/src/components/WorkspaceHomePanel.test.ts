@@ -78,9 +78,21 @@ describe('workspace home actions', () => {
       },
     }));
 
-    expect(markup.indexOf('Services that need the next handoff'))
+    expect(markup.indexOf('Work that needs your attention'))
       .toBeLessThan(markup.indexOf('Field delivery'));
     expect(markup).toContain('Open report');
+  });
+
+  it('puts the recommended task before mobile progress summaries', () => {
+    const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
+      assignedJobCount: 4, completedJobCount: 1, hasSelectedJob: false,
+      hasWorkspaceRole: true, onOpen: () => undefined, pendingChangeCount: 0,
+      persona: workspacePersonasForRoles(['CrewLead'])[0], signedInName: 'Crew Lead',
+    }));
+
+    expect(markup.indexOf('Recommended next')).toBeLessThan(markup.indexOf('Route progress'));
+    expect(markup).toContain('min-h-[10.5rem]');
+    expect(markup).not.toContain('<span>Plan</span>');
   });
 
   it('describes progress in language that matches the active persona', () => {

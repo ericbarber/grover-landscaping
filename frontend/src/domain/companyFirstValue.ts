@@ -45,30 +45,30 @@ export function resolveCompanySetupMembership(
 }
 
 export function firstOwnerSetupSteps(access: PrincipalAccessSummary): string[] {
-  if (access.memberships.length === 0) return ['Create your organization'];
+  if (access.memberships.length === 0) return ['Create your company'];
   return [
-    'Complete organization profile',
-    'Configure the first crew',
-    'Create the first customer and property',
-    'Publish the first route',
-    'Complete the first service',
-    'Deliver the first completion report',
-    'Invite additional team members',
+    'Complete your company profile',
+    'Add your first crew',
+    'Add your first customer and property',
+    'Publish your first route',
+    'Complete your first service',
+    'Send your first service report',
+    'Invite another team member',
   ];
 }
 
 export function firstOwnerSetupTarget(step: string): CompanyFirstValueTarget | null {
   switch (step) {
-    case 'Configure the first crew':
+    case 'Add your first crew':
       return null;
-    case 'Create the first customer and property':
+    case 'Add your first customer and property':
       return 'customer-accounts';
-    case 'Publish the first route':
-    case 'Complete the first service':
+    case 'Publish your first route':
+    case 'Complete your first service':
       return 'day-plan';
-    case 'Deliver the first completion report':
+    case 'Send your first service report':
       return 'completion-reports';
-    case 'Invite additional team members':
+    case 'Invite another team member':
       return 'team-invitations';
     default:
       return null;
@@ -81,49 +81,49 @@ export function firstOwnerProgressMilestones(
   return [
     {
       id: 'organization_profile',
-      label: 'Complete organization profile',
-      detail: 'Add a customer-facing contact and service area.',
-      unlockedOutcome: 'Company identity is ready for operational setup.',
+      label: 'Complete your company profile',
+      detail: 'Add contact information, your service area, and daily capacity.',
+      unlockedOutcome: 'Your company is ready to add crews and customers.',
       complete: progress.organizationProfileComplete,
       target: null,
     },
     {
       id: 'first_crew',
-      label: 'Configure the first crew',
-      detail: 'Create one active crew inside this organization.',
-      unlockedOutcome: 'A route can be assigned to an accountable crew.',
+      label: 'Add your first crew',
+      detail: 'Create one active crew for routes and property assignments.',
+      unlockedOutcome: 'A route can now be assigned to your crew.',
       complete: progress.crewConfigured,
       target: null,
     },
     {
       id: 'first_customer_property',
-      label: 'Create the first customer and property',
-      detail: 'Create an organization-scoped customer property.',
-      unlockedOutcome: 'The property can enter service planning.',
+      label: 'Add your first customer and property',
+      detail: 'Add the customer and service address for your first job.',
+      unlockedOutcome: 'The property is ready to schedule.',
       complete: progress.customerPropertyCreated,
       target: 'customer-accounts',
     },
     {
       id: 'first_route',
-      label: 'Publish the first route',
-      detail: 'Publish a persisted day plan for an active crew.',
-      unlockedOutcome: 'The crew receives an authoritative service route.',
+      label: 'Publish your first route',
+      detail: 'Build and publish a day plan for an active crew.',
+      unlockedOutcome: 'Your crew can open the route and prepare for each stop.',
       complete: progress.firstRoutePublished,
       target: 'day-plan',
     },
     {
       id: 'first_service',
-      label: 'Complete the first service',
-      detail: 'Finish a persisted job with the required field evidence.',
-      unlockedOutcome: 'The completed service can enter proof review.',
+      label: 'Complete your first service',
+      detail: 'Finish the job and add the required photos and notes.',
+      unlockedOutcome: 'Your team can review the completed work.',
       complete: progress.firstServiceCompleted,
       target: 'day-plan',
     },
     {
       id: 'first_report',
-      label: 'Deliver the first completion report',
-      detail: 'Review and deliver customer-safe proof for a completed job.',
-      unlockedOutcome: 'The company has reached its first delivered operating value.',
+      label: 'Send your first service report',
+      detail: 'Review the completed work and send the customer-safe summary.',
+      unlockedOutcome: 'Your first customer service cycle is complete.',
       complete: progress.firstReportDelivered,
       target: 'completion-reports',
     },

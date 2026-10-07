@@ -33,7 +33,7 @@ describe('PropertyManagerAuthorizedPortfolioPanel', () => {
     const markup = render('ready');
     expect(markup).toContain('Canyon View');
     expect(markup).toContain('Sage Lane');
-    expect(markup).toContain('2 properties in your current access scope');
+    expect(markup).toContain('2 properties available to your account');
     expect(markup).not.toContain('123 Oak Street');
     expect(markup).not.toContain('Grover Demo Landscaping');
   });
@@ -44,9 +44,9 @@ describe('PropertyManagerAuthorizedPortfolioPanel', () => {
       expect(markup).not.toContain('Canyon View');
       expect(markup).not.toContain('Sage Lane');
       expect(markup).not.toContain('One-time cleanup and pruning');
-      expect(markup).not.toContain('2 properties in your current access scope');
+      expect(markup).not.toContain('2 properties available to your account');
       expect(markup).toContain('Return Home');
-      expect(markup.includes('Retry protected read')).toBe(readState !== 'loading');
+      expect(markup.includes('Try again')).toBe(readState !== 'loading');
     },
   );
 

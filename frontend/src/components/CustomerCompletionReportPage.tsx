@@ -61,11 +61,11 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
         if (isMounted) {
           setError(
             isApiErrorCode(requestError, 'shared_report_unavailable')
-              ? 'Report storage is temporarily unavailable. Retry after service readiness recovers.'
+              ? 'This report is temporarily unavailable. Please try again.'
               : isApiErrorCode(requestError, 'shared_report_snapshot_invalid')
-                ? 'The delivered report could not be safely prepared. Retry after service readiness recovers.'
+                ? 'We couldn’t safely prepare this delivered report. Please try again.'
               : isApiErrorCode(requestError, 'completion_report_route_unavailable')
-                ? 'Route storage is temporarily unavailable, so this report cannot be safely assembled yet.'
+                ? 'Part of this service record is temporarily unavailable. Please try again.'
                 : 'This completion report link is invalid or no longer available.',
           );
         }
@@ -147,21 +147,21 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
                   <dd className="mt-2 text-base font-black text-forest">Grover Landscaping</dd>
                 </div>
                 <div className="rounded-2xl bg-slate-100 p-4">
-                  <dt className="text-xs font-black uppercase tracking-wide text-slate-600">Evidence</dt>
+                  <dt className="text-xs font-black uppercase tracking-wide text-slate-600">Photos</dt>
                   <dd className="mt-2 text-base font-black text-forest">{evidenceLabel(report)}</dd>
                 </div>
               </dl>
-              {capturedAt ? <p className="mt-3 text-xs text-slate-500">Immutable delivery snapshot captured {capturedAt}.</p> : null}
+              {capturedAt ? <p className="mt-3 text-xs text-slate-500">Report prepared {capturedAt}.</p> : null}
             </section>
 
             <section aria-labelledby="proof-heading" className="border-t border-slate-200 pt-7">
-              <p className="grover-eyebrow">Evidence</p>
+              <p className="grover-eyebrow">Service proof</p>
               <div className="mt-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
                 <div>
                   <h2 className="font-display text-3xl font-black text-forest" id="proof-heading">Work completed</h2>
-                  <p className="mt-1 text-sm text-slate-600">Checklist, photos, and completed add-ons included in this delivered snapshot.</p>
+                  <p className="mt-1 text-sm text-slate-600">Completed tasks, service photos, and approved extras from this visit.</p>
                 </div>
-                <p className="text-sm font-black text-emerald-800">{report.checklistProgress}% checklist complete</p>
+                <p className="text-sm font-black text-emerald-800">{report.checklistProgress}% of tasks complete</p>
               </div>
 
               {report.photoEvidence.length > 0 ? (
@@ -170,7 +170,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
                     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50" key={`${photo.photoType}-${photo.fileName}`}>
                       {photo.imageUrl ? (
                         <img
-                          alt={`${photo.photoType} service evidence for ${report.propertyAddress}`}
+                          alt={`${photo.photoType} service photo for ${report.propertyAddress}`}
                           className="aspect-video w-full object-cover"
                           loading="lazy"
                           src={photo.imageUrl}
@@ -190,7 +190,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
               ) : null}
 
               <div className="mt-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
-                <h3 className="text-lg font-black text-forest">Completed checklist</h3>
+                <h3 className="text-lg font-black text-forest">Completed tasks</h3>
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   {report.checklist.map((item, index) => (
                     <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3" key={`${item.label}-${index}`}>

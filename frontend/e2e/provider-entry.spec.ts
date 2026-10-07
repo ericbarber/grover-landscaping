@@ -84,8 +84,8 @@ test('provider path opens authenticated setup without granting authority from th
   await page.goto('/app?provider-entry=owner-operator');
 
   await expect(page.getByText('Owner-operator setup', { exact: true })).toBeVisible();
-  await expect(page.getByText('Signed-in claims and active memberships remain authoritative.', { exact: false })).toBeVisible();
-  await expect(page.getByText('provider organization of one', { exact: false })).toBeVisible();
+  await expect(page.getByText('confirm your signed-in account and active company access', { exact: false })).toBeVisible();
+  await expect(page.getByText('one company account for you', { exact: false })).toBeVisible();
 });
 
 test('provider readiness distinguishes supplied, operating, missing, and unchecked facts', async ({ page }) => {
@@ -113,11 +113,11 @@ test('company setup resumes at the first server-confirmed incomplete milestone',
   await page.goto('/app?provider-entry=company-owner');
 
   const onboarding = page.getByText('First-user setup', { exact: true }).locator('xpath=ancestor::section[1]');
-  await expect(onboarding.getByRole('heading', { name: 'First-value progress' })).toBeVisible();
-  await expect(onboarding).toContainText('2 of 6 persisted milestones complete');
-  await expect(onboarding).toContainText('Current prerequisite');
-  await expect(onboarding).toContainText('Create the first customer and property');
-  await onboarding.getByRole('button', { name: /Continue: Create the first customer and property/ }).click();
+  await expect(onboarding.getByRole('heading', { name: 'Launch progress' })).toBeVisible();
+  await expect(onboarding).toContainText('2 of 6 setup steps complete');
+  await expect(onboarding).toContainText('Next step');
+  await expect(onboarding).toContainText('Add your first customer and property');
+  await onboarding.getByRole('button', { name: /Continue: Add your first customer and property/ }).click();
   await expect(page.getByText('Customer onboarding', { exact: true })).toBeVisible();
 
   await page.setViewportSize({ width: 320, height: 720 });
@@ -133,7 +133,7 @@ test('company setup fails closed when more than one organization is active', asy
   await page.goto('/app?provider-entry=company-owner');
 
   const onboarding = page.getByText('First-user setup', { exact: true }).locator('xpath=ancestor::section[1]');
-  await expect(onboarding.getByRole('alert')).toContainText('explicit organization choice');
-  await expect(onboarding.getByText('First-value progress')).not.toBeVisible();
-  await expect(onboarding.getByRole('button', { name: /Create organization/ })).not.toBeVisible();
+  await expect(onboarding.getByRole('alert')).toContainText('more than one company');
+  await expect(onboarding.getByText('Launch progress')).not.toBeVisible();
+  await expect(onboarding.getByRole('button', { name: /Create company/ })).not.toBeVisible();
 });

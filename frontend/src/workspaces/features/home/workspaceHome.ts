@@ -71,28 +71,28 @@ export function homePriorityStatus({
     return {
       tone: 'attention',
       title: 'Sync needs attention',
-      detail: `${pendingChangeCount} saved ${pendingChangeCount === 1 ? 'change is' : 'changes are'} waiting to reach the server.`,
+      detail: `${pendingChangeCount} ${pendingChangeCount === 1 ? 'change is' : 'changes are'} saved on this device and will sync when a connection is available.`,
     };
   }
   if (assignedJobCount === 0) {
     return {
       tone: 'ready',
       title: 'You’re clear for now',
-      detail: `No ${itemPlural} are currently scheduled or assigned. Use your workspace shortcuts for the next task.`,
+      detail: `No ${itemPlural} are currently scheduled or assigned. Choose a shortcut below when you’re ready to plan ahead.`,
     };
   }
   if (completedJobCount >= assignedJobCount) {
     return {
       tone: 'complete',
       title: `Today’s ${itemPlural} are complete`,
-      detail: 'Everything is synced and ready for the next workflow.',
+      detail: 'All changes are saved. You’re ready for what comes next.',
     };
   }
   const remaining = assignedJobCount - completedJobCount;
   return {
     tone: 'ready',
     title: `${remaining} ${remaining === 1 ? itemSingular : itemPlural} remaining`,
-    detail: 'Everything is synced. Continue with the recommended next action.',
+    detail: 'All changes are saved. Continue with the recommended action.',
   };
 }
 
@@ -110,7 +110,7 @@ export function homeContinuityStatus(
     const states = {
       loading: ['Checking your visits', 'Your service summary will appear after account access is checked.'],
       access_required: ['Customer portal access is not active', 'Review account access before relying on a visit summary.'],
-      inconsistent: ['Portal access needs review', 'Your account and property access could not be reconciled. Review account access.'],
+      inconsistent: ['Yard access needs review', 'This property does not match the access on your account. Review account access before continuing.'],
       unavailable: ['Visits could not be loaded', 'Retry My yard when the service is available.'],
     } as const;
     const [title, detail] = states[portalReadState];
@@ -125,7 +125,7 @@ export function homeContinuityStatus(
     const states = {
       loading: ['Checking your properties', 'Portfolio service summaries will appear after account access is checked.'],
       access_required: ['Property portfolio access is not active', 'Review property access before relying on a service summary.'],
-      inconsistent: ['Property access needs review', 'Your property grant and membership could not be reconciled.'],
+      inconsistent: ['Property access needs review', 'This property does not match the access on your account. Review access before continuing.'],
       unavailable: ['Portfolio visits could not be loaded', 'Retry Portfolio when the service is available.'],
     } as const;
     const [title, detail] = states[portalReadState];
@@ -166,7 +166,7 @@ export function homeContinuityStatus(
     if (routeOverview.source === 'local') {
       return {
         title: 'Local route preview',
-        detail: 'The published crew plan could not be verified. Check with a manager before starting stops.',
+        detail: 'Grover could not confirm this crew plan with the office. Check with a manager before starting stops.',
         tone: 'attention',
         progressAvailable: true,
       };
@@ -174,7 +174,7 @@ export function homeContinuityStatus(
     if (routeOverview.totalStops === 0) {
       return {
         title: 'No stops on today’s plan',
-        detail: 'Check with a manager before assuming no field work is assigned.',
+        detail: 'A manager may still need to publish or update today’s plan.',
         tone: 'ready',
         progressAvailable: true,
       };

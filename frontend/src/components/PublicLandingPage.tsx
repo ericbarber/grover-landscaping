@@ -26,7 +26,9 @@ const marketingPersonas: Array<{
     description: string;
   };
   outcomes: Array<{ title: string; description: string }>;
-  preview: {
+  journey: Array<{
+    id: 'plan' | 'care' | 'prove';
+    label: string;
     status: string;
     kicker: string;
     title: string;
@@ -35,7 +37,7 @@ const marketingPersonas: Array<{
     progressLabel: string;
     metaOne: string;
     metaTwo: string;
-  };
+  }>;
   trust: {
     heading: string;
     items: string[];
@@ -61,9 +63,9 @@ const marketingPersonas: Array<{
   {
     id: 'owner',
     label: 'Yard owner',
-    eyebrow: 'Confidence after every visit',
-    headline: 'Your yard. Every visit. One clear story.',
-    description: 'See what’s planned, what was completed, and what your yard may need next—without chasing an update.',
+    eyebrow: 'A private service record for your yard',
+    headline: 'Know what happened—without chasing an update.',
+    description: 'Keep upcoming visits, completed work, photos, and recommendations together while you control what your provider can see.',
     perspective: {
       eyebrow: 'A homeowner-first view',
       title: 'The service story—without the operations clutter.',
@@ -74,16 +76,29 @@ const marketingPersonas: Array<{
       { title: 'See the care', description: 'Before-and-after evidence makes each visit feel tangible.' },
       { title: 'Stay ahead', description: 'Recommendations arrive with the context needed to decide.' },
     ],
-    preview: {
-      status: 'Report ready',
-      kicker: 'Oak Street residence',
-      title: 'Your latest service is ready',
-      description: 'Completed work, photo evidence, and the next recommendation are together in one update.',
-      progress: 100,
-      progressLabel: 'Latest service report complete',
-      metaOne: 'Service complete',
-      metaTwo: '1 recommendation',
-    },
+    journey: [
+      {
+        id: 'plan', label: 'Upcoming', status: 'Confirmed', kicker: 'Next visit',
+        title: 'Tuesday · 8:00–10:00 AM',
+        description: 'Weekly care, approved yard details, and the visit plan are ready in one place.',
+        progress: 33, progressLabel: 'Upcoming visit confirmed',
+        metaOne: 'Mow, edge + inspect', metaTwo: 'Private notes protected',
+      },
+      {
+        id: 'care', label: 'In progress', status: 'Care underway', kicker: 'Today’s service',
+        title: 'Your crew has started',
+        description: 'Follow the visit without interrupting the people caring for your yard.',
+        progress: 67, progressLabel: 'Two of three service stages complete',
+        metaOne: 'Front yard complete', metaTwo: 'Irrigation check next',
+      },
+      {
+        id: 'prove', label: 'Review', status: 'Report ready', kicker: 'Latest visit',
+        title: 'Your care summary is ready',
+        description: 'Completed work, photo evidence, and the next recommendation are together.',
+        progress: 100, progressLabel: 'Latest service report complete',
+        metaOne: '4 photos delivered', metaTwo: '1 recommendation',
+      },
+    ],
     trust: {
       heading: 'Confidence before and after care',
       items: ['Private yard setup', 'Upcoming care in one place', 'Evidence tied to each visit', 'Recommendations you control'],
@@ -132,16 +147,29 @@ const marketingPersonas: Array<{
       { title: 'Review delivered work', description: 'Customer-safe completion records replace scattered service updates.' },
       { title: 'Keep property context', description: 'Evidence stays connected to the correct customer and address.' },
     ],
-    preview: {
-      status: '2 need review',
-      kicker: 'Portfolio readiness',
-      title: '14 of 16 properties on track',
-      description: 'The two open needs have owners, due dates, and service evidence ready for review.',
-      progress: 88,
-      progressLabel: 'Fourteen of sixteen properties on track',
-      metaOne: '14 on track',
-      metaTwo: '2 owned needs',
-    },
+    journey: [
+      {
+        id: 'plan', label: 'Access', status: 'Access verified', kicker: 'Authorized portfolio',
+        title: '16 properties available',
+        description: 'Active customer grants define exactly which properties and records are visible.',
+        progress: 33, progressLabel: 'Portfolio access verified',
+        metaOne: '16 active grants', metaTwo: 'Customer scope preserved',
+      },
+      {
+        id: 'care', label: 'Review', status: '2 need review', kicker: 'Portfolio readiness',
+        title: '14 of 16 properties on track',
+        description: 'The two open needs have owners, due dates, and service evidence ready for review.',
+        progress: 67, progressLabel: 'Fourteen of sixteen properties on track',
+        metaOne: '14 on track', metaTwo: '2 owned needs',
+      },
+      {
+        id: 'prove', label: 'Proof', status: 'Proof available', kicker: 'Delivered service history',
+        title: '14 reports ready by address',
+        description: 'Customer-safe completion evidence stays connected to the correct property.',
+        progress: 100, progressLabel: 'Delivered service evidence available',
+        metaOne: '14 delivered reports', metaTwo: 'Address-level history',
+      },
+    ],
     trust: {
       heading: 'Portfolio clarity within approved access',
       items: ['Scoped property access', 'Service status by property', 'Delivered evidence by address', 'Clear unavailable states'],
@@ -190,16 +218,29 @@ const marketingPersonas: Array<{
       { title: 'Move approvals faster', description: 'Evidence and recommendations give customers a complete story.' },
       { title: 'Deliver proof faster', description: 'Reviewed completion records move cleanly from the field to the customer.' },
     ],
-    preview: {
-      status: 'On track',
-      kicker: 'Today · North crew',
-      title: '6 of 8 properties complete',
-      description: 'Photos are synced and one completion report is ready for review.',
-      progress: 75,
-      progressLabel: 'Six of eight properties complete',
-      metaOne: 'Field progress visible',
-      metaTwo: '1 review needed',
-    },
+    journey: [
+      {
+        id: 'plan', label: 'Plan', status: 'Plan ready', kicker: 'Today · North crew',
+        title: '8 ordered stops',
+        description: 'Routes, service expectations, and property context are ready before crews roll.',
+        progress: 33, progressLabel: 'Today’s route plan is ready',
+        metaOne: 'Workload balanced', metaTwo: 'Details published',
+      },
+      {
+        id: 'care', label: 'Care', status: 'On track', kicker: 'Field progress',
+        title: '6 of 8 properties complete',
+        description: 'The office can see progress while crews keep working through the route.',
+        progress: 75, progressLabel: 'Six of eight properties complete',
+        metaOne: 'Field progress visible', metaTwo: '2 stops remain',
+      },
+      {
+        id: 'prove', label: 'Prove', status: 'Review ready', kicker: 'Completion review',
+        title: 'Service story ready',
+        description: 'Photos, notes, and completion details are together for one customer-ready handoff.',
+        progress: 100, progressLabel: 'Completion evidence ready for review',
+        metaOne: 'Evidence complete', metaTwo: '1 review needed',
+      },
+    ],
     trust: {
       heading: 'One shared view of the work',
       items: ['Routes and workloads aligned', 'Offline-ready field progress', 'Evidence linked to service', 'Traceable operational decisions'],
@@ -248,16 +289,29 @@ const marketingPersonas: Array<{
       { title: 'Keep working offline', description: 'Progress and evidence wait safely when coverage disappears.' },
       { title: 'Finish with a clean handoff', description: 'Photos, notes, and exceptions reach the office together.' },
     ],
-    preview: {
-      status: 'In progress',
-      kicker: 'Stop 3 of 8',
-      title: 'Oak Street residence',
-      description: 'Four of six tasks are complete. Required property context is available offline.',
-      progress: 67,
-      progressLabel: 'Four of six tasks complete',
-      metaOne: 'Details offline-ready',
-      metaTwo: '2 tasks remain',
-    },
+    journey: [
+      {
+        id: 'plan', label: 'Route', status: 'Offline ready', kicker: 'North crew · Today',
+        title: '8 ordered stops',
+        description: 'The route, service details, and access notes are ready before leaving the yard.',
+        progress: 33, progressLabel: 'Today’s route is ready',
+        metaOne: '8 stops downloaded', metaTwo: 'Access notes included',
+      },
+      {
+        id: 'care', label: 'Work', status: 'In progress', kicker: 'Stop 3 of 8',
+        title: 'Oak Street residence',
+        description: 'Four of six tasks are complete. Required property context is available offline.',
+        progress: 67, progressLabel: 'Four of six tasks complete',
+        metaOne: 'Details offline-ready', metaTwo: '2 tasks remain',
+      },
+      {
+        id: 'prove', label: 'Handoff', status: 'Complete', kicker: 'Route closeout',
+        title: '8 stops ready to hand off',
+        description: 'Completed tasks, photos, notes, and exceptions return to the office together.',
+        progress: 100, progressLabel: 'Route handoff complete',
+        metaOne: '22 photos attached', metaTwo: 'Final sync complete',
+      },
+    ],
     trust: {
       heading: 'Everything the field needs to move',
       items: ['Route and stop context', 'Clear completion expectations', 'Offline-safe progress', 'One clean office handoff'],
@@ -325,6 +379,7 @@ export function PublicLandingPage({
   initialPersonaId?: MarketingPersonaId;
 }) {
   const [activePersonaId, setActivePersonaId] = useState<MarketingPersonaId>(initialPersonaId);
+  const [activeHeroStepId, setActiveHeroStepId] = useState<'plan' | 'care' | 'prove'>('plan');
   const [leadDialogPersona, setLeadDialogPersona] = useState<MarketingPersona | null>(null);
   const entryPersona = marketingPersonas.find((persona) => persona.id === initialPersonaId)
     ?? marketingPersonas[0];
@@ -334,6 +389,8 @@ export function PublicLandingPage({
   const entryCallToAction = marketingCallToAction(entryMarketingPersona);
   const activeMarketingPersona = marketingPersonaFor(activePersona.id);
   const activeCallToAction = marketingCallToAction(activeMarketingPersona);
+  const activeHeroPreview = entryPersona.journey.find((step) => step.id === activeHeroStepId)
+    ?? entryPersona.journey[0];
   const providerEntryPath = providerEntryHref(
     typeof window === 'undefined' ? '' : window.location.search,
   );
@@ -445,7 +502,7 @@ export function PublicLandingPage({
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Hero next steps">
               {entryPersona.id === 'owner' ? (
                 <a className="grover-button-primary" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
-                  Sign up your yard <span className="ml-2" aria-hidden="true">→</span>
+                  Create my private yard <span className="ml-2" aria-hidden="true">→</span>
                 </a>
               ) : entryPersona.id === 'company' ? (
                 <a className="grover-button-primary" href={providerEntryPath} onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}>
@@ -456,32 +513,45 @@ export function PublicLandingPage({
                   {entryCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
                 </button>
               )}
-              <a className="grover-button-secondary" href="#who-its-for">See every perspective</a>
-              {entryPersona.id === 'owner' || entryPersona.id === 'company' ? (
-                <button className="min-h-12 px-2 text-sm font-extrabold text-emerald-800 underline decoration-emerald-800/30 underline-offset-4 hover:text-emerald-700" onClick={() => openLeadDialog(entryMarketingPersona, 'hero_conversation')} type="button">
-                  Request a walkthrough
-                </button>
-              ) : null}
+              <a className="grover-button-secondary" href="#tour" onClick={() => trackMarketingEvent('cta_clicked', entryMarketingPersona, 'hero_product_tour')}>See how it works</a>
             </div>
           </div>
 
-          <div className="relative h-[27rem] overflow-hidden rounded-[2rem] bg-forest shadow-grover-lg sm:h-[30rem] lg:h-[calc(100svh-9rem)] lg:min-h-[28rem] lg:max-h-[33rem]" data-testid="hero-visual">
-            <img alt="Landscape care team working in a Southwestern garden at sunrise" className="absolute inset-0 h-full w-full object-cover object-center" decoding="async" {...{ fetchpriority: 'high' }} height="688" src="/brand/grover-landscape-home-hero.webp" width="1440" />
+          <div className="relative h-[28rem] overflow-hidden rounded-[2rem] bg-forest shadow-grover-lg sm:h-[29rem] lg:h-[calc(100svh-9rem)] lg:min-h-[28rem] lg:max-h-[33rem]" data-testid="hero-visual">
+            <img alt="Landscape care team working in a Southwestern garden at sunrise" className="absolute inset-0 h-full w-full object-cover object-[68%_center]" decoding="async" {...{ fetchpriority: 'high' }} height="688" src="/brand/grover-landscape-home-hero.webp" width="1440" />
             <span className="absolute inset-0 bg-gradient-to-t from-forest/45 via-forest/5 to-transparent" />
-            <article className="absolute bottom-4 left-4 right-4 rounded-[1.35rem] border border-white/60 bg-paper/95 p-5 text-ink shadow-grover-lg backdrop-blur sm:bottom-7 sm:left-auto sm:right-7 sm:w-[min(29rem,calc(100%-3.5rem))] sm:p-6" data-testid="hero-entry-preview">
+            <article className="absolute bottom-4 left-4 right-4 rounded-[1.35rem] border border-white/60 bg-paper/95 p-4 text-ink shadow-grover-lg backdrop-blur sm:bottom-7 sm:left-auto sm:right-7 sm:w-[min(29rem,calc(100%-3.5rem))] sm:p-6" data-testid="hero-entry-preview">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-slate-600">Illustrative {entryPersona.label.toLowerCase()} view</p>
-                <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-[0.65rem] font-black uppercase tracking-wide text-emerald-800">{entryPersona.preview.status}</span>
+                <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-slate-600">Sample {entryPersona.label.toLowerCase()} workspace</p>
+                <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-[0.65rem] font-black uppercase tracking-wide text-emerald-800">{activeHeroPreview.status}</span>
               </div>
-              <p className="mt-4 text-[0.7rem] font-black uppercase tracking-[0.1em] text-emerald-700">{entryPersona.preview.kicker}</p>
-              <h2 className="mt-1 text-2xl font-black leading-tight text-ink">{entryPersona.preview.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{entryPersona.preview.description}</p>
-              <div aria-label={entryPersona.preview.progressLabel} className="mt-4 h-2 overflow-hidden rounded-full bg-emerald-100" role="progressbar" aria-valuemax={100} aria-valuemin={0} aria-valuenow={entryPersona.preview.progress}>
-                <span className="block h-full rounded-full bg-emerald-700" style={{ width: `${entryPersona.preview.progress}%` }} />
+              <div aria-label="Sample service journey" className="mt-4 grid grid-cols-3 gap-1 rounded-xl bg-emerald-50 p-1">
+                {entryPersona.journey.map((step) => (
+                  <button
+                    aria-pressed={step.id === activeHeroPreview.id}
+                    className={`min-h-10 rounded-lg px-2 py-2 text-[0.68rem] font-black transition ${step.id === activeHeroPreview.id ? 'bg-emerald-800 text-white shadow-sm' : 'text-emerald-800 hover:bg-emerald-100'}`}
+                    key={step.id}
+                    onClick={() => {
+                      setActiveHeroStepId(step.id);
+                      trackMarketingEvent('tour_step_selected', entryMarketingPersona, `hero_${step.id}`);
+                    }}
+                    type="button"
+                  >
+                    {step.label}
+                  </button>
+                ))}
               </div>
-              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-bold text-slate-600">
-                <span className="flex items-center gap-2 before:h-2 before:w-2 before:rounded-full before:bg-emerald-700">{entryPersona.preview.metaOne}</span>
-                <span className="flex items-center gap-2 before:h-2 before:w-2 before:rounded-full before:bg-[#c99f55]">{entryPersona.preview.metaTwo}</span>
+              <div aria-live="polite">
+                <p className="mt-4 text-[0.7rem] font-black uppercase tracking-[0.1em] text-emerald-700">{activeHeroPreview.kicker}</p>
+                <h2 className="mt-1 text-xl font-black leading-tight text-ink sm:text-2xl">{activeHeroPreview.title}</h2>
+                <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">{activeHeroPreview.description}</p>
+              </div>
+              <div aria-label={activeHeroPreview.progressLabel} className="mt-4 h-2 overflow-hidden rounded-full bg-emerald-100" role="progressbar" aria-valuemax={100} aria-valuemin={0} aria-valuenow={activeHeroPreview.progress}>
+                <span className="block h-full rounded-full bg-emerald-700 transition-[width]" style={{ width: `${activeHeroPreview.progress}%` }} />
+              </div>
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[0.7rem] font-bold text-slate-600 sm:text-xs">
+                <span className="flex items-center gap-2 before:h-2 before:w-2 before:rounded-full before:bg-emerald-700">{activeHeroPreview.metaOne}</span>
+                <span className="flex items-center gap-2 before:h-2 before:w-2 before:rounded-full before:bg-[#c99f55]">{activeHeroPreview.metaTwo}</span>
               </div>
             </article>
           </div>
@@ -652,11 +722,20 @@ export function PublicLandingPage({
               <a className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" href={providerEntryPath} onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'final_company_signup')}>
                 Start company setup <span className="ml-2" aria-hidden="true">→</span>
               </a>
+            ) : activePersona.id === 'owner' ? (
+              <a className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'final_yard_signup')}>
+                Create my private yard <span className="ml-2" aria-hidden="true">→</span>
+              </a>
             ) : (
               <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => openLeadDialog(activeMarketingPersona, 'final_cta')} type="button">
                 {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
               </button>
             )}
+            {activePersona.id === 'company' ? (
+              <button className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-7 py-3 font-black text-white transition hover:bg-white/10" onClick={() => openLeadDialog('landscaping_company', 'final_walkthrough')} type="button">
+                Request a walkthrough
+              </button>
+            ) : null}
             <a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-7 py-3 font-black text-white transition hover:bg-white/10" href="/app">
               Existing user sign in
             </a>

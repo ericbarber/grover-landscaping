@@ -21,7 +21,7 @@ describe('first owner onboarding steps', () => {
         rolloutMode: 'default_off',
         personas: [],
       },
-    })).toEqual(['Create your organization']);
+    })).toEqual(['Create your company']);
   });
 
   it('shows the operational setup sequence after bootstrap', () => {
@@ -48,17 +48,17 @@ describe('first owner onboarding steps', () => {
         scopeId: 'org_1',
       }],
     };
-    expect(firstOwnerSetupSteps(access)).toContain('Publish the first route');
-    expect(firstOwnerSetupSteps(access)).toContain('Invite additional team members');
+    expect(firstOwnerSetupSteps(access)).toContain('Publish your first route');
+    expect(firstOwnerSetupSteps(access)).toContain('Invite another team member');
   });
 
   it('routes actionable setup steps to the matching manager workspace', () => {
-    expect(firstOwnerSetupTarget('Complete organization profile')).toBeNull();
-    expect(firstOwnerSetupTarget('Configure the first crew')).toBeNull();
-    expect(firstOwnerSetupTarget('Create the first customer and property')).toBe('customer-accounts');
-    expect(firstOwnerSetupTarget('Publish the first route')).toBe('day-plan');
-    expect(firstOwnerSetupTarget('Deliver the first completion report')).toBe('completion-reports');
-    expect(firstOwnerSetupTarget('Invite additional team members')).toBe('team-invitations');
+    expect(firstOwnerSetupTarget('Complete your company profile')).toBeNull();
+    expect(firstOwnerSetupTarget('Add your first crew')).toBeNull();
+    expect(firstOwnerSetupTarget('Add your first customer and property')).toBe('customer-accounts');
+    expect(firstOwnerSetupTarget('Publish your first route')).toBe('day-plan');
+    expect(firstOwnerSetupTarget('Send your first service report')).toBe('completion-reports');
+    expect(firstOwnerSetupTarget('Invite another team member')).toBe('team-invitations');
   });
 
   it('maps persisted completion state to actionable mobile milestones', () => {
@@ -77,12 +77,12 @@ describe('first owner onboarding steps', () => {
     });
 
     expect(milestones.map(({ label, complete, target }) => ({ label, complete, target }))).toEqual([
-      { label: 'Complete organization profile', complete: true, target: null },
-      { label: 'Configure the first crew', complete: true, target: null },
-      { label: 'Create the first customer and property', complete: false, target: 'customer-accounts' },
-      { label: 'Publish the first route', complete: false, target: 'day-plan' },
-      { label: 'Complete the first service', complete: false, target: 'day-plan' },
-      { label: 'Deliver the first completion report', complete: false, target: 'completion-reports' },
+      { label: 'Complete your company profile', complete: true, target: null },
+      { label: 'Add your first crew', complete: true, target: null },
+      { label: 'Add your first customer and property', complete: false, target: 'customer-accounts' },
+      { label: 'Publish your first route', complete: false, target: 'day-plan' },
+      { label: 'Complete your first service', complete: false, target: 'day-plan' },
+      { label: 'Send your first service report', complete: false, target: 'completion-reports' },
     ]);
   });
 
@@ -102,7 +102,7 @@ describe('first owner onboarding steps', () => {
     };
 
     expect(firstOwnerNextMilestone(progress)).toMatchObject({
-      label: 'Publish the first route',
+      label: 'Publish your first route',
       target: 'day-plan',
     });
     expect(firstOwnerNextMilestone({

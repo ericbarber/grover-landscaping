@@ -44,13 +44,13 @@ function AssignedJobCard({
           </div>
           <p className="mt-1 text-sm text-slate-600">{job.propertyAddress}</p>
           <p className="mt-3 text-xs font-semibold text-slate-600">
-            {job.completedChecklistItems}/{job.checklistItems} checklist · {job.beforePhotos} before · {job.afterPhotos} after
+            {job.completedChecklistItems}/{job.checklistItems} tasks · {job.beforePhotos} before {job.beforePhotos === 1 ? 'photo' : 'photos'} · {job.afterPhotos} after {job.afterPhotos === 1 ? 'photo' : 'photos'}
           </p>
         </div>
       </div>
 
       <div
-        aria-label={`${progress}% checklist complete`}
+        aria-label={`${progress}% of tasks complete`}
         className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100"
       >
         <div className="h-full rounded-full bg-emerald-700" style={{ width: `${progress}%` }} />
@@ -61,7 +61,7 @@ function AssignedJobCard({
         onClick={() => onSelect(job.id)}
         type="button"
       >
-        {isSelected ? 'Selected Job' : 'Open Job'}
+        {isSelected ? 'Job open' : 'Open job'}
       </button>
     </article>
   );

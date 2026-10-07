@@ -142,6 +142,15 @@ Plan product-tour step. A shorter capped hero visual and prepared phone/desktop
 geometry coverage make the first screen calmer without removing any audience
 route or conversion path.
 
+The current experience-language pass now keeps the first signed-in journeys in
+plain, role-appropriate terms. Company setup speaks in companies, crews,
+customers, routes, services, and reports; authentication and Property Manager
+failures explain what the person can do next without exposing claim,
+membership, or persistence mechanics. Crew work now uses tasks, job photos, and
+"saved on this phone" recovery states consistently from assignment through
+customer handoff. Completion-report previews no longer expose report IDs,
+storage object keys, upload modes, or backend lifecycle terminology.
+
 ### Raspberry Pi development hosting
 
 - The repository has an opt-in `main` deployment job gated by all CI checks,
@@ -379,7 +388,7 @@ Current state:
   gates. Assigned-job search, filtering, cards, data-read status, and the three
   offline recovery queues now render through dedicated field components; their
   filter and conflict-confirmation state no longer lives in `App`. Selected-job
-  overview, workflow navigation, checklist, evidence upload, add-ons, and report
+  overview, workflow navigation, tasks, photo upload, add-ons, and report
   presentation now also live in a dedicated field component. Field detail
   fallback construction, local photo-ticket construction, and authoritative
   evidence merging now share the field feature boundary instead of being
@@ -1308,6 +1317,11 @@ Current state:
   shadows, forest manager navigation, and canonical mobile header/bottom-nav
   materials. Exact browser assertions cover the canvas, display stack, sand
   wordmark, and deep-navigation surface without changing role or tool access.
+- The public entry hero now limits its first-screen choice to one persona-specific
+  conversion and one product-tour path, while a tracked three-stage sample makes
+  upcoming work, active care, and delivered proof tangible for each campaign.
+  The signed-in phone Home compresses its welcome image and moves the
+  persona-specific recommended action ahead of progress and continuity summaries.
 - Production visual convergence phase 3 aligns the reciprocal provider
   invitation entry with the acquisition family: canonical brand lockup,
   editorial page title, bone/paper/forest composition, shared action and card
@@ -1991,6 +2005,9 @@ or crew assignment.
   the complete two-column hero fits below the sticky header at supported laptop
   widths without placing persona controls in the first screen
 - Product preview, Plan-Care-Proof workflow, capability story, trust cues, and repeated workspace calls to action create a complete marketing narrative
+- The entry preview is an interactive, persona-specific three-stage sample, and
+  the first screen presents one primary conversion plus one product-tour action;
+  walkthrough capture remains available later in the company narrative
 - `/app` remains the direct authenticated or auth-disabled workspace entry, while callbacks, invitations, diagnostics, shared bids, and shared reports retain dedicated routing
 - Installed application sessions now start directly at `/app`
 - Public marketing remains independent of API, network, update, and installation banners so backend readiness cannot make the homepage appear unavailable

@@ -42,7 +42,7 @@ describe('AssignedJobsPanel', () => {
     expect(markup).toContain('North Yard');
     expect(markup).toContain('South Yard');
     expect(markup).toContain('2 shown');
-    expect(markup).toContain('Selected Job');
+    expect(markup).toContain('Job open');
   });
 
   it('shows a persisted-data failure without substituting work', () => {

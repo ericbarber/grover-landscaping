@@ -32,14 +32,14 @@ describe('field mutation commands', () => {
       queue,
     })).resolves.toEqual({
       outcome: 'queued',
-      message: 'Checklist change saved locally and queued offline.',
+      message: 'Task change saved on this phone. It will sync when online.',
     });
     await expect(runChecklistMutationCommand({
       persist: async () => ({ persisted: false }),
       queue,
     })).resolves.toEqual({
       outcome: 'queued',
-      message: 'Checklist change saved locally and queued offline.',
+      message: 'Task change saved on this phone. It will sync when online.',
     });
     expect(queue).toHaveBeenCalledTimes(2);
   });

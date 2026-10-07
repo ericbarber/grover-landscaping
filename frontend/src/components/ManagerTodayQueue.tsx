@@ -36,13 +36,13 @@ export function ManagerTodayQueue({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">
-            Manager Today
+            Today
           </p>
           <h2 className="mt-1 font-display text-2xl font-black text-slate-950" id="manager-today-heading">
-            Services that need the next handoff
+            Work that needs your attention
           </h2>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
-            Open the exact property service, current state, and next workflow without searching a tool directory.
+            Open the property, see what changed, and take the next action without searching through tools.
           </p>
         </div>
         <button
@@ -56,15 +56,15 @@ export function ManagerTodayQueue({
 
       {state === 'loading' ? (
         <p aria-live="polite" className="mt-4 rounded-xl bg-slate-50 p-4 text-sm font-semibold text-slate-600">
-          Checking authorized jobs and completion reports…
+          Checking today’s jobs and service reports…
         </p>
       ) : state === 'unavailable' ? (
         <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-950" role="alert">
-          Today’s service queue could not be verified. Retry after job access is available; no empty or all-clear state is inferred.
+          We couldn’t check today’s work. Try again when job access returns. Nothing is being marked clear or complete.
         </p>
       ) : visibleItems.length === 0 ? (
         <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-950">
-          No loaded service currently requires a manager decision. Review all jobs for future scheduled work.
+          Nothing loaded needs a manager decision right now. Open all jobs to review scheduled work.
         </p>
       ) : (
         <ol className="mt-4 grid gap-3 lg:grid-cols-2">
@@ -97,7 +97,7 @@ export function ManagerTodayQueue({
       )}
       {state === 'ready' && items.length > visibleItems.length ? (
         <p className="mt-3 text-xs font-semibold text-slate-500">
-          Showing the first {visibleItems.length} of {items.length} prioritized services. Review all jobs to see the full workload.
+          Showing the first {visibleItems.length} of {items.length} priority services. Open all jobs to see the full workload.
         </p>
       ) : null}
     </section>

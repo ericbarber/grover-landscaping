@@ -16,18 +16,18 @@ describe('ManagerTodayQueue', () => {
       <ManagerTodayQueue items={[item]} onOpenAll={() => undefined} onOpenItem={() => undefined} state="ready" />,
     );
 
-    expect(markup).toContain('Services that need the next handoff');
+    expect(markup).toContain('Work that needs your attention');
     expect(markup).toContain('Sample Customer');
     expect(markup).toContain('123 Oak Street');
     expect(markup).toContain('Open report');
   });
 
-  it('does not infer an empty queue when authoritative reads are unavailable', () => {
+  it('does not present an all-clear state when today’s work cannot be checked', () => {
     const markup = renderToStaticMarkup(
       <ManagerTodayQueue items={[]} onOpenAll={() => undefined} onOpenItem={() => undefined} state="unavailable" />,
     );
 
-    expect(markup).toContain('could not be verified');
-    expect(markup).not.toContain('No loaded service currently requires');
+    expect(markup).toContain('We couldn’t check today’s work');
+    expect(markup).not.toContain('Nothing loaded needs a manager decision');
   });
 });

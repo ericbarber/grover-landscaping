@@ -286,7 +286,7 @@ function CustomerDeliveredProof({ visit }: { visit: CustomerPortalVisitSummary }
       {proof ? (
         <div className="mt-4 space-y-4">
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-xl bg-emerald-50 p-3"><strong className="block text-xl text-forest">{proof.checklistProgress}%</strong><span className="text-xs text-slate-600">Checklist</span></div>
+            <div className="rounded-xl bg-emerald-50 p-3"><strong className="block text-xl text-forest">{proof.checklistProgress}%</strong><span className="text-xs text-slate-600">Tasks</span></div>
             <div className="rounded-xl bg-emerald-50 p-3"><strong className="block text-xl text-forest">{proof.beforePhotos}</strong><span className="text-xs text-slate-600">Before</span></div>
             <div className="rounded-xl bg-emerald-50 p-3"><strong className="block text-xl text-forest">{proof.afterPhotos}</strong><span className="text-xs text-slate-600">After</span></div>
           </div>
@@ -300,10 +300,10 @@ function CustomerDeliveredProof({ visit }: { visit: CustomerPortalVisitSummary }
           </div>
           {proof.photoEvidence.length ? (
             <div>
-              <h4 className="text-sm font-black text-forest">Photo evidence</h4>
+              <h4 className="text-sm font-black text-forest">Service photos</h4>
               <div className="mt-2 grid grid-cols-2 gap-2">{proof.photoEvidence.map((photo) => (
                 <figure className="overflow-hidden rounded-xl border border-slate-200" key={`${photo.photoType}:${photo.imageUrl}`}>
-                  <img alt={`${photo.photoType} service evidence`} className="aspect-[4/3] w-full object-cover" src={photo.imageUrl} />
+                  <img alt={`${photo.photoType} service photo`} className="aspect-[4/3] w-full object-cover" src={photo.imageUrl} />
                   <figcaption className="p-2 text-xs font-bold capitalize text-slate-600">{photo.photoType}</figcaption>
                 </figure>
               ))}</div>

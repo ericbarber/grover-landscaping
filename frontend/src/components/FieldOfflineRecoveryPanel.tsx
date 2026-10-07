@@ -14,12 +14,27 @@ import {
 function queuedAt(mutation: { createdAt: string; attemptCount: number }) {
   return (
     <p className="mt-1 text-slate-600">
-      Queued {new Date(mutation.createdAt).toLocaleString()}
+      Saved {new Date(mutation.createdAt).toLocaleString()}
       {mutation.attemptCount > 0
-        ? ` · ${mutation.attemptCount} ${mutation.attemptCount === 1 ? 'attempt' : 'attempts'}`
+        ? ` · ${mutation.attemptCount} ${mutation.attemptCount === 1 ? 'retry' : 'retries'}`
         : ''}
     </p>
   );
+}
+
+function syncStateLabel(syncState: 'pending' | 'failed' | 'conflict') {
+  if (syncState === 'failed') return 'Needs another sync';
+  if (syncState === 'conflict') return 'Needs manager review';
+  return 'Saved on device';
+}
+
+function recoverySummary({ failed, conflicts }: { failed: number; conflicts: number }) {
+  const issues = [
+    ...(failed > 0 ? [`${failed} need another sync`] : []),
+    ...(conflicts > 0 ? [`${conflicts} need manager review`] : []),
+  ];
+
+  return issues.length > 0 ? issues.join(' · ') : 'Ready to sync when online.';
 }
 
 function ConflictDecision({
@@ -100,13 +115,13 @@ export function FieldOfflineRecoveryPanel({
       {jobMutations.length > 0 ? (
         <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
           <p>
-            {jobMutations.length} job {jobMutations.length === 1 ? 'change is' : 'changes are'} queued offline on this phone.
+            {jobMutations.length} job {jobMutations.length === 1 ? 'change is' : 'changes are'} saved on this phone.
           </p>
           <p className="mt-1 font-medium">
-            {recovery.jobs.failed} retry failed · {recovery.jobs.conflicts} conflicted
+            {recoverySummary(recovery.jobs)}
           </p>
           <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
-            <summary className="min-h-11 cursor-pointer py-3 font-bold">Review queued job changes</summary>
+            <summary className="min-h-11 cursor-pointer py-3 font-bold">Review saved job changes</summary>
             <div className="space-y-2 border-t border-amber-200 pt-2">
               {jobMutations.map((mutation) => {
                 const job = jobs.find((item) => item.id === mutation.jobId);
@@ -114,14 +129,14 @@ export function FieldOfflineRecoveryPanel({
                   <article className="rounded-lg bg-amber-50 p-2 font-medium" key={mutation.id}>
                     <p className="font-bold text-slate-900">{job?.customerName ?? mutation.jobId}</p>
                     <p className="mt-1 text-slate-700">
-                      {mutation.action === 'start' ? 'Start job' : 'Complete job'} · {mutation.syncState}
+                      {mutation.action === 'start' ? 'Start job' : 'Complete job'} · {syncStateLabel(mutation.syncState)}
                     </p>
                     {queuedAt(mutation)}
                     {mutation.syncState === 'conflict' ? (
                       jobConflictId === mutation.id ? (
                         <ConflictDecision
-                          confirmLabel="Discard conflict"
-                          detail="Confirm a manager reviewed this job action. Discarding restores server state."
+                          confirmLabel="Discard phone change"
+                          detail="Only discard this after a manager confirms the office record is correct. This removes the saved change from this phone."
                           onCancel={() => setJobConflictId(null)}
                           onConfirm={() => void onDiscardJobConflict(mutation)}
                         />
@@ -131,7 +146,7 @@ export function FieldOfflineRecoveryPanel({
                           onClick={() => setJobConflictId(mutation.id)}
                           type="button"
                         >
-                          Resolve after manager review
+                          Review with manager
                         </button>
                       )
                     ) : null}
@@ -154,13 +169,13 @@ export function FieldOfflineRecoveryPanel({
       {checklistMutations.length > 0 ? (
         <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
           <p>
-            {checklistMutations.length} checklist {checklistMutations.length === 1 ? 'change is' : 'changes are'} queued offline.
+            {checklistMutations.length} task {checklistMutations.length === 1 ? 'change is' : 'changes are'} saved on this phone.
           </p>
           <p className="mt-1 font-medium">
-            {recovery.checklist.failed} retry failed · {recovery.checklist.conflicts} conflicted
+            {recoverySummary(recovery.checklist)}
           </p>
           <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
-            <summary className="min-h-11 cursor-pointer py-3 font-bold">Review queued checklist changes</summary>
+            <summary className="min-h-11 cursor-pointer py-3 font-bold">Review saved task changes</summary>
             <div className="space-y-2 border-t border-amber-200 pt-2">
               {checklistMutations.map((mutation) => {
                 const job = jobs.find((item) => item.id === mutation.jobId);
@@ -172,14 +187,14 @@ export function FieldOfflineRecoveryPanel({
                     <p className="font-bold text-slate-900">{job?.customerName ?? mutation.jobId}</p>
                     <p className="mt-1 text-slate-700">
                       {checklistItem?.label ?? mutation.checklistItemId} ·{' '}
-                      {mutation.completed ? 'Complete' : 'Not complete'} · {mutation.syncState}
+                      {mutation.completed ? 'Complete' : 'Not complete'} · {syncStateLabel(mutation.syncState)}
                     </p>
                     {queuedAt(mutation)}
                     {mutation.syncState === 'conflict' ? (
                       checklistConflictId === mutation.id ? (
                         <ConflictDecision
-                          confirmLabel="Discard conflict"
-                          detail="Confirm a manager reviewed this checklist change. Discarding restores server state."
+                          confirmLabel="Discard phone change"
+                          detail="Only discard this after a manager confirms the office record is correct. This removes the saved task change from this phone."
                           onCancel={() => setChecklistConflictId(null)}
                           onConfirm={() => void onDiscardChecklistConflict(mutation)}
                         />
@@ -189,7 +204,7 @@ export function FieldOfflineRecoveryPanel({
                           onClick={() => setChecklistConflictId(mutation.id)}
                           type="button"
                         >
-                          Resolve after manager review
+                          Review with manager
                         </button>
                       )
                     ) : null}
@@ -204,7 +219,7 @@ export function FieldOfflineRecoveryPanel({
             onClick={() => void onReplayChecklist()}
             type="button"
           >
-            {isReplayingChecklist ? 'Syncing checklist…' : 'Sync checklist changes'}
+            {isReplayingChecklist ? 'Syncing task changes…' : 'Sync task changes'}
           </button>
         </div>
       ) : null}
@@ -212,13 +227,13 @@ export function FieldOfflineRecoveryPanel({
       {photoMutations.length > 0 ? (
         <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
           <p>
-            {photoMutations.length} photo {photoMutations.length === 1 ? 'upload is' : 'uploads are'} stored offline on this phone.
+            {photoMutations.length} {photoMutations.length === 1 ? 'photo is' : 'photos are'} saved on this phone.
           </p>
           <p className="mt-1 font-medium">
-            {recovery.photos.failed} retry failed · {recovery.photos.conflicts} conflicted
+            {recoverySummary(recovery.photos)}
           </p>
           <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
-            <summary className="min-h-11 cursor-pointer py-3 font-bold">Review queued photos</summary>
+            <summary className="min-h-11 cursor-pointer py-3 font-bold">Review saved photos</summary>
             <div className="space-y-2 border-t border-amber-200 pt-2">
               {photoMutations.map((mutation) => {
                 const job = jobs.find((item) => item.id === mutation.jobId);
@@ -227,14 +242,14 @@ export function FieldOfflineRecoveryPanel({
                     <p className="font-bold text-slate-900">{job?.customerName ?? mutation.jobId}</p>
                     <p className="mt-1 break-all text-slate-700">
                       {mutation.photoType} photo · {mutation.fileName} ·{' '}
-                      {(mutation.fileSizeBytes / 1024 / 1024).toFixed(1)} MB · {mutation.syncState}
+                      {(mutation.fileSizeBytes / 1024 / 1024).toFixed(1)} MB · {syncStateLabel(mutation.syncState)}
                     </p>
                     {queuedAt(mutation)}
                     {mutation.syncState === 'conflict' ? (
                       photoConflictId === mutation.id ? (
                         <ConflictDecision
                           confirmLabel="Discard photo"
-                          detail="Confirm a manager reviewed this photo. Discarding permanently removes its local image bytes."
+                          detail="Only discard this after a manager confirms the office record is correct. This permanently removes the saved photo from this phone."
                           onCancel={() => setPhotoConflictId(null)}
                           onConfirm={() => void onDiscardPhotoConflict(mutation)}
                         />
@@ -244,7 +259,7 @@ export function FieldOfflineRecoveryPanel({
                           onClick={() => setPhotoConflictId(mutation.id)}
                           type="button"
                         >
-                          Resolve after manager review
+                          Review with manager
                         </button>
                       )
                     ) : null}
@@ -259,7 +274,7 @@ export function FieldOfflineRecoveryPanel({
             onClick={() => void onReplayPhotos()}
             type="button"
           >
-            {isReplayingPhotos ? 'Uploading photos…' : 'Upload queued photos'}
+            {isReplayingPhotos ? 'Uploading photos…' : 'Upload saved photos'}
           </button>
         </div>
       ) : null}

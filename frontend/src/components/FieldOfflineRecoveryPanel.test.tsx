@@ -57,10 +57,10 @@ describe('FieldOfflineRecoveryPanel', () => {
       selectedJob: null,
     }));
 
-    expect(markup).toContain('1 job change is queued offline');
+    expect(markup).toContain('1 job change is saved on this phone');
     expect(markup).toContain('North Yard');
-    expect(markup).toContain('2 attempts');
-    expect(markup).toContain('Resolve after manager review');
+    expect(markup).toContain('2 retries');
+    expect(markup).toContain('Review with manager');
     expect(markup).toMatch(/<button[^>]*disabled=""[^>]*>Sync job changes<\/button>/);
   });
 

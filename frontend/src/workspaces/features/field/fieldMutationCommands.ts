@@ -172,12 +172,12 @@ export function runChecklistMutationCommand({
   return runFieldMutationCommand({
     persist,
     queue,
-    persistedMessage: 'Checklist updated.',
-    queuedMessage: 'Checklist change saved locally and queued offline.',
+    persistedMessage: 'Task updated.',
+    queuedMessage: 'Task change saved on this phone. It will sync when online.',
     storageUnavailableMessage:
-      'Checklist changed locally, but durable offline storage is unavailable.',
+      'Task changed on this phone, but offline saving is unavailable. Reconnect before continuing.',
     tenantUnresolvedMessage:
-      'Checklist changed locally without a resolved tenant; reconnect before continuing.',
+      'Task changed on this phone, but Grover could not confirm company access. Reconnect before continuing.',
   });
 }
 
@@ -221,11 +221,11 @@ export async function runFieldPhotoUploadCommand({
     };
     return {
       outcome: 'uploaded',
-      message: `Uploaded ${photoType} photo evidence for ${file.name}.`,
+      message: `Added ${photoType} photo ${file.name}.`,
       ticket,
       activity: {
-        title: 'Photo evidence uploaded',
-        message: `${photoType} photo evidence was uploaded for ${jobId}.`,
+        title: 'Job photo added',
+        message: `${photoType} photo was added for ${jobId}.`,
         tone: 'success',
         source: 'photo',
       },
@@ -236,14 +236,14 @@ export async function runFieldPhotoUploadCommand({
     return {
       outcome: queued ? 'queued' : 'local_only',
       message: queued
-        ? `Saved ${photoType} photo in the durable offline queue.`
-        : `Prepared ${photoType} photo locally, but it could not be queued for offline upload.`,
+        ? `Saved ${photoType} photo on this phone. It will upload when online.`
+        : `Prepared ${photoType} photo on this phone, but offline saving is unavailable.`,
       ticket,
       activity: {
-        title: queued ? 'Photo evidence queued offline' : 'Photo evidence saved locally',
+        title: queued ? 'Job photo saved on phone' : 'Job photo needs connection',
         message: queued
-          ? `${photoType} photo evidence for ${jobId} is queued durably until the API is reachable.`
-          : `${photoType} photo evidence for ${jobId} is browser-local until the API is reachable.`,
+          ? `${photoType} photo for ${jobId} is saved on this phone until Grover reconnects.`
+          : `${photoType} photo for ${jobId} is only available in this session until Grover reconnects.`,
         tone: 'warning',
         source: 'photo',
       },

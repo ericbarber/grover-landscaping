@@ -31,15 +31,15 @@ const readFailure: Record<Exclude<CustomerPortalReadState, 'loading' | 'ready'>,
 }> = {
   access_required: {
     title: 'Property portfolio access is not active.',
-    detail: 'No authorized property or visit can be shown for this account. Ask the provider to review your property access.',
+    detail: 'No property or visit can be shown for this account. Ask the landscaping company to review your access.',
   },
   inconsistent: {
-    title: 'Property access needs provider review.',
-    detail: 'Your account, property grant, and membership could not be reconciled. Property details remain hidden.',
+    title: 'Property access needs review.',
+    detail: 'Grover couldn’t match this property to your current access. Property details remain hidden.',
   },
   unavailable: {
     title: 'Portfolio visits could not be loaded.',
-    detail: 'The protected read is unavailable. No property or service detail is shown until it succeeds.',
+    detail: 'Grover couldn’t check your property access. No property or service details are shown until it succeeds.',
   },
 };
 
@@ -77,7 +77,7 @@ export function PropertyManagerAuthorizedPortfolioPanel({
         <WorkspaceStatusNotice
           className="mt-4"
           title="Portfolio access is not enabled for this account."
-          detail="Ask an organization administrator to confirm your workspace rollout assignment."
+          detail="Ask your company administrator to confirm that portfolio access is enabled for your account."
           tone="neutral"
         />
       </section>
@@ -88,7 +88,7 @@ export function PropertyManagerAuthorizedPortfolioPanel({
     const failure = readState === 'loading' ? null : readFailure[readState];
     return (
       <section className="grover-card p-6" data-property-manager-portfolio>
-        <p className="grover-eyebrow">Property portfolio · protected read</p>
+        <p className="grover-eyebrow">Property portfolio · Private access</p>
         <h1 className="mt-2 font-display text-3xl font-black text-forest">Your authorized properties</h1>
         <WorkspaceStatusNotice
           className="mt-5"
@@ -97,7 +97,7 @@ export function PropertyManagerAuthorizedPortfolioPanel({
           tone={failure ? 'warning' : 'info'}
         />
         <div className="mt-5 flex flex-wrap gap-3">
-          {failure ? <button className="grover-button-primary" onClick={onRetry} type="button">Retry protected read</button> : null}
+          {failure ? <button className="grover-button-primary" onClick={onRetry} type="button">Try again</button> : null}
           <button className="grover-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
         </div>
       </section>
@@ -107,10 +107,10 @@ export function PropertyManagerAuthorizedPortfolioPanel({
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-200 bg-paper shadow-grover-md" data-property-manager-portfolio>
       <header className="bg-forest p-5 text-white sm:p-7">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Property portfolio · protected read</p>
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Property portfolio · Private access</p>
         <h1 className="mt-2 font-display text-3xl font-black">Your authorized properties</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200">
-          {properties.length} {properties.length === 1 ? 'property' : 'properties'} in your current access scope. Service updates are customer-safe and tied to the exact property.
+          {properties.length} {properties.length === 1 ? 'property' : 'properties'} available to your account. Service updates are customer-safe and tied to the exact property.
         </p>
       </header>
       <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[minmax(15rem,.38fr)_minmax(0,1fr)]">
@@ -128,12 +128,12 @@ export function PropertyManagerAuthorizedPortfolioPanel({
           {properties.length === 0 ? (
             <WorkspaceStatusNotice
               className="mt-4"
-              title="No property is in your current access scope."
-              detail="Ask the provider to review your property assignment before relying on a service summary."
+              title="No properties are available to this account."
+              detail="Ask the landscaping company to review your property access before relying on a service summary."
               tone="neutral"
             />
           ) : filtered.length === 0 ? (
-            <p className="mt-4 rounded-xl bg-slate-100 p-4 text-sm text-slate-700">No authorized property matches that search.</p>
+            <p className="mt-4 rounded-xl bg-slate-100 p-4 text-sm text-slate-700">No available property matches that search.</p>
           ) : (
             <div className="mt-4 grid gap-2" aria-label="Authorized properties">
               {filtered.map((property) => {
@@ -151,7 +151,7 @@ export function PropertyManagerAuthorizedPortfolioPanel({
                   >
                     <strong className="block text-base text-forest">{property.displayName}</strong>
                     <span className="mt-1 block text-xs text-slate-600">
-                      {latest ? `${customerVisitStatusLabel(latest.status)} · ${serviceDateLabel(latest.scheduledDate)}` : 'No confirmed visit in this read'}
+                      {latest ? `${customerVisitStatusLabel(latest.status)} · ${serviceDateLabel(latest.scheduledDate)}` : 'No confirmed visit available'}
                     </span>
                   </button>
                 );
@@ -168,7 +168,7 @@ export function PropertyManagerAuthorizedPortfolioPanel({
                 <WorkspaceStatusNotice
                   className="mt-4"
                   title="No confirmed visit is available for this property."
-                  detail="This protected read does not include a service to review or respond to."
+                  detail="No service visit is available to this account for this property."
                   tone="neutral"
                 />
               ) : visitsForPortalProperty(visits, selected.customerId, selected.organizationId, selected.id).map((visit) => (
@@ -187,7 +187,7 @@ export function PropertyManagerAuthorizedPortfolioPanel({
           ) : (
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
               <h2 className="font-display text-2xl font-black text-forest">Choose a property to see its service.</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Only property and visit details returned for your current access are available here.</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Only properties and visits available to your account appear here.</p>
             </div>
           )}
         </div>

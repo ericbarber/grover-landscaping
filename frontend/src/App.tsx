@@ -1592,7 +1592,7 @@ export function App() {
     );
     if (!evidence.ready) {
       setStatusMessage(
-        `Cannot complete this job yet. Capture ${evidence.missing.join(' and ')} photo evidence first.`,
+        `Cannot complete this job yet. Add ${evidence.missing.join(' and ')} ${evidence.missing.length === 1 ? 'photo' : 'photos'} first.`,
       );
       return;
     }

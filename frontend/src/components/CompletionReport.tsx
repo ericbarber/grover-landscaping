@@ -24,7 +24,17 @@ type CompletionReportProps = {
 };
 
 function reportStatusLabel(status: string): string {
-  return status.replace('_', ' ');
+  return status
+    .split('_')
+    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+    .join(' ');
+}
+
+function photoStatusLabel(status: string): string {
+  return status
+    .split(/[_-]/)
+    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+    .join(' ');
 }
 
 export function CompletionReport({
@@ -79,7 +89,7 @@ export function CompletionReport({
       <div className="mt-5 grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
         <div className="rounded-xl bg-slate-50 p-3">
           <p className="text-2xl font-bold text-slate-950">{progress}%</p>
-          <p className="text-xs text-slate-500">Checklist</p>
+          <p className="text-xs text-slate-500">Tasks</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-3">
           <p className="text-2xl font-bold text-slate-950">{beforePhotos}</p>
@@ -96,15 +106,15 @@ export function CompletionReport({
       </div>
 
       <div className="mt-5 rounded-xl bg-slate-50 p-4">
-        <p className="text-sm font-semibold text-slate-800">Customer-facing summary</p>
+        <p className="text-sm font-semibold text-slate-800">Customer report preview</p>
         <p className="mt-2 text-sm text-slate-600">
-          Yard-care work for {job.propertyAddress} is tracked with timestamped completion steps and photo evidence.
-          This report will become shareable once the required before and after photos are present and the checklist is complete.
+          This report shows the completed yard-care tasks and photos for {job.propertyAddress}.
+          It becomes shareable when every task is finished and the required before and after photos are ready.
         </p>
         {reportSnapshot && (
           <p className="mt-3 text-xs font-medium text-slate-500">
-            Backend report {reportSnapshot.persisted ? 'persisted' : 'computed locally'} as {reportSnapshot.reportId} with{' '}
-            {reportSnapshot.photoEvidence.length} photo evidence item
+            {reportSnapshot.persisted ? 'Saved to Grover' : 'Prepared on this device'} ·{' '}
+            {reportSnapshot.photoEvidence.length} attached photo
             {reportSnapshot.photoEvidence.length === 1 ? '' : 's'}.
           </p>
         )}
@@ -115,15 +125,15 @@ export function CompletionReport({
             rel="noreferrer"
             target="_blank"
           >
-            Open shareable report
+            Preview customer report
           </a>
         )}
         {readinessBlockers.length > 0 && (
           <p className="mt-3 rounded-lg bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900">
             Still needed: {readinessBlockers.map((blocker) => ({
-              checklist: 'finish the checklist',
-              before_photos: 'capture a before photo',
-              after_photos: 'capture an after photo',
+              checklist: 'finish all tasks',
+              before_photos: 'add a before photo',
+              after_photos: 'add an after photo',
               add_ons: 'finish approved add-on work',
               route_stop: 'finish the route stop',
             })[blocker]).join(' · ')}
@@ -146,7 +156,7 @@ export function CompletionReport({
             <div>
               <p className="text-sm font-semibold text-slate-800">Manager review actions</p>
               <p className="mt-1 text-xs text-slate-500">
-                Current lifecycle state: {reportStatusLabel(reportSnapshot.reportStatus)}.
+                Current status: {reportStatusLabel(reportSnapshot.reportStatus)}.
               </p>
             </div>
             {actionStatus ? <p className="text-xs font-semibold text-slate-500">{actionStatus}</p> : null}
@@ -247,7 +257,7 @@ export function CompletionReport({
                     }
                     type="button"
                   >
-                    Queue delivery
+                    Send notification
                   </button>
                 </div>
               </div>
@@ -273,7 +283,7 @@ export function CompletionReport({
 
       {uploadTickets.length > 0 && (
         <div className="mt-5">
-          <p className="text-sm font-semibold text-slate-800">Photo evidence</p>
+          <p className="text-sm font-semibold text-slate-800">Job photos</p>
           <div className="mt-3 space-y-2">
             {uploadTickets.map((ticket) => (
               <div key={ticket.photoId} className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
@@ -293,11 +303,9 @@ export function CompletionReport({
                     </div>
                   </div>
                   <span className="rounded-full bg-white px-2 py-1 font-semibold uppercase text-slate-500">
-                    {ticket.status}
+                    {photoStatusLabel(ticket.status)}
                   </span>
                 </div>
-                <p className="mt-2">{ticket.uploadMode}</p>
-                <p className="break-all">{ticket.objectKey}</p>
               </div>
             ))}
           </div>
