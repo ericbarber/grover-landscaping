@@ -173,7 +173,7 @@ select_terraform_runner() {
 
   if command -v docker >/dev/null 2>&1 && docker image inspect "${terraform_image}" >/dev/null 2>&1; then
     local container_id
-    temporary_terraform="$(mktemp /tmp/grover-release-preflight-terraform.XXXXXX)"
+    temporary_terraform="$(mktemp /tmp/yardfolio-release-preflight-terraform.XXXXXX)"
     container_id="$(docker create "${terraform_image}")"
     if docker cp "${container_id}:/bin/terraform" "${temporary_terraform}" >/dev/null 2>&1; then
       chmod +x "${temporary_terraform}"

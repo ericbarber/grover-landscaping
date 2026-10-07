@@ -139,7 +139,7 @@ abandoned claims, and records provider receipts:
 
 ```text
 NOTIFICATION_DISPATCH_MODE=webhook
-PUBLIC_APP_URL=https://grover-landscaping.example.com
+PUBLIC_APP_URL=https://yardfolio.example.com
 NOTIFICATION_WEBHOOK_URL=https://notification-gateway.example.com/deliver
 NOTIFICATION_WEBHOOK_BEARER_TOKEN=<optional-bearer-token>
 NOTIFICATION_POLL_SECONDS=5

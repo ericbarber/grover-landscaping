@@ -10906,7 +10906,7 @@ mod tests {
     }
 
     fn seed_app_with_frontend(frontend_dist: PathBuf) -> Router {
-        let public_site = PublicSite::new(frontend_dist.clone(), "https://grover.example", true)
+        let public_site = PublicSite::new(frontend_dist.clone(), "https://yardfolio.example", true)
             .expect("test public-site configuration should be valid");
         app_with_runtime(
             seed_state(),
@@ -14054,7 +14054,7 @@ mod tests {
     #[tokio::test]
     async fn production_router_serves_public_sign_in_frontend() {
         let frontend_dist =
-            std::env::temp_dir().join(format!("grover-frontend-test-{}", std::process::id()));
+            std::env::temp_dir().join(format!("yardfolio-frontend-test-{}", std::process::id()));
         std::fs::create_dir_all(&frontend_dist).unwrap();
         std::fs::write(
             frontend_dist.join("index.html"),
@@ -14076,9 +14076,9 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let body = String::from_utf8_lossy(&body);
         assert!(body.contains("Your yard. Every visit. One clear story."));
-        assert!(body.contains("<link rel=\"canonical\" href=\"https://grover.example/\""));
+        assert!(body.contains("<link rel=\"canonical\" href=\"https://yardfolio.example/\""));
         assert!(body.contains(
-            "<meta property=\"og:image\" content=\"https://grover.example/brand/yardfolio-landscape-home-hero.webp\""
+            "<meta property=\"og:image\" content=\"https://yardfolio.example/brand/yardfolio-landscape-home-hero.webp\""
         ));
 
         for route in [
@@ -14116,7 +14116,7 @@ mod tests {
             .to_bytes();
         let owner_body = String::from_utf8_lossy(&owner_body);
         assert!(owner_body.contains("Your yard. Every visit. One clear story."));
-        assert!(owner_body.contains("https://grover.example/for-yard-owners"));
+        assert!(owner_body.contains("https://yardfolio.example/for-yard-owners"));
 
         let sitemap_response = seed_app_with_frontend(frontend_dist.clone())
             .oneshot(
@@ -14135,7 +14135,7 @@ mod tests {
             .unwrap()
             .to_bytes();
         let sitemap_body = String::from_utf8_lossy(&sitemap_body);
-        assert!(sitemap_body.contains("https://grover.example/for-crew-leads"));
+        assert!(sitemap_body.contains("https://yardfolio.example/for-crew-leads"));
         assert!(!sitemap_body.contains("/app"));
 
         let robots_response = seed_app_with_frontend(frontend_dist.clone())
@@ -14154,7 +14154,7 @@ mod tests {
             .unwrap()
             .to_bytes();
         assert!(String::from_utf8_lossy(&robots_body)
-            .contains("Sitemap: https://grover.example/sitemap.xml"));
+            .contains("Sitemap: https://yardfolio.example/sitemap.xml"));
 
         let shared_bid_response = seed_app_with_frontend(frontend_dist.clone())
             .oneshot(

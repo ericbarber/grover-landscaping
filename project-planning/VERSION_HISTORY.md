@@ -9,6 +9,9 @@
   internal study name, `/yardfolio-study` review route, isolated fixture
   database contract, request namespaces, environment variables, response
   header, CI commands, and linked prototype paths now use Yardfolio Study.
+  Test-only public origins, temporary paths, synthetic people and companies,
+  photo-bucket examples, operational-indicator contracts, frontend/backend
+  readmes, and the Cognito role description also use Yardfolio-neutral names.
   Source identifiers and infrastructure retain the documented legacy namespace
   until their coordinated migrations. The production shell
   cache version advances so existing installations receive the renamed shell

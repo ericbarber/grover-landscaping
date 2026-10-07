@@ -6,7 +6,7 @@ import test from 'node:test';
 import { validateQualityBudgets } from './validate-quality-budgets.mjs';
 
 async function fixture(overrides = {}) {
-  const root = await mkdtemp(join(tmpdir(), 'grover-quality-budget-'));
+  const root = await mkdtemp(join(tmpdir(), 'yardfolio-quality-budget-'));
   const dist = join(root, 'dist');
   const assets = join(dist, 'assets');
   const publicDirectory = join(root, 'public');
@@ -38,7 +38,7 @@ async function fixture(overrides = {}) {
       realUserMeasurementStatus: 'not_approved',
     },
     operationalIndicators: [{
-      name: 'grover_test_total', kind: 'counter', allowedDimensions: ['outcome'],
+      name: 'yardfolio_test_total', kind: 'counter', allowedDimensions: ['outcome'],
       owner: 'test_owner', runbook: 'docs/test.md', protectedStatus: 'external_pending',
     }],
   }));

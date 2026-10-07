@@ -230,14 +230,14 @@ async fn repository_bootstraps_first_owner_once() {
             &created.membership.id,
             &user_id,
             UpdateOrganizationMembershipProfileRequest {
-                display_name: "Jordan Grover".to_string(),
+                display_name: "Jordan Rivera".to_string(),
             },
         )
         .await;
     let MembershipProfileUpdateResult::Updated(renamed_member) = renamed_member else {
         panic!("owner membership display name should be editable");
     };
-    assert_eq!(renamed_member.display_name, "Jordan Grover");
+    assert_eq!(renamed_member.display_name, "Jordan Rivera");
     assert!(loaded(
         organizations
             .list_organization_memberships(&created.organization_id)
@@ -246,7 +246,7 @@ async fn repository_bootstraps_first_owner_once() {
     )
     .iter()
     .any(|membership| {
-        membership.id == created.membership.id && membership.display_name == "Jordan Grover"
+        membership.id == created.membership.id && membership.display_name == "Jordan Rivera"
     }));
 
     let OrganizationProfileUpdateResult::Updated(updated_profile) = organizations
@@ -641,8 +641,8 @@ async fn repository_bootstraps_first_owner_once() {
         .iter()
         .find(|item| item.event_kind == "membership_profile_updated")
         .expect("member profile activity should be readable");
-    assert_eq!(profile_activity.actor_label, "Jordan Grover");
-    assert_eq!(profile_activity.target_label, "Jordan Grover");
+    assert_eq!(profile_activity.actor_label, "Jordan Rivera");
+    assert_eq!(profile_activity.target_label, "Jordan Rivera");
     assert_eq!(
         loaded(
             organizations
@@ -697,7 +697,7 @@ async fn repository_bootstraps_first_owner_once() {
         .await
         .into_loaded()
         .iter()
-        .all(|item| item.actor_label == "Jordan Grover"));
+        .all(|item| item.actor_label == "Jordan Rivera"));
     assert!(organizations
         .list_team_administration_activity_page(
             &created.organization_id,
@@ -714,7 +714,7 @@ async fn repository_bootstraps_first_owner_once() {
         .await
         .into_loaded()
         .iter()
-        .all(|item| item.target_label == "Jordan Grover"));
+        .all(|item| item.target_label == "Jordan Rivera"));
     assert!(organizations
         .list_team_administration_activity_page(
             &created.organization_id,

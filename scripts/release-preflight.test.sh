@@ -3,7 +3,7 @@ set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 preflight="${repository_root}/scripts/release-preflight.sh"
-test_bin="$(mktemp -d /tmp/grover-release-preflight-test.XXXXXX)"
+test_bin="$(mktemp -d /tmp/yardfolio-release-preflight-test.XXXXXX)"
 
 cleanup() {
   rm -rf -- "${test_bin}"

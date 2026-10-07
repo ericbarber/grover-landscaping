@@ -26,7 +26,7 @@
   },
   "operationalIndicators": [
     {
-      "name": "grover_readiness_duration_ms",
+      "name": "yardfolio_readiness_duration_ms",
       "kind": "histogram",
       "allowedDimensions": ["environment", "outcome"],
       "owner": "engineering_on_call",
@@ -34,7 +34,7 @@
       "protectedStatus": "external_pending"
     },
     {
-      "name": "grover_api_request_duration_ms",
+      "name": "yardfolio_api_request_duration_ms",
       "kind": "histogram",
       "allowedDimensions": ["environment", "route_family", "method", "status_class"],
       "owner": "engineering_on_call",
@@ -42,7 +42,7 @@
       "protectedStatus": "external_pending"
     },
     {
-      "name": "grover_persistence_unavailable_total",
+      "name": "yardfolio_persistence_unavailable_total",
       "kind": "counter",
       "allowedDimensions": ["environment", "route_family", "outcome"],
       "owner": "engineering_on_call",
@@ -50,7 +50,7 @@
       "protectedStatus": "external_pending"
     },
     {
-      "name": "grover_worker_queue_age_seconds",
+      "name": "yardfolio_worker_queue_age_seconds",
       "kind": "gauge",
       "allowedDimensions": ["environment", "worker_kind", "outcome"],
       "owner": "workflow_operator",
@@ -58,7 +58,7 @@
       "protectedStatus": "external_pending"
     },
     {
-      "name": "grover_worker_outcomes_total",
+      "name": "yardfolio_worker_outcomes_total",
       "kind": "counter",
       "allowedDimensions": ["environment", "worker_kind", "outcome"],
       "owner": "workflow_operator",
@@ -66,7 +66,7 @@
       "protectedStatus": "external_pending"
     },
     {
-      "name": "grover_offline_mutation_outcomes_total",
+      "name": "yardfolio_offline_mutation_outcomes_total",
       "kind": "counter",
       "allowedDimensions": ["environment", "queue_kind", "outcome"],
       "owner": "field_operations_owner",

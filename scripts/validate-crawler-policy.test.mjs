@@ -37,7 +37,7 @@ test('requires any future sitemap directive to use an absolute HTTPS canonical U
     /absolute HTTPS/,
   );
   assert.deepEqual(
-    validateCrawlerPolicy(`${repositoryPolicy}\nSitemap: https://grover.example/sitemap.xml\n`),
+    validateCrawlerPolicy(`${repositoryPolicy}\nSitemap: https://yardfolio.example/sitemap.xml\n`),
     [],
   );
 });

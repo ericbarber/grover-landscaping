@@ -1,7 +1,7 @@
 # AWS Account Setup for the Protected Pilot
 
 This runbook prepares the AWS ownership and operator access required by the
-Grover Landscaping protected pilot. It does not deploy the application.
+Yardfolio protected pilot. It does not deploy the application.
 
 Last verified against the linked AWS and HashiCorp documentation: 2026-09-03.
 Recheck the linked billing and console guidance if this runbook is used later.

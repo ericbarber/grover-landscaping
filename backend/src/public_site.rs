@@ -331,7 +331,7 @@ mod tests {
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let directory = std::env::temp_dir().join(format!("grover-public-site-{suffix}"));
+        let directory = std::env::temp_dir().join(format!("yardfolio-public-site-{suffix}"));
         fs::create_dir_all(&directory).unwrap();
         fs::write(
             directory.join("index.html"),
@@ -339,7 +339,7 @@ mod tests {
         )
         .unwrap();
         fs::write(directory.join("robots.txt"), "User-agent: *\nAllow: /\n").unwrap();
-        let site = PublicSite::new(directory.clone(), "https://grover.example", true).unwrap();
+        let site = PublicSite::new(directory.clone(), "https://yardfolio.example", true).unwrap();
         (site, directory)
     }
 
@@ -351,7 +351,7 @@ mod tests {
             assert!(html.contains(metadata.headline), "{}", metadata.path);
             assert!(html.contains(metadata.description), "{}", metadata.path);
             assert!(html.contains(&format!(
-                "https://grover.example{}",
+                "https://yardfolio.example{}",
                 if metadata.path == "/" {
                     "/"
                 } else {
@@ -359,7 +359,7 @@ mod tests {
                 }
             )));
             assert!(
-                html.contains("https://grover.example/brand/yardfolio-landscape-home-hero.webp")
+                html.contains("https://yardfolio.example/brand/yardfolio-landscape-home-hero.webp")
             );
         }
         assert!(site.render("/app").unwrap().is_none());
@@ -376,7 +376,7 @@ mod tests {
         assert!(site
             .robots()
             .unwrap()
-            .contains("Sitemap: https://grover.example/sitemap.xml"));
+            .contains("Sitemap: https://yardfolio.example/sitemap.xml"));
         fs::remove_dir_all(directory).unwrap();
     }
 
@@ -384,14 +384,14 @@ mod tests {
     fn production_origin_must_be_an_exact_https_origin() {
         let (_site, directory) = fixture();
         for invalid in [
-            "http://grover.example",
-            "https://grover.example/path",
-            "https://user@grover.example",
-            "https://grover.example/?campaign=one",
+            "http://yardfolio.example",
+            "https://yardfolio.example/path",
+            "https://user@yardfolio.example",
+            "https://yardfolio.example/?campaign=one",
         ] {
             assert!(PublicSite::new(directory.clone(), invalid, true).is_err());
         }
-        assert!(PublicSite::new(directory.clone(), "https://grover.example", true).is_ok());
+        assert!(PublicSite::new(directory.clone(), "https://yardfolio.example", true).is_ok());
         fs::remove_dir_all(directory).unwrap();
     }
 }

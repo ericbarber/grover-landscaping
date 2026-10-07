@@ -123,7 +123,7 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
                 "org_demo_landscaping",
                 "local-development-user",
                 UpdateOrganizationProfileRequest {
-                    display_name: "Grover Property Services".to_string(),
+                    display_name: "Desert Bloom Property Services".to_string(),
                     organization_type: "property_management_company".to_string(),
                     contact_email: None,
                     contact_phone: None,
@@ -158,7 +158,7 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
                 "membership_local_owner_demo",
                 "local-development-user",
                 UpdateOrganizationMembershipProfileRequest {
-                    display_name: "Jordan Grover".to_string(),
+                    display_name: "Jordan Rivera".to_string(),
                 },
             )
             .await,
@@ -239,7 +239,7 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
                 "org_demo_landscaping",
                 "local-development-user",
                 UpdateOrganizationProfileRequest {
-                    display_name: "Grover Landscaping".to_string(),
+                    display_name: "Desert Bloom Landscaping".to_string(),
                     organization_type: "yard_care_company".to_string(),
                     contact_email: Some("office@example.com".to_string()),
                     contact_phone: None,
