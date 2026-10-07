@@ -11,8 +11,8 @@ describe('API base URL resolution', () => {
     expect(resolveApiBaseUrl(
       'http://127.0.0.1:8080/',
       false,
-      'http://grover-workstation:5173',
-    )).toBe('http://grover-workstation:8080');
+      'http://yardfolio-workstation:5173',
+    )).toBe('http://yardfolio-workstation:8080');
   });
 
   it('preserves loopback for workstation use and explicit hosted APIs', () => {

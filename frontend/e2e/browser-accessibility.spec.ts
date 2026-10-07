@@ -16,15 +16,15 @@ const qualityBudgets = JSON.parse(
 
 test('the public route meets the versioned lab interaction, stability, and reflow budgets', async ({ page }) => {
   await page.addInitScript(() => {
-    const qualityWindow = window as Window & { __groverLayoutShift?: number };
-    qualityWindow.__groverLayoutShift = 0;
+    const qualityWindow = window as Window & { __yardfolioLayoutShift?: number };
+    qualityWindow.__yardfolioLayoutShift = 0;
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries() as Array<PerformanceEntry & {
         hadRecentInput: boolean;
         value: number;
       }>) {
         if (!entry.hadRecentInput) {
-          qualityWindow.__groverLayoutShift = (qualityWindow.__groverLayoutShift ?? 0) + entry.value;
+          qualityWindow.__yardfolioLayoutShift = (qualityWindow.__yardfolioLayoutShift ?? 0) + entry.value;
         }
       }
     }).observe({ type: 'layout-shift', buffered: true });
@@ -44,7 +44,7 @@ test('the public route meets the versioned lab interaction, stability, and reflo
     qualityBudgets.browserExperience.publicPrimaryContentReadyMs,
   );
   const layoutShift = await page.evaluate(
-    () => (window as Window & { __groverLayoutShift?: number }).__groverLayoutShift ?? 0,
+    () => (window as Window & { __yardfolioLayoutShift?: number }).__yardfolioLayoutShift ?? 0,
   );
   expect(layoutShift).toBeLessThanOrEqual(qualityBudgets.browserExperience.maxLayoutShift);
 
@@ -97,7 +97,9 @@ test('the Yard Owner entry preserves reflow, reduced motion, and keyboard focus'
       .toBe(true);
   }
 
-  await expect(page.getByRole('link', { name: 'Create my private yard' })).toBeVisible();
+  await expect(page.getByTestId('marketing-hero').getByRole('link', {
+    name: 'Create my private yard',
+  })).toBeVisible();
   await page.keyboard.press('Tab');
   const focused = page.locator(':focus-visible');
   await expect(focused).toBeVisible();
@@ -106,7 +108,9 @@ test('the Yard Owner entry preserves reflow, reduced motion, and keyboard focus'
 
 test('forced-colors mode retains a visible keyboard focus indicator', async ({ page }) => {
   await page.goto('/for-yard-owners');
-  await expect(page.getByRole('link', { name: 'Create my private yard' })).toBeVisible();
+  await expect(page.getByTestId('marketing-hero').getByRole('link', {
+    name: 'Create my private yard',
+  })).toBeVisible();
   await page.keyboard.press('Tab');
   const focused = page.locator(':focus-visible');
   await expect(focused).toBeVisible();
@@ -144,10 +148,10 @@ test('the production homepage retains the validated prototype foundation', async
     const heading = document.querySelector('h1');
     const primaryAction = Array.from(document.querySelectorAll('a'))
       .find((element) => element.textContent?.includes('Create my private yard'));
-    const brandMark = document.querySelector('.grover-brand-mark');
+    const brandMark = document.querySelector('.yardfolio-brand-mark');
 
     if (!main || !heading || !primaryAction || !brandMark) {
-      throw new Error('The shared Grover theme targets were not rendered.');
+      throw new Error('The shared Yardfolio theme targets were not rendered.');
     }
 
     return {
@@ -157,7 +161,7 @@ test('the production homepage retains the validated prototype foundation', async
       primaryAction: getComputedStyle(primaryAction).backgroundColor,
       brandMark: getComputedStyle(brandMark).stroke,
       focusToken: getComputedStyle(document.documentElement)
-        .getPropertyValue('--grover-focus')
+        .getPropertyValue('--yardfolio-focus')
         .trim(),
     };
   });
@@ -176,7 +180,7 @@ test('each audience route presents a complete persona-specific landing view', as
   const personas = [
     {
       path: '/for-yard-owners',
-      title: 'Clearer yard care for homeowners | Grover',
+      title: 'Clearer yard care for homeowners | Yardfolio',
       headline: 'Know what happened—without chasing an update.',
       perspective: 'The service story—without the operations clutter.',
       trust: 'Confidence before and after care',
@@ -188,7 +192,7 @@ test('each audience route presents a complete persona-specific landing view', as
     },
     {
       path: '/for-property-managers',
-      title: 'Landscaping oversight for property managers | Grover',
+      title: 'Landscaping oversight for property managers | Yardfolio',
       headline: 'Keep your entire property portfolio in view.',
       perspective: 'Move from your portfolio to the exact service record.',
       trust: 'Portfolio clarity within approved access',
@@ -200,7 +204,7 @@ test('each audience route presents a complete persona-specific landing view', as
     },
     {
       path: '/for-landscaping-companies',
-      title: 'Landscaping operations software | Grover',
+      title: 'Landscaping operations software | Yardfolio',
       headline: 'Plan the day. Guide the crew. Prove the work.',
       perspective: 'Keep office, field, and customer work aligned.',
       trust: 'One shared view of the work',
@@ -212,7 +216,7 @@ test('each audience route presents a complete persona-specific landing view', as
     },
     {
       path: '/for-crew-leads',
-      title: 'Field workflow for landscaping crews | Grover',
+      title: 'Field workflow for landscaping crews | Yardfolio',
       headline: 'Know the next stop—and what done looks like.',
       perspective: 'Give crews the context to finish each stop well.',
       trust: 'Everything the field needs to move',

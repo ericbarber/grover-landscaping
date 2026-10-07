@@ -13,10 +13,12 @@
   cache version advances so existing installations receive the renamed shell
   through the established update prompt without clearing offline work. The
   active CSS variables, reusable component classes, Tailwind shadow utilities,
-  and public hero asset use a Yardfolio namespace. The brand gate now also
-  rejects former customer-visible runtime copy. Professional trademark
-  clearance, domain/app-store confirmation, and public rollout approval remain
-  open.
+  public hero asset, frontend package, service-worker event/current cache,
+  diagnostic downloads, temporary browser-test output, and current browser
+  assertions use a Yardfolio namespace. Prior shell caches remain removable
+  through a brand-neutral matcher. The brand gate now also rejects former
+  customer-visible runtime copy. Professional trademark clearance,
+  domain/app-store confirmation, and public rollout approval remain open.
 - 2026-10-06: Enforced the product-renaming boundary with a tested local and CI
   consistency gate. It rejects new hard-coded customer-visible runtime brand
   copy and detects stale HTML metadata, installed-app manifest/icon labels, or

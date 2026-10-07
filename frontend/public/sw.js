@@ -1,4 +1,4 @@
-const CACHE_NAME = 'grover-field-shell-v4';
+const CACHE_NAME = 'yardfolio-field-shell-v1';
 const SHELL_ASSETS = ['/', '/manifest.webmanifest', '/app-icon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -13,7 +13,7 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then((names) => Promise.all(
         names
-          .filter((name) => name.startsWith('grover-field-shell-') && name !== CACHE_NAME)
+          .filter((name) => name.includes('-field-shell-') && name !== CACHE_NAME)
           .map((name) => caches.delete(name)),
       ))
       .then(() => self.clients.claim()),

@@ -15,7 +15,7 @@ export type MarketingEventName =
   | 'setup_stage_failed'
   | 'setup_resumed';
 
-const sessionKey = 'grover.marketing-session.v1';
+const sessionKey = 'yardfolio.marketing-session.v1';
 let memorySessionId: string | undefined;
 
 export function createAnonymousMarketingSessionId(): string {

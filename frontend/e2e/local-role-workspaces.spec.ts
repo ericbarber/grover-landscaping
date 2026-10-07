@@ -61,7 +61,7 @@ test.beforeEach(async ({ page }) => {
           memberships: [{
             id: `membership-${reviewerId}`,
             organization_id: 'org_demo_landscaping',
-            organization_name: 'Grover Demo Landscaping',
+            organization_name: 'Desert Bloom Landscaping',
             organization_type: 'yard_care_company',
             user_id: `local-review-${reviewerId}`,
             display_name: displayName,
@@ -108,7 +108,7 @@ test('workspace access verification fails closed and recovers without a reload',
         memberships: [{
           id: 'membership-organization-owner',
           organization_id: 'org_demo_landscaping',
-          organization_name: 'Grover Demo Landscaping',
+          organization_name: 'Desert Bloom Landscaping',
           organization_type: 'yard_care_company',
           user_id: 'local-review-organization-owner',
           display_name: 'Olivia — Organization Owner',
@@ -127,8 +127,9 @@ test('workspace access verification fails closed and recovers without a reload',
 
   await page.getByRole('button', { name: 'Check access again' }).click();
 
+  await expect(page.getByRole('navigation', { name: 'Desktop workspace' }))
+    .toBeVisible({ timeout: 15_000 });
   await expect(page.getByLabel('Local reviewer account')).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'Desktop workspace' })).toBeVisible();
   expect(accessRequests).toBeGreaterThanOrEqual(2);
 });
 
@@ -257,7 +258,9 @@ test('mobile Home keeps its final action clear of fixed navigation', async ({ pa
     await page.setViewportSize(viewport);
     await page.goto('/app');
     const recommendedAction = page.getByRole('button', { name: /Recommended next/ });
-    const progressLabel = page.getByText('Field delivery', { exact: true });
+    const progressLabel = page.getByRole('article')
+      .filter({ has: page.getByText('jobs complete', { exact: true }) })
+      .getByText('Field delivery', { exact: true });
     await expect(recommendedAction).toBeVisible();
     const recommendedTop = await recommendedAction.evaluate(
       (element) => element.getBoundingClientRect().top,
@@ -266,7 +269,7 @@ test('mobile Home keeps its final action clear of fixed navigation', async ({ pa
       (element) => element.getBoundingClientRect().top,
     );
     expect(recommendedTop).toBeLessThan(progressTop);
-    const workspaceActions = page.locator('section.grover-card').filter({
+    const workspaceActions = page.locator('section.yardfolio-card').filter({
       has: page.getByText('Your workspace', { exact: true }),
     });
     const finalAction = workspaceActions.getByRole('button').last();
@@ -278,7 +281,7 @@ test('mobile Home keeps its final action clear of fixed navigation', async ({ pa
   await page.evaluate(() => {
     document.documentElement.style.zoom = '2';
   });
-  const zoomedWorkspaceActions = page.locator('section.grover-card').filter({
+  const zoomedWorkspaceActions = page.locator('section.yardfolio-card').filter({
     has: page.getByText('Your workspace', { exact: true }),
   });
   await expectActionAboveMobileWorkspaceNavigation(
@@ -433,7 +436,7 @@ test('organization owner Team opens the responsive team and access command cente
         {
           id: 'membership_owner',
           organization_id: 'org_demo_landscaping',
-          organization_name: 'Grover Demo Landscaping',
+          organization_name: 'Desert Bloom Landscaping',
           organization_type: 'yard_care_company',
           user_id: 'local-review-organization-owner',
           display_name: 'Olivia — Organization Owner',
@@ -445,7 +448,7 @@ test('organization owner Team opens the responsive team and access command cente
         {
           id: 'membership_lead',
           organization_id: 'org_demo_landscaping',
-          organization_name: 'Grover Demo Landscaping',
+          organization_name: 'Desert Bloom Landscaping',
           organization_type: 'yard_care_company',
           user_id: 'crew-lead',
           display_name: 'Leah — Crew Lead',
@@ -572,7 +575,7 @@ test('team overview preserves available counts during a partial API outage', asy
         {
           id: 'membership_owner',
           organization_id: 'org_demo_landscaping',
-          organization_name: 'Grover Demo Landscaping',
+          organization_name: 'Desert Bloom Landscaping',
           organization_type: 'yard_care_company',
           user_id: 'local-review-organization-owner',
           display_name: 'Olivia — Organization Owner',
@@ -608,7 +611,7 @@ test('member directory warns before changing the signed-in owner access', async 
   const member = (id: string, userId: string, displayName: string) => ({
     id,
     organization_id: 'org_demo_landscaping',
-    organization_name: 'Grover Demo Landscaping',
+    organization_name: 'Desert Bloom Landscaping',
     organization_type: 'yard_care_company',
     user_id: userId,
     display_name: displayName,
@@ -691,7 +694,7 @@ test('authenticated home retains the shared shell materials and type roles', asy
   const shell = await page.evaluate(() => {
     const main = document.querySelector('main');
     const heading = document.querySelector('h1');
-    const brandMark = document.querySelector('.grover-brand-mark');
+    const brandMark = document.querySelector('.yardfolio-brand-mark');
     if (!main || !heading || !brandMark) {
       throw new Error('Authenticated shell theme targets were not rendered.');
     }
@@ -955,7 +958,8 @@ test('field Jobs supports compact status and customer filtering', async ({ page 
   const jobs = page.locator('#assigned-jobs').locator('..');
   await expect(jobs.getByText('3 shown', { exact: true })).toBeVisible();
   await expect(jobs.getByText('Oak Street Residence', { exact: true })).toBeVisible();
-  await expect(jobs.getByText('4/6 checklist · 1 before · 0 after', { exact: true })).toBeVisible();
+  await expect(jobs.getByText('4/6 tasks · 1 before photo · 0 after photos', { exact: true }))
+    .toBeVisible();
 
   await jobs.getByLabel('Filter assigned jobs by status').selectOption('in_progress');
   await expect(jobs.getByText('1 shown', { exact: true })).toBeVisible();

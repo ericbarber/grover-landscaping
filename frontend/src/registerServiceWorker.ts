@@ -7,7 +7,7 @@ export function registerProductionServiceWorker() {
     void navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
         const announceUpdate = () => window.dispatchEvent(
-          new CustomEvent('grover-service-worker-update', { detail: registration }),
+          new CustomEvent('yardfolio-service-worker-update', { detail: registration }),
         );
         if (registration.waiting) announceUpdate();
         registration.addEventListener('updatefound', () => {

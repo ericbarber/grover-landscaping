@@ -51,7 +51,7 @@ test('yard owner reviews version history and approves the exact recommendation o
       memberships: [{
         id: 'membership-property-owner',
         organization_id: 'org_demo_landscaping',
-        organization_name: 'Grover Demo Landscaping',
+        organization_name: 'Desert Bloom Landscaping',
         organization_type: 'yard_care_company',
         user_id: 'local-review-property-owner',
         display_name: 'Jamie — Property Owner',

@@ -317,10 +317,12 @@ Current state:
   discover the renamed shell through the normal update-and-reload flow without
   clearing field queues. Active CSS variables, reusable component classes,
   Tailwind shadows, and the public hero asset now use the Yardfolio namespace;
-  persistent browser and external infrastructure identifiers remain isolated
-  behind the compatibility plan. Professional trademark clearance,
-  domain/app-store confirmation, final visual identity, and public rollout
-  approval remain required.
+  so do the frontend package, service-worker event/current cache, diagnostics,
+  and browser-test artifacts. Prior shell caches are still removed through a
+  brand-neutral matcher. Persistent browser data, local-review API, and external
+  infrastructure identifiers remain isolated behind the compatibility plan.
+  Professional trademark clearance, domain/app-store confirmation, final visual
+  identity, and public rollout approval remain required.
 
 - The public website now has an approved company-first positioning boundary:
   landscaping company owners/managers are the primary buyer, company setup is

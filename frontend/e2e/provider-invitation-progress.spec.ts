@@ -145,7 +145,7 @@ test('a checked recipient loads status without retaining the bearer fragment', a
   expect(await page.evaluate(() => {
     const main = document.querySelector('main');
     const heading = document.querySelector('h1');
-    const brandMark = document.querySelector('.grover-brand-mark');
+    const brandMark = document.querySelector('.yardfolio-brand-mark');
     if (!main || !heading || !brandMark) throw new Error('Provider shell theme was not rendered.');
     return {
       canvas: getComputedStyle(main).backgroundColor,

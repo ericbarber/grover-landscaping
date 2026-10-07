@@ -488,7 +488,7 @@ export function PublicLandingPage({
 
       <main className="min-h-screen overflow-x-hidden bg-bone text-ink" id="main-content">
       <section className="bg-bone" data-testid="marketing-hero">
-        <div className="mx-auto grid max-w-[86rem] gap-8 px-4 py-10 sm:px-6 sm:py-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(30rem,1.08fr)] lg:items-center lg:gap-12 lg:px-8 lg:py-8">
+        <div className="mx-auto grid max-w-[86rem] gap-8 px-4 py-10 sm:px-6 sm:py-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(30rem,1.08fr)] lg:items-center lg:gap-12 lg:px-8 lg:py-7">
           <div className="min-w-0 lg:py-2">
             <p className="yardfolio-eyebrow flex items-center gap-3 before:h-px before:w-7 before:bg-emerald-700">
               {entryPersona.eyebrow}

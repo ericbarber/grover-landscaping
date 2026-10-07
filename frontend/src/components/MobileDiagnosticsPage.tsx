@@ -146,7 +146,7 @@ export function MobileDiagnosticsPage() {
     const blobUrl = URL.createObjectURL(new Blob([supportDetails()], { type: 'text/plain' }));
     const link = document.createElement('a');
     link.href = blobUrl;
-    link.download = `grover-field-diagnostics-${new Date().toISOString().slice(0, 10)}.txt`;
+    link.download = `yardfolio-field-diagnostics-${new Date().toISOString().slice(0, 10)}.txt`;
     link.hidden = true;
     document.body.appendChild(link);
     link.click();

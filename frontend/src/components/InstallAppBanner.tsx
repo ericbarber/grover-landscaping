@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FIELD_APP_NAME } from '../productBrand';
 
-const DISMISSED_KEY = 'grover-install-guidance-dismissed';
+const DISMISSED_KEY = 'yardfolio-install-guidance-dismissed';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;

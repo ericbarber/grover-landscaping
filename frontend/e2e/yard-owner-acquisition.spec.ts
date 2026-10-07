@@ -189,8 +189,11 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   });
 
   await page.goto('/for-yard-owners');
-  await expect(page.getByRole('link', { name: 'Create my private yard' })).toBeVisible();
-  await page.getByRole('link', { name: 'Create my private yard' }).click();
+  const heroYardSignup = page.getByTestId('marketing-hero').getByRole('link', {
+    name: 'Create my private yard',
+  });
+  await expect(heroYardSignup).toBeVisible();
+  await heroYardSignup.click();
   await expect(page).toHaveURL(/\/app\/yard-owner$/);
   await expect(page.getByRole('heading', { name: 'Tell us about the yard. You choose who sees it.' })).toBeVisible();
   await page.getByLabel('Your name').fill('Morgan Reyes');
@@ -729,7 +732,7 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
   await expect(page.getByText(/Proposal accepted for provider setup. No visit was scheduled/)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Create the provider relationship' })).toBeVisible();
   await page.getByRole('button', { name: 'Review provider setup' }).click();
-  const activationAffirmation = page.getByLabel(/I want Grover to create this provider relationship/);
+  const activationAffirmation = page.getByLabel(/I want Yardfolio to create this provider relationship/);
   await expect(page.getByRole('button', { name: 'Activate provider setup' })).toBeDisabled();
   await activationAffirmation.check();
   await page.getByRole('button', { name: 'Activate provider setup' }).click();

@@ -26,7 +26,7 @@ export class RouteLoadBoundary extends React.Component<
         const cacheNames = await window.caches.keys();
         await Promise.all(
           cacheNames
-            .filter((name) => name.startsWith('grover-field-shell-'))
+            .filter((name) => name.includes('-field-shell-'))
             .map((name) => window.caches.delete(name)),
         );
       }
