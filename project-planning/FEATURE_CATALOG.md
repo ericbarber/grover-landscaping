@@ -17,8 +17,9 @@ boundary; inclusion here alone does not mean a feature shipped.
   public hero assets, frontend and Rust packages, health labels, and local-review
   identifiers, browser storage, and field IndexedDB; tested suffix-based
   migration protects prior filters, route state, queued work, and photo blobs,
-  while an explicit legacy namespace boundary protects installed-app, database,
-  and infrastructure compatibility
+  while the prototype/design archive and generated visual artifacts use the
+  same current identity; an explicit legacy namespace boundary protects
+  installed-app, database, and infrastructure compatibility
 - Documented navigation system separating public discovery,
   acquisition-progress, and authenticated-destination models without changing
   their common brand treatment

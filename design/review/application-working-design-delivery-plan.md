@@ -2,7 +2,7 @@
 
 ## Goal
 
-Bring the current Grover application to the same review standard as the V2 public
+Bring the current Yardfolio application to the same review standard as the V2 public
 homepage through connected, responsive working designs—not a larger collection of
 isolated high-fidelity screens.
 

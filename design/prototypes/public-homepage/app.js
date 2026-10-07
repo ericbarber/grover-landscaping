@@ -5,7 +5,7 @@ const personaContent = {
     headline: "See the care behind your yard.",
     description: "Know what was planned, what was completed, and what your property may need next—without chasing an update.",
     cta: "Join early access",
-    dialogTitle: "Be among the first to experience Grover.",
+    dialogTitle: "Be among the first to experience Yardfolio.",
     conversionTitle: "See the care behind every visit.",
     conversionCopy: "Tell us what would make landscape service feel clearer, from upcoming work to visible proof and useful recommendations.",
     preview: {
@@ -19,7 +19,7 @@ const personaContent = {
       metaTwo: "1 recommendation",
     },
     storyTitle: "See the care behind your yard.",
-    storyDescription: "Grover turns the provider’s operational work into a simple customer view without exposing crew assignment, audit details, or internal recovery tools.",
+    storyDescription: "Yardfolio turns the provider’s operational work into a simple customer view without exposing crew assignment, audit details, or internal recovery tools.",
     outcomes: [
       ["Know what’s next", "Upcoming service and property expectations stay easy to find."],
       ["See the care", "Before-and-after evidence makes each visit feel tangible."],
@@ -59,8 +59,8 @@ const personaContent = {
     headline: "Plan every visit. Care with confidence. Prove the work.",
     description: "Connect scheduling, crews, proof, customer communication, and revenue in one calm operating view.",
     cta: "Request a walkthrough",
-    dialogTitle: "See how Grover fits your operation.",
-    conversionTitle: "See how Grover fits your operation.",
+    dialogTitle: "See how Yardfolio fits your operation.",
+    conversionTitle: "See how Yardfolio fits your operation.",
     conversionCopy: "Bring the workflow that creates the most back-and-forth. We’ll shape the conversation around your team and the result you need.",
     preview: {
       status: "On track",
@@ -73,7 +73,7 @@ const personaContent = {
       metaTwo: "1 review needed",
     },
     storyTitle: "Turn great field work into growth.",
-    storyDescription: "Grover keeps the office, field, and customer handoff connected without giving every person the same crowded workspace.",
+    storyDescription: "Yardfolio keeps the office, field, and customer handoff connected without giving every person the same crowded workspace.",
     outcomes: [
       ["Run a clearer day", "Routes, crews, property context, and exceptions stay connected."],
       ["Move approvals faster", "Evidence and recommendations give customers a complete story."],
@@ -232,7 +232,7 @@ function activatePersona(personaId, { focus = false, updateAddress = true } = {}
   const submitButton = document.querySelector("[data-submit-button]");
   if (submitButton) submitButton.textContent = content.cta;
   updateWorkflow(state.workflow);
-  document.title = `${content.label} landscape care | Grover working design`;
+  document.title = `${content.label} landscape care | Yardfolio working design`;
 
   if (updateAddress && window.location.protocol !== "file:") {
     const url = new URL(window.location.href);

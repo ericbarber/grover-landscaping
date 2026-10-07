@@ -10,7 +10,7 @@ prototype, not the new track's workplan.
 
 ## Intent
 
-Use the existing Grover application as the baseline for a modern, coherent
+Use the existing Yardfolio application as the baseline for a modern, coherent
 public website and application UI. This is a design-review track, not a rebuild
 commitment or a change to production authorization. It complements the active
 service-thread redesign and its planned comparative user study.
@@ -33,7 +33,7 @@ service-thread redesign and its planned comparative user study.
 
 | Surface | First question | Primary action | Review boundary |
 | --- | --- | --- | --- |
-| Public home | How does Grover make yard care clear? | Choose customer or provider path | No live availability, verified provider, price, or outcome claim |
+| Public home | How does Yardfolio make yard care clear? | Choose customer or provider path | No live availability, verified provider, price, or outcome claim |
 | Customer path | What will I know before and after care? | Preview the Yard Owner workspace | Exact service example is illustrative |
 | Provider path | How does the team stay coordinated? | Preview the Company Manager workspace | No lead marketplace or dispatch promise |
 | Workspace preview | What is my next service action? | Switch among five role views and inspect a task | No authentication, writes, or new authority |

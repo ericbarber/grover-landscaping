@@ -8,7 +8,7 @@ Last updated: 2026-09-08
 
 ## Outcome
 
-Redesign the existing Grover product around a simpler user flow without
+Redesign the existing Yardfolio product around a simpler user flow without
 reducing it to an MVP feature set. The product already contains substantial
 customer, planning, field, proof, recovery, administration, and rollout
 capability. The design problem is that those capabilities have accumulated as
@@ -25,7 +25,7 @@ This plan supersedes the “minimal-product” framing in the
 its [research session guide](minimal-product-workflow-session-guide.md) remain
 useful research inputs, especially their evidence labels, interview prompts,
 and handoff questions. They no longer define the product stage or imply that
-Grover is still selecting an MVP feature set.
+Yardfolio is still selecting an MVP feature set.
 
 The completed ten-persona prototype remains broad design evidence. Dispatcher
 and Crew Member are not part of the first simplified-workflow prototype, but
@@ -34,7 +34,7 @@ of scope for the mature product.
 
 ## The simplification decision
 
-Grover will organize work around a **service thread**, not around a collection
+Yardfolio will organize work around a **service thread**, not around a collection
 of feature destinations.
 
 A service thread is the durable, role-filtered story of one customer outcome:
@@ -173,7 +173,7 @@ sequenceDiagram
     participant Customer as Yard Owner / Property Manager
     participant Manager as Company Manager
     participant Lead as Crew Lead
-    participant System as Grover service thread
+    participant System as Yardfolio service thread
 
     Customer->>System: Review need, scope, or current service
     System-->>Manager: Surface exact customer decision or ready work
@@ -390,7 +390,7 @@ Prepared evidence:
 State: technical groundwork begun; design adoption remains gated on SX4
 participant evidence.
 
-- Apply the mature Grover visual system after workflow validation.
+- Apply the mature Yardfolio visual system after workflow validation.
 - Define narrow React adoption slices by service-thread stage and persona.
 - Map each slice to real APIs, authorization, persistence, telemetry, and
   regression evidence.
@@ -407,7 +407,7 @@ rewrite or unsupported product promise.
 
 ## Non-goals
 
-- Redefining Grover as an MVP or removing mature capability to reduce scope.
+- Redefining Yardfolio as an MVP or removing mature capability to reduce scope.
 - Replacing production authorization with client-side persona selection.
 - Combining customer-safe and provider-private data.
 - Flattening Company Owner, Company Manager, and Crew Lead authority.

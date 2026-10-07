@@ -12,6 +12,9 @@
   Test-only public origins, temporary paths, synthetic people and companies,
   photo-bucket examples, operational-indicator contracts, frontend/backend
   readmes, and the Cognito role description also use Yardfolio-neutral names.
+  The design archive now uses Yardfolio throughout prototype copy,
+  accessibility labels, generated SVGs, review documents, shared-foundation
+  links, and source asset names while retaining its historical design status.
   Source identifiers and infrastructure retain the documented legacy namespace
   until their coordinated migrations. The production shell
   cache version advances so existing installations receive the renamed shell

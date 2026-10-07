@@ -16,7 +16,7 @@ const personas = {
     why: 'The owner needs the current service outcome and its next responsible person—not separate approval, schedule, proof, and support products.',
     timeline: {
       decision: [['Sep 5', 'Routine care requested', 'Mesa Court · front and back yard'], ['Sep 6', 'Recommendation version 2 ready', 'Exact scope and consequence available for review']],
-      release: [['Sep 6', 'Version 2 accepted', 'Acceptance did not silently schedule work'], ['Sep 7', 'Service preparation started', 'Grover Yard Care owns the next update']],
+      release: [['Sep 6', 'Version 2 accepted', 'Acceptance did not silently schedule work'], ['Sep 7', 'Service preparation started', 'Yardfolio Yard Care owns the next update']],
       field: [['Sep 8 · 8:26', 'Care started', 'Customer-safe arrival update'], ['Now', 'Routine care underway', 'No owner action is required']],
       proof: [['Sep 8 · 8:26', 'Care started', 'Routine service at Mesa Court'], ['Sep 8 · 9:18', 'Care completed', 'Provider review followed'], ['Sep 8 · 9:34', 'Proof delivered', 'Six tasks and three reviewed photos']],
     },
@@ -26,7 +26,7 @@ const personas = {
         copy: 'The scope, price, version, and consequence stay together before anything is accepted.',
         owner: 'You', update: 'Nothing is scheduled until you respond.',
         facts: ['Routine care · Version 2', '$145 exact total', 'Acceptance does not schedule work'],
-        essentials: [['Property', 'Mesa Court'], ['Timing', 'Requested for September 8'], ['Provider', 'Grover Yard Care']],
+        essentials: [['Property', 'Mesa Court'], ['Timing', 'Requested for September 8'], ['Provider', 'Yardfolio Yard Care']],
         action: 'Review recommendation', choiceLabel: 'Response to version 2', options: ['Accept this exact scope', 'Request a revision', 'Ask a question before deciding'], confirm: 'Preview response',
       },
       release: {
@@ -40,7 +40,7 @@ const personas = {
       field: {
         stage: 'Field work', status: 'In progress', title: 'Today’s care is underway',
         copy: 'Only the customer-safe service state appears; internal route and recovery detail stays with the provider.',
-        owner: 'Grover Yard Care', update: 'Reviewed completion proof comes next.',
+        owner: 'Yardfolio Yard Care', update: 'Reviewed completion proof comes next.',
         facts: ['Arrived at 8:26 AM', 'Routine care in progress', 'No owner action required'],
         essentials: [['Visit window', '8:00–10:00 AM'], ['Preparation', 'Complete'], ['Next update', 'Delivered proof']],
         action: 'Review current service',
@@ -50,7 +50,7 @@ const personas = {
         copy: 'The reviewed completion record closes the same service thread that began with your decision.',
         owner: 'You', update: 'Review the outcome when convenient.',
         facts: ['6 tasks completed', '3 provider-reviewed photos', 'Completed at 9:18 AM'],
-        essentials: [['Service', 'Routine yard care'], ['Delivered', 'September 8 · 9:34 AM'], ['Provider', 'Grover Yard Care']],
+        essentials: [['Service', 'Routine yard care'], ['Delivered', 'September 8 · 9:34 AM'], ['Provider', 'Yardfolio Yard Care']],
         action: 'Review delivered care', choiceLabel: 'Is the outcome understandable?', options: ['Yes, the completed care is clear', 'Ask about this exact visit'], confirm: 'Preview response',
       },
     },
@@ -78,7 +78,7 @@ const personas = {
       release: {
         stage: 'Plan', status: 'Confirmed', title: 'Mesa Court service is scheduled',
         copy: 'The accepted decision, property access, and customer-visible timing stay in one property thread.',
-        owner: 'Grover Yard Care', update: 'The provider owns service delivery and the next update.',
+        owner: 'Yardfolio Yard Care', update: 'The provider owns service delivery and the next update.',
         facts: ['September 8 · 8:00–10:00 AM', 'Property access current', 'No portfolio action required'],
         essentials: [['Accepted scope', 'Routine yard care'], ['Decision', 'Version 2 accepted'], ['Portfolio impact', 'No other property changed']],
         action: 'Review confirmed service',
@@ -86,7 +86,7 @@ const personas = {
       field: {
         stage: 'Field work', status: 'Provider reviewing', title: 'Mesa Court access is being resolved',
         copy: 'The portfolio sees the customer-safe consequence and responsible provider without internal route or crew detail.',
-        owner: 'Grover Yard Care', update: 'The current arrival window remains in place.',
+        owner: 'Yardfolio Yard Care', update: 'The current arrival window remains in place.',
         facts: ['Care began at 8:26 AM', 'Access review in progress', 'No portfolio decision requested'],
         essentials: [['Property', 'Mesa Court'], ['Service state', 'In progress'], ['Next update', 'Resolution or delivered proof']],
         action: 'Review property service',
@@ -294,7 +294,7 @@ const reviewPaths = {
       copy: 'The incident carries the affected service reference, last confirmed event, and accountable product owner without loading private service detail.',
       owner: 'You', update: 'Confirm delivery state before requesting any temporary access.',
       facts: ['Service reference SRV-1048', 'Last event accepted at 8:31 AM', 'Manager has not received the 8:41 update'],
-      essentials: [['Tenant', 'Grover Yard Care'], ['Incident owner', 'Sam P.'], ['Access state', 'No temporary access granted']],
+      essentials: [['Tenant', 'Yardfolio Yard Care'], ['Incident owner', 'Sam P.'], ['Access state', 'No temporary access granted']],
       action: 'Review incident response', choiceLabel: 'Bounded support response', options: ['Retry the exact event delivery', 'Ask the manager to refresh service state', 'Request purpose-bound temporary access'], confirm: 'Preview incident response',
     },
     timeline: [['8:31 AM', 'Last service event accepted', 'Reference SRV-1048'], ['8:41 AM', 'Field update queued', 'Manager receipt not confirmed'], ['Now', 'Incident assigned', 'No protected workspace opened']],
@@ -452,7 +452,7 @@ function render(announce = true) {
   document.querySelector('#stage-list').hidden = Boolean(path?.hideLifecycle);
   document.querySelector('.timeline-card').hidden = Boolean(path?.hideTimeline);
   document.querySelector('#follow-handoff').hidden = Boolean(path?.noHandoff);
-  document.title = `${persona.name} · ${focus.stage} · Grover service thread`;
+  document.title = `${persona.name} · ${focus.stage} · Yardfolio service thread`;
   const pathSuffix = state.path === 'standard' ? '' : `/${state.path}`;
   history.replaceState(null, '', `#${state.persona}/${state.moment}${pathSuffix}`);
   bindNavigation();

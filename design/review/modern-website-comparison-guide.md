@@ -42,7 +42,7 @@ record names to reduce memorization.
 | ID | Participant prompt | What to observe |
 | --- | --- | --- |
 | MW-01 · Yard Owner entry | “You want to know what will happen before and after the next yard visit. Show where you would start.” | First chosen path, expected outcome, confusion with provider sign-in or proof claims |
-| MW-02 · Provider entry | “Your company already has a customer relationship. Find the part of Grover that would help the office and field stay coordinated.” | Path choice, whether provider discovery or marketplace availability is incorrectly inferred |
+| MW-02 · Provider entry | “Your company already has a customer relationship. Find the part of Yardfolio that would help the office and field stay coordinated.” | Path choice, whether provider discovery or marketplace availability is incorrectly inferred |
 | MW-03 · Yard Owner | “Find what you need to do next for Mesa Court and who takes over afterward.” | Exact decision, next owner, pending versus reviewed proof |
 | MW-04 · Property Manager | “One property needs attention. Find it and explain what decision is yours.” | Exact property, version, portfolio scope, absence of provider-private detail |
 | MW-05 · Company Owner | “Decide whether this risk requires you or the operating manager.” | Business blocker, named handoff, no route editing assumption |

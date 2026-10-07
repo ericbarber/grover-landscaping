@@ -1,6 +1,6 @@
 # Design Artifact Status
 
-This inventory is the interpretation key for the Grover design gallery. It
+This inventory is the interpretation key for the Yardfolio design gallery. It
 classifies artifact families by how they should be used today; a polished image
 or interactive prototype is not production evidence by itself.
 

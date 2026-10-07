@@ -1,6 +1,6 @@
-# Grover Product Design
+# Yardfolio Product Design
 
-This directory is the design-review source for Grover's public website and
+This directory is the design-review source for Yardfolio's public website and
 application experiences. It intentionally mirrors the product architecture so a
 reviewer can discuss page hierarchy, content, actions, and responsive behavior
 before implementation changes begin.

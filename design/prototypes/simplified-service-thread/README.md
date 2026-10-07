@@ -1,6 +1,6 @@
 # Simplified Service Thread
 
-This dependency-free working prototype begins Grover's post-MVP experience
+This dependency-free working prototype begins Yardfolio's post-MVP experience
 redesign. It does not remove mature capability. It reorganizes that capability
 around one exact service thread so users no longer need separate approval,
 schedule, report, proof, and recovery products to understand one outcome.

@@ -12,8 +12,8 @@ interface sans serif.
 - **Monospace:** use only for immutable audit IDs, diagnostic values, and code-like
   support details.
 
-In production React, `font-display` and `grover-display` identify editorial
-moments. `grover-type-operational` explicitly resets task titles and data back
+In production React, `font-display` and `yardfolio-display` identify editorial
+moments. `yardfolio-type-operational` explicitly resets task titles and data back
 to the interface family when they sit inside an otherwise editorial surface.
 Destination names such as Visits, Proof, Account, Schedule, Reports, Team, and
 Recovery are operational. A customer greeting, property/place promise, service

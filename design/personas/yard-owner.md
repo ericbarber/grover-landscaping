@@ -1,7 +1,7 @@
 # Yard Owner
 
 **Situation:** A household customer wants dependable care without learning the
-provider's dispatch process. They may check Grover briefly between visits.
+provider's dispatch process. They may check Yardfolio briefly between visits.
 
 **First answer:** What is happening next at my property, and do I need to act?
 

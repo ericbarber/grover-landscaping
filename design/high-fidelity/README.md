@@ -1,6 +1,6 @@
 # High-Fidelity Concepts
 
-These concepts apply the first Grover visual direction to representative product
+These concepts apply the first Yardfolio visual direction to representative product
 surfaces. They remain design-review artifacts rather than production screenshots,
 but several of their approved decisions have now been adopted in React. Track
 that distinction in the

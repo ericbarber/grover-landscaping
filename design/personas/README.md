@@ -1,4 +1,4 @@
-# Grover application personas
+# Yardfolio application personas
 
 Status: prior design hypotheses for review, 2026-09-16. These are task and
 authority profiles, not interview findings or new production roles. The active

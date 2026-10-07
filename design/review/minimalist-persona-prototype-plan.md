@@ -2,7 +2,7 @@
 
 ## Outcome
 
-Create a separate, interactive design review for the simplest useful Grover
+Create a separate, interactive design review for the simplest useful Yardfolio
 experience each signed-in persona can receive. This prototype answers **how the
 work should feel and flow**. The existing
 [functional-unit rollout](all-persona-minimal-rollout-plan.md) continues to

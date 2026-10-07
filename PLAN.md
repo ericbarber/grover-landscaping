@@ -323,8 +323,12 @@ Current state:
   Persistent browser keys and the field IndexedDB database now use Yardfolio;
   tested suffix-based migration preserves existing filters, route state, queued
   mutations, and offline photo blobs without retaining the former brand in the
-  active bundle. Database/container defaults and external infrastructure
-  identifiers remain isolated behind the compatibility plan.
+  active bundle. The complete design archive now uses Yardfolio in prototype
+  copy, accessibility labels, generated SVGs, shared-foundation links, and
+  source asset names, so historical design evidence no longer presents the
+  family name as a current product identity. Database/container defaults and
+  external infrastructure identifiers remain isolated behind the compatibility
+  plan.
   Professional trademark clearance, domain/app-store confirmation, final
   visual identity, and public rollout approval remain required.
 

@@ -2,7 +2,7 @@
 
 ## Outcome
 
-Roll out every signed-in Grover workspace as a sequence of small, complete,
+Roll out every signed-in Yardfolio workspace as a sequence of small, complete,
 supportable capabilities. Each persona receives a minimum useful experience
 before broader destinations or write authority appear. The
 [interactive rollout map](../prototypes/yard-owner-minimal-rollout/index.html#overview/map)

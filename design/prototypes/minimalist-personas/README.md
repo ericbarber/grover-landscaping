@@ -1,7 +1,7 @@
 # Minimalist Persona Experiences
 
 This dependency-free working prototype explores the smallest clear, useful
-frontend experience for all ten signed-in Grover personas. It is intentionally
+frontend experience for all ten signed-in Yardfolio personas. It is intentionally
 separate from the functional-unit rollout prototype:
 
 - this prototype reviews task hierarchy, navigation, content, responsive

@@ -1,7 +1,7 @@
 # Yard Crew Acquisition Working Design
 
 This dependency-free prototype explores how landscape service professionals
-discover Grover, choose the correct provider or invitation path, establish
+discover Yardfolio, choose the correct provider or invitation path, establish
 qualification, review owner-authorized service opportunities, complete a site
 assessment, issue a service proposal, and mobilize approved work into provider
 operations.

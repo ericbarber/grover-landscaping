@@ -30,7 +30,7 @@ Do not mechanically rename identifiers beginning with `grover` in the same
 release as the display brand. They include:
 
 - database, container, infrastructure, and environment identifiers
-- test fixtures and historical planning artifacts
+- applied migration history and compatibility-sensitive deployment fixtures
 
 These names are not customer-visible branding. Current service-worker cache,
 browser event, diagnostic-download, test-output, and frontend package names now
@@ -40,6 +40,8 @@ local-review request header, and local-review session key also use Yardfolio.
 The independent research/review track now uses the Yardfolio Study name across
 its repository directory, private review route, fixture tooling, isolated
 database contract, and backend safety gate.
+The design archive also uses Yardfolio in its visible copy, accessibility
+labels, generated visual sources, shared stylesheet, and image filenames.
 Persistent local-storage keys and the field IndexedDB database now use a
 Yardfolio namespace. On first access, the browser adopts values and queued work
 from matching earlier namespaces by stable suffix, copies only missing

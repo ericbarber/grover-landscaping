@@ -49,7 +49,7 @@ the MVP during the session.
 
 The study should answer:
 
-1. What event causes each persona to open Grover?
+1. What event causes each persona to open Yardfolio?
 2. What must they know first to feel oriented?
 3. What outcome are they actually trying to reach?
 4. What information is required before their next decision?
@@ -125,7 +125,7 @@ location selected by the project owner.
 
 ## FigJam board structure
 
-Create one board named `Grover · Minimal Product Workflow · WF1`. Use these
+Create one board named `Yardfolio · Minimal Product Workflow · WF1`. Use these
 frames in order.
 
 ### Frame 0 — Session lobby

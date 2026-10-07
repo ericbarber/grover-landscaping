@@ -65,7 +65,7 @@ const personas = {
     },
   },
   'company-owner': {
-    name: 'Company Owner', identity: 'Avery K.', initials: 'AK', family: 'operations', familyLabel: 'Business workspace', context: 'Grover Yard Care',
+    name: 'Company Owner', identity: 'Avery K.', initials: 'AK', family: 'operations', familyLabel: 'Business workspace', context: 'Yardfolio Yard Care',
     title: 'Know whether the business is ready.', promise: 'Company readiness and the most consequential blocker come before day-to-day detail.', confidence: '1 setup action',
     boundary: 'Platform support, customer-private content, accounting, payments, and low-level field controls stay outside this owner overview.',
     why: 'The owner needs business readiness and exceptions. Dispatch detail belongs to the team unless it creates an owner-level risk.',
@@ -116,7 +116,7 @@ const personas = {
   },
   'billing-admin': {
     name: 'Billing Administrator', identity: 'Blair N.', initials: 'BN', family: 'admin', familyLabel: 'Billing-readiness workspace', context: 'Completion readiness · September',
-    title: 'Start with incomplete billing evidence.', promise: 'Delivered-work readiness is actionable without pretending Grover creates invoices or takes payment.', confidence: '3 need review',
+    title: 'Start with incomplete billing evidence.', promise: 'Delivered-work readiness is actionable without pretending Yardfolio creates invoices or takes payment.', confidence: '3 need review',
     boundary: 'Invoice creation, payment collection, refunds, tax, ledger, profitability, and provider-private field notes are absent.',
     why: 'The supported role verifies that completed service records are ready for downstream billing. Unsupported financial operations must not fill the screen.',
     nav: [
@@ -141,7 +141,7 @@ const personas = {
       { id: 'access', label: 'Access', title: 'Temporary access', copy: 'Purpose-bound support scope and expiry.' },
     ],
     scenarios: {
-      attention: { label: 'Highest impact', title: 'Owner update delivery failed', status: 'Unowned', copy: 'One customer-visible service update exhausted automatic retries.', facts: ['Tenant: Grover Yard Care', 'Visit: opaque support reference', 'Original event remains immutable'], action: 'Take ownership', steps: ['Confirm tenant, purpose, and impact.', 'Accept incident ownership.', 'Open the bounded retry evidence.'], queue: [['Delivery failure', 'Customer-visible · Unowned'], ['Photo processing', 'Provider-visible · Owned']] },
+      attention: { label: 'Highest impact', title: 'Owner update delivery failed', status: 'Unowned', copy: 'One customer-visible service update exhausted automatic retries.', facts: ['Tenant: Yardfolio Yard Care', 'Visit: opaque support reference', 'Original event remains immutable'], action: 'Take ownership', steps: ['Confirm tenant, purpose, and impact.', 'Accept incident ownership.', 'Open the bounded retry evidence.'], queue: [['Delivery failure', 'Customer-visible · Unowned'], ['Photo processing', 'Provider-visible · Owned']] },
       ready: { label: 'Support queue', title: 'Every active incident has an owner', status: 'Covered', copy: 'Two incidents are progressing within their response expectations.', facts: ['2 active incidents', '2 named owners', 'No expired support access'], action: 'Review owned work', steps: ['Open the assigned incident.', 'Review its last audited action.', 'Confirm the next response time.'], queue: [['Delivery failure', 'Owned by Sage'], ['Photo processing', 'Owned by Kai']] },
       empty: { label: 'Support queue', title: 'No active incidents', status: 'Clear', copy: 'There is no current support work in the selected scope.', facts: ['No tenant data opened', 'No temporary access active', 'Audit history remains available'], action: 'Review recent activity', steps: ['Open minimized recent activity.', 'Choose an incident reference if needed.', 'Return without opening tenant data.'], queue: [['Recent resolution', 'Notification retry · Closed']] },
     },
@@ -154,7 +154,7 @@ const personas = {
     nav: [{ id: 'home', label: 'Home', title: 'Access resolution', copy: 'Invitation and administrator guidance only.' }],
     scenarios: {
       attention: { label: 'Workspace access', title: 'Your account has no active role', status: 'No role', copy: 'Check an invitation or contact your organization administrator.', facts: ['Signed in as Taylor J.', 'No workspace data loaded', 'Sign out is always available'], action: 'Check invitation', steps: ['Review pending invitations for this account.', 'Accept a valid invitation or note its status.', 'Contact the named administrator if none exists.'], queue: [['Invitation', 'No accepted invitation'], ['Account', 'Signed in successfully']] },
-      ready: { label: 'Invitation', title: 'An invitation is ready to review', status: 'Pending', copy: 'Grover Yard Care invited this account to a Crew Member role.', facts: ['Organization shown before acceptance', 'Role and access summary available', 'No access granted yet'], action: 'Review invitation', steps: ['Confirm the organization.', 'Review the proposed role and access.', 'Accept or decline deliberately.'], queue: [['Grover Yard Care', 'Crew Member · Pending']] },
+      ready: { label: 'Invitation', title: 'An invitation is ready to review', status: 'Pending', copy: 'Yardfolio Yard Care invited this account to a Crew Member role.', facts: ['Organization shown before acceptance', 'Role and access summary available', 'No access granted yet'], action: 'Review invitation', steps: ['Confirm the organization.', 'Review the proposed role and access.', 'Accept or decline deliberately.'], queue: [['Yardfolio Yard Care', 'Crew Member · Pending']] },
       empty: { label: 'Workspace access', title: 'No invitations were found', status: 'No access', copy: 'Ask an organization administrator to invite this exact account.', facts: ['No protected reads attempted', 'Account identity is valid', 'Safe sign out available'], action: 'View guidance', steps: ['Confirm the account email outside this prototype.', 'Share it with the organization administrator.', 'Return after an invitation is sent.'], queue: [['Next step', 'Contact an administrator']] },
     },
   },
@@ -214,11 +214,11 @@ const administrativeViews = {
   },
   support: {
     activity: viewStates('Incident activity', 'Minimized history for the owned incident',
-      { title: 'Delivery failure has one immutable timeline', status: 'Owned by Sage', copy: 'Only events needed to recover this exact incident appear after ownership is established.', facts: ['Tenant · Grover Yard Care', 'Automatic retries exhausted', 'Original event retained'], action: 'Review retry timeline', nextView: 'access', nextLabel: 'Review recovery access' },
+      { title: 'Delivery failure has one immutable timeline', status: 'Owned by Sage', copy: 'Only events needed to recover this exact incident appear after ownership is established.', facts: ['Tenant · Yardfolio Yard Care', 'Automatic retries exhausted', 'Original event retained'], action: 'Review retry timeline', nextView: 'access', nextLabel: 'Review recovery access' },
       { title: 'Owned incidents have current audit trails', status: 'Current', copy: 'The activity view stays scoped to assigned incidents and accountable actions.', facts: ['2 owned incidents', 'No missing audit events', 'No cross-tenant browsing'], action: 'Review latest activity', nextView: 'incidents', nextLabel: 'Return to incidents' },
       { title: 'No incident activity is in scope', status: 'Clear', copy: 'No tenant history loads without a current incident and purpose.', facts: ['0 active incidents', '0 tenant records opened', 'Audit boundary active'], action: 'Return to incidents', nextView: 'incidents', nextLabel: 'Open incidents' }),
     access: viewStates('Temporary access', 'Purpose-bound access only',
-      { title: 'Recovery requires a 30-minute tenant scope', status: 'Not granted', copy: 'The tenant, purpose, expiry, and audit consequence stay visible before access can be requested.', facts: ['Tenant · Grover Yard Care', 'Purpose · Delivery retry evidence', 'Expires 30 minutes after grant'], action: 'Review temporary access', optionType: 'checkbox', optionsLabel: 'Access boundary check', options: ['Exact tenant and incident confirmed', 'Purpose and 30-minute expiry understood'], confirmLabel: 'Preview access request', nextView: 'incidents', nextLabel: 'Return to incident' },
+      { title: 'Recovery requires a 30-minute tenant scope', status: 'Not granted', copy: 'The tenant, purpose, expiry, and audit consequence stay visible before access can be requested.', facts: ['Tenant · Yardfolio Yard Care', 'Purpose · Delivery retry evidence', 'Expires 30 minutes after grant'], action: 'Review temporary access', optionType: 'checkbox', optionsLabel: 'Access boundary check', options: ['Exact tenant and incident confirmed', 'Purpose and 30-minute expiry understood'], confirmLabel: 'Preview access request', nextView: 'incidents', nextLabel: 'Return to incident' },
       { title: 'Current support access is purpose-bound', status: '18 minutes remain', copy: 'Only the owned incident context is available and every action remains audited.', facts: ['One exact tenant', 'Delivery evidence only', 'Automatic expiry active'], action: 'Review access receipt', nextView: 'incidents', nextLabel: 'Return to incidents' },
       { title: 'No temporary access is active', status: 'Protected', copy: 'Tenant data stays closed when no owned incident requires access.', facts: ['0 active grants', '0 tenant sessions', 'No protected data loaded'], action: 'Return to incidents', nextView: 'incidents', nextLabel: 'Open incidents' }),
   },
@@ -386,7 +386,7 @@ function render(announce = true) {
   document.querySelector('#why-panel').hidden = true;
   detail.hidden = true;
   completion.hidden = true;
-  document.title = `${persona.name} · ${availableView.label} · Grover minimalist prototype`;
+  document.title = `${persona.name} · ${availableView.label} · Yardfolio minimalist prototype`;
   history.replaceState(null, '', `#${state.persona}/${state.scenario}/${state.view}`);
   bindDynamicControls(focus, persona);
   if (announce) document.querySelector('#announcer').textContent = `Showing ${persona.name}, ${scenarioPicker.selectedOptions[0].text}, ${availableView.label}`;

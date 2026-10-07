@@ -45,7 +45,7 @@ try {
     await page.waitForTimeout(120);
 
     const foundationHref = await page.locator('link[rel="stylesheet"]').last().getAttribute('href');
-    check(foundationHref === '../shared/grover-foundation.css', `${prototype.name}: shared foundation is not the final stylesheet`);
+    check(foundationHref === '../shared/yardfolio-foundation.css', `${prototype.name}: shared foundation is not the final stylesheet`);
 
     const tokens = await page.evaluate((names) => {
       const style = getComputedStyle(document.documentElement);

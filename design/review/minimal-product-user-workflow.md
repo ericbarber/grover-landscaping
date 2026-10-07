@@ -13,7 +13,7 @@ Last updated: 2026-09-08
 
 ## Purpose
 
-Define the smallest coherent Grover service workflow before revising more
+Define the smallest coherent Yardfolio service workflow before revising more
 screens or adopting the minimalist prototypes into React. This document is the
 source of truth for who participates in the minimal product, what each person
 is trying to accomplish, how responsibility moves between them, and which

@@ -100,7 +100,7 @@ try {
   await desktop.page.locator('[data-success-state]').waitFor({ state: 'visible' });
   check(await desktop.page.locator('[data-success-state]').isVisible(), 'Form: success state missing');
   check((await desktop.page.locator('[data-success-name]').innerText()) === 'Morgan', 'Form: success context missing');
-  await desktop.page.getByRole('button', { name: 'Return to Grover' }).click();
+  await desktop.page.getByRole('button', { name: 'Return to Yardfolio' }).click();
   check(desktop.browserErrors.length === 0, `Desktop browser errors: ${desktop.browserErrors.join('; ')}`);
 
   await desktop.page.reload({ waitUntil: 'load' });

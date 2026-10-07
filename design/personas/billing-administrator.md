@@ -13,7 +13,7 @@ send an owned gap to operations with a traceable receipt.
 missing-information reasons, and handoff status.
 
 **Boundary:** This role is design-only until an explicit backend role exists.
-Grover does not currently provide invoices, payments, refunds, or an accounting
+Yardfolio does not currently provide invoices, payments, refunds, or an accounting
 ledger; the prototype must not imply those actions.
 
 **Research prompt:** What information is actually required at completion, and

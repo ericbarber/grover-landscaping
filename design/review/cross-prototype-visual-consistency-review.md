@@ -40,7 +40,7 @@ workflow layout.
 ## Canonical foundation
 
 The runtime source is
-[`../prototypes/shared/grover-foundation.css`](../prototypes/shared/grover-foundation.css).
+[`../prototypes/shared/yardfolio-foundation.css`](../prototypes/shared/yardfolio-foundation.css).
 It implements the approved values already documented in
 [`../foundations/color.md`](../foundations/color.md),
 [`../foundations/typography.md`](../foundations/typography.md), and

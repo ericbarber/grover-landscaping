@@ -2,14 +2,14 @@
 
 ## Goal
 
-Let a yard owner create a Grover account before they have a landscaping provider,
+Let a yard owner create a Yardfolio account before they have a landscaping provider,
 build a private profile of their property with guided photographs and care goals,
 then either connect an existing provider or request service from suitable provider
 companies. After assessment and explicit agreement, the accepted provider can
 activate the property in the existing service lifecycle and assign its own crew.
 
 This plan extends the validated Yard Owner V2 portal backward from “service is
-already connected” to “I need to get my yard into Grover and establish care.”
+already connected” to “I need to get my yard into Yardfolio and establish care.”
 
 ## Working-design execution status
 
@@ -57,7 +57,7 @@ service team, but the relationship still belongs to the provider organization.
 ### The owner creates a yard brief, not an operational care plan
 
 The owner can describe goals, desired cadence, yard areas, known problems,
-access constraints, household considerations, and budget comfort. Grover may
+access constraints, household considerations, and budget comfort. Yardfolio may
 organize those answers into a **draft care brief** and suggest questions to ask.
 
 It must not claim that photographs alone establish plant health, treatment,
@@ -164,7 +164,7 @@ service frequency.
 Present three honest choices:
 
 - **Invite my current provider.** Enter a business email or mobile number and
-  optional company name. Grover sends an expiring connection invitation.
+  optional company name. Yardfolio sends an expiring connection invitation.
 - **Find a provider.** Browse eligible providers whose declared territory and
   capabilities match the property’s approximate area and requested care.
 - **Finish later.** Keep the private yard profile without sending anything.
@@ -189,7 +189,7 @@ but it must not mix DIY tasks with provider operations in this workflow.
 ### 4B. Find a provider
 
 The directory shows provider organizations, not individual employees, and only
-facts Grover can support:
+facts Yardfolio can support:
 
 - business/trade name and contact route;
 - declared service territory;
@@ -233,7 +233,7 @@ Each provider authors a versioned initial-service proposal containing:
 - expiration and what acceptance authorizes;
 - next step before the first visit.
 
-Owners compare the same high-level categories without Grover pretending unlike
+Owners compare the same high-level categories without Yardfolio pretending unlike
 scope is identical. They may ask a question or request a revision without deciding
 the proposal. Acceptance uses explicit confirmation and is distinct from payment.
 Declined, expired, withdrawn, and superseded versions remain understandable.
@@ -342,7 +342,7 @@ Deliver:
 - Final state machines, ownership matrix, threat model, abuse model, retention and
   deletion policy, disclosure receipt, and support/recovery runbook.
 - Decide initial launch geography, provider eligibility standard, maximum active
-  requests, invitation channels, assessment expectations, and whether Grover is
+  requests, invitation channels, assessment expectations, and whether Yardfolio is
   only a connector or a party to the service agreement.
 - Define address provider/fallback behavior and exact/coarse location rules.
 - Create responsive low-fidelity owner and provider journeys plus failure states.

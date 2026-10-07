@@ -384,7 +384,7 @@ function shell(width, height, page, body) {
   <desc id="desc">${esc(page.subtitle)}</desc>
   <rect width="${width}" height="${height}" fill="${palette.paper}"/>
   ${body}
-  ${text(28, height - 22, `Grover design study · ${page.status} · low fidelity`, 12, 700, palette.muted)}
+  ${text(28, height - 22, `Yardfolio design study · ${page.status} · low fidelity`, 12, 700, palette.muted)}
 </svg>\n`;
 }
 
@@ -397,7 +397,7 @@ function renderMobile(page) {
   const startY = 210;
   let body = [
     rect(12, 12, 366, 68, { radius: 18 }),
-    text(28, 38, 'GROVER', 12, 900, palette.accent),
+    text(28, 38, 'YARDFOLIO', 12, 900, palette.accent),
     text(28, 62, page.eyebrow ?? 'WORKSPACE', 11, 800, palette.muted),
     rect(320, 26, 40, 40, { fill: palette.soft, stroke: palette.soft, radius: 20 }),
     text(340, 51, 'ME', 10, 900, palette.accent, 'middle'),
@@ -421,7 +421,7 @@ function renderMobile(page) {
 function desktopChrome(page) {
   const nav = page.navigation ?? [];
   let body = rect(22, 20, 1396, 72, { radius: 18 });
-  body += text(48, 55, 'GROVER', 19, 900, palette.accent);
+  body += text(48, 55, 'YARDFOLIO', 19, 900, palette.accent);
   body += text(48, 76, 'Plan · Care · Proof', 11, 700, palette.muted);
   body += badge(1190, 40, page.status);
   body += rect(22, 108, 220, 870, { radius: 18 });
@@ -464,7 +464,7 @@ function renderMarketing(page) {
   const height = 1100;
   let body = [
     rect(24, 20, 1392, 70, { radius: 18 }),
-    text(52, 62, 'GROVER', 20, 900, palette.accent),
+    text(52, 62, 'YARDFOLIO', 20, 900, palette.accent),
     text(252, 62, 'Product', 14, 700), text(338, 62, 'How it works', 14, 700), text(457, 62, 'Who it helps', 14, 700),
     rect(1186, 34, 96, 42, { fill: palette.surface, stroke: palette.accent, radius: 12 }), text(1234, 60, 'Sign in', 13, 800, palette.accent, 'middle'),
     rect(1294, 34, 98, 42, { fill: palette.accent, stroke: palette.accent, radius: 12 }), text(1343, 60, 'Get started', 13, 800, '#ffffff', 'middle'),
@@ -516,7 +516,7 @@ function renderShared(page) {
   const width = 1200;
   const height = 980;
   let body = rect(24, 20, 1152, 70, { radius: 18 });
-  body += text(50, 61, 'GROVER', 19, 900, palette.accent);
+  body += text(50, 61, 'YARDFOLIO', 19, 900, palette.accent);
   body += text(1148, 61, 'Secure customer link', 12, 800, palette.muted, 'end');
   body += text(48, 140, page.title, 31, 900, palette.ink);
   body += wrappedText(48, 170, page.subtitle, 950, 15, 21);
@@ -539,7 +539,7 @@ function renderAuth(page) {
   const height = 1024;
   let body = rect(24, 20, 1392, 958, { radius: 24 });
   body += rect(24, 20, 592, 958, { fill: palette.accent, stroke: palette.accent, radius: 24 });
-  body += text(70, 79, 'GROVER', 20, 900, '#ffffff');
+  body += text(70, 79, 'YARDFOLIO', 20, 900, '#ffffff');
   body += text(70, 224, 'Run the day.', 39, 900, '#ffffff');
   body += text(70, 271, 'Prove the work.', 39, 900, '#ffffff');
   body += wrappedText(72, 316, page.subtitle, 450, 17, 25, '#dceae4');
@@ -574,4 +574,4 @@ for (const page of pages) {
 const manifest = pages.map(({ path, title, status, kind }) => ({ path, title, status, kind }));
 await writeFile(resolve(designRoot, 'wireframes/manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 
-console.log(`Rendered ${pages.length} Grover wireframes.`);
+console.log(`Rendered ${pages.length} Yardfolio wireframes.`);
