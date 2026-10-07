@@ -7,7 +7,7 @@ trap 'rm -rf -- "${temporary}"' EXIT
 mkdir -p "${temporary}/bin" "${temporary}/site"
 cp "${repository_root}/scripts/deploy-pi.sh" "${temporary}/site/deploy-pi.sh"
 cp "${repository_root}/infra/pi/compose.yml" "${temporary}/site/compose.yml"
-printf 'POSTGRES_PASSWORD=%064d\nPUBLIC_APP_URL=https://grover-dev-pi.example.ts.net\n' 0 \
+printf 'POSTGRES_PASSWORD=%064d\nPUBLIC_APP_URL=https://yardfolio-dev-pi.example.ts.net\n' 0 \
   > "${temporary}/site/.env"
 chmod 600 "${temporary}/site/.env"
 
@@ -24,7 +24,7 @@ SH
 
 cat > "${temporary}/bin/curl" <<'SH'
 #!/usr/bin/env bash
-current="$(sed -n 's/^GROVER_IMAGE=//p' .release.env)"
+current="$(sed -n 's/^YARDFOLIO_IMAGE=//p' .release.env)"
 [[ "${current}" != "${FAKE_FAIL_IMAGE:-}" ]] || exit 22
 if [[ "${*: -1}" == */auth/config ]]; then
   printf '{"mode":"local_review"}\n'
@@ -41,15 +41,15 @@ old_sha="$(printf 'a%.0s' {1..40})"
 new_sha="$(printf 'b%.0s' {1..40})"
 export PATH="${temporary}/bin:${PATH}"
 bash "${temporary}/site/deploy-pi.sh" "${old_sha}"
-grep -Fxq "GROVER_IMAGE=grover-landscaping:${old_sha}" \
+grep -Fxq "YARDFOLIO_IMAGE=yardfolio:${old_sha}" \
   "${temporary}/site/.release.env"
 
-export FAKE_FAIL_IMAGE="grover-landscaping:${new_sha}"
+export FAKE_FAIL_IMAGE="yardfolio:${new_sha}"
 if bash "${temporary}/site/deploy-pi.sh" "${new_sha}"; then
   echo 'Expected failed readiness to fail the deployment' >&2
   exit 1
 fi
-grep -Fxq "GROVER_IMAGE=grover-landscaping:${old_sha}" \
+grep -Fxq "YARDFOLIO_IMAGE=yardfolio:${old_sha}" \
   "${temporary}/site/.release.env"
 
 if bash "${temporary}/site/deploy-pi.sh" invalid >/dev/null 2>&1; then

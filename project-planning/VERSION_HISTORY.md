@@ -26,9 +26,10 @@
   persisted PostgreSQL volume or credentials.
   Unprovisioned Render and AWS definitions, example origins, resource names,
   state-key guidance, tags, and operator profiles now use Yardfolio; existing
-  external resources remain subject to provider-specific migration. Persistent
-  database and Pi identifiers retain the documented legacy namespace until
-  their coordinated migrations. The production shell
+  external resources remain subject to provider-specific migration. The next
+  Pi release uses a Yardfolio image tag, release-environment key, and deployment
+  directory; its database, private hostname, CI ACL tag, and repository identity
+  still require coordinated migration. The production shell
   cache version advances so existing installations receive the renamed shell
   through the established update prompt without clearing offline work. The
   active CSS variables, reusable component classes, Tailwind shadow utilities,

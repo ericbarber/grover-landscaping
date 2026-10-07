@@ -54,8 +54,8 @@ wholesale onto the new OS.
 2. Create a runtime file on the Pi. Use the Pi's actual tailnet DNS name:
 
    ```bash
-   mkdir -p ~/grover-landscaping
-   cd ~/grover-landscaping
+   mkdir -p ~/yardfolio
+   cd ~/yardfolio
    umask 077
    password="$(openssl rand -hex 32)"
    printf 'POSTGRES_PASSWORD=%s\nPUBLIC_APP_URL=https://%s\n' \
@@ -178,13 +178,13 @@ validated by the first GitHub Actions deployment run.
 
 ## Operating the site
 
-On the Pi, `~/grover-landscaping` holds the runtime `.env`, current
+On the Pi, `~/yardfolio` holds the runtime `.env`, current
 `.release.env`, Compose file, and deploy script. The image is named
-`grover-landscaping:<full-commit-sha>`. GitHub's deployment job reports the
+`yardfolio:<full-commit-sha>`. GitHub's deployment job reports the
 deployed SHA after readiness succeeds. Check local service status with:
 
 ```bash
-cd ~/grover-landscaping
+cd ~/yardfolio
 docker compose --env-file .env --env-file .release.env -f compose.yml ps
 docker compose --env-file .env --env-file .release.env -f compose.yml logs --tail=100 app
 curl --fail http://127.0.0.1:10000/health/ready
@@ -195,9 +195,9 @@ on the Pi while that image remains loaded. Back up the PostgreSQL volume
 before significant data or migration changes. For example, from the Pi:
 
 ```bash
-cd ~/grover-landscaping
+cd ~/yardfolio
 docker compose --env-file .env --env-file .release.env -f compose.yml \
-  exec -T postgres pg_dump -U grover grover_landscaping > "grover-$(date +%F).sql"
+  exec -T postgres pg_dump -U grover grover_landscaping > "yardfolio-$(date +%F).sql"
 ```
 
 Keep backup files outside the web server and test restoration on a separate

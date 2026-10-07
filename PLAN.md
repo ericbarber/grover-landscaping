@@ -329,7 +329,9 @@ Current state:
   family name as a current product identity. Planned Render/AWS resources and
   their operator runbooks use the Yardfolio namespace. Local and Pi database
   credentials plus already-issued Pi network and repository identifiers remain
-  isolated behind the compatibility plan.
+  isolated behind the compatibility plan. The Pi release image, environment
+  key, and deployment directory are Yardfolio-namespaced for the next gated
+  release; its private hostname and CI ACL tag still require external changes.
   Professional trademark clearance, domain/app-store confirmation, final
   visual identity, and public rollout approval remain required.
 

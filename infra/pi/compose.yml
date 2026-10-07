@@ -15,7 +15,7 @@ services:
       retries: 6
 
   app:
-    image: ${GROVER_IMAGE:?Set GROVER_IMAGE in .release.env}
+    image: ${YARDFOLIO_IMAGE:?Set YARDFOLIO_IMAGE in .release.env}
     pull_policy: never
     restart: unless-stopped
     environment:

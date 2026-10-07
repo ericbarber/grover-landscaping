@@ -25,7 +25,7 @@ if ! grep -Eq '^POSTGRES_PASSWORD=[a-f0-9]{64}$' .env ||
   exit 1
 fi
 
-image="grover-landscaping:$1"
+image="yardfolio:$1"
 if [[ $(docker image inspect --format '{{.Architecture}}' "${image}") != arm64 ]]; then
   echo 'Expected a loaded ARM64 application image' >&2
   exit 1
@@ -33,8 +33,8 @@ fi
 
 previous=''
 if [[ -f .release.env ]]; then
-  previous="$(sed -n 's/^GROVER_IMAGE=//p' .release.env)"
-  if [[ ! ${previous} =~ ^grover-landscaping:[a-f0-9]{40}$ ]]; then
+  previous="$(sed -n 's/^YARDFOLIO_IMAGE=//p' .release.env)"
+  if [[ ! ${previous} =~ ^yardfolio:[a-f0-9]{40}$ ]]; then
     echo 'Invalid previous release record' >&2
     exit 1
   fi
@@ -45,7 +45,7 @@ write_release() {
   local temporary
   temporary="$(mktemp .release.env.XXXXXX)"
   chmod 600 "${temporary}"
-  printf 'GROVER_IMAGE=%s\n' "${next_image}" > "${temporary}"
+  printf 'YARDFOLIO_IMAGE=%s\n' "${next_image}" > "${temporary}"
   mv -f -- "${temporary}" .release.env
 }
 
