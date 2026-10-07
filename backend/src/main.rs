@@ -10858,7 +10858,7 @@ mod tests {
                 false,
                 true,
                 "postgres",
-                Some("grover_landscaping"),
+                Some("yardfolio"),
             ),
             validate_local_fixture_mode(Some("true"), false, true, "postgres", None),
         ] {
@@ -12452,7 +12452,7 @@ mod tests {
         let mut state = (*seed_state()).clone();
         let pool = sqlx::postgres::PgPoolOptions::new()
             .acquire_timeout(std::time::Duration::from_millis(100))
-            .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+            .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
             .expect("unavailable test pool URL should be valid");
         state.day_plans = DayPlanRepository::from_pool(pool);
         let principal = AuthPrincipal {
@@ -12502,7 +12502,7 @@ mod tests {
         let mut unavailable_state = (*state).clone();
         let pool = sqlx::postgres::PgPoolOptions::new()
             .acquire_timeout(std::time::Duration::from_millis(100))
-            .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+            .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
             .expect("unavailable test pool URL should be valid");
         unavailable_state.organizations = OrganizationRepository::from_pool(pool);
 
@@ -12530,7 +12530,7 @@ mod tests {
         let mut state = (*seed_state()).clone();
         let pool = sqlx::postgres::PgPoolOptions::new()
             .acquire_timeout(std::time::Duration::from_millis(100))
-            .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+            .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
             .expect("unavailable test pool URL should be valid");
         state.organizations = OrganizationRepository::from_pool(pool);
 
@@ -12555,7 +12555,7 @@ mod tests {
         let mut state = (*seed_state()).clone();
         let pool = sqlx::postgres::PgPoolOptions::new()
             .acquire_timeout(std::time::Duration::from_millis(100))
-            .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+            .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
             .expect("unavailable test pool URL should be valid");
         state.jobs = JobRepository::from_pool(pool);
         let principal = AuthPrincipal {

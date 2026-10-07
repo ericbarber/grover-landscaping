@@ -40,7 +40,7 @@ async fn repository_reads_persisted_job_account_summary() {
 async fn repository_distinguishes_unavailable_and_demo_job_account_summaries() {
     let unavailable_pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
-        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
         .expect("unavailable test pool URL should be valid");
     let unavailable_repository = AccountRepository::from_pool(unavailable_pool);
     assert!(matches!(
@@ -99,7 +99,7 @@ async fn repository_distinguishes_unavailable_customer_account_state_from_empty_
 
     let unavailable_pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
-        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
         .expect("unavailable test pool URL should be valid");
     let unavailable_repository = AccountRepository::from_pool(unavailable_pool);
     assert!(matches!(

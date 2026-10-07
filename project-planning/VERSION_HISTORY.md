@@ -18,6 +18,9 @@
   Historical delivery notes now describe the product as Yardfolio, and the
   offline-photo contract documents the active IndexedDB namespace and its
   compatibility migration.
+  Ephemeral CI PostgreSQL and unreachable persistence-test URLs also use a
+  Yardfolio namespace; local and deployed database defaults remain behind the
+  compatibility boundary until their data-preserving migration is delivered.
   Source identifiers and infrastructure retain the documented legacy namespace
   until their coordinated migrations. The production shell
   cache version advances so existing installations receive the renamed shell

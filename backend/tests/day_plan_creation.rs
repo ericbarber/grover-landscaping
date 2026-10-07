@@ -32,7 +32,7 @@ async fn repository_distinguishes_unavailable_dispatch_setup_collections() {
 
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
-        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
         .expect("unavailable test pool URL should be valid");
     let repository = DayPlanRepository::from_pool(pool);
     let organizations = vec!["org_demo_landscaping".to_string()];
@@ -626,7 +626,7 @@ async fn repository_fails_persisted_route_ownership_lookups_closed() {
 
     let unavailable_pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
-        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
         .expect("unavailable test pool URL should be valid");
     let unavailable_repository = DayPlanRepository::from_pool(unavailable_pool);
     assert_eq!(

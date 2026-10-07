@@ -67,19 +67,19 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: grover_landscaping
-          POSTGRES_USER: grover
-          POSTGRES_PASSWORD: grover
+          POSTGRES_DB: yardfolio
+          POSTGRES_USER: yardfolio
+          POSTGRES_PASSWORD: yardfolio
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U grover -d grover_landscaping"
+          --health-cmd "pg_isready -U yardfolio -d yardfolio"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
     env:
-      DATABASE_URL: postgres://grover:grover@localhost:5432/grover_landscaping
+      DATABASE_URL: postgres://yardfolio:yardfolio@localhost:5432/yardfolio
       RUST_LOG: yardfolio_api=debug,tower_http=debug
 
     steps:

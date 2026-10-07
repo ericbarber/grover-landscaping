@@ -630,7 +630,7 @@ async fn authorized_response_capability(
 async fn repository_distinguishes_unavailable_invitation_storage() {
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
-        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
         .expect("unavailable test pool URL should be valid");
     let repository = OwnerAcquisitionRepository::from_pool(pool);
 
