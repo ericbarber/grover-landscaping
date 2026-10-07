@@ -45,6 +45,8 @@ jobs:
           bash scripts/smoke-production.test.sh
           bash scripts/deploy-pi.test.sh
           node --test scripts/validate-quality-budgets.test.mjs
+          node --test scripts/validate-product-brand.test.mjs
+          node scripts/validate-product-brand.mjs
           node --test scripts/validate-crawler-policy.test.mjs
           node scripts/validate-crawler-policy.mjs
           node --test modern-grover/fixtures/validate-manifest.test.mjs
@@ -182,6 +184,13 @@ jobs:
           /usr/bin/time -f
           'frontend_quality_budgets elapsed=%e user=%U system=%S max_rss_kb=%M'
           npm run quality:budgets
+        working-directory: frontend
+
+      - name: Enforce product brand consistency
+        run: >-
+          /usr/bin/time -f
+          'frontend_product_brand elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm run quality:brand
         working-directory: frontend
 
   browser-journeys:

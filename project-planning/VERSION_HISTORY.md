@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-10-06: Enforced the product-renaming boundary with a tested local and CI
+  consistency gate. It rejects new hard-coded customer-visible runtime brand
+  copy and detects stale HTML metadata, installed-app manifest/icon labels, or
+  server-rendered public titles before a rename can ship partially.
 - 2026-10-06: Centralized customer-visible runtime product naming so the
   family-name-based working title can be replaced without editing workflow copy
   throughout the application. Public, onboarding, field, diagnostics, access,

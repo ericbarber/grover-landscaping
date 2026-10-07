@@ -313,6 +313,8 @@ Current state:
   legacy technical identifiers remain stable behind the documented
   [product-renaming boundary](docs/product-renaming.md). Final naming still
   requires trademark, domain, app-store, visual identity, and rollout approval.
+  A tested local/CI gate rejects new hard-coded runtime brand copy and detects
+  drift in static metadata, the PWA manifest/icon, and server-rendered titles.
 
 - The public website now has an approved company-first positioning boundary:
   landscaping company owners/managers are the primary buyer, company setup is

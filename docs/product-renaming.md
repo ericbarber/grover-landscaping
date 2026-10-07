@@ -57,4 +57,7 @@ Before changing the display name:
    identity changes.
 
 Until those gates pass, the repository keeps the current display name while
-making the eventual change bounded and reviewable.
+making the eventual change bounded and reviewable. The local and CI
+`quality:brand` gate rejects new hard-coded runtime brand copy and fails when
+the approved static metadata, PWA, icon, or server-rendered title surfaces drift
+from `PRODUCT_NAME`.
