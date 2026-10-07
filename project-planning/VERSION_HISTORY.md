@@ -33,7 +33,9 @@
   the seeded demo organization while preserving applied migration history. The
   local Compose database, login, and volume now use Yardfolio after a logical
   backup and no-owner restore that retains application data without carrying
-  the bootstrap role into the new cluster. The
+  the bootstrap role into the new cluster. The next gated Pi stack also uses a
+  Yardfolio database and login; existing Pi data must be backed up and restored
+  into that new stack before deployment is enabled. The
   production shell
   cache version advances so existing installations receive the renamed shell
   through the established update prompt without clearing offline work. The

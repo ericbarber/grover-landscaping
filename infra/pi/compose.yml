@@ -3,13 +3,13 @@ services:
     image: postgres:16-bookworm
     restart: unless-stopped
     environment:
-      POSTGRES_DB: grover_landscaping
-      POSTGRES_USER: grover
+      POSTGRES_DB: yardfolio
+      POSTGRES_USER: yardfolio
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U grover -d grover_landscaping"]
+      test: ["CMD-SHELL", "pg_isready -U yardfolio -d yardfolio"]
       interval: 10s
       timeout: 5s
       retries: 6
@@ -21,7 +21,7 @@ services:
     environment:
       APP_ENV: local
       AUTH_MODE: local_review
-      DATABASE_URL: postgres://grover:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/grover_landscaping
+      DATABASE_URL: postgres://yardfolio:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/yardfolio
       PUBLIC_APP_URL: ${PUBLIC_APP_URL:?Set PUBLIC_APP_URL in .env}
       PHOTO_STORAGE_MODE: local
       NOTIFICATION_DISPATCH_MODE: disabled

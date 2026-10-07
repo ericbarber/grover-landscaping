@@ -197,7 +197,7 @@ before significant data or migration changes. For example, from the Pi:
 ```bash
 cd ~/yardfolio
 docker compose --env-file .env --env-file .release.env -f compose.yml \
-  exec -T postgres pg_dump -U grover grover_landscaping > "yardfolio-$(date +%F).sql"
+  exec -T postgres pg_dump -U yardfolio yardfolio > "yardfolio-$(date +%F).sql"
 ```
 
 Keep backup files outside the web server and test restoration on a separate
