@@ -157,6 +157,9 @@ scanning and handoff.
 Notification delivery history now uses customer-facing work labels and clear
 delivery states, withholds provider/template/error identifiers, and confirms
 before closing a failed delivery without sending it.
+Photo-preview recovery follows the same standard: managers see preview outcomes
+instead of worker terminology or raw processing errors, and closing a failed
+preview requires confirming that no new preview is needed.
 
 ### Raspberry Pi development hosting
 

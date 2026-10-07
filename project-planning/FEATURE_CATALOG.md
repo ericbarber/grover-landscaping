@@ -129,6 +129,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Manager notification history with customer-report/proposal/invitation labels,
   user-safe failure guidance, hidden provider internals, and confirmation before
   closing an undelivered message
+- Manager photo-preview follow-up with plain processing states, user-safe error
+  guidance, phone-sized recovery actions, and confirmation before closing a
+  failed preview without recreating it
 - Centralized field-data continuity policy for job-detail fallbacks, typed local
   photo evidence, and authoritative evidence merges that preserve unsaved work
 - Field job-selection coordinator owning detail and add-on request lifecycle,

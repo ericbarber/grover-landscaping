@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-06: Aligned manager photo-preview recovery with notification
+  recovery. The panel now describes preview outcomes instead of queue/worker
+  states, hides raw processing failures, expands phone actions, and confirms
+  before closing an issue without creating a replacement preview. Focused
+  component coverage, TypeScript, the production build, and all artifact
+  budgets pass.
 - 2026-10-06: Improved manager notification recovery after report delivery.
   Delivery history now translates queue/provider states into waiting, delivered,
   attention, and closed language; replaces raw template keys, provider message

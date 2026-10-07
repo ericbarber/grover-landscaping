@@ -18,9 +18,13 @@ export type PhotoProcessingRecoveryFilters = {
 const statusFilters: PhotoProcessingStatusFilter[] = ['all', 'failed', 'dead_letter', 'queued', 'processing', 'completed', 'resolved'];
 
 function statusLabel(status: PhotoProcessingStatusFilter): string {
-  if (status === 'dead_letter') return 'Needs attention';
+  if (status === 'queued') return 'Waiting';
+  if (status === 'processing') return 'Creating preview';
+  if (status === 'completed') return 'Preview ready';
+  if (status === 'failed' || status === 'dead_letter') return 'Needs attention';
+  if (status === 'resolved') return 'Closed';
   if (status === 'all') return 'All statuses';
-  return status.replace('_', ' ');
+  return status;
 }
 
 function statusClassName(status: PhotoProcessingStatus): string {
@@ -43,7 +47,7 @@ function formatDate(value: string | null): string {
 }
 
 function taskLabel(item: PhotoProcessingHistoryItem): string {
-  return item.taskType === 'thumbnail_generation' ? 'Thumbnail generation' : 'Photo processing';
+  return item.taskType === 'thumbnail_generation' ? 'Create photo preview' : 'Prepare photo';
 }
 
 export function ManagerPhotoProcessingRecoveryPanel({
@@ -54,6 +58,7 @@ export function ManagerPhotoProcessingRecoveryPanel({
   onResolve,
 }: ManagerPhotoProcessingRecoveryPanelProps) {
   const [status, setStatus] = useState<PhotoProcessingStatusFilter>('failed');
+  const [resolveCandidateId, setResolveCandidateId] = useState<string | null>(null);
   const attentionCount = useMemo(
     () => items.filter((item) => item.status === 'failed' || item.status === 'dead_letter').length,
     [items],
@@ -73,9 +78,9 @@ export function ManagerPhotoProcessingRecoveryPanel({
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Photo processing</p>
-          <h2 className="mt-1 text-xl font-bold text-slate-950">Recovery queue</h2>
+          <h2 className="mt-1 text-xl font-bold text-slate-950">Photo follow-up</h2>
           <p className="mt-1 text-xs text-slate-500">
-            {attentionCount > 0 ? `${attentionCount} thumbnail job${attentionCount === 1 ? '' : 's'} need attention.` : 'No failed thumbnail work in the current view.'}
+            {attentionCount > 0 ? `${attentionCount} photo preview${attentionCount === 1 ? '' : 's'} need attention.` : 'No photo previews need attention in the current view.'}
           </p>
         </div>
         <button
@@ -84,7 +89,7 @@ export function ManagerPhotoProcessingRecoveryPanel({
           onClick={() => onRefresh({ status })}
           type="button"
         >
-          {isLoading ? 'Refreshing' : 'Refresh'}
+          {isLoading ? 'Refreshing…' : 'Refresh'}
         </button>
       </div>
 
@@ -108,7 +113,7 @@ export function ManagerPhotoProcessingRecoveryPanel({
 
       {items.length === 0 ? (
         <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
-          No photo processing jobs match the selected filters.
+          No photo previews match the selected filters.
         </p>
       ) : (
         <div className="mt-4 space-y-2">
@@ -120,7 +125,7 @@ export function ManagerPhotoProcessingRecoveryPanel({
                     {taskLabel(item)} · {item.fileName}
                   </p>
                   <p className="mt-1 break-all text-xs text-slate-600">
-                    {item.jobId} · {item.photoType}
+                    <span className="capitalize">{item.photoType} photo</span> · Job {item.jobId}
                   </p>
                 </div>
                 <span className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold uppercase ${statusClassName(item.status)}`}>
@@ -128,13 +133,15 @@ export function ManagerPhotoProcessingRecoveryPanel({
                 </span>
               </div>
               <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-3">
-                <p>Attempts: {item.attemptCount}</p>
+                <p>Processing attempts: {item.attemptCount}</p>
                 <p>Last attempt: {formatDate(item.lastAttemptAt)}</p>
-                <p>Next available: {formatDate(item.availableAt)}</p>
+                <p>{item.status === 'completed'
+                  ? `Completed: ${formatDate(item.completedAt)}`
+                  : `Retry available: ${formatDate(item.availableAt)}`}</p>
               </div>
-              {item.lastError ? (
+              {item.status === 'failed' || item.status === 'dead_letter' ? (
                 <p className="mt-2 break-words rounded-lg bg-white p-2 text-xs text-rose-700">
-                  {item.lastError}
+                  Grover could not prepare this photo preview. Retry processing, or close the issue if the original photo is sufficient.
                 </p>
               ) : null}
               {item.resolutionNote ? (
@@ -143,24 +150,53 @@ export function ManagerPhotoProcessingRecoveryPanel({
                 </p>
               ) : null}
               {item.status === 'failed' || item.status === 'dead_letter' ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
-                    disabled={isLoading}
-                    onClick={() => onRetry(item.id, { status })}
-                    type="button"
-                  >
-                    Retry processing
-                  </button>
-                  <button
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                    disabled={isLoading}
-                    onClick={() => onResolve(item.id, { status })}
-                    type="button"
-                  >
-                    Mark resolved
-                  </button>
-                </div>
+                resolveCandidateId === item.id ? (
+                  <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3">
+                    <p className="text-xs leading-5 text-amber-950">
+                      Close this only if no preview is needed. Closing the issue will not create a new preview.
+                    </p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      <button
+                        className="min-h-11 rounded-lg bg-amber-800 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-900 disabled:opacity-60"
+                        disabled={isLoading}
+                        onClick={() => {
+                          setResolveCandidateId(null);
+                          onResolve(item.id, { status });
+                        }}
+                        type="button"
+                      >
+                        Close without preview
+                      </button>
+                      <button
+                        className="min-h-11 rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-950 hover:bg-amber-100 disabled:opacity-60"
+                        disabled={isLoading}
+                        onClick={() => setResolveCandidateId(null)}
+                        type="button"
+                      >
+                        Keep open
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <button
+                      className="min-h-11 rounded-lg border border-rose-300 bg-white px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
+                      disabled={isLoading}
+                      onClick={() => onRetry(item.id, { status })}
+                      type="button"
+                    >
+                      Retry processing
+                    </button>
+                    <button
+                      className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                      disabled={isLoading}
+                      onClick={() => setResolveCandidateId(item.id)}
+                      type="button"
+                    >
+                      Close issue
+                    </button>
+                  </div>
+                )
               ) : null}
             </article>
           ))}
