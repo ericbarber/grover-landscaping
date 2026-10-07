@@ -15,6 +15,9 @@
   The design archive now uses Yardfolio throughout prototype copy,
   accessibility labels, generated SVGs, review documents, shared-foundation
   links, and source asset names while retaining its historical design status.
+  Historical delivery notes now describe the product as Yardfolio, and the
+  offline-photo contract documents the active IndexedDB namespace and its
+  compatibility migration.
   Source identifiers and infrastructure retain the documented legacy namespace
   until their coordinated migrations. The production shell
   cache version advances so existing installations receive the renamed shell
@@ -488,7 +491,7 @@
   matching synthetic moment; typed field notes are not transferred. Browser
   tasks pass at 320, 390, and 1440px; no real office action occurred.
 - 2026-09-16: Added a simulated Crew Lead task to the independent Modern
-  Grover service flow. Released Plan 8 shows the assigned Canyon View stop,
+  Yardfolio service flow. Released Plan 8 shows the assigned Canyon View stop,
   access question, and safe checklist work without customer price. Offline
   actions remain in the prototype tab until a simulated reconnect; a Plan 9
   conflict stops replay and retains the local changes for manager review.
@@ -513,13 +516,13 @@
   Home and Route, with stop/time copy tied to the route date. Component tests,
   production frontend build, and 390px/320px local-review browser checks
   passed. The diagnostic reviewer selector also fits at 320px. No new Modern
-  Grover composition was adopted.
+  Yardfolio composition was adopted.
 - 2026-09-16: Specified two equivalent synthetic cross-role service records for
   Yardfolio Study comparison. The fixtures preserve exact proposal/plan versions,
   customer/field privacy, current service day, offline state, proof review, and
   reset/replay requirements; they are not seeded or participant evidence.
 - 2026-09-16: Traced the current local-review Home-to-work paths for five Modern
-  Grover perspectives at phone width. The record distinguishes sample-fixture
+  Yardfolio perspectives at phone width. The record distinguishes sample-fixture
   limits from design findings and identifies Yard Owner access and Crew Lead
   route-date contradictions between Home and destination. Matched service
   fixtures are still needed before a comparative task study.
@@ -971,7 +974,7 @@
 - 2026-08-22: Adopted the Team and access command center for Organization Owners with live active-member, pending-invitation, active-crew, and unstaffed-territory summaries; explicit unavailable recovery; staffing attention; direct member, invitation, crew, and audit paths; focused unit coverage; and phone/desktop Chromium validation.
 - 2026-08-22: Adopted the first Yard Owner portal production slice with stable Home/Visits/Proof/Account navigation, portal-wide property selection, an explicit customer-safe local-review visit model, next-visit confidence hierarchy, delivered-proof archive, recommendation history, and responsive property-context coverage; persisted customer visit reads remain planned.
 - 2026-08-22: Adopted secure customer proposal decisions with the shared public visual hierarchy, responsive scope and pricing, explicit approval/decline confirmation, recorded outcomes, closed-link recovery, and a narrowed public API projection that omits internal bid/line-item/service IDs, manager notes, and delivery metadata.
-- 2026-08-22: Adopted the customer-safe shared completion-proof hierarchy with Grover service identity, immutable snapshot context, responsive photo/checklist/add-on evidence, explicit retry recovery, and a trust boundary that omits internal billing notes and operating identifiers.
+- 2026-08-22: Adopted the customer-safe shared completion-proof hierarchy with Yardfolio service identity, immutable snapshot context, responsive photo/checklist/add-on evidence, explicit retry recovery, and a trust boundary that omits internal billing notes and operating identifiers.
 - 2026-08-22: Connected manager completion review to the exact selected Job Report workflow across desktop and mobile, and adopted the branded Reports and communication command-center hierarchy plus a denser responsive review board without changing report lifecycle or delivery contracts.
 - 2026-08-22: Adopted the manager Recovery queue/detail hierarchy with open/assigned/urgent/resolved-today summaries, responsive filtered queue and selected inspector, shared status feedback, preserved optimistic lifecycle actions, and direct routing back to affected Job, property, or Schedule work.
 - 2026-08-22: Adopted the first authenticated manager Schedule command-center slice with Today’s operation, service-date crew/work/risk summaries, compact route-target controls, a desktop route board plus selected-route planning inspector, responsive stacking, shared status feedback, and preserved draft/capacity/publish/amendment behavior.
@@ -1092,7 +1095,7 @@
 - 2026-07-20: Added an interactive persona-aware product tour and capability-backed credibility section without unverified customer claims.
 - 2026-07-20: Added persona campaign landing paths with first-screen personalization, canonical search/social metadata, and crawler controls.
 - 2026-07-20: Added persona-specific marketing conversion flows with consent, attribution, spam filtering, and durable production lead capture.
-- 2026-07-20: Added an API-independent public persona-selectable Grover homepage with product narrative, preview, outcomes, and direct workspace routing.
+- 2026-07-20: Added an API-independent public persona-selectable Yardfolio homepage with product narrative, preview, outcomes, and direct workspace routing.
 - 2026-07-20: Added auditable photo-erasure recovery events and isolated durable photo recovery integration coverage.
 - 2026-07-20: Aligned day-plan, amendment, and bid readiness tests with explicit persistence result contracts.
 - 2026-07-20: Restored the full 160-test Rust library readiness suite after persistence contract hardening.
@@ -1433,7 +1436,7 @@ Current continuation work:
 - A sticky phone navigation bar links the core workflow sections, and opening a
   job moves directly to its detail and field actions on narrow viewports.
 - Mobile application metadata now supports standalone home-screen presentation,
-  portrait orientation, safe-area viewports, and Grover Field branding.
+  portrait orientation, safe-area viewports, and Yardfolio Field branding.
 - Mobile route cards now keep stop progress prominent while route changes,
   request history, and extra-service controls remain available on demand.
 - Mobile job detail now presents lifecycle actions first and condenses the

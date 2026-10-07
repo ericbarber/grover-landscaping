@@ -498,7 +498,7 @@ Current state:
   task scenarios, synthesis confidence, privacy handling, and an explicit exit
   checklist. No user evidence is claimed before those sessions occur.
 - The [simplified product experience plan](design/review/simplified-product-experience-plan.md)
-  supersedes the MVP framing while retaining those research materials. Grover
+  supersedes the MVP framing while retaining those research materials. Yardfolio
   is treated as a post-MVP product whose accumulated capability needs a simpler
   mental model: queues find an exact service thread, and customer decisions,
   plan versions, field work, proof, and recovery remain contextual to that
@@ -2029,7 +2029,7 @@ or crew assignment.
 
 ### Public product experience
 
-- Public root homepage introduces Grover without requiring authentication
+- Public root homepage introduces Yardfolio without requiring authentication
 - The root hero focuses on one Yard Owner, one yard, and the story across its
   visits; multi-property and provider operations remain in their dedicated routes
 - Each direct public route opens with its own focused hero action: Yard Owners
@@ -2083,7 +2083,7 @@ or crew assignment.
 - Home pairs an original Southwestern landscape hero with persona-specific product promises and concise plan-care-proof brand cues
 - Home translates progress into persona-relevant service, portfolio, route, revenue, or field-delivery language
 - Desktop now opens with the same premium landscape imagery, persona promise, brand cues, and contextual progress as mobile
-- Authentication and session-loading screens now introduce Grover with premium imagery, an outcome-led value proposition, trust cues, and a clearer workspace call to action
+- Authentication and session-loading screens now introduce Yardfolio with premium imagery, an outcome-led value proposition, trust cues, and a clearer workspace call to action
 - Daily progress, sync health, and a recommended next action establish a clear visual and task hierarchy
 - Secondary persona destinations use compact workspace cards while signed-in identity details remain available below the primary workflow
 - Home status messaging prioritizes pending sync, no assigned work, remaining work, or a completed day with distinct visual tones
@@ -2101,7 +2101,7 @@ or crew assignment.
 - Desktop applies the same persona boundaries: customer roles see property and portfolio care, crews see field execution, company roles see operations, and support sees diagnostics and recovery
 - Install and application-update notifications stack above the mobile navbar and iPhone safe area instead of covering navigation
 - Install guidance uses device-neutral language across phones, tablets, and desktop computers
-- Failed route recovery clears stale Grover Field shell caches before reloading, and online application assets use network-first delivery with offline cache fallback
+- Failed route recovery clears stale Yardfolio Field shell caches before reloading, and online application assets use network-first delivery with offline cache fallback
 - Manager activity renders photo-erasure recovery audits and safely falls back for newer server event kinds instead of crashing application startup
 - Managers land on a compact role-filtered category home instead of every office tool in one continuous page
 - Manager Overview, Schedule, Customers, Team, Reports, and Recovery categories render only when relevant to the active persona
@@ -2571,7 +2571,7 @@ Current state:
 - Manager completion review opens the exact selected Job directly in its Report
   workflow across desktop and mobile rather than leaving the manager tool active.
 - The secure customer completion-report link presents responsive, immutable
-  delivered proof using the public Grover hierarchy without rendering internal
+  delivered proof using the public Yardfolio hierarchy without rendering internal
   billing or operating identifiers, and can retry transient report outages.
 - The secure proposal link presents customer-safe scope and pricing, requires
   explicit decision confirmation, renders recorded outcomes, and does not
@@ -3071,7 +3071,7 @@ Planned boundaries:
   Yelp's business guidance prohibits review solicitation.
 - Start with outbound links. Do not automatically cross-post owner text, scrape
   reviews, import ratings, claim that a review was published, or display third-
-  party review content inside Grover without a separately approved API,
+  party review content inside Yardfolio without a separately approved API,
   attribution, consent, moderation, deletion, and platform-policy contract.
 - Require verified provider ownership of each destination, an allowlisted host
   and safe redirect contract, link-health recovery, accessibility, minimized

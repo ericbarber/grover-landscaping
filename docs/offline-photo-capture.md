@@ -1,7 +1,10 @@
 # Offline Photo Capture Boundary
 
 Phase 2 photo reliability stores captured image bytes separately from mutation
-metadata in the existing `grover-field-offline` IndexedDB database.
+metadata in the `yardfolio-field-offline` IndexedDB database. Existing queues
+from an earlier namespace are copied into this database without overwriting
+current records and are removed from the earlier database only after the copy
+succeeds.
 
 ## Storage model
 
