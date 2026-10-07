@@ -56,8 +56,8 @@ export function WorkspaceHomePanel({
           title="No active workspace role"
           tone="warning"
         />
-        <article className="grover-card p-5 text-sm text-slate-600">
-          <p className="grover-eyebrow">Signed-in identity</p>
+        <article className="yardfolio-card p-5 text-sm text-slate-600">
+          <p className="yardfolio-eyebrow">Signed-in identity</p>
           <h2 className="mt-2 font-display text-2xl font-black text-forest" id="workspace-access-heading">
             {signedInName}
           </h2>
@@ -106,11 +106,11 @@ export function WorkspaceHomePanel({
           <ManagerTodayQueue {...managerTodayQueue} />
         </div>
       ) : null}
-      <article className="relative min-h-[10.5rem] overflow-hidden rounded-2xl bg-emerald-950 p-4 text-white shadow-grover-md lg:hidden">
+      <article className="relative min-h-[10.5rem] overflow-hidden rounded-2xl bg-emerald-950 p-4 text-white shadow-yardfolio-md lg:hidden">
         <img
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center"
-          src="/brand/grover-landscape-home-hero.webp"
+          src="/brand/yardfolio-landscape-home-hero.webp"
         />
         <span className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-emerald-950/10" />
         <span className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-slate-950/80 to-transparent" />
@@ -159,7 +159,7 @@ export function WorkspaceHomePanel({
         </button>
       ) : null}
 
-      <article className="grover-card p-4 lg:col-span-4">
+      <article className="yardfolio-card p-4 lg:col-span-4">
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
@@ -224,7 +224,7 @@ export function WorkspaceHomePanel({
       </WorkspaceStatusNotice>
 
       {secondaryActions.length > 0 ? (
-        <section className="grover-card p-4 lg:col-span-12">
+        <section className="yardfolio-card p-4 lg:col-span-12">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
             Your workspace
           </p>

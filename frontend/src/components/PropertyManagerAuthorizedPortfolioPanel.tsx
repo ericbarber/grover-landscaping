@@ -73,7 +73,7 @@ export function PropertyManagerAuthorizedPortfolioPanel({
 
   if (!capabilities.portfolioRead) {
     return (
-      <section className="grover-card p-6" data-property-manager-portfolio>
+      <section className="yardfolio-card p-6" data-property-manager-portfolio>
         <h1 className="font-display text-3xl font-black text-forest">Property portfolio</h1>
         <WorkspaceStatusNotice
           className="mt-4"
@@ -88,8 +88,8 @@ export function PropertyManagerAuthorizedPortfolioPanel({
   if (readState !== 'ready') {
     const failure = readState === 'loading' ? null : readFailure[readState];
     return (
-      <section className="grover-card p-6" data-property-manager-portfolio>
-        <p className="grover-eyebrow">Property portfolio · Private access</p>
+      <section className="yardfolio-card p-6" data-property-manager-portfolio>
+        <p className="yardfolio-eyebrow">Property portfolio · Private access</p>
         <h1 className="mt-2 font-display text-3xl font-black text-forest">Your authorized properties</h1>
         <WorkspaceStatusNotice
           className="mt-5"
@@ -98,15 +98,15 @@ export function PropertyManagerAuthorizedPortfolioPanel({
           tone={failure ? 'warning' : 'info'}
         />
         <div className="mt-5 flex flex-wrap gap-3">
-          {failure ? <button className="grover-button-primary" onClick={onRetry} type="button">Try again</button> : null}
-          <button className="grover-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
+          {failure ? <button className="yardfolio-button-primary" onClick={onRetry} type="button">Try again</button> : null}
+          <button className="yardfolio-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-paper shadow-grover-md" data-property-manager-portfolio>
+    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-paper shadow-yardfolio-md" data-property-manager-portfolio>
       <header className="bg-forest p-5 text-white sm:p-7">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Property portfolio · Private access</p>
         <h1 className="mt-2 font-display text-3xl font-black">Your authorized properties</h1>
@@ -163,7 +163,7 @@ export function PropertyManagerAuthorizedPortfolioPanel({
         <div className="min-w-0">
           {selected ? (
             <div>
-              <p className="grover-eyebrow">Exact property</p>
+              <p className="yardfolio-eyebrow">Exact property</p>
               <h2 className="mt-2 font-display text-3xl font-black text-forest" id="authorized-property-title" tabIndex={-1}>{selected.displayName}</h2>
               {visitsForPortalProperty(visits, selected.customerId, selected.organizationId, selected.id).length === 0 ? (
                 <WorkspaceStatusNotice

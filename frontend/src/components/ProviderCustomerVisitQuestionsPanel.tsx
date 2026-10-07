@@ -202,10 +202,10 @@ export function ProviderCustomerVisitQuestionsPanel() {
   }
 
   return (
-    <section className="grover-card p-5" aria-labelledby="visit-question-queue-heading">
+    <section className="yardfolio-card p-5" aria-labelledby="visit-question-queue-heading">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="grover-eyebrow">Customer communication</p>
+          <p className="yardfolio-eyebrow">Customer communication</p>
           <h2 className="mt-1 text-2xl font-black text-forest" id="visit-question-queue-heading">
             Visit questions
           </h2>
@@ -214,7 +214,7 @@ export function ProviderCustomerVisitQuestionsPanel() {
           </p>
         </div>
         <button
-          className="grover-button-secondary"
+          className="yardfolio-button-secondary"
           disabled={queueLoading}
           onClick={() => void loadQueue(selectedReference)}
           type="button"
@@ -310,7 +310,7 @@ export function ProviderCustomerVisitQuestionsPanel() {
                       />
                     </label>
                     <button
-                      className="grover-button-primary disabled:opacity-60"
+                      className="yardfolio-button-primary disabled:opacity-60"
                       disabled={saving || !body.trim()}
                       type="submit"
                     >

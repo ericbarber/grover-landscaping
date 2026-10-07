@@ -4,25 +4,25 @@
 
 :root {
   color-scheme: light;
-  --grover-forest: #0f2f28;
-  --grover-evergreen: #173f35;
-  --grover-evergreen-hover: #24594a;
-  --grover-bone: #f6f2e8;
-  --grover-paper: #fffdf8;
-  --grover-ink: #17342d;
-  --grover-slate: #5d6e67;
-  --grover-line: #d8ddd7;
-  --grover-sage: #8ea795;
-  --grover-sage-soft: #dce6de;
-  --grover-sand: #dec79d;
-  --grover-gold: #c99f55;
-  --grover-clay: #bd6848;
-  --grover-sky: #dce8eb;
-  --grover-focus: #1685a4;
-  --grover-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
-  --grover-sans: Inter, 'Segoe UI', Arial, ui-sans-serif, system-ui, -apple-system,
+  --yardfolio-forest: #0f2f28;
+  --yardfolio-evergreen: #173f35;
+  --yardfolio-evergreen-hover: #24594a;
+  --yardfolio-bone: #f6f2e8;
+  --yardfolio-paper: #fffdf8;
+  --yardfolio-ink: #17342d;
+  --yardfolio-slate: #5d6e67;
+  --yardfolio-line: #d8ddd7;
+  --yardfolio-sage: #8ea795;
+  --yardfolio-sage-soft: #dce6de;
+  --yardfolio-sand: #dec79d;
+  --yardfolio-gold: #c99f55;
+  --yardfolio-clay: #bd6848;
+  --yardfolio-sky: #dce8eb;
+  --yardfolio-focus: #1685a4;
+  --yardfolio-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --yardfolio-sans: Inter, 'Segoe UI', Arial, ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, sans-serif;
-  font-family: var(--grover-sans);
+  font-family: var(--yardfolio-sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -30,21 +30,21 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 5rem;
-  background: var(--grover-bone);
+  background: var(--yardfolio-bone);
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
   overflow-x: hidden;
-  background: var(--grover-bone);
-  color: var(--grover-ink);
+  background: var(--yardfolio-bone);
+  color: var(--yardfolio-ink);
   padding-right: env(safe-area-inset-right);
   padding-left: env(safe-area-inset-left);
 }
 
 .authenticated-workspace-shell {
-  padding-bottom: calc(var(--grover-mobile-workspace-nav-height, 5rem) + 1rem);
+  padding-bottom: calc(var(--yardfolio-mobile-workspace-nav-height, 5rem) + 1rem);
 }
 
 @media (min-width: 768px) {
@@ -57,7 +57,7 @@ button,
 input,
 select,
 textarea {
-  font-family: var(--grover-sans);
+  font-family: var(--yardfolio-sans);
 }
 
 button {
@@ -73,49 +73,49 @@ textarea {
 }
 
 :focus-visible {
-  outline: 3px solid var(--grover-focus);
+  outline: 3px solid var(--yardfolio-focus);
   outline-offset: 3px;
 }
 
 ::selection {
-  background: var(--grover-sand);
-  color: var(--grover-forest);
+  background: var(--yardfolio-sand);
+  color: var(--yardfolio-forest);
 }
 
 @layer components {
-  .grover-brand {
+  .yardfolio-brand {
     @apply inline-flex min-h-11 items-center gap-3 font-sans text-sm font-black uppercase tracking-[0.18em] no-underline;
   }
 
-  .grover-brand-mark {
+  .yardfolio-brand-mark {
     @apply h-8 w-8 shrink-0 fill-none stroke-current;
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 2.6;
   }
 
-  .grover-eyebrow {
+  .yardfolio-eyebrow {
     @apply text-[0.7rem] font-black uppercase tracking-[0.18em] text-emerald-700;
   }
 
-  .grover-display {
+  .yardfolio-display {
     @apply font-display font-bold text-ink;
     letter-spacing: -0.035em;
   }
 
-  .grover-type-operational {
+  .yardfolio-type-operational {
     @apply font-sans;
   }
 
-  .grover-card {
-    @apply rounded-2xl border border-slate-200 bg-paper shadow-grover-sm;
+  .yardfolio-card {
+    @apply rounded-2xl border border-slate-200 bg-paper shadow-yardfolio-sm;
   }
 
-  .grover-button-primary {
-    @apply inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-800 bg-emerald-800 px-5 py-3 text-sm font-extrabold text-white shadow-grover-sm transition hover:border-emerald-700 hover:bg-emerald-700;
+  .yardfolio-button-primary {
+    @apply inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-800 bg-emerald-800 px-5 py-3 text-sm font-extrabold text-white shadow-yardfolio-sm transition hover:border-emerald-700 hover:bg-emerald-700;
   }
 
-  .grover-button-secondary {
+  .yardfolio-button-secondary {
     @apply inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-paper px-5 py-3 text-sm font-extrabold text-emerald-800 transition hover:border-emerald-700 hover:bg-emerald-50;
   }
 }

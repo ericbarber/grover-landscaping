@@ -45,7 +45,7 @@ describe('Yard Owner persisted visit states', () => {
 
     expect(markup).toContain('Loading your yard');
     expect(markup).toContain('<h1');
-    expect(markup).toContain('grover-type-operational');
+    expect(markup).toContain('yardfolio-type-operational');
     expect(markup).not.toContain('font-display');
     expect(markup).not.toContain('Weekly yard care');
     expect(markup).not.toContain('August 27');
@@ -61,7 +61,7 @@ describe('Yard Owner persisted visit states', () => {
     expect(markup).toContain('Return Home');
     expect(markup).toContain('<h1');
     expect(markup).toContain('<h2');
-    expect(markup).toContain('grover-type-operational');
+    expect(markup).toContain('yardfolio-type-operational');
     expect(markup).not.toContain('Weekly yard care');
   });
 

@@ -37,7 +37,7 @@ export function ManagerWorkspaceMenu({
   const sections = managerWorkspaceSectionsForPersona(personaId, rolloutUnit, capabilities);
 
   return (
-    <section className="grover-card p-4">
+    <section className="yardfolio-card p-4">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
         Manager home
       </p>
@@ -108,7 +108,7 @@ export function ManagerWorkspaceToolMenu({
 
   if (selectedTool) {
     return (
-      <section className="grover-card flex items-center gap-3 p-3">
+      <section className="yardfolio-card flex items-center gap-3 p-3">
         <button
           className="min-h-11 rounded-xl border border-slate-300 bg-paper px-3 text-sm font-bold text-slate-700"
           onClick={onClear}
@@ -129,7 +129,7 @@ export function ManagerWorkspaceToolMenu({
   }
 
   return (
-    <section className="grover-card p-4">
+    <section className="yardfolio-card p-4">
       <button
         className="min-h-11 rounded-xl border border-slate-300 bg-paper px-3 text-sm font-bold text-slate-700"
         onClick={onBack}

@@ -369,7 +369,7 @@ function PersonaTourPreview({ content }: { content: TourPreviewContent }) {
       : 'bg-emerald-100 text-emerald-900';
 
   return (
-    <article className="rounded-2xl bg-bone p-4 text-slate-950 shadow-grover-md sm:p-6">
+    <article className="rounded-2xl bg-bone p-4 text-slate-950 shadow-yardfolio-md sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">{content.eyebrow}</p>

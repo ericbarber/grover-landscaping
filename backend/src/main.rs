@@ -14078,7 +14078,7 @@ mod tests {
         assert!(body.contains("Your yard. Every visit. One clear story."));
         assert!(body.contains("<link rel=\"canonical\" href=\"https://grover.example/\""));
         assert!(body.contains(
-            "<meta property=\"og:image\" content=\"https://grover.example/brand/grover-landscape-home-hero.webp\""
+            "<meta property=\"og:image\" content=\"https://grover.example/brand/yardfolio-landscape-home-hero.webp\""
         ));
 
         for route in [

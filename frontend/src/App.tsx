@@ -2127,7 +2127,7 @@ export function App() {
         <img
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center"
-          src="/brand/grover-landscape-home-hero.webp"
+          src="/brand/yardfolio-landscape-home-hero.webp"
         />
         <span className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-emerald-950/20" />
         <span className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/20" />
@@ -2163,7 +2163,7 @@ export function App() {
                 <span className="text-emerald-300">Proof</span>
               </div>
             </div>
-            <aside className="rounded-2xl border border-white/15 bg-slate-950/45 p-5 shadow-grover-md backdrop-blur-md">
+            <aside className="rounded-2xl border border-white/15 bg-slate-950/45 p-5 shadow-yardfolio-md backdrop-blur-md">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">
                 {personaProgressLanguage(activePersona).eyebrow}
               </p>
@@ -2325,7 +2325,7 @@ export function App() {
           </div>
 
           {canUseManagerTools ? (
-          <details className={`${mobileView === 'manager' ? 'block' : 'hidden'} mt-0 scroll-mt-16 rounded-2xl border border-slate-200 bg-paper p-3 shadow-grover-sm open:bg-transparent open:p-0 open:shadow-none`} id="manager-tools" open={mobileView === 'manager' ? true : undefined}>
+          <details className={`${mobileView === 'manager' ? 'block' : 'hidden'} mt-0 scroll-mt-16 rounded-2xl border border-slate-200 bg-paper p-3 shadow-yardfolio-sm open:bg-transparent open:p-0 open:shadow-none`} id="manager-tools" open={mobileView === 'manager' ? true : undefined}>
             <summary className="cursor-pointer list-none rounded-xl bg-forest px-4 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
               {managerWorkspaceHeading}
               <span className="ml-2 text-xs font-normal text-slate-300">{managerWorkspaceDescription}</span>

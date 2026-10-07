@@ -6,8 +6,8 @@ export function PublicCustomerLinkHeader() {
   return (
     <header className="border-b border-slate-200 bg-paper px-4 py-3 sm:px-6">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
-        <div className="grover-brand text-forest">
-          <svg aria-hidden="true" className="grover-brand-mark" viewBox="0 0 32 32">
+        <div className="yardfolio-brand text-forest">
+          <svg aria-hidden="true" className="yardfolio-brand-mark" viewBox="0 0 32 32">
             <path d="M6 25c5-1 9-5 11-11 4 2 7 6 8 11" />
             <path d="M8 24c0-8 5-14 13-17-1 8-5 14-13 17Z" />
           </svg>

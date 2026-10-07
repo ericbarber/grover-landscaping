@@ -32,7 +32,7 @@ export function ManagerTodayQueue({
   const visibleItems = items.slice(0, 4);
 
   return (
-    <section aria-labelledby="manager-today-heading" className="grover-card p-4 sm:p-5">
+    <section aria-labelledby="manager-today-heading" className="yardfolio-card p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">

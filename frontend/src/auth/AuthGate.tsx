@@ -35,7 +35,7 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
       <img
         alt=""
         className="absolute inset-0 h-full w-full object-cover object-center"
-        src="/brand/grover-landscape-home-hero.webp"
+        src="/brand/yardfolio-landscape-home-hero.webp"
       />
       <span className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-emerald-950/30" />
       <span className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-slate-950/40" />

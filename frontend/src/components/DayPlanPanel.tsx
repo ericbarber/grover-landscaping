@@ -812,7 +812,7 @@ export function DayPlanPanel({
         </div>
       </div>
 
-      <section aria-label={`${routeDate.label} progress`} className="order-2 mt-5 rounded-2xl bg-forest p-5 text-white shadow-grover-md">
+      <section aria-label={`${routeDate.label} progress`} className="order-2 mt-5 rounded-2xl bg-forest p-5 text-white shadow-yardfolio-md">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.16em] text-sand">{routeDate.label}</p>
@@ -1083,12 +1083,12 @@ export function DayPlanPanel({
 
           return (
             <div key={stop.id}>
-              <h3 className="grover-type-operational mb-2 mt-5 text-xl font-black text-forest">
+              <h3 className="yardfolio-type-operational mb-2 mt-5 text-xl font-black text-forest">
                 {!routeDate.mutable ? `Stop ${stop.stopOrder}` : index === 0
                   ? completedStops >= dayPlan.stops.length ? 'Latest stop' : 'Current stop'
                   : index === 1 ? 'Up next' : `Stop ${stop.stopOrder}`}
               </h3>
-              <article className={`rounded-2xl border p-4 ${index === 0 ? 'border-emerald-300 bg-paper shadow-grover-sm' : 'border-slate-200 bg-slate-50'}`}>
+              <article className={`rounded-2xl border p-4 ${index === 0 ? 'border-emerald-300 bg-paper shadow-yardfolio-sm' : 'border-slate-200 bg-slate-50'}`}>
               {jobDetailsEnabled ? (
                 <button
                   aria-label={`Open job details for ${stop.customerName}`}

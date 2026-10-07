@@ -404,7 +404,7 @@ export function PublicLandingPage({
       window.location.origin,
     )
       .toString();
-    const shareImageUrl = new URL('/brand/grover-landscape-home-hero.webp', window.location.origin)
+    const shareImageUrl = new URL('/brand/yardfolio-landscape-home-hero.webp', window.location.origin)
       .toString();
     document.title = title;
     setMetadata('description', description);
@@ -480,7 +480,7 @@ export function PublicLandingPage({
             <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#who-its-for">Who it helps</a>
             <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#proof">Why {PRODUCT_NAME}</a>
           </div>
-          <a className="grover-button-primary px-4 sm:px-5" href="/app">
+          <a className="yardfolio-button-primary px-4 sm:px-5" href="/app">
             Sign in
           </a>
         </nav>
@@ -490,10 +490,10 @@ export function PublicLandingPage({
       <section className="bg-bone" data-testid="marketing-hero">
         <div className="mx-auto grid max-w-[86rem] gap-8 px-4 py-10 sm:px-6 sm:py-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(30rem,1.08fr)] lg:items-center lg:gap-12 lg:px-8 lg:py-8">
           <div className="min-w-0 lg:py-2">
-            <p className="grover-eyebrow flex items-center gap-3 before:h-px before:w-7 before:bg-emerald-700">
+            <p className="yardfolio-eyebrow flex items-center gap-3 before:h-px before:w-7 before:bg-emerald-700">
               {entryPersona.eyebrow}
             </p>
-            <h1 className="grover-display mt-4 max-w-[12ch] text-[clamp(3rem,5.5vw,5rem)] leading-[0.96]">
+            <h1 className="yardfolio-display mt-4 max-w-[12ch] text-[clamp(3rem,5.5vw,5rem)] leading-[0.96]">
               {entryPersona.headline}
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600 lg:text-[1.05rem] lg:leading-7 xl:text-lg xl:leading-8">
@@ -502,26 +502,26 @@ export function PublicLandingPage({
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Hero next steps">
               {entryPersona.id === 'owner' ? (
-                <a className="grover-button-primary" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
+                <a className="yardfolio-button-primary" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
                   Create my private yard <span className="ml-2" aria-hidden="true">→</span>
                 </a>
               ) : entryPersona.id === 'company' ? (
-                <a className="grover-button-primary" href={providerEntryPath} onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}>
+                <a className="yardfolio-button-primary" href={providerEntryPath} onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}>
                   Start company setup <span className="ml-2" aria-hidden="true">→</span>
                 </a>
               ) : (
-                <button className="grover-button-primary" onClick={() => openLeadDialog(entryMarketingPersona, 'hero_conversation')} type="button">
+                <button className="yardfolio-button-primary" onClick={() => openLeadDialog(entryMarketingPersona, 'hero_conversation')} type="button">
                   {entryCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
                 </button>
               )}
-              <a className="grover-button-secondary" href="#tour" onClick={() => trackMarketingEvent('cta_clicked', entryMarketingPersona, 'hero_product_tour')}>See how it works</a>
+              <a className="yardfolio-button-secondary" href="#tour" onClick={() => trackMarketingEvent('cta_clicked', entryMarketingPersona, 'hero_product_tour')}>See how it works</a>
             </div>
           </div>
 
-          <div className="relative h-[28rem] overflow-hidden rounded-[2rem] bg-forest shadow-grover-lg sm:h-[29rem] lg:h-[calc(100svh-9rem)] lg:min-h-[28rem] lg:max-h-[33rem]" data-testid="hero-visual">
-            <img alt="Landscape care team working in a Southwestern garden at sunrise" className="absolute inset-0 h-full w-full object-cover object-[68%_center]" decoding="async" {...{ fetchpriority: 'high' }} height="688" src="/brand/grover-landscape-home-hero.webp" width="1440" />
+          <div className="relative h-[28rem] overflow-hidden rounded-[2rem] bg-forest shadow-yardfolio-lg sm:h-[29rem] lg:h-[calc(100svh-9rem)] lg:min-h-[28rem] lg:max-h-[33rem]" data-testid="hero-visual">
+            <img alt="Landscape care team working in a Southwestern garden at sunrise" className="absolute inset-0 h-full w-full object-cover object-[68%_center]" decoding="async" {...{ fetchpriority: 'high' }} height="688" src="/brand/yardfolio-landscape-home-hero.webp" width="1440" />
             <span className="absolute inset-0 bg-gradient-to-t from-forest/45 via-forest/5 to-transparent" />
-            <article className="absolute bottom-4 left-4 right-4 rounded-[1.35rem] border border-white/60 bg-paper/95 p-4 text-ink shadow-grover-lg backdrop-blur sm:bottom-7 sm:left-auto sm:right-7 sm:w-[min(29rem,calc(100%-3.5rem))] sm:p-6" data-testid="hero-entry-preview">
+            <article className="absolute bottom-4 left-4 right-4 rounded-[1.35rem] border border-white/60 bg-paper/95 p-4 text-ink shadow-yardfolio-lg backdrop-blur sm:bottom-7 sm:left-auto sm:right-7 sm:w-[min(29rem,calc(100%-3.5rem))] sm:p-6" data-testid="hero-entry-preview">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-slate-600">Sample {entryPersona.label.toLowerCase()} workspace</p>
                 <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-[0.65rem] font-black uppercase tracking-wide text-emerald-800">{activeHeroPreview.status}</span>
@@ -564,7 +564,7 @@ export function PublicLandingPage({
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(28rem,0.9fr)] lg:items-end">
             <div className="max-w-3xl">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">One service story · four focused views</p>
-              <h2 className="grover-display mt-4 text-4xl leading-tight sm:text-5xl">See {PRODUCT_NAME} from every side of the work.</h2>
+              <h2 className="yardfolio-display mt-4 text-4xl leading-tight sm:text-5xl">See {PRODUCT_NAME} from every side of the work.</h2>
               <p className="mt-4 text-lg leading-8 text-slate-600">Choose a perspective to review the information, outcomes, and next step designed for that role. Your original page and primary invitation stay unchanged.</p>
             </div>
             <div>
@@ -574,7 +574,7 @@ export function PublicLandingPage({
                   <button
                     aria-controls="persona-review-panel"
                     aria-selected={persona.id === activePersona.id}
-                    className={`min-h-11 rounded-full border px-3.5 py-2 text-xs font-extrabold transition ${persona.id === activePersona.id ? 'border-emerald-800 bg-emerald-800 text-white shadow-grover-sm' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-700 hover:text-emerald-800'}`}
+                    className={`min-h-11 rounded-full border px-3.5 py-2 text-xs font-extrabold transition ${persona.id === activePersona.id ? 'border-emerald-800 bg-emerald-800 text-white shadow-yardfolio-sm' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-700 hover:text-emerald-800'}`}
                     id={`persona-review-tab-${persona.id}`}
                     key={persona.id}
                     onClick={() => selectPersona(persona.id, 'audience_review_tabs')}
@@ -661,7 +661,7 @@ export function PublicLandingPage({
           <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">{activePersona.proof.eyebrow}</p>
-              <h2 className="grover-display mt-4 text-4xl leading-tight sm:text-5xl">
+              <h2 className="yardfolio-display mt-4 text-4xl leading-tight sm:text-5xl">
                 {activePersona.proof.title}
               </h2>
             </div>

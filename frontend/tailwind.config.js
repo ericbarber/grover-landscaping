@@ -43,9 +43,9 @@ export default {
         display: ['Iowan Old Style', 'Palatino Linotype', 'Palatino', 'Georgia', 'serif'],
       },
       boxShadow: {
-        'grover-sm': '0 8px 24px rgb(15 47 40 / 8%)',
-        'grover-md': '0 20px 52px rgb(15 47 40 / 14%)',
-        'grover-lg': '0 30px 70px rgb(15 47 40 / 20%)',
+        'yardfolio-sm': '0 8px 24px rgb(15 47 40 / 8%)',
+        'yardfolio-md': '0 20px 52px rgb(15 47 40 / 14%)',
+        'yardfolio-lg': '0 30px 70px rgb(15 47 40 / 20%)',
       },
     },
   },

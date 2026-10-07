@@ -60,8 +60,8 @@ export function PropertyManagerInvitationInbox({ onAccepted }: { onAccepted: () 
   if (!loading && pending.length === 0 && !error && !notice) return null;
 
   return (
-    <section className="grover-card p-5 sm:p-6" aria-labelledby="property-manager-invitations-title">
-      <p className="grover-eyebrow">Property access invitations</p>
+    <section className="yardfolio-card p-5 sm:p-6" aria-labelledby="property-manager-invitations-title">
+      <p className="yardfolio-eyebrow">Property access invitations</p>
       <h1 className="mt-2 font-display text-2xl font-black text-forest" id="property-manager-invitations-title">
         Review access before property details are shown
       </h1>

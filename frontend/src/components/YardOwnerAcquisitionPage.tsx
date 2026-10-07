@@ -580,7 +580,7 @@ export function YardOwnerAcquisitionPage() {
       </header>
 
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:px-8">
-        <section className="min-w-0 rounded-2xl border border-slate-200 bg-paper p-5 shadow-grover-md sm:p-8" aria-labelledby="yard-setup-title">
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-paper p-5 shadow-yardfolio-md sm:p-8" aria-labelledby="yard-setup-title">
           <Progress
             activeStep={activeStep}
             briefReady={yardBrief?.status === 'ready'}

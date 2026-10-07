@@ -103,7 +103,7 @@ export function MarketingLeadDialog({
       role="dialog"
     >
       <div className="mx-auto flex min-h-full max-w-4xl items-center justify-center">
-        <section className="relative grid w-full overflow-hidden rounded-2xl bg-paper shadow-grover-lg lg:grid-cols-[0.75fr_1.25fr]">
+        <section className="relative grid w-full overflow-hidden rounded-2xl bg-paper shadow-yardfolio-lg lg:grid-cols-[0.75fr_1.25fr]">
           <aside className="bg-emerald-950 p-7 text-white sm:p-9">
             <button
               aria-label="Close request form"

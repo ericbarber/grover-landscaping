@@ -203,7 +203,7 @@ export function CustomerVisitQuestions({ visit }: { visit: CustomerPortalVisitSu
   }
 
   if (!open) {
-    return <button className="grover-button-secondary mt-4" onClick={openThread} type="button">Ask about this visit</button>;
+    return <button className="yardfolio-button-secondary mt-4" onClick={openThread} type="button">Ask about this visit</button>;
   }
 
   return (
@@ -214,7 +214,7 @@ export function CustomerVisitQuestions({ visit }: { visit: CustomerPortalVisitSu
       </div>
       {loading ? <p className="mt-4 text-sm font-bold text-slate-600" role="status">Loading conversation…</p> : null}
       {error ? <WorkspaceStatusNotice className="mt-4" detail={error} title="Conversation needs attention." tone="warning" /> : null}
-      {!loading && !thread ? <button className="grover-button-secondary mt-4" onClick={() => void loadThread()} type="button">Try conversation again</button> : null}
+      {!loading && !thread ? <button className="yardfolio-button-secondary mt-4" onClick={() => void loadThread()} type="button">Try conversation again</button> : null}
       {thread ? (
         <>
           {thread.messages.length ? <ol className="mt-4 space-y-3">{thread.messages.map((message) => (
@@ -226,7 +226,7 @@ export function CustomerVisitQuestions({ visit }: { visit: CustomerPortalVisitSu
           <form className="mt-4 grid gap-3" onSubmit={submitQuestion}>
             <label className="text-sm font-bold text-forest">Topic<select className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 font-normal" onChange={(event) => setTopic(event.target.value as CustomerVisitQuestionTopic)} value={topic}>{questionTopics.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
             <label className="text-sm font-bold text-forest">Your question<textarea className="mt-1 min-h-24 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" maxLength={2000} onChange={(event) => { setBody(event.target.value); retryKey.current = null; }} placeholder="What would help you prepare for this visit?" value={body} /></label>
-            <button className="grover-button-primary disabled:opacity-60" disabled={saving || !body.trim()} type="submit">{saving ? 'Confirming question…' : 'Send question'}</button>
+            <button className="yardfolio-button-primary disabled:opacity-60" disabled={saving || !body.trim()} type="submit">{saving ? 'Confirming question…' : 'Send question'}</button>
           </form>
         </>
       ) : null}
@@ -262,7 +262,7 @@ function CustomerDeliveredProof({ visit }: { visit: CustomerPortalVisitSummary }
 
   if (!open) {
     return (
-      <button className="grover-button-secondary mt-4 w-full" onClick={() => void loadProof()} type="button">
+      <button className="yardfolio-button-secondary mt-4 w-full" onClick={() => void loadProof()} type="button">
         Open delivered proof
       </button>
     );
@@ -280,7 +280,7 @@ function CustomerDeliveredProof({ visit }: { visit: CustomerPortalVisitSummary }
       {loading ? <p className="mt-4 text-sm font-bold text-slate-600" role="status">Loading protected proof…</p> : null}
       {error ? (
         <WorkspaceStatusNotice className="mt-4" detail={`${error} No live work data was substituted.`} title="Delivered proof needs attention." tone="warning">
-          <button className="grover-button-secondary mt-2" onClick={() => void loadProof()} type="button">Try proof again</button>
+          <button className="yardfolio-button-secondary mt-2" onClick={() => void loadProof()} type="button">Try proof again</button>
         </WorkspaceStatusNotice>
       ) : null}
       {proof ? (
@@ -387,9 +387,9 @@ export function YardOwnerPortalPanel({
 
   if (isLoadingVisits) {
     return (
-      <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-grover-md" aria-busy="true">
-        <p className="grover-eyebrow">My yard</p>
-        <h1 className="grover-type-operational mt-2 text-4xl font-black text-forest">Loading your yard</h1>
+      <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-yardfolio-md" aria-busy="true">
+        <p className="yardfolio-eyebrow">My yard</p>
+        <h1 className="yardfolio-type-operational mt-2 text-4xl font-black text-forest">Loading your yard</h1>
         <p className="mt-4 text-sm font-semibold text-slate-600" role="status">Checking your protected properties and confirmed visits…</p>
       </section>
     );
@@ -417,9 +417,9 @@ export function YardOwnerPortalPanel({
           retryLabel: 'Try again',
         };
     return (
-      <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-grover-md">
-        <p className="grover-eyebrow">My yard</p>
-        <h1 className="grover-type-operational mt-2 text-4xl font-black text-forest">{copy.heading}</h1>
+      <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-yardfolio-md">
+        <p className="yardfolio-eyebrow">My yard</p>
+        <h1 className="yardfolio-type-operational mt-2 text-4xl font-black text-forest">{copy.heading}</h1>
         <WorkspaceStatusNotice
           className="mt-5"
           detail={copy.detail}
@@ -428,8 +428,8 @@ export function YardOwnerPortalPanel({
           tone="warning"
         />
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-          <button className="grover-button-primary" onClick={onRetryVisits} type="button">{copy.retryLabel}</button>
-          <button className="grover-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
+          <button className="yardfolio-button-primary" onClick={onRetryVisits} type="button">{copy.retryLabel}</button>
+          <button className="yardfolio-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
         </div>
       </section>
     );
@@ -437,8 +437,8 @@ export function YardOwnerPortalPanel({
 
   if (!selectedProperty) {
     return (
-      <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-grover-md">
-        <p className="grover-eyebrow">My yard</p>
+      <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-yardfolio-md">
+        <p className="yardfolio-eyebrow">My yard</p>
         <h1 className="mt-2 font-display text-4xl font-black text-forest">Welcome, {customerDisplayName}</h1>
         <WorkspaceStatusNotice
           className="mt-6"
@@ -447,14 +447,14 @@ export function YardOwnerPortalPanel({
           titleAs="h2"
           tone="neutral"
         >
-          <button className="grover-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
+          <button className="yardfolio-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
         </WorkspaceStatusNotice>
       </section>
     );
   }
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-paper shadow-grover-md">
+    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-paper shadow-yardfolio-md">
       <header className="bg-forest p-5 text-white sm:p-7">
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end">
           <div>
@@ -489,7 +489,7 @@ export function YardOwnerPortalPanel({
         {visibleDestinations.map((item) => (
           <button
             aria-current={destination === item.id ? 'page' : undefined}
-            className={`min-h-12 rounded-xl px-2 text-xs font-black sm:text-sm ${destination === item.id ? 'bg-emerald-800 text-white shadow-grover-sm' : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-900'}`}
+            className={`min-h-12 rounded-xl px-2 text-xs font-black sm:text-sm ${destination === item.id ? 'bg-emerald-800 text-white shadow-yardfolio-sm' : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-900'}`}
             key={item.id}
             onClick={() => setDestination(item.id)}
             type="button"
@@ -502,7 +502,7 @@ export function YardOwnerPortalPanel({
       <div className="p-5 sm:p-7">
         {destination === 'home' ? (
           <div>
-            <p className="grover-eyebrow">{selectedProperty.displayName}</p>
+            <p className="yardfolio-eyebrow">{selectedProperty.displayName}</p>
             <h1 className="mt-2 font-display text-4xl font-black text-forest">
               Welcome back, {customerDisplayName}
             </h1>
@@ -513,7 +513,7 @@ export function YardOwnerPortalPanel({
                 <article className={`rounded-2xl p-5 sm:p-6 ${serviceCardClass(nextVisit.status)}`}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="grover-eyebrow">{serviceVisitEyebrow(nextVisit.status)}</p>
+                      <p className="yardfolio-eyebrow">{serviceVisitEyebrow(nextVisit.status)}</p>
                       <h2 className="mt-2 font-display text-3xl font-black text-forest">{serviceDateLabel(nextVisit.scheduledDate)}</h2>
                       <p className="mt-1 font-black text-emerald-900">{nextVisit.arrivalWindow} · {nextVisit.serviceTitle}</p>
                     </div>
@@ -547,12 +547,12 @@ export function YardOwnerPortalPanel({
                   titleAs="h2"
                   tone="neutral"
                 >
-                  <button className="grover-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
+                  <button className="yardfolio-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
                 </WorkspaceStatusNotice>
               )}
 
               {allowsProof ? <article className="rounded-2xl border border-slate-200 p-5 sm:p-6">
-                <p className="grover-eyebrow">Latest delivered proof</p>
+                <p className="yardfolio-eyebrow">Latest delivered proof</p>
                 {latestProofVisit ? (
                   <>
                     <h2 className="mt-2 font-display text-3xl font-black text-forest">Care completed</h2>
@@ -569,8 +569,8 @@ export function YardOwnerPortalPanel({
 
         {destination === 'visits' ? (
           <div>
-            <p className="grover-eyebrow">{selectedProperty.displayName}</p>
-            <h1 className="grover-type-operational mt-2 text-4xl font-black text-forest">Visits</h1>
+            <p className="yardfolio-eyebrow">{selectedProperty.displayName}</p>
+            <h1 className="yardfolio-type-operational mt-2 text-4xl font-black text-forest">Visits</h1>
             <p className="mt-2 text-sm text-slate-600">Scheduled care and explicit customer-visible service-day updates.</p>
             <div className="mt-6 space-y-3">
               {propertyVisits.length > 0 ? propertyVisits.map((visit, index) => {
@@ -618,8 +618,8 @@ export function YardOwnerPortalPanel({
 
         {destination === 'proof' ? (
           <div>
-            <p className="grover-eyebrow">{selectedProperty.displayName}</p>
-            <h1 className="grover-type-operational mt-2 text-4xl font-black text-forest">Proof</h1>
+            <p className="yardfolio-eyebrow">{selectedProperty.displayName}</p>
+            <h1 className="yardfolio-type-operational mt-2 text-4xl font-black text-forest">Proof</h1>
             <p className="mt-2 text-sm text-slate-600">Delivered care records for this property.</p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {proofVisits.map((visit) => (
@@ -639,8 +639,8 @@ export function YardOwnerPortalPanel({
 
         {destination === 'account' ? (
           <div>
-            <p className="grover-eyebrow">Customer account</p>
-            <h1 className="grover-type-operational mt-2 text-4xl font-black text-forest">Account</h1>
+            <p className="yardfolio-eyebrow">Customer account</p>
+            <h1 className="yardfolio-type-operational mt-2 text-4xl font-black text-forest">Account</h1>
             <p className="mt-2 text-sm text-slate-600">Choose a connected property.</p>
             <section className="mt-6" aria-labelledby="account-properties-heading">
               <h2 className="text-lg font-black text-forest" id="account-properties-heading">Properties</h2>

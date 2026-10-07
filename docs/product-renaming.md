@@ -11,8 +11,9 @@ public-launch gate.
 
 Runtime customer-facing React copy reads the current name from
 `frontend/src/productBrand.ts`. That module owns the product name, field-app
-name, API status label, and browser title suffix. Legacy `grover-*` CSS classes
-remain internal implementation identifiers and do not control displayed text.
+name, API status label, and browser title suffix. Active visual tokens, reusable
+component classes, Tailwind shadow utilities, and public brand-image paths use
+the `yardfolio-*` namespace.
 
 Static and server-rendered surfaces that cannot import the frontend module must
 remain synchronized with it:
@@ -32,8 +33,7 @@ release as the display brand. They include:
 - service-worker and other browser custom-event names
 - local-review request headers
 - database, container, package, infrastructure, and environment identifiers
-- CSS classes, source filenames, image paths, test fixtures, and historical
-  planning artifacts
+- test fixtures and historical planning artifacts
 
 These names are not customer-visible branding. Changing persistent browser
 keys or IndexedDB names without a versioned copy-and-verify migration can make

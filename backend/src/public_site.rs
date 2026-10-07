@@ -1,7 +1,7 @@
 use reqwest::Url;
 use std::{env, fmt, fs, path::PathBuf};
 
-const SHARE_IMAGE_PATH: &str = "/brand/grover-landscape-home-hero.webp";
+const SHARE_IMAGE_PATH: &str = "/brand/yardfolio-landscape-home-hero.webp";
 const SHARE_IMAGE_ALT: &str = "Landscape care team working in a Southwestern garden at sunrise";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -358,7 +358,9 @@ mod tests {
                     metadata.path
                 }
             )));
-            assert!(html.contains("https://grover.example/brand/grover-landscape-home-hero.webp"));
+            assert!(
+                html.contains("https://grover.example/brand/yardfolio-landscape-home-hero.webp")
+            );
         }
         assert!(site.render("/app").unwrap().is_none());
         fs::remove_dir_all(directory).unwrap();

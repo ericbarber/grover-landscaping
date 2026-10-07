@@ -79,14 +79,14 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
   if (error && !report) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-bone px-4 py-12 sm:px-6">
-        <section className="w-full max-w-xl rounded-3xl border border-slate-200 bg-paper p-7 text-center shadow-grover-md sm:p-9" role="alert">
+        <section className="w-full max-w-xl rounded-3xl border border-slate-200 bg-paper p-7 text-center shadow-yardfolio-md sm:p-9" role="alert">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-rose-100 text-rose-700">
             <WorkspaceIcon className="h-6 w-6" name="attention" />
           </span>
           <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-rose-700">Report unavailable</p>
           <h1 className="mt-3 font-display text-3xl font-black text-forest">Unable to open this completion report</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">{error}</p>
-          <button className="grover-button-primary mt-6 w-full sm:w-auto" onClick={() => setLoadAttempt((value) => value + 1)} type="button">
+          <button className="yardfolio-button-primary mt-6 w-full sm:w-auto" onClick={() => setLoadAttempt((value) => value + 1)} type="button">
             Try again
           </button>
           <p className="mt-5 text-xs text-slate-500">This secure link does not expose internal account or team information.</p>
@@ -114,7 +114,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
       <PublicCustomerLinkHeader />
 
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-paper shadow-grover-md">
+        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-paper shadow-yardfolio-md">
           <header className="bg-forest p-6 text-white sm:p-8 lg:p-10">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Delivered service proof</p>
             <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
@@ -133,7 +133,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
 
           <div className="space-y-7 p-5 sm:p-8 lg:p-10">
             <section aria-labelledby="service-identity-heading">
-              <p className="grover-eyebrow">Service identity</p>
+              <p className="yardfolio-eyebrow">Service identity</p>
               <h2 className="mt-2 font-display text-3xl font-black text-forest" id="service-identity-heading">
                 {report.propertyAddress}
               </h2>
@@ -155,7 +155,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
             </section>
 
             <section aria-labelledby="proof-heading" className="border-t border-slate-200 pt-7">
-              <p className="grover-eyebrow">Service proof</p>
+              <p className="yardfolio-eyebrow">Service proof</p>
               <div className="mt-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
                 <div>
                   <h2 className="font-display text-3xl font-black text-forest" id="proof-heading">Work completed</h2>
@@ -206,7 +206,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
 
             {report.completedRecommendations.length > 0 ? (
               <section className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5" aria-labelledby="recommendation-proof-heading">
-                <p className="grover-eyebrow">Recommendation outcome</p>
+                <p className="yardfolio-eyebrow">Recommendation outcome</p>
                 <h2 className="mt-2 font-display text-2xl font-black text-forest" id="recommendation-proof-heading">Approved recommendations delivered</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   These customer-approved additions are complete and included in this service proof.

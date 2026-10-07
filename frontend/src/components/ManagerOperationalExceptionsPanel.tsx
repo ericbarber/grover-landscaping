@@ -178,9 +178,9 @@ export function ManagerOperationalExceptionsPanel({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl bg-forest p-5 text-white shadow-grover-sm sm:p-6">
+      <section className="rounded-2xl bg-forest p-5 text-white shadow-yardfolio-sm sm:p-6">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Operations recovery</p>
-        <h2 className="grover-type-operational mt-2 text-3xl font-black">Recovery and exceptions</h2>
+        <h2 className="yardfolio-type-operational mt-2 text-3xl font-black">Recovery and exceptions</h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-mist">
           Every failed or risky workflow stays visible, attributable, and actionable until it is resolved.
         </p>

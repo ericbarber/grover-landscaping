@@ -110,7 +110,7 @@ export function MobileWorkspaceHeader({
   const context = mobileWorkspaceContext(input);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-paper/95 px-4 py-3 shadow-grover-sm backdrop-blur lg:hidden">
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-paper/95 px-4 py-3 shadow-yardfolio-sm backdrop-blur lg:hidden">
       <div className="mx-auto flex max-w-lg items-center gap-3">
         {input.view === 'job' ? (
           <button
@@ -137,7 +137,7 @@ export function MobileWorkspaceHeader({
             >
               {signedInName.trim().slice(0, 1).toUpperCase() || 'A'}
             </summary>
-            <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 rounded-xl border border-slate-200 bg-paper p-3 text-left shadow-grover-md">
+            <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 rounded-xl border border-slate-200 bg-paper p-3 text-left shadow-yardfolio-md">
               <p className="truncate text-sm font-black text-slate-900">{signedInName}</p>
               <p className="mt-1 truncate text-xs text-slate-500">{input.personaLabel}</p>
               {availablePersonas.length > 1 ? (
@@ -216,7 +216,7 @@ export function DesktopWorkspaceNavigation({
   signedInName,
 }: DesktopWorkspaceNavigationProps) {
   return (
-    <aside className={`fixed bottom-0 left-0 z-30 hidden w-60 flex-col bg-forest px-5 py-8 text-white shadow-grover-md lg:flex ${hasEnvironmentBanner ? 'top-[3.25rem]' : 'top-0'}`}>
+    <aside className={`fixed bottom-0 left-0 z-30 hidden w-60 flex-col bg-forest px-5 py-8 text-white shadow-yardfolio-md lg:flex ${hasEnvironmentBanner ? 'top-[3.25rem]' : 'top-0'}`}>
       <ProductBrand className="text-sand" />
       <p className="mt-5 text-[0.68rem] font-black uppercase tracking-[0.16em] text-emerald-200">
         {personaLabel}
@@ -276,7 +276,7 @@ export function MobileWorkspaceNavigation({
     const root = document.documentElement;
     const updateHeight = () => {
       root.style.setProperty(
-        '--grover-mobile-workspace-nav-height',
+        '--yardfolio-mobile-workspace-nav-height',
         `${Math.ceil(navigation.getBoundingClientRect().height)}px`,
       );
     };
@@ -289,14 +289,14 @@ export function MobileWorkspaceNavigation({
     return () => {
       observer?.disconnect();
       window.removeEventListener('resize', updateHeight);
-      root.style.removeProperty('--grover-mobile-workspace-nav-height');
+      root.style.removeProperty('--yardfolio-mobile-workspace-nav-height');
     };
   }, [navigationItems.length]);
 
   return (
     <nav
       aria-label="Mobile workspace"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-paper/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,47,40,0.10)] backdrop-blur md:inset-y-0 md:left-0 md:right-auto md:w-24 md:border-r md:border-t-0 md:px-2 md:py-24 md:shadow-grover-md lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-paper/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,47,40,0.10)] backdrop-blur md:inset-y-0 md:left-0 md:right-auto md:w-24 md:border-r md:border-t-0 md:px-2 md:py-24 md:shadow-yardfolio-md lg:hidden"
       data-mobile-workspace-navigation
       ref={navigationRef}
     >
