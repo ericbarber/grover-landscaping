@@ -16,9 +16,11 @@ import type { CompletionReportQueueItem } from '../domain/completionReportQueue'
 import type { CompletionReportOperationalFilters } from '../domain/completionReportOperationalFilters';
 import {
   COMPLETION_REPORT_FILTER_STORAGE_KEY,
+  COMPLETION_REPORT_FILTER_STORAGE_SUFFIX,
   completionReportOperationalFilterCount,
   parseCompletionReportOperationalFilters,
 } from '../domain/completionReportOperationalFilters';
+import { readMigratedStorageValue } from '../domain/browserStorageNamespace';
 
 type ManagerCompletionReportQueuePanelProps = {
   reports: CompletionReportSnapshot[];
@@ -71,7 +73,11 @@ export function ManagerCompletionReportQueuePanel({
     () => {
       try {
         return parseCompletionReportOperationalFilters(
-          window.localStorage.getItem(COMPLETION_REPORT_FILTER_STORAGE_KEY),
+          readMigratedStorageValue(
+            window.localStorage,
+            COMPLETION_REPORT_FILTER_STORAGE_KEY,
+            COMPLETION_REPORT_FILTER_STORAGE_SUFFIX,
+          ),
         );
       } catch {
         return {};

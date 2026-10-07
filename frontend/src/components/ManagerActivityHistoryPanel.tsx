@@ -16,6 +16,10 @@ import {
   managerActivitySourceLabel,
   managerActivityToneLabel,
 } from '../domain/managerActivityLabels';
+import {
+  readMigratedStorageValue,
+  YARDFOLIO_STORAGE_PREFIX,
+} from '../domain/browserStorageNamespace';
 
 function activityToneClass(tone: ManagerActivityItem['tone']) {
   if (tone === 'warning') {
@@ -31,8 +35,8 @@ function activityToneClass(tone: ManagerActivityItem['tone']) {
 
 const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'recovery', 'sync'];
 const activityTones: ManagerActivityTone[] = ['warning', 'success', 'info'];
-const activitySourceFilterStorageKey = 'grover.managerActivity.sourceFilter';
-const activityToneFilterStorageKey = 'grover.managerActivity.toneFilter';
+const activitySourceFilterStorageKey = `${YARDFOLIO_STORAGE_PREFIX}.managerActivity.sourceFilter`;
+const activityToneFilterStorageKey = `${YARDFOLIO_STORAGE_PREFIX}.managerActivity.toneFilter`;
 
 type ActivitySourceFilter = ManagerActivitySource | 'all';
 type ActivityToneFilter = ManagerActivityTone | 'all';
@@ -58,7 +62,11 @@ function readStorageValue(key: string): string | null {
   }
 
   try {
-    return window.localStorage.getItem(key);
+    return readMigratedStorageValue(
+      window.localStorage,
+      key,
+      key.slice(YARDFOLIO_STORAGE_PREFIX.length),
+    );
   } catch {
     return null;
   }

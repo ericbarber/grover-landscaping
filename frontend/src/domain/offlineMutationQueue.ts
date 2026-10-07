@@ -5,8 +5,9 @@ import type {
 } from './stopProgress';
 import { ApiRequestError } from '../api/apiError';
 
-const DATABASE_NAME = 'grover-field-offline';
+export const OFFLINE_DATABASE_NAME = 'yardfolio-field-offline';
 const DATABASE_VERSION = 4;
+const DATABASE_SUFFIX = '-field-offline';
 const MUTATION_STORE = 'mutations';
 const PHOTO_BLOB_STORE = 'photo_blobs';
 export const MAX_OFFLINE_PHOTO_BYTES = 20 * 1024 * 1024;
@@ -299,9 +300,9 @@ export function createStopProgressOfflineMutation(
   };
 }
 
-function openOfflineDatabase(): Promise<IDBDatabase> {
+function openCurrentOfflineDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
+    const request = indexedDB.open(OFFLINE_DATABASE_NAME, DATABASE_VERSION);
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
     request.onupgradeneeded = () => {
@@ -329,6 +330,112 @@ function openOfflineDatabase(): Promise<IDBDatabase> {
       }
     };
   });
+}
+
+function openExistingDatabase(name: string): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(name);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+}
+
+function readStoreEntries(
+  database: IDBDatabase,
+  storeName: string,
+): Promise<Array<[IDBValidKey, unknown]>> {
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(storeName, 'readonly');
+    const entries: Array<[IDBValidKey, unknown]> = [];
+    const request = transaction.objectStore(storeName).openCursor();
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (!cursor) return;
+      entries.push([cursor.primaryKey, cursor.value]);
+      cursor.continue();
+    };
+    transaction.oncomplete = () => resolve(entries);
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error);
+  });
+}
+
+function copyMissingEntries(
+  transaction: IDBTransaction,
+  storeName: string,
+  entries: Array<[IDBValidKey, unknown]>,
+) {
+  const store = transaction.objectStore(storeName);
+  for (const [key, value] of entries) {
+    const existingRequest = store.get(key);
+    existingRequest.onsuccess = () => {
+      if (existingRequest.result === undefined) {
+        if (store.keyPath === null) {
+          store.put(value, key);
+        } else {
+          store.put(value);
+        }
+      }
+    };
+  }
+}
+
+async function deleteLegacyDatabase(name: string): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(name);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+    request.onblocked = () => resolve();
+  });
+}
+
+async function migrateLegacyOfflineDatabases(database: IDBDatabase): Promise<void> {
+  if (typeof indexedDB.databases !== 'function') return;
+
+  const databaseNames = (await indexedDB.databases())
+    .map((entry) => entry.name)
+    .filter((name): name is string => Boolean(
+      name
+      && name !== OFFLINE_DATABASE_NAME
+      && name.endsWith(DATABASE_SUFFIX),
+    ));
+
+  for (const databaseName of databaseNames.sort()) {
+    const legacyDatabase = await openExistingDatabase(databaseName);
+    try {
+      const mutationEntries = legacyDatabase.objectStoreNames.contains(MUTATION_STORE)
+        ? await readStoreEntries(legacyDatabase, MUTATION_STORE)
+        : [];
+      const photoEntries = legacyDatabase.objectStoreNames.contains(PHOTO_BLOB_STORE)
+        ? await readStoreEntries(legacyDatabase, PHOTO_BLOB_STORE)
+        : [];
+
+      if (mutationEntries.length || photoEntries.length) {
+        const transaction = database.transaction(
+          [MUTATION_STORE, PHOTO_BLOB_STORE],
+          'readwrite',
+        );
+        copyMissingEntries(transaction, MUTATION_STORE, mutationEntries);
+        copyMissingEntries(transaction, PHOTO_BLOB_STORE, photoEntries);
+        await waitForTransaction(transaction);
+      }
+    } finally {
+      legacyDatabase.close();
+    }
+    await deleteLegacyDatabase(databaseName);
+  }
+}
+
+async function openOfflineDatabase(): Promise<IDBDatabase> {
+  const database = await openCurrentOfflineDatabase();
+  try {
+    await migrateLegacyOfflineDatabases(database);
+    return database;
+  } catch (error) {
+    database.close();
+    throw error;
+  }
 }
 
 function waitForTransaction(transaction: IDBTransaction): Promise<void> {

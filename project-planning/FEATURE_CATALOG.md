@@ -15,9 +15,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   icon accessibility, server-rendered titles, authentication challenges, and
   operator messages, with Yardfolio-namespaced active visual primitives and
   public hero assets, frontend and Rust packages, health labels, and local-review
-  identifiers, an automated consistency gate, and an explicit legacy namespace
-  boundary protecting installed-app, offline-data, storage, database, and
-  infrastructure compatibility
+  identifiers, browser storage, and field IndexedDB; tested suffix-based
+  migration protects prior filters, route state, queued work, and photo blobs,
+  while an explicit legacy namespace boundary protects installed-app, database,
+  and infrastructure compatibility
 - Documented navigation system separating public discovery,
   acquisition-progress, and authenticated-destination models without changing
   their common brand treatment

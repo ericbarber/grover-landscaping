@@ -33,6 +33,10 @@ import {
   type CustomerAccountDraft,
 } from '../domain/customerAccountDraft';
 import { customerOnboardingCsv } from '../domain/customerOnboardingExport';
+import {
+  readMigratedStorageValue,
+  YARDFOLIO_STORAGE_PREFIX,
+} from '../domain/browserStorageNamespace';
 
 type Props = {
   organizationId: string;
@@ -788,11 +792,15 @@ function accountRelationshipLabel(
 }
 
 function relationshipFilterStorageKey(organizationId: string): string {
-  return `grover.customer-account-relationship-filter.v1.${organizationId}`;
+  return `${YARDFOLIO_STORAGE_PREFIX}.customer-account-relationship-filter.v1.${organizationId}`;
 }
 
 function loadRelationshipFilter(organizationId: string): CustomerRelationshipFilter {
-  const value = window.localStorage.getItem(relationshipFilterStorageKey(organizationId));
+  const value = readMigratedStorageValue(
+    window.localStorage,
+    relationshipFilterStorageKey(organizationId),
+    `.customer-account-relationship-filter.v1.${organizationId}`,
+  );
   return value === 'owner' || value === 'property_manager' || value === 'service_provider'
     ? value
     : 'all';

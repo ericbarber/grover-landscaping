@@ -6,6 +6,10 @@ import {
   type TeamAdministrationEventKind,
   type TeamActivityMoveScope,
 } from '../api/client';
+import {
+  readMigratedStorageValue,
+  YARDFOLIO_STORAGE_PREFIX,
+} from '../domain/browserStorageNamespace';
 
 export function teamActivityLabel(eventKind: TeamAdministrationEventKind): string {
   switch (eventKind) {
@@ -111,14 +115,18 @@ export function parseTeamActivityReviewFilters(raw: string | null): TeamActivity
 }
 
 function teamActivityReviewStorageKey(organizationId: string): string {
-  return `grover.team-activity-review-filters.v1.${organizationId}`;
+  return `${YARDFOLIO_STORAGE_PREFIX}.team-activity-review-filters.v1.${organizationId}`;
 }
 
 function loadTeamActivityReviewFilters(organizationId: string): TeamActivityReviewFilters {
   if (typeof window === 'undefined') return parseTeamActivityReviewFilters(null);
   try {
     return parseTeamActivityReviewFilters(
-      window.localStorage.getItem(teamActivityReviewStorageKey(organizationId)),
+      readMigratedStorageValue(
+        window.localStorage,
+        teamActivityReviewStorageKey(organizationId),
+        `.team-activity-review-filters.v1.${organizationId}`,
+      ),
     );
   } catch {
     return parseTeamActivityReviewFilters(null);

@@ -29,7 +29,6 @@ remain synchronized with it:
 Do not mechanically rename identifiers beginning with `grover` in the same
 release as the display brand. They include:
 
-- local/session storage keys and the `grover-field-offline` IndexedDB database
 - database, container, infrastructure, and environment identifiers
 - test fixtures and historical planning artifacts
 
@@ -38,11 +37,15 @@ browser event, diagnostic-download, test-output, and frontend package names now
 use Yardfolio; cache cleanup recognizes prior shells structurally without
 retaining the former brand string. The Rust crate/binary, health-service label,
 local-review request header, and local-review session key also use Yardfolio.
-Changing persistent browser
-keys or IndexedDB names without a versioned copy-and-verify migration can make
-saved field work appear lost. Changing headers or infrastructure identifiers
-requires a coordinated compatibility window across clients, servers, CI, and
-operations. They may retain a documented legacy namespace indefinitely.
+Persistent local-storage keys and the field IndexedDB database now use a
+Yardfolio namespace. On first access, the browser adopts values and queued work
+from matching earlier namespaces by stable suffix, copies only missing
+IndexedDB records and photo blobs, and removes a prior database only after a
+successful copy. Browsers that cannot enumerate IndexedDB databases leave the
+earlier database untouched rather than risking data loss. Changing
+infrastructure identifiers still requires a coordinated compatibility window
+across clients, servers, CI, and operations. They may retain a documented
+legacy namespace until that migration is available.
 
 ## Public-launch gate
 

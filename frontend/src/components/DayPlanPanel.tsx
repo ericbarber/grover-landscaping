@@ -5,6 +5,10 @@ import {
 } from '../api/dayPlanAmendmentsClient';
 import { DayPlanRequestError, fetchCrewDayPlan } from '../api/dayPlansClient';
 import { FIELD_APP_NAME } from '../productBrand';
+import {
+  readMigratedStorageValue,
+  YARDFOLIO_STORAGE_PREFIX,
+} from '../domain/browserStorageNamespace';
 import { updateStopProgress } from '../api/stopProgressClient';
 import {
   classifyRouteDate,
@@ -87,12 +91,16 @@ const crewExtraServiceCatalog: ServiceCatalogItem[] = [
 ];
 
 function storageKey(dayPlanId: string): string {
-  return `grover.dayPlan.${dayPlanId}.stopStates`;
+  return `${YARDFOLIO_STORAGE_PREFIX}.dayPlan.${dayPlanId}.stopStates`;
 }
 
 function loadStopStates(dayPlanId: string): StopStateMap {
   try {
-    const rawValue = window.localStorage.getItem(storageKey(dayPlanId));
+    const rawValue = readMigratedStorageValue(
+      window.localStorage,
+      storageKey(dayPlanId),
+      `.dayPlan.${dayPlanId}.stopStates`,
+    );
     return rawValue ? (JSON.parse(rawValue) as StopStateMap) : {};
   } catch {
     return {};

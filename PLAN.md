@@ -308,10 +308,9 @@ Current state:
 - Yardfolio is now the customer-facing working name across runtime copy, HTML
   and social metadata, the installed Field app, accessible icon text,
   server-rendered public titles, authentication challenges, and operator-facing
-  startup/release messages. Browser storage, offline data, request headers,
-  source identifiers, and infrastructure retain their legacy technical
-  namespace behind the documented [rename boundary](docs/product-renaming.md),
-  protecting installed sessions and queued work. A tested local/CI gate rejects
+  startup/release messages. Source, database/container, and infrastructure
+  identifiers retain their legacy technical namespace behind the documented
+  [rename boundary](docs/product-renaming.md). A tested local/CI gate rejects
   new hard-coded or former runtime brand copy and detects drift across static
   surfaces. The production shell cache was advanced so existing installed apps
   discover the renamed shell through the normal update-and-reload flow without
@@ -321,8 +320,11 @@ Current state:
   and browser-test artifacts. Prior shell caches are still removed through a
   brand-neutral matcher. The Rust crate/binary, runtime health label,
   local-review request header, and local-review session key now use Yardfolio.
-  Persistent browser data, database/container defaults, and external
-  infrastructure identifiers remain isolated behind the compatibility plan.
+  Persistent browser keys and the field IndexedDB database now use Yardfolio;
+  tested suffix-based migration preserves existing filters, route state, queued
+  mutations, and offline photo blobs without retaining the former brand in the
+  active bundle. Database/container defaults and external infrastructure
+  identifiers remain isolated behind the compatibility plan.
   Professional trademark clearance, domain/app-store confirmation, final
   visual identity, and public rollout approval remain required.
 

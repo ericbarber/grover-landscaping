@@ -16,6 +16,7 @@ import {
   listOfflineMutations,
   listOfflineMutationsForActor,
   markOfflineMutationFailed,
+  OFFLINE_DATABASE_NAME,
   removeOfflineMutation,
   requestPersistentOfflineStorage,
   summarizeOfflineMutations,
@@ -27,7 +28,7 @@ import { replayOfflinePhotoMutation } from './offlinePhotoReplay';
 describe('offline mutation queue records', () => {
   beforeEach(async () => {
     await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.deleteDatabase('grover-field-offline');
+      const request = indexedDB.deleteDatabase(OFFLINE_DATABASE_NAME);
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
       request.onblocked = () => reject(new Error('offline test database deletion was blocked'));
@@ -264,7 +265,7 @@ describe('offline mutation queue records', () => {
       fileSizeBytes: 4,
     }, 'mutation-upgrade', new Date('2026-07-20T12:00:00.000Z'));
     await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.open('grover-field-offline', 3);
+      const request = indexedDB.open(OFFLINE_DATABASE_NAME, 3);
       request.onupgradeneeded = () => {
         const database = request.result;
         const store = database.createObjectStore('mutations', { keyPath: 'id' });
@@ -292,6 +293,49 @@ describe('offline mutation queue records', () => {
 
     expect(await listOfflineMutationsForActor('crew-upgrade')).toEqual([mutation]);
     expect(await getOfflinePhotoBlob(mutation.id)).toMatchObject({ size: 4, type: 'image/jpeg' });
+  });
+
+  it('adopts queued work and photo blobs from a prior product namespace', async () => {
+    const legacyDatabaseName = 'prior-product-field-offline';
+    const mutation = createPhotoUploadOfflineMutation({
+      organizationId: 'org-migration',
+      actorId: 'crew-migration',
+      jobId: 'job-migration',
+      photoType: 'before',
+      fileName: 'migration.jpg',
+      contentType: 'image/jpeg',
+      fileSizeBytes: 4,
+    }, 'mutation-migration', new Date('2026-07-20T12:00:00.000Z'));
+
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open(legacyDatabaseName, 4);
+      request.onupgradeneeded = () => {
+        const database = request.result;
+        database.createObjectStore('mutations', { keyPath: 'id' });
+        database.createObjectStore('photo_blobs');
+      };
+      request.onsuccess = () => {
+        const database = request.result;
+        const transaction = database.transaction(['mutations', 'photo_blobs'], 'readwrite');
+        transaction.objectStore('mutations').put(mutation);
+        transaction.objectStore('photo_blobs').put(
+          new Blob(['data'], { type: 'image/jpeg' }),
+          mutation.id,
+        );
+        transaction.oncomplete = () => {
+          database.close();
+          resolve();
+        };
+        transaction.onerror = () => reject(transaction.error);
+      };
+      request.onerror = () => reject(request.error);
+    });
+
+    expect(await listOfflineMutationsForActor('crew-migration')).toEqual([mutation]);
+    expect(await getOfflinePhotoBlob(mutation.id)).toMatchObject({ size: 4, type: 'image/jpeg' });
+    expect((await indexedDB.databases()).map((entry) => entry.name)).not.toContain(
+      legacyDatabaseName,
+    );
   });
 
   it('persists tenant-scoped day-plan amendment requests with service context', async () => {

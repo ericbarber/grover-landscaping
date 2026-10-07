@@ -1,6 +1,10 @@
 import type { ManagerActivityItem, ManagerActivitySource, ManagerActivityTone } from './managerActivity';
+import {
+  readMigratedStorageValue,
+  YARDFOLIO_STORAGE_PREFIX,
+} from './browserStorageNamespace';
 
-const managerActivityStorageKey = 'grover.managerActivity.items';
+const managerActivityStorageKey = `${YARDFOLIO_STORAGE_PREFIX}.managerActivity.items`;
 const maxStoredManagerActivityItems = 20;
 const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'sync'];
 const activityTones: ManagerActivityTone[] = ['info', 'warning', 'success'];
@@ -30,7 +34,11 @@ export function readStoredManagerActivityItems(
   }
 
   try {
-    const rawValue = window.localStorage.getItem(managerActivityStorageKey);
+    const rawValue = readMigratedStorageValue(
+      window.localStorage,
+      managerActivityStorageKey,
+      '.managerActivity.items',
+    );
 
     if (!rawValue) {
       return fallbackItems;

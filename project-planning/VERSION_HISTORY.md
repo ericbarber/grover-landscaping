@@ -7,9 +7,8 @@
   messages now use the new name. Current repository overviews, operational
   guides, trust language, and active planning records use Yardfolio while the
   historical Modern Grover track retains its original internal name.
-  Persistent browser storage, IndexedDB, events,
-  headers, source identifiers, asset paths, and infrastructure retain the
-  documented legacy namespace to protect compatibility. The production shell
+  Source identifiers and infrastructure retain the documented legacy namespace
+  until their coordinated migrations. The production shell
   cache version advances so existing installations receive the renamed shell
   through the established update prompt without clearing offline work. The
   active CSS variables, reusable component classes, Tailwind shadow utilities,
@@ -18,9 +17,13 @@
   assertions use a Yardfolio namespace. Prior shell caches remain removable
   through a brand-neutral matcher. The Rust crate/binary, health-service label,
   local-review request header/session key, log targets, image build, and runtime
-  commands also use Yardfolio. The brand gate now rejects former
-  customer-visible runtime copy. Professional trademark clearance,
-  domain/app-store confirmation, and public rollout approval remain open.
+  commands also use Yardfolio. Persistent browser keys and field IndexedDB now
+  use Yardfolio; suffix-based migration moves saved filters, route state,
+  queued mutations, and offline photo blobs without overwriting current records
+  or deleting an earlier database before a successful copy. The brand gate now
+  rejects former customer-visible runtime copy. Professional trademark
+  clearance, domain/app-store confirmation, and public rollout approval remain
+  open.
 - 2026-10-06: Enforced the product-renaming boundary with a tested local and CI
   consistency gate. It rejects new hard-coded customer-visible runtime brand
   copy and detects stale HTML metadata, installed-app manifest/icon labels, or

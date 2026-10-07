@@ -12,6 +12,10 @@ import {
   type ServiceTerritoryRecord,
 } from '../api/client';
 import { isApiErrorCode } from '../api/apiError';
+import {
+  readMigratedStorageValue,
+  YARDFOLIO_STORAGE_PREFIX,
+} from '../domain/browserStorageNamespace';
 
 type ManagerDispatchHierarchyPanelProps = {
   organizationId: string;
@@ -61,13 +65,17 @@ export function parseDispatchHierarchyFilters(value: string | null): DispatchHie
 }
 
 function dispatchHierarchyFilterStorageKey(organizationId: string) {
-  return `grover.dispatch-hierarchy-filters.v1.${organizationId}`;
+  return `${YARDFOLIO_STORAGE_PREFIX}.dispatch-hierarchy-filters.v1.${organizationId}`;
 }
 
 function loadDispatchHierarchyFilters(organizationId: string): DispatchHierarchyFilters {
   try {
     return parseDispatchHierarchyFilters(
-      window.localStorage.getItem(dispatchHierarchyFilterStorageKey(organizationId)),
+      readMigratedStorageValue(
+        window.localStorage,
+        dispatchHierarchyFilterStorageKey(organizationId),
+        `.dispatch-hierarchy-filters.v1.${organizationId}`,
+      ),
     );
   } catch {
     return defaultDispatchHierarchyFilters;
