@@ -35,7 +35,7 @@ import {
 import { customerOnboardingCsv } from '../domain/customerOnboardingExport';
 import {
   readMigratedStorageValue,
-  YARDFOLIO_STORAGE_PREFIX,
+  APP_STORAGE_NAMESPACE,
 } from '../domain/browserStorageNamespace';
 
 type Props = {
@@ -792,7 +792,7 @@ function accountRelationshipLabel(
 }
 
 function relationshipFilterStorageKey(organizationId: string): string {
-  return `${YARDFOLIO_STORAGE_PREFIX}.customer-account-relationship-filter.v1.${organizationId}`;
+  return `${APP_STORAGE_NAMESPACE}.customer-account-relationship-filter.v1.${organizationId}`;
 }
 
 function loadRelationshipFilter(organizationId: string): CustomerRelationshipFilter {

@@ -1,4 +1,4 @@
-import { PRODUCT_NAME } from '../productBrand';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 
 export function ProductBrand({ className = '' }: { className?: string }) {
   return (
@@ -7,7 +7,7 @@ export function ProductBrand({ className = '' }: { className?: string }) {
         <path d="M6 23C7 11 15 4 27 4c0 12-7 21-19 22" />
         <path d="M7 25c5-7 10-12 18-18" />
       </svg>
-      <span>{PRODUCT_NAME}</span>
+      <span>{APP_DISPLAY_NAME}</span>
     </span>
   );
 }

@@ -1,7 +1,7 @@
 import { ProductBrand } from './ProductBrand';
 import { PROVIDER_INVITATION_PATH } from '../domain/providerInvitationRoute';
 import { providerWorkspaceHref } from '../domain/providerEntryRoute';
-import { PRODUCT_NAME } from '../productBrand';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 
 const readinessSteps = [
   { title: 'Confirm your account', detail: 'Use a verified business email so invitations and access stay tied to the right person.' },
@@ -16,7 +16,7 @@ export function ProviderEntryPage() {
     <main className="min-h-screen overflow-x-hidden bg-bone text-ink">
       <header className="border-b border-slate-200 bg-paper">
         <nav aria-label="Provider entry navigation" className="mx-auto flex min-h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <a aria-label={`${PRODUCT_NAME} home`} className="text-emerald-800" href="/"><ProductBrand /></a>
+          <a aria-label={`${APP_DISPLAY_NAME} home`} className="text-emerald-800" href="/"><ProductBrand /></a>
           <a className="yardfolio-button-secondary" href="/app">Existing provider sign in</a>
         </nav>
       </header>
@@ -25,7 +25,7 @@ export function ProviderEntryPage() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Provider entry</p>
           <h1 className="mt-5 max-w-4xl font-display text-5xl font-black leading-[1.02] sm:text-6xl">Start with the provider path that matches your role.</h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-emerald-100">{PRODUCT_NAME} creates provider organizations—not public “Yard Crew” marketplace accounts. Choose how you are entering, then sign in to complete only the setup you are authorized to manage.</p>
+          <p className="mt-6 max-w-3xl text-lg leading-8 text-emerald-100">{APP_DISPLAY_NAME} creates provider organizations—not public “Yard Crew” marketplace accounts. Choose how you are entering, then sign in to complete only the setup you are authorized to manage.</p>
           <div className="mt-7 inline-flex max-w-3xl items-start gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm leading-6 text-emerald-50" role="note">
             <span aria-hidden="true" className="font-black text-sand">i</span>
             <p><strong>No opportunity promise.</strong> Creating a provider profile does not publish your business, guarantee work, expose owner details, or make curated service opportunities available.</p>
@@ -55,7 +55,7 @@ export function ProviderEntryPage() {
 
       <section className="bg-paper px-4 py-16 sm:px-6 lg:px-8" aria-labelledby="provider-readiness-heading">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
-          <div><p className="yardfolio-eyebrow">Provider readiness</p><h2 className="mt-3 font-display text-4xl font-black text-forest" id="provider-readiness-heading">Setup is preparation—not publication.</h2><p className="mt-4 leading-7 text-slate-600">{PRODUCT_NAME} keeps supplied identity, active access, operational readiness, and future eligibility separate. A single “verified” badge cannot stand in for those facts.</p></div>
+          <div><p className="yardfolio-eyebrow">Provider readiness</p><h2 className="mt-3 font-display text-4xl font-black text-forest" id="provider-readiness-heading">Setup is preparation—not publication.</h2><p className="mt-4 leading-7 text-slate-600">{APP_DISPLAY_NAME} keeps supplied identity, active access, operational readiness, and future eligibility separate. A single “verified” badge cannot stand in for those facts.</p></div>
           <ol className="grid gap-3 sm:grid-cols-2">
             {readinessSteps.map((step, index) => <li className="rounded-2xl border border-slate-200 bg-bone p-5" key={step.title}><span className="grid size-9 place-items-center rounded-full bg-emerald-800 text-sm font-black text-white">{index + 1}</span><h3 className="mt-4 font-black text-forest">{step.title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{step.detail}</p></li>)}
           </ol>
@@ -63,7 +63,7 @@ export function ProviderEntryPage() {
       </section>
 
       <section className="px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl rounded-3xl bg-slate-950 p-8 text-center text-white sm:p-12"><p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">Ready to begin?</p><h2 className="mt-4 font-display text-4xl font-black">Create the provider boundary first.</h2><p className="mx-auto mt-4 max-w-2xl leading-7 text-slate-300">Choose owner-operator or company-owner setup. If someone invited you, return to that exact invitation so {PRODUCT_NAME} can preserve its role and data scope.</p><div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row"><a className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 font-black text-emerald-950" href={providerWorkspaceHref('company-owner', search)}>Start provider setup</a><a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-6 font-black text-white" href={PROVIDER_INVITATION_PATH}>Review owner invitation</a></div></div>
+        <div className="mx-auto max-w-5xl rounded-3xl bg-slate-950 p-8 text-center text-white sm:p-12"><p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">Ready to begin?</p><h2 className="mt-4 font-display text-4xl font-black">Create the provider boundary first.</h2><p className="mx-auto mt-4 max-w-2xl leading-7 text-slate-300">Choose owner-operator or company-owner setup. If someone invited you, return to that exact invitation so {APP_DISPLAY_NAME} can preserve its role and data scope.</p><div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row"><a className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 font-black text-emerald-950" href={providerWorkspaceHref('company-owner', search)}>Start provider setup</a><a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-6 font-black text-white" href={PROVIDER_INVITATION_PATH}>Review owner invitation</a></div></div>
       </section>
     </main>
   );

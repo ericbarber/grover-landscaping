@@ -6,7 +6,7 @@ import {
   type MarketingPersona,
 } from '../api/marketingLeadsClient';
 import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
-import { PRODUCT_NAME } from '../productBrand';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 
 const personaLabels: Record<MarketingPersona, string> = {
   yard_owner: 'Yard owner',
@@ -31,7 +31,7 @@ export function marketingCallToAction(persona: MarketingPersona): {
     return {
       intent: 'early_access',
       label: 'Join early access',
-      title: `Be among the first to experience ${PRODUCT_NAME}.`,
+      title: `Be among the first to experience ${APP_DISPLAY_NAME}.`,
     };
   }
   return {
@@ -39,7 +39,7 @@ export function marketingCallToAction(persona: MarketingPersona): {
     label: 'Request a demo',
     title: persona === 'crew_lead'
       ? 'See a better field day.'
-      : `See how ${PRODUCT_NAME} fits your operation.`,
+      : `See how ${APP_DISPLAY_NAME} fits your operation.`,
   };
 }
 
@@ -146,7 +146,7 @@ export function MarketingLeadDialog({
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <button className="rounded-full bg-emerald-800 px-6 py-3 font-black text-white" onClick={onClose} type="button">
-                  Return to {PRODUCT_NAME}
+                  Return to {APP_DISPLAY_NAME}
                 </button>
                 <a className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-300 px-6 py-3 font-black text-slate-800" href="/app">
                   Explore the workspace
@@ -165,7 +165,7 @@ export function MarketingLeadDialog({
             >
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="text-sm font-bold text-slate-700">
-                  I’m exploring {PRODUCT_NAME} as
+                  I’m exploring {APP_DISPLAY_NAME} as
                   <select className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-slate-950" onChange={(event) => setPersona(event.target.value as MarketingPersona)} value={persona}>
                     {Object.entries(personaLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                   </select>
@@ -194,7 +194,7 @@ export function MarketingLeadDialog({
                   </select>
                 </label>
                 <label className="text-sm font-bold text-slate-700 sm:col-span-2">
-                  What would make {PRODUCT_NAME} valuable to you?
+                  What would make {APP_DISPLAY_NAME} valuable to you?
                   <textarea className="mt-2 min-h-28 w-full rounded-xl border border-slate-300 px-3 py-3 font-normal text-slate-950" maxLength={2000} onChange={(event) => setMessage(event.target.value)} value={message} />
                 </label>
               </div>
@@ -204,7 +204,7 @@ export function MarketingLeadDialog({
               </label>
               <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-slate-600">
                 <input checked={consent} className="mt-1 h-4 w-4 accent-emerald-700" onChange={(event) => setConsent(event.target.checked)} required type="checkbox" />
-                <span>I agree that {PRODUCT_NAME} may contact me about this request. My details will only be used to continue this product conversation.</span>
+                <span>I agree that {APP_DISPLAY_NAME} may contact me about this request. My details will only be used to continue this product conversation.</span>
               </label>
               {status === 'error' ? (
                 <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-800" role="alert">

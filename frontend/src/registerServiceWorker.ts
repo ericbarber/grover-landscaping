@@ -1,4 +1,4 @@
-import { FIELD_APP_NAME } from './productBrand';
+import { FIELD_APP_DISPLAY_NAME } from './appIdentity';
 
 export function registerProductionServiceWorker() {
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
@@ -20,7 +20,7 @@ export function registerProductionServiceWorker() {
         });
       })
       .catch((error: unknown) => {
-        console.error(`${FIELD_APP_NAME} service worker registration failed.`, error);
+        console.error(`${FIELD_APP_DISPLAY_NAME} service worker registration failed.`, error);
       });
   });
 }

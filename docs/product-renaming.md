@@ -1,81 +1,67 @@
-# Yardfolio Rename and Compatibility Boundary
+# Application Identity and Compatibility Boundary
 
-Yardfolio was adopted as the customer-facing working name on 2026-10-07. The
-rename removes the family name from the product experience without invalidating
-installed apps, authenticated sessions, queued field changes, or offline photo
-records. Preliminary exact-name web searches found no obvious landscaping,
-software, property, or trademark collision; professional clearance remains a
-public-launch gate.
+Grover is the temporary customer-facing display name. It is deliberately
+separate from the application's technical namespace so another naming decision
+does not require a repository-wide identifier migration or put saved work at
+risk.
 
-## Display name boundary
+## Display-name boundary
 
-Runtime customer-facing React copy reads the current name from
-`frontend/src/productBrand.ts`. That module owns the product name, field-app
-name, API status label, and browser title suffix. Active visual tokens, reusable
-component classes, Tailwind shadow utilities, and public brand-image paths use
-the `yardfolio-*` namespace.
+Customer-facing React copy reads the current name from
+`frontend/src/appIdentity.ts`. The module owns the application display name,
+Field app label, API status label, and browser-title suffix. The Rust backend
+uses the matching constant in `backend/src/application_identity.rs` for
+server-rendered titles and authentication challenges.
 
-Static and server-rendered surfaces that cannot import the frontend module must
-remain synchronized with it:
+Static surfaces that cannot import either module must remain synchronized:
 
 - `frontend/index.html` application, Open Graph, Twitter, and document metadata
 - `frontend/public/manifest.webmanifest` installed-app name and short name
-- `backend/src/public_site.rs` route-specific initial HTML titles
+- `frontend/public/app-icon.svg` accessible icon title
 - email/SMS templates, public URLs, screenshots, policy text, and deployment
   documentation after the final name and origin are approved
 
-## Compatibility identifiers
+The local and CI `quality:brand` gate verifies both application-identity
+constants agree, rejects hard-coded display names in frontend runtime code, and
+checks the static metadata, PWA, icon, and server-title composition boundaries.
 
-Do not mechanically rename identifiers beginning with `grover` in the same
-release as the display brand. They include:
+## Compatibility namespace
 
-- database, container, infrastructure, and environment identifiers
-- applied migration history and compatibility-sensitive deployment fixtures
+The stable technical namespace remains `yardfolio`. It is not the current
+customer-facing name. Do not mechanically rename it when the display name
+changes. Compatibility-sensitive identifiers include:
 
-These names are not customer-visible branding. Current service-worker cache,
-browser event, diagnostic-download, test-output, and frontend package names now
-use Yardfolio; cache cleanup recognizes prior shells structurally without
-retaining the former brand string. The Rust crate/binary, health-service label,
-local-review request header, and local-review session key also use Yardfolio.
-The independent research/review track now uses the Yardfolio Study name across
-its repository directory, private review route, fixture tooling, isolated
-database contract, and backend safety gate.
-The design archive also uses Yardfolio in its visible copy, accessibility
-labels, generated visual sources, shared stylesheet, and image filenames.
-Unprovisioned Render and AWS definitions, example origins, resource tags, and
-operator profiles use Yardfolio as well. Already-created external resources
-must still be renamed or replaced through their provider-specific migration
-procedures rather than by editing state.
-Persistent local-storage keys and the field IndexedDB database now use a
-Yardfolio namespace. On first access, the browser adopts values and queued work
-from matching earlier namespaces by stable suffix, copies only missing
-IndexedDB records and photo blobs, and removes a prior database only after a
-successful copy. Browsers that cannot enumerate IndexedDB databases leave the
-earlier database untouched rather than risking data loss. Changing
-infrastructure identifiers still requires a coordinated compatibility window
-across clients, servers, CI, and operations. The local Compose database has
-completed that migration; Pi and already-created external resources may retain
-a documented legacy namespace until their migrations are available.
+- CSS variables, reusable classes, visual assets, and test instrumentation
+- browser-storage keys, IndexedDB databases, service-worker caches, and events
+- Rust crate/binary and frontend package names, health-service labels, and log
+  targets
+- local-review headers, session keys, fixture databases, and study tooling
+- database, container, image, infrastructure, deployment, and environment
+  identifiers
+- applied migration history and already-created external resources
 
-## Public-launch gate
+Changing those identifiers requires an explicit, data-preserving migration.
+Installed sessions, queued field changes, offline photos, deployed services,
+and infrastructure state must never be invalidated merely because the display
+name changes.
 
-Before presenting Yardfolio as a cleared public brand:
+The independent research/review track retains the Yardfolio Study name. That
+track, its routes, fixtures, and artifacts are separate from the application's
+temporary display name.
 
-1. Complete professional trademark clearance in the intended jurisdictions;
-   search results and domain availability are only preliminary screens.
-2. Confirm primary domain, common misspellings, social handles, and relevant
-   app-store names.
-3. Approve the wordmark, pronunciation, capitalization, tagline, and any field
-   app qualifier.
-4. Search production source and built artifacts for former customer-visible
-   copy while keeping allowlisted legacy technical identifiers intact.
-5. Validate metadata, sitemap/canonical URLs, install/update behavior, customer
-   links, notification templates, analytics continuity, and redirects.
-6. Publish customer and operator communication before any URL or installed-app
-   identity changes.
+## Future display-name change
 
-Until those gates pass, Yardfolio remains a working product name rather than a
-claim of legal clearance. The local and CI `quality:brand` gate rejects new
-hard-coded runtime brand copy, rejects the former display name in runtime
-source, and fails when static metadata, PWA, icon, or server-rendered title
-surfaces drift from `PRODUCT_NAME`.
+For a future naming decision:
+
+1. Change the frontend and backend `APP_DISPLAY_NAME` constants.
+2. Synchronize the three static frontend surfaces listed above.
+3. Update current customer-facing tests, policies, screenshots, and operator
+   documentation without renaming compatibility identifiers.
+4. Run the brand consistency gate, frontend tests/build, and backend tests.
+5. Treat domains, installed-app identity, external resources, and redirects as
+   separately reviewed rollout work.
+
+Before any name is presented as a cleared public brand, complete professional
+trademark review, domain and app-store checks, wordmark approval, public-origin
+validation, and customer/operator rollout planning. Grover is a temporary
+display value, not a claim of legal clearance.

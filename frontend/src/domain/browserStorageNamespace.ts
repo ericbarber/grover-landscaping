@@ -1,4 +1,6 @@
-export const YARDFOLIO_STORAGE_PREFIX = 'yardfolio';
+import { APP_TECHNICAL_NAMESPACE } from '../appIdentity';
+
+export const APP_STORAGE_NAMESPACE = APP_TECHNICAL_NAMESPACE;
 
 /**
  * Reads a namespaced browser value and adopts a matching value from an older

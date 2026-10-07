@@ -9,7 +9,7 @@ import type { CustomerPortalReadState } from '../workspaces/features/customer/cu
 import { CustomerVisitQuestions } from './YardOwnerPortalPanel';
 import { propertyManagerPortfolioCapabilities } from './PropertyManagerPortfolioPanel';
 import { WorkspaceStatusNotice } from './WorkspaceStatus';
-import { PRODUCT_NAME } from '../productBrand';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 
 type Props = {
   properties: CustomerPortalPropertySummary[];
@@ -36,11 +36,11 @@ const readFailure: Record<Exclude<CustomerPortalReadState, 'loading' | 'ready'>,
   },
   inconsistent: {
     title: 'Property access needs review.',
-    detail: `${PRODUCT_NAME} couldn’t match this property to your current access. Property details remain hidden.`,
+    detail: `${APP_DISPLAY_NAME} couldn’t match this property to your current access. Property details remain hidden.`,
   },
   unavailable: {
     title: 'Portfolio visits could not be loaded.',
-    detail: `${PRODUCT_NAME} couldn’t check your property access. No property or service details are shown until it succeeds.`,
+    detail: `${APP_DISPLAY_NAME} couldn’t check your property access. No property or service details are shown until it succeeds.`,
   },
 };
 

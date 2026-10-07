@@ -1,10 +1,10 @@
 import type { ManagerActivityItem, ManagerActivitySource, ManagerActivityTone } from './managerActivity';
 import {
   readMigratedStorageValue,
-  YARDFOLIO_STORAGE_PREFIX,
+  APP_STORAGE_NAMESPACE,
 } from './browserStorageNamespace';
 
-const managerActivityStorageKey = `${YARDFOLIO_STORAGE_PREFIX}.managerActivity.items`;
+const managerActivityStorageKey = `${APP_STORAGE_NAMESPACE}.managerActivity.items`;
 const maxStoredManagerActivityItems = 20;
 const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'sync'];
 const activityTones: ManagerActivityTone[] = ['info', 'warning', 'success'];

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { APP_DISPLAY_NAME } from '../src/appIdentity';
 
 const qualityBudgets = JSON.parse(
   readFileSync(new URL('../../quality-budgets.json', import.meta.url), 'utf8'),
@@ -151,7 +152,7 @@ test('the production homepage retains the validated prototype foundation', async
     const brandMark = document.querySelector('.yardfolio-brand-mark');
 
     if (!main || !heading || !primaryAction || !brandMark) {
-      throw new Error('The shared Yardfolio theme targets were not rendered.');
+      throw new Error('The shared application theme targets were not rendered.');
     }
 
     return {
@@ -180,7 +181,7 @@ test('each audience route presents a complete persona-specific landing view', as
   const personas = [
     {
       path: '/for-yard-owners',
-      title: 'Clearer yard care for homeowners | Yardfolio',
+      title: `Clearer yard care for homeowners | ${APP_DISPLAY_NAME}`,
       headline: 'Know what happened—without chasing an update.',
       perspective: 'The service story—without the operations clutter.',
       trust: 'Confidence before and after care',
@@ -192,7 +193,7 @@ test('each audience route presents a complete persona-specific landing view', as
     },
     {
       path: '/for-property-managers',
-      title: 'Landscaping oversight for property managers | Yardfolio',
+      title: `Landscaping oversight for property managers | ${APP_DISPLAY_NAME}`,
       headline: 'Keep your entire property portfolio in view.',
       perspective: 'Move from your portfolio to the exact service record.',
       trust: 'Portfolio clarity within approved access',
@@ -204,7 +205,7 @@ test('each audience route presents a complete persona-specific landing view', as
     },
     {
       path: '/for-landscaping-companies',
-      title: 'Landscaping operations software | Yardfolio',
+      title: `Landscaping operations software | ${APP_DISPLAY_NAME}`,
       headline: 'Plan the day. Guide the crew. Prove the work.',
       perspective: 'Keep office, field, and customer work aligned.',
       trust: 'One shared view of the work',
@@ -216,7 +217,7 @@ test('each audience route presents a complete persona-specific landing view', as
     },
     {
       path: '/for-crew-leads',
-      title: 'Field workflow for landscaping crews | Yardfolio',
+      title: `Field workflow for landscaping crews | ${APP_DISPLAY_NAME}`,
       headline: 'Know the next stop—and what done looks like.',
       perspective: 'Give crews the context to finish each stop well.',
       trust: 'Everything the field needs to move',

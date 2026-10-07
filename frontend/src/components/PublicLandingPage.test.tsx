@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import { PublicLandingPage } from './PublicLandingPage';
 
 describe('PublicLandingPage', () => {
@@ -57,7 +58,7 @@ describe('PublicLandingPage', () => {
     expect(companyHero).toContain('See how it works');
     expect(companyHero).not.toContain('Request a walkthrough');
     expect(companyMarkup).toContain('Plan the day. Guide the crew. Prove the work.');
-    expect(companyMarkup).toContain('See Yardfolio from every side of the work.');
+    expect(companyMarkup).toContain(`See ${APP_DISPLAY_NAME} from every side of the work.`);
     expect(ownerMarkup).toContain('Sample yard owner workspace');
     expect(ownerMarkup).toContain('Know what happened—without chasing an update.');
     expect(ownerMarkup).toContain('Create my private yard');

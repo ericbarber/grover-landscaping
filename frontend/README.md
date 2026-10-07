@@ -1,4 +1,4 @@
-# Yardfolio Frontend
+# Application Frontend
 
 The frontend is a responsive React 18 and TypeScript application built with
 Vite and Tailwind CSS. It contains the public marketing site, authenticated

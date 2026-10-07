@@ -14,7 +14,7 @@ import {
 import { isApiErrorCode } from '../api/apiError';
 import {
   readMigratedStorageValue,
-  YARDFOLIO_STORAGE_PREFIX,
+  APP_STORAGE_NAMESPACE,
 } from '../domain/browserStorageNamespace';
 
 type ManagerDispatchHierarchyPanelProps = {
@@ -65,7 +65,7 @@ export function parseDispatchHierarchyFilters(value: string | null): DispatchHie
 }
 
 function dispatchHierarchyFilterStorageKey(organizationId: string) {
-  return `${YARDFOLIO_STORAGE_PREFIX}.dispatch-hierarchy-filters.v1.${organizationId}`;
+  return `${APP_STORAGE_NAMESPACE}.dispatch-hierarchy-filters.v1.${organizationId}`;
 }
 
 function loadDispatchHierarchyFilters(organizationId: string): DispatchHierarchyFilters {

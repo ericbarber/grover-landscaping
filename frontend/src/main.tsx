@@ -13,7 +13,7 @@ import { isDiagnosticsPath } from './domain/diagnosticsRoute';
 import { isApplicationPath } from './domain/applicationRoute';
 import { marketingPersonaFromPath } from './domain/marketingRoute';
 import { isProviderEntryPath } from './domain/providerEntryRoute';
-import { FIELD_APP_NAME } from './productBrand';
+import { FIELD_APP_DISPLAY_NAME } from './appIdentity';
 import './styles.css';
 
 registerProductionServiceWorker();
@@ -70,7 +70,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <React.Suspense fallback={(
         <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
           <p className="text-sm font-semibold text-slate-700" role="status">
-            Loading {FIELD_APP_NAME}…
+            Loading {FIELD_APP_DISPLAY_NAME}…
           </p>
         </main>
       )}>

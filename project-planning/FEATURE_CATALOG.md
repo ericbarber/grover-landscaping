@@ -20,15 +20,16 @@ workflows are not product targets.
   acquisition, Yard Owner acquisition, and Yard Owner portal, including
   canonical palette, wordmark, typography roles, banners, controls, surfaces,
   focus treatment, public headers, and application-rail materials
-- Yardfolio customer-facing working brand across runtime copy, metadata, PWA,
-  icon accessibility, server-rendered titles, authentication challenges, and
-  operator messages, with Yardfolio-namespaced active visual primitives and
-  public hero assets, frontend and Rust packages, health labels, and local-review
-  identifiers, browser storage, and field IndexedDB; tested suffix-based
-  migration protects prior filters, route state, queued work, and photo blobs,
-  while the prototype/design archive and generated visual artifacts use the
-  same current identity; an explicit legacy namespace boundary protects
-  installed-app, database, and infrastructure compatibility
+- Grover temporary customer-facing display name across runtime copy, metadata,
+  PWA, icon accessibility, server-rendered titles, and authentication
+  challenges, composed through explicit frontend and backend application
+  identity modules. The stable `yardfolio` compatibility namespace remains for
+  active visual primitives, public hero assets, frontend and Rust packages,
+  health labels, local-review identifiers, browser storage, and field IndexedDB;
+  tested suffix-based migration protects prior filters, route state, queued
+  work, and photo blobs. The historical prototype/design archive and generated
+  artifacts retain the Yardfolio Study identity; an explicit compatibility
+  boundary protects installed-app, database, and infrastructure state
 - Documented navigation system separating public discovery,
   acquisition-progress, and authenticated-destination models without changing
   their common brand treatment

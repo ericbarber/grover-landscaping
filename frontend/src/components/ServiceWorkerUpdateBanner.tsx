@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FIELD_APP_NAME } from '../productBrand';
+import { FIELD_APP_DISPLAY_NAME } from '../appIdentity';
 
 export function ServiceWorkerUpdateBanner() {
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
@@ -28,7 +28,7 @@ export function ServiceWorkerUpdateBanner() {
 
   return (
     <aside className="fixed inset-x-3 bottom-[calc(11rem+env(safe-area-inset-bottom))] z-50 rounded-xl bg-blue-950 p-4 text-sm text-white shadow-xl sm:left-auto sm:right-4 sm:max-w-sm lg:bottom-24">
-      <p className="font-bold">A {FIELD_APP_NAME} update is ready</p>
+      <p className="font-bold">A {FIELD_APP_DISPLAY_NAME} update is ready</p>
       <p className="mt-1 text-blue-100">
         Finish any unsaved work, then reload into the latest version.
       </p>

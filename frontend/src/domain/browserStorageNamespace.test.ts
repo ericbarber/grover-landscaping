@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   readMigratedStorageValue,
-  YARDFOLIO_STORAGE_PREFIX,
+  APP_STORAGE_NAMESPACE,
 } from './browserStorageNamespace';
 
 function createMemoryStorage(): Storage {
@@ -24,8 +24,8 @@ function createMemoryStorage(): Storage {
 
 describe('browser storage namespace migration', () => {
 
-  it('returns the current Yardfolio value without changing other keys', () => {
-    const currentKey = `${YARDFOLIO_STORAGE_PREFIX}.managerActivity.items`;
+  it('returns the current namespace value without changing other keys', () => {
+    const currentKey = `${APP_STORAGE_NAMESPACE}.managerActivity.items`;
     const storage = createMemoryStorage();
     storage.setItem(currentKey, 'current');
     storage.setItem('prior-product.managerActivity.items', 'legacy');
@@ -38,8 +38,8 @@ describe('browser storage namespace migration', () => {
     expect(storage.getItem('prior-product.managerActivity.items')).toBe('legacy');
   });
 
-  it('moves a matching prior namespace value to Yardfolio', () => {
-    const currentKey = `${YARDFOLIO_STORAGE_PREFIX}.dayPlan.plan-1.stopStates`;
+  it('moves a matching prior namespace value to the current namespace', () => {
+    const currentKey = `${APP_STORAGE_NAMESPACE}.dayPlan.plan-1.stopStates`;
     const priorKey = 'prior-product.dayPlan.plan-1.stopStates';
     const storage = createMemoryStorage();
     storage.setItem(priorKey, '{"stop-1":"finished"}');
@@ -54,7 +54,7 @@ describe('browser storage namespace migration', () => {
   });
 
   it('ignores keys that do not share the complete stable suffix', () => {
-    const currentKey = `${YARDFOLIO_STORAGE_PREFIX}.managerActivity.sourceFilter`;
+    const currentKey = `${APP_STORAGE_NAMESPACE}.managerActivity.sourceFilter`;
     const storage = createMemoryStorage();
     storage.setItem('another-product.managerActivity.toneFilter', 'warning');
 

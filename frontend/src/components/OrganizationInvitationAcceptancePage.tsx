@@ -5,7 +5,7 @@ import {
   type OrganizationInvitationAcceptance,
 } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
-import { PRODUCT_NAME } from '../productBrand';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 
 export function OrganizationInvitationAcceptancePage({ token }: { token: string }) {
   const auth = useAuth();
@@ -36,7 +36,7 @@ export function OrganizationInvitationAcceptancePage({ token }: { token: string 
     <main className="flex min-h-[calc(100vh-41px)] items-center justify-center bg-slate-100 px-4 py-10">
       <section className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
-          {PRODUCT_NAME}
+          {APP_DISPLAY_NAME}
         </p>
         <h1 className="mt-2 text-2xl font-bold text-slate-950">Organization invitation</h1>
         {accepted ? (

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { APP_DISPLAY_NAME } from '../src/appIdentity';
 
 test('a verified owner creates a private profile and reconfirms a changed address', async ({ page }) => {
   let yardBriefVersion = 0;
@@ -732,7 +733,9 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
   await expect(page.getByText(/Proposal accepted for provider setup. No visit was scheduled/)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Create the provider relationship' })).toBeVisible();
   await page.getByRole('button', { name: 'Review provider setup' }).click();
-  const activationAffirmation = page.getByLabel(/I want Yardfolio to create this provider relationship/);
+  const activationAffirmation = page.getByLabel(
+    new RegExp(`I want ${APP_DISPLAY_NAME} to create this provider relationship`),
+  );
   await expect(page.getByRole('button', { name: 'Activate provider setup' })).toBeDisabled();
   await activationAffirmation.check();
   await page.getByRole('button', { name: 'Activate provider setup' }).click();

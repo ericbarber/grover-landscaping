@@ -1,7 +1,7 @@
 # Mobile Offline Recovery Smoke
 
 The Playwright mobile smoke test uses a Pixel 7 Chromium viewport against a running
-frontend and API. It resets only browser-local Yardfolio Field state, then verifies:
+frontend and API. It resets only browser-local Grover Field state, then verifies:
 
 1. the day plan loads from the API without horizontal overflow;
 2. a browser network interruption produces the global offline warning;

@@ -11,7 +11,7 @@ acceptance evidence, and rollout boundaries for that board.
 
 ## Product outcome
 
-Yardfolio should make one landscape-service outcome understandable from public
+Grover should make one landscape-service outcome understandable from public
 entry through company setup, planning, field execution, reviewed proof, and
 customer follow-through. Every authorized person should be able to answer:
 
@@ -342,7 +342,7 @@ No public route or protected-runtime claim is approved.
 
 ### Outcome
 
-Prospective customers can understand how Yardfolio handles identity, access,
+Prospective customers can understand how Grover handles identity, access,
 customer-safe proof, offline data, recovery, privacy, and service availability
 without security theater or unsupported promises.
 
@@ -492,7 +492,7 @@ not approved and does not authorize implementation.
 
 ### Outcome
 
-Before Yardfolio accepts general concerns or communication preferences, the
+Before Grover accepts general concerns or communication preferences, the
 product has an explicit operating contract for who responds, what is retained,
 what is private, and how urgent or out-of-scope issues are handled.
 
@@ -523,7 +523,7 @@ unscoped inbox.
 - Customer and manager interfaces name the responsible role and expected next
   event only when authoritative.
 - Safety/billing/out-of-scope branches route to owned destinations without
-  claiming Yardfolio provides emergency response.
+  claiming Grover provides emergency response.
 
 ## Program scorecard
 

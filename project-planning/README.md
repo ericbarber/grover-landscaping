@@ -1,6 +1,8 @@
 # Project Planning and Version History
 
-This directory is the review entry point for Yardfolio product planning.
+This directory is the review entry point for product planning. Grover is the
+current temporary display name; technical identifiers retain the `yardfolio`
+compatibility namespace.
 It brings the roadmap, feature specifications, and release history together without
 moving their existing canonical documents.
 

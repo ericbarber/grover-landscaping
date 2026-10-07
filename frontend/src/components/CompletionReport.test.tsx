@@ -2,6 +2,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { CompletionReportSnapshot, JobDetail, PhotoUploadTicket } from '../api/client';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import { CompletionReport } from './CompletionReport';
 
 const job: JobDetail = {
@@ -64,7 +65,7 @@ describe('CompletionReport', () => {
     }));
 
     expect(markup).toContain('Customer report preview');
-    expect(markup).toContain('Saved to Yardfolio');
+    expect(markup).toContain(`Saved to ${APP_DISPLAY_NAME}`);
     expect(markup).toContain('Current status: In Review.');
     expect(markup).toContain('Job photos');
     expect(markup).toContain('Ready For Review');

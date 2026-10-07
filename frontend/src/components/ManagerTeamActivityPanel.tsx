@@ -8,7 +8,7 @@ import {
 } from '../api/client';
 import {
   readMigratedStorageValue,
-  YARDFOLIO_STORAGE_PREFIX,
+  APP_STORAGE_NAMESPACE,
 } from '../domain/browserStorageNamespace';
 
 export function teamActivityLabel(eventKind: TeamAdministrationEventKind): string {
@@ -115,7 +115,7 @@ export function parseTeamActivityReviewFilters(raw: string | null): TeamActivity
 }
 
 function teamActivityReviewStorageKey(organizationId: string): string {
-  return `${YARDFOLIO_STORAGE_PREFIX}.team-activity-review-filters.v1.${organizationId}`;
+  return `${APP_STORAGE_NAMESPACE}.team-activity-review-filters.v1.${organizationId}`;
 }
 
 function loadTeamActivityReviewFilters(organizationId: string): TeamActivityReviewFilters {

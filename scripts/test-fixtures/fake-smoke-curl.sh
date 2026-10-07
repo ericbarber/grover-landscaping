@@ -91,7 +91,7 @@ case "${url}" in
     printf '[]'
     ;;
   https://pilot.example.test/)
-    printf '<!doctype html><title>Yardfolio</title>'
+    printf '<!doctype html><title>Application</title>'
     ;;
   *)
     echo "Fake curl received an unexpected request target." >&2

@@ -4,10 +4,10 @@ import {
   fetchDayPlanAmendments,
 } from '../api/dayPlanAmendmentsClient';
 import { DayPlanRequestError, fetchCrewDayPlan } from '../api/dayPlansClient';
-import { FIELD_APP_NAME } from '../productBrand';
+import { FIELD_APP_DISPLAY_NAME } from '../appIdentity';
 import {
   readMigratedStorageValue,
-  YARDFOLIO_STORAGE_PREFIX,
+  APP_STORAGE_NAMESPACE,
 } from '../domain/browserStorageNamespace';
 import { updateStopProgress } from '../api/stopProgressClient';
 import {
@@ -91,7 +91,7 @@ const crewExtraServiceCatalog: ServiceCatalogItem[] = [
 ];
 
 function storageKey(dayPlanId: string): string {
-  return `${YARDFOLIO_STORAGE_PREFIX}.dayPlan.${dayPlanId}.stopStates`;
+  return `${APP_STORAGE_NAMESPACE}.dayPlan.${dayPlanId}.stopStates`;
 }
 
 function loadStopStates(dayPlanId: string): StopStateMap {
@@ -710,7 +710,7 @@ export function DayPlanPanel({
             <WorkspaceStatusNotice
               className="mt-2"
               compact
-              detail={`Keep ${FIELD_APP_NAME} installed and open it regularly.`}
+              detail={`Keep ${FIELD_APP_DISPLAY_NAME} installed and open it regularly.`}
               title="Offline changes use browser-managed retention."
               tone="neutral"
             />

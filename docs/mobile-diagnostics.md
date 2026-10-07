@@ -1,6 +1,6 @@
 # Mobile Diagnostics
 
-Open `/diagnostics` on the same Yardfolio Field origin to check a phone without
+Open `/diagnostics` on the same Grover Field origin to check a phone without
 signing in. The page reports:
 
 - browser network status;

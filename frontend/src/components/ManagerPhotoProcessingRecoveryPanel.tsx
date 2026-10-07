@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { PhotoProcessingHistoryItem, PhotoProcessingStatus } from '../api/client';
-import { PRODUCT_NAME } from '../productBrand';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 
 type ManagerPhotoProcessingRecoveryPanelProps = {
   items: PhotoProcessingHistoryItem[];
@@ -142,7 +142,7 @@ export function ManagerPhotoProcessingRecoveryPanel({
               </div>
               {item.status === 'failed' || item.status === 'dead_letter' ? (
                 <p className="mt-2 break-words rounded-lg bg-white p-2 text-xs text-rose-700">
-                  {PRODUCT_NAME} could not prepare this photo preview. Retry processing, or close the issue if the original photo is sufficient.
+                  {APP_DISPLAY_NAME} could not prepare this photo preview. Retry processing, or close the issue if the original photo is sufficient.
                 </p>
               ) : null}
               {item.resolutionNote ? (

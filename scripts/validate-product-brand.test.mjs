@@ -6,11 +6,12 @@ import {
 } from './validate-product-brand.mjs';
 
 const validSources = {
-  productBrandSource: "export const PRODUCT_NAME = 'Yardfolio';",
-  indexSource: '<meta content="Yardfolio"><meta content="Yardfolio Field"><meta content="Yardfolio connects care"><meta content="Yardfolio | Care"><title>Yardfolio | Care</title>',
-  manifestSource: JSON.stringify({ name: 'Yardfolio Field Work', short_name: 'Yardfolio Field' }),
-  iconSource: '<title id="title">Yardfolio</title>',
-  publicSiteSource: Array.from({ length: 5 }, () => 'title: "Page | Yardfolio"').join('\n'),
+  applicationIdentitySource: "export const APP_DISPLAY_NAME = 'Grover';",
+  backendApplicationIdentitySource: 'pub const APP_DISPLAY_NAME: &str = "Grover";',
+  indexSource: '<meta content="Grover"><meta content="Grover Field"><meta content="Grover connects care"><meta content="Grover | Care"><title>Grover | Care</title>',
+  manifestSource: JSON.stringify({ name: 'Grover Field Work', short_name: 'Grover Field' }),
+  iconSource: '<title id="title">Grover</title>',
+  publicSiteSource: 'let page_title = app_page_title(metadata.title);',
   runtimeSources: [['components/ProductBrand.tsx', 'export function ProductBrand() {}']],
 };
 
@@ -21,17 +22,17 @@ test('accepts the repository product-brand boundary', async () => {
 test('rejects customer-visible hard-coded runtime copy', () => {
   const errors = validateProductBrandSources({
     ...validSources,
-    runtimeSources: [['components/Example.tsx', '<p>Return to Yardfolio</p>']],
+    runtimeSources: [['components/Example.tsx', '<p>Return to Grover</p>']],
   });
   assert.deepEqual(errors, [
-    'customer-visible product name must come from productBrand.ts: components/Example.tsx',
+    'customer-visible application name must come from appIdentity.ts: components/Example.tsx',
   ]);
 });
 
 test('rejects the former display name in runtime source', () => {
   assert.deepEqual(validateProductBrandSources({
     ...validSources,
-    runtimeSources: [['components/Example.tsx', '<p>Return to Grover</p>']],
+    runtimeSources: [['components/Example.tsx', '<p>Return to Yardfolio</p>']],
   }), [
     'former customer-visible product name remains in runtime source: components/Example.tsx',
   ]);
@@ -40,7 +41,7 @@ test('rejects the former display name in runtime source', () => {
 test('rejects stale metadata, manifest, icon, and server titles', () => {
   const errors = validateProductBrandSources({
     ...validSources,
-    indexSource: validSources.indexSource.replaceAll('Yardfolio', 'OldName'),
+    indexSource: validSources.indexSource.replaceAll('Grover', 'OldName'),
     manifestSource: JSON.stringify({ name: 'OldName Field Work', short_name: 'OldName Field' }),
     iconSource: '<title>OldName Landscaping</title>',
     publicSiteSource: 'title: "Page | OldName"',
@@ -49,4 +50,13 @@ test('rejects stale metadata, manifest, icon, and server titles', () => {
   assert.ok(errors.some((error) => error.includes('web manifest name')));
   assert.ok(errors.some((error) => error.includes('app icon accessible title')));
   assert.ok(errors.some((error) => error.includes('server-rendered public route titles')));
+});
+
+test('rejects a backend display-name mismatch', () => {
+  assert.deepEqual(validateProductBrandSources({
+    ...validSources,
+    backendApplicationIdentitySource: 'pub const APP_DISPLAY_NAME: &str = "OldName";',
+  }), [
+    'backend APP_DISPLAY_NAME is not aligned with frontend APP_DISPLAY_NAME',
+  ]);
 });

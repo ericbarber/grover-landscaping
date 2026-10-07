@@ -36,6 +36,7 @@ use yardfolio_api::{
         UpdateCustomerAccountRequest, UpdateCustomerPropertyIdentityRequest,
         UpdateCustomerPropertyStatusRequest,
     },
+    application_identity::APP_DISPLAY_NAME,
     auth::{require_api_auth, AuthPrincipal, AuthService},
     completion_reports::{
         self, apply_completion_report_persistence, build_completion_report,
@@ -516,7 +517,7 @@ async fn main() -> Result<(), DynError> {
         .map_err(|error| configuration_error(format!("PORT must be a valid TCP port: {error}")))?;
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
-    tracing::info!(%addr, "starting Yardfolio API");
+    tracing::info!(%addr, application = APP_DISPLAY_NAME, "starting application API");
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
 
@@ -14058,7 +14059,7 @@ mod tests {
         std::fs::create_dir_all(&frontend_dist).unwrap();
         std::fs::write(
             frontend_dist.join("index.html"),
-            "<!doctype html><html><head><title>Yardfolio production</title><meta name=\"description\" content=\"Fallback\" /><meta property=\"og:title\" content=\"Fallback\" /><meta property=\"og:description\" content=\"Fallback\" /><meta property=\"og:image\" content=\"/fallback.webp\" /><meta name=\"twitter:title\" content=\"Fallback\" /><meta name=\"twitter:description\" content=\"Fallback\" /><meta name=\"twitter:image\" content=\"/fallback.webp\" /></head><body><div id=\"root\"></div></body></html>",
+            format!("<!doctype html><html><head><title>{APP_DISPLAY_NAME} production</title><meta name=\"description\" content=\"Fallback\" /><meta property=\"og:title\" content=\"Fallback\" /><meta property=\"og:description\" content=\"Fallback\" /><meta property=\"og:image\" content=\"/fallback.webp\" /><meta name=\"twitter:title\" content=\"Fallback\" /><meta name=\"twitter:description\" content=\"Fallback\" /><meta name=\"twitter:image\" content=\"/fallback.webp\" /></head><body><div id=\"root\"></div></body></html>"),
         )
         .unwrap();
         std::fs::write(
@@ -14172,7 +14173,8 @@ mod tests {
             .await
             .unwrap()
             .to_bytes();
-        assert!(String::from_utf8_lossy(&shared_bid_body).contains("Yardfolio production"));
+        assert!(String::from_utf8_lossy(&shared_bid_body)
+            .contains(&format!("{APP_DISPLAY_NAME} production")));
 
         let shared_report_response = seed_app_with_frontend(frontend_dist.clone())
             .oneshot(
@@ -14190,7 +14192,8 @@ mod tests {
             .await
             .unwrap()
             .to_bytes();
-        assert!(String::from_utf8_lossy(&shared_report_body).contains("Yardfolio production"));
+        assert!(String::from_utf8_lossy(&shared_report_body)
+            .contains(&format!("{APP_DISPLAY_NAME} production")));
 
         for route in [
             "/not-a-real-route",

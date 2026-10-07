@@ -1,11 +1,21 @@
 # Version History
 
+- 2026-10-07: Decoupled the customer-facing display name from technical
+  identity and restored Grover as the temporary display value. React runtime
+  copy now composes through `APP_DISPLAY_NAME`; Rust public titles and
+  authentication challenges use a matching backend identity constant; and the
+  consistency gate verifies both constants plus static HTML, PWA, icon, and
+  server-rendered surfaces. Existing `yardfolio` CSS, storage, IndexedDB,
+  service, database, package, and infrastructure identifiers remain a stable
+  compatibility namespace, so this display-name change does not migrate or
+  invalidate persisted work.
 - 2026-10-07: Narrowed the long-term market to residential property care while
   allowing the service model to expand beyond yards and landscaping. In-scope
   properties now include owner-occupied and rental homes, residential
   communities and HOAs, and residential portfolios; commercial facilities,
   construction-project management, and generic field-service operations are
-  explicitly out of scope. Yardfolio remains a temporary working name pending
+  explicitly out of scope. At that point, Yardfolio remained the temporary
+  working name pending
   selection and screening of a broader residential-property brand.
 - 2026-10-07: Adopted Yardfolio as the customer-facing working name after a
   preliminary exact-name collision screen. Runtime copy, browser/social

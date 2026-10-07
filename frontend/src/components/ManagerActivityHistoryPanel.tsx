@@ -18,7 +18,7 @@ import {
 } from '../domain/managerActivityLabels';
 import {
   readMigratedStorageValue,
-  YARDFOLIO_STORAGE_PREFIX,
+  APP_STORAGE_NAMESPACE,
 } from '../domain/browserStorageNamespace';
 
 function activityToneClass(tone: ManagerActivityItem['tone']) {
@@ -35,8 +35,8 @@ function activityToneClass(tone: ManagerActivityItem['tone']) {
 
 const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'recovery', 'sync'];
 const activityTones: ManagerActivityTone[] = ['warning', 'success', 'info'];
-const activitySourceFilterStorageKey = `${YARDFOLIO_STORAGE_PREFIX}.managerActivity.sourceFilter`;
-const activityToneFilterStorageKey = `${YARDFOLIO_STORAGE_PREFIX}.managerActivity.toneFilter`;
+const activitySourceFilterStorageKey = `${APP_STORAGE_NAMESPACE}.managerActivity.sourceFilter`;
+const activityToneFilterStorageKey = `${APP_STORAGE_NAMESPACE}.managerActivity.toneFilter`;
 
 type ActivitySourceFilter = ManagerActivitySource | 'all';
 type ActivityToneFilter = ManagerActivityTone | 'all';
@@ -65,7 +65,7 @@ function readStorageValue(key: string): string | null {
     return readMigratedStorageValue(
       window.localStorage,
       key,
-      key.slice(YARDFOLIO_STORAGE_PREFIX.length),
+      key.slice(APP_STORAGE_NAMESPACE.length),
     );
   } catch {
     return null;

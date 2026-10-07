@@ -1,3 +1,4 @@
+use crate::application_identity::app_page_title;
 use reqwest::Url;
 use std::{env, fmt, fs, path::PathBuf};
 
@@ -15,31 +16,31 @@ pub struct PublicRouteMetadata {
 pub const PUBLIC_ROUTES: [PublicRouteMetadata; 5] = [
     PublicRouteMetadata {
         path: "/",
-        title: "Clearer yard care for homeowners | Yardfolio",
+        title: "Clearer yard care for homeowners",
         description: "See what’s planned, what was completed, and what your yard may need next—without chasing an update.",
         headline: "Your yard. Every visit. One clear story.",
     },
     PublicRouteMetadata {
         path: "/for-landscaping-companies",
-        title: "Landscaping operations software | Yardfolio",
+        title: "Landscaping operations software",
         description: "Connect daily planning, field progress, customer-ready proof, and follow-through in one calm operating view.",
         headline: "Plan the day. Guide the crew. Prove the work.",
     },
     PublicRouteMetadata {
         path: "/for-yard-owners",
-        title: "Clearer yard care for homeowners | Yardfolio",
+        title: "Clearer yard care for homeowners",
         description: "See what’s planned, what was completed, and what your yard may need next—without chasing an update.",
         headline: "Your yard. Every visit. One clear story.",
     },
     PublicRouteMetadata {
         path: "/for-property-managers",
-        title: "Landscaping oversight for property managers | Yardfolio",
+        title: "Landscaping oversight for property managers",
         description: "Review service status and delivered completion evidence across the properties you are authorized to access.",
         headline: "Keep your entire property portfolio in view.",
     },
     PublicRouteMetadata {
         path: "/for-crew-leads",
-        title: "Field workflow for landscaping crews | Yardfolio",
+        title: "Field workflow for landscaping crews",
         description: "Give crews the route, service details, and evidence requirements they need without the office back-and-forth.",
         headline: "Know the next stop—and what done looks like.",
     },
@@ -142,7 +143,8 @@ impl PublicSite {
         let canonical_url = self.absolute_url(metadata.path)?;
         let share_image_url = self.absolute_url(SHARE_IMAGE_PATH)?;
 
-        replace_title(&mut html, metadata.title)?;
+        let page_title = app_page_title(metadata.title);
+        replace_title(&mut html, &page_title)?;
         set_head_tag(
             &mut html,
             "<meta name=\"description\"",
@@ -156,7 +158,7 @@ impl PublicSite {
                 "<meta property=\"og:title\"",
                 format!(
                     "<meta property=\"og:title\" content=\"{}\" />",
-                    escape_html(metadata.title)
+                    escape_html(&page_title)
                 ),
             ),
             (
@@ -185,7 +187,7 @@ impl PublicSite {
                 "<meta name=\"twitter:title\"",
                 format!(
                     "<meta name=\"twitter:title\" content=\"{}\" />",
-                    escape_html(metadata.title)
+                    escape_html(&page_title)
                 ),
             ),
             (

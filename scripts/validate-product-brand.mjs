@@ -5,19 +5,21 @@ import { extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
-const legacyDisplayNames = ['Grover'];
+const formerDisplayNames = ['Yardfolio'];
 
-function productNameFrom(source) {
-  const match = source.match(/export const PRODUCT_NAME = '([^']+)'/);
+function frontendDisplayNameFrom(source) {
+  const match = source.match(/export const APP_DISPLAY_NAME = '([^']+)'/);
   return match?.[1] ?? null;
 }
 
-function occurrencesOf(source, value) {
-  return source.split(value).length - 1;
+function backendDisplayNameFrom(source) {
+  const match = source.match(/pub const APP_DISPLAY_NAME: &str = "([^"]+)"/);
+  return match?.[1] ?? null;
 }
 
 export function validateProductBrandSources({
-  productBrandSource,
+  applicationIdentitySource,
+  backendApplicationIdentitySource,
   indexSource,
   manifestSource,
   iconSource,
@@ -25,31 +27,35 @@ export function validateProductBrandSources({
   runtimeSources,
 }) {
   const errors = [];
-  const productName = productNameFrom(productBrandSource);
-  if (!productName) return ['frontend product brand must declare a literal PRODUCT_NAME'];
+  const displayName = frontendDisplayNameFrom(applicationIdentitySource);
+  if (!displayName) return ['frontend application identity must declare a literal APP_DISPLAY_NAME'];
+  const backendDisplayName = backendDisplayNameFrom(backendApplicationIdentitySource);
+  if (backendDisplayName !== displayName) {
+    errors.push('backend APP_DISPLAY_NAME is not aligned with frontend APP_DISPLAY_NAME');
+  }
 
-  const fieldAppName = `${productName} Field`;
+  const fieldAppName = `${displayName} Field`;
   for (const [path, source] of runtimeSources) {
-    if (source.includes(productName)) {
-      errors.push(`customer-visible product name must come from productBrand.ts: ${path}`);
+    if (source.includes(displayName)) {
+      errors.push(`customer-visible application name must come from appIdentity.ts: ${path}`);
     }
-    for (const legacyName of legacyDisplayNames) {
-      if (legacyName !== productName && source.includes(legacyName)) {
+    for (const formerName of formerDisplayNames) {
+      if (formerName !== displayName && source.includes(formerName)) {
         errors.push(`former customer-visible product name remains in runtime source: ${path}`);
       }
     }
   }
 
   const requiredIndexFragments = [
-    `content="${productName}"`,
+    `content="${displayName}"`,
     `content="${fieldAppName}"`,
-    `content="${productName} connects`,
-    `content="${productName} |`,
-    `<title>${productName} |`,
+    `content="${displayName} connects`,
+    `content="${displayName} |`,
+    `<title>${displayName} |`,
   ];
   for (const fragment of requiredIndexFragments) {
     if (!indexSource.includes(fragment)) {
-      errors.push(`frontend index metadata is not aligned with PRODUCT_NAME: ${fragment}`);
+      errors.push(`frontend index metadata is not aligned with APP_DISPLAY_NAME: ${fragment}`);
     }
   }
 
@@ -60,19 +66,19 @@ export function validateProductBrandSources({
     errors.push('web manifest must be valid JSON');
   }
   if (manifest) {
-    if (!String(manifest.name ?? '').startsWith(productName)) {
-      errors.push('web manifest name is not aligned with PRODUCT_NAME');
+    if (!String(manifest.name ?? '').startsWith(displayName)) {
+      errors.push('web manifest name is not aligned with APP_DISPLAY_NAME');
     }
     if (manifest.short_name !== fieldAppName) {
-      errors.push('web manifest short_name is not aligned with FIELD_APP_NAME');
+      errors.push('web manifest short_name is not aligned with FIELD_APP_DISPLAY_NAME');
     }
   }
 
-  if (!iconSource.includes(`>${productName}</title>`)) {
-    errors.push('app icon accessible title is not aligned with PRODUCT_NAME');
+  if (!iconSource.includes(`>${displayName}</title>`)) {
+    errors.push('app icon accessible title is not aligned with APP_DISPLAY_NAME');
   }
-  if (occurrencesOf(publicSiteSource, `| ${productName}"`) !== 5) {
-    errors.push('server-rendered public route titles are not aligned with PRODUCT_NAME');
+  if (!publicSiteSource.includes('app_page_title(metadata.title)')) {
+    errors.push('server-rendered public route titles must compose through app_page_title');
   }
 
   return errors;
@@ -88,7 +94,7 @@ async function collectRuntimeSources(directory, prefix = '') {
       continue;
     }
     if (!['.ts', '.tsx'].includes(extname(entry.name))) continue;
-    if (entry.name === 'productBrand.ts' || /\.(test|spec)\.[^.]+$/.test(entry.name)) continue;
+    if (entry.name === 'appIdentity.ts' || /\.(test|spec)\.[^.]+$/.test(entry.name)) continue;
     sources.push([relativePath, await readFile(absolutePath, 'utf8')]);
   }
   return sources;
@@ -97,7 +103,8 @@ async function collectRuntimeSources(directory, prefix = '') {
 export async function validateRepositoryProductBrand(root = repositoryRoot) {
   const read = (path) => readFile(resolve(root, path), 'utf8');
   return validateProductBrandSources({
-    productBrandSource: await read('frontend/src/productBrand.ts'),
+    applicationIdentitySource: await read('frontend/src/appIdentity.ts'),
+    backendApplicationIdentitySource: await read('backend/src/application_identity.rs'),
     indexSource: await read('frontend/index.html'),
     manifestSource: await read('frontend/public/manifest.webmanifest'),
     iconSource: await read('frontend/public/app-icon.svg'),

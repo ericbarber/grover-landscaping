@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiRequestError } from '../api/apiError';
-import { PRODUCT_NAME } from '../productBrand';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import {
   activateOwnerProviderRelationship,
   createOwnerInitialServiceProposalMessage,
@@ -355,7 +355,7 @@ export function OwnerInitialServiceProposalPanel({
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-800">Proposal review</p>
           <h4 className="mt-2 text-xl font-black text-slate-950" id="owner-proposals-title">Compare the exact offer before deciding</h4>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-700">Each version is provider-authored and preserved. {PRODUCT_NAME} shows the terms neutrally and does not rank, recommend, or silently activate an offer.</p>
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-700">Each version is provider-authored and preserved. {APP_DISPLAY_NAME} shows the terms neutrally and does not rank, recommend, or silently activate an offer.</p>
         </div>
         <button className="min-h-11 rounded-lg border border-emerald-700 bg-white px-4 text-sm font-bold text-emerald-950 disabled:opacity-60" disabled={loading || busy} onClick={() => void load()} type="button">{loading ? 'Refreshing…' : 'Refresh proposals'}</button>
       </div>

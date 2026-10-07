@@ -1,5 +1,5 @@
 import type { FirstOwnerSetupProgress } from '../api/client';
-import { PRODUCT_NAME } from '../productBrand';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 
 export type ProviderReadinessFactState = 'supplied' | 'recorded' | 'operational' | 'missing' | 'not_collected' | 'not_evaluated';
 
@@ -92,7 +92,7 @@ export function providerReadinessFacts(input: ProviderReadinessInput): ProviderR
     {
       id: 'credentials',
       label: 'Insurance, license, and certification facts',
-      detail: `${PRODUCT_NAME} does not collect or check provider credentials in this release.`,
+      detail: `${APP_DISPLAY_NAME} does not collect or check provider credentials in this release.`,
       state: 'not_collected',
     },
     {

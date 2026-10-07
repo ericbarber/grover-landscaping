@@ -13,7 +13,7 @@ import { MarketingProductTour } from './MarketingProductTour';
 import { OWNER_ACQUISITION_PATH } from '../domain/ownerAcquisitionRoute';
 import { ProductBrand } from './ProductBrand';
 import { providerEntryHref } from '../domain/providerEntryRoute';
-import { PRODUCT_NAME, productPageTitle } from '../productBrand';
+import { APP_DISPLAY_NAME, appPageTitle } from '../appIdentity';
 
 const marketingPersonas: Array<{
   id: MarketingPersonaId;
@@ -107,7 +107,7 @@ const marketingPersonas: Array<{
     proof: {
       eyebrow: 'Clarity for your yard',
       title: 'Yard care should never feel like a mystery.',
-      description: `${PRODUCT_NAME} keeps your property private while you get started, then connects each visit, update, and recommendation into a story you can actually follow.`,
+      description: `${APP_DISPLAY_NAME} keeps your property private while you get started, then connects each visit, update, and recommendation into a story you can actually follow.`,
       cards: [
         { title: 'Start privately', description: 'Describe your yard before choosing what any provider can see.', label: 'Owner control' },
         { title: 'Know the plan', description: 'Find upcoming service expectations without chasing an update.', label: 'Service confidence' },
@@ -178,7 +178,7 @@ const marketingPersonas: Array<{
     proof: {
       eyebrow: 'Clarity across the portfolio',
       title: 'Keep service records connected to the right address.',
-      description: `${PRODUCT_NAME} brings authorized property status and delivered proof into one focused portfolio without exposing provider-private operations.`,
+      description: `${APP_DISPLAY_NAME} brings authorized property status and delivered proof into one focused portfolio without exposing provider-private operations.`,
       cards: [
         { title: 'Respect property access', description: 'See only properties covered by an active authorized grant.', label: 'Authorized scope' },
         { title: 'Review service status', description: 'Scan customer-safe visit information for each accessible property.', label: 'Service visibility' },
@@ -249,7 +249,7 @@ const marketingPersonas: Array<{
     proof: {
       eyebrow: 'Operational confidence by design',
       title: 'Run the day without losing the service story.',
-      description: `${PRODUCT_NAME} connects planning, execution, evidence, and customer follow-through so the office and field can work from the same operational truth.`,
+      description: `${APP_DISPLAY_NAME} connects planning, execution, evidence, and customer follow-through so the office and field can work from the same operational truth.`,
       cards: [
         { title: 'Plan a workable day', description: 'Balance routes, crew assignments, commitments, and workload risk.', label: 'Daily operations' },
         { title: 'Stay aligned in the field', description: 'Give crews property context and resilient progress capture.', label: 'Field execution' },
@@ -320,7 +320,7 @@ const marketingPersonas: Array<{
     proof: {
       eyebrow: 'A field-ready workday',
       title: 'The next stop should already make sense.',
-      description: `${PRODUCT_NAME} puts the route, property context, required work, evidence, and exception path together so crews can focus on the yard instead of reconstructing the plan.`,
+      description: `${APP_DISPLAY_NAME} puts the route, property context, required work, evidence, and exception path together so crews can focus on the yard instead of reconstructing the plan.`,
       cards: [
         { title: 'Start with the route', description: 'See the ordered day and the context behind each stop.', label: 'Clear direction' },
         { title: 'Know what done means', description: 'Keep service details and required evidence close to the work.', label: 'Completion clarity' },
@@ -342,7 +342,7 @@ const marketingPersonas: Array<{
     invitation: {
       eyebrow: 'Make the field day clearer',
       title: 'Give crews the plan before they reach the property.',
-      description: `Request a field-workflow demo and see how ${PRODUCT_NAME} keeps routes, progress, and proof connected.`,
+      description: `Request a field-workflow demo and see how ${APP_DISPLAY_NAME} keeps routes, progress, and proof connected.`,
     },
   },
 ];
@@ -368,10 +368,10 @@ function marketingPersonaFor(id: MarketingPersonaId): MarketingPersona {
 }
 
 function marketingTitleFor(id: MarketingPersonaId): string {
-  if (id === 'owner') return productPageTitle('Clearer yard care for homeowners');
-  if (id === 'property-manager') return productPageTitle('Landscaping oversight for property managers');
-  if (id === 'crew') return productPageTitle('Field workflow for landscaping crews');
-  return productPageTitle('Landscaping operations software');
+  if (id === 'owner') return appPageTitle('Clearer yard care for homeowners');
+  if (id === 'property-manager') return appPageTitle('Landscaping oversight for property managers');
+  if (id === 'crew') return appPageTitle('Field workflow for landscaping crews');
+  return appPageTitle('Landscaping operations software');
 }
 
 export function PublicLandingPage({
@@ -472,13 +472,13 @@ export function PublicLandingPage({
       </a>
       <header className="sticky inset-x-0 top-0 z-30 border-b border-slate-200 bg-paper/95 backdrop-blur-xl">
         <nav className="mx-auto flex min-h-20 max-w-[86rem] items-center justify-between px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
-          <a aria-label={`${PRODUCT_NAME} home`} className="text-emerald-800" href="/">
+          <a aria-label={`${APP_DISPLAY_NAME} home`} className="text-emerald-800" href="/">
             <ProductBrand />
           </a>
           <div className="hidden items-center gap-7 text-sm font-bold text-slate-600 md:flex">
             <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#tour">How it works</a>
             <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#who-its-for">Who it helps</a>
-            <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#proof">Why {PRODUCT_NAME}</a>
+            <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#proof">Why {APP_DISPLAY_NAME}</a>
           </div>
           <a className="yardfolio-button-primary px-4 sm:px-5" href="/app">
             Sign in
@@ -564,7 +564,7 @@ export function PublicLandingPage({
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(28rem,0.9fr)] lg:items-end">
             <div className="max-w-3xl">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">One service story · four focused views</p>
-              <h2 className="yardfolio-display mt-4 text-4xl leading-tight sm:text-5xl">See {PRODUCT_NAME} from every side of the work.</h2>
+              <h2 className="yardfolio-display mt-4 text-4xl leading-tight sm:text-5xl">See {APP_DISPLAY_NAME} from every side of the work.</h2>
               <p className="mt-4 text-lg leading-8 text-slate-600">Choose a perspective to review the information, outcomes, and next step designed for that role. Your original page and primary invitation stay unchanged.</p>
             </div>
             <div>
@@ -589,7 +589,7 @@ export function PublicLandingPage({
               </div>
             </div>
           </div>
-          <p aria-live="polite" className="sr-only">Showing {PRODUCT_NAME} for {activePersona.label}</p>
+          <p aria-live="polite" className="sr-only">Showing {APP_DISPLAY_NAME} for {activePersona.label}</p>
           <article aria-labelledby={`persona-review-tab-${activePersona.id}`} className="mt-8 grid overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-xl lg:grid-cols-[0.9fr_1.1fr]" data-testid="persona-review-panel" id="persona-review-panel" role="tabpanel">
             <div className="p-7 sm:p-10">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">{activePersona.perspective.eyebrow}</p>

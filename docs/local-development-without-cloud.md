@@ -1,6 +1,6 @@
 # Local Development Without Cloud Hosting
 
-Yardfolio can be developed and reviewed locally without AWS, Render, Cognito, S3,
+Grover can be developed and reviewed locally without AWS, Render, Cognito, S3,
 or a notification provider. The local stack intentionally substitutes bounded,
 visible development behavior without pretending cloud effects occurred.
 
