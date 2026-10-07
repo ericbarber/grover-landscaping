@@ -11,6 +11,9 @@ boundary; inclusion here alone does not mean a feature shipped.
   acquisition, Yard Owner acquisition, and Yard Owner portal, including
   canonical palette, wordmark, typography roles, banners, controls, surfaces,
   focus treatment, public headers, and application-rail materials
+- Centralized customer-visible runtime product naming with an explicit rename
+  boundary that preserves installed-app, offline-data, storage, request-header,
+  and infrastructure compatibility until a separately approved migration
 - Documented navigation system separating public discovery,
   acquisition-progress, and authenticated-destination models without changing
   their common brand treatment

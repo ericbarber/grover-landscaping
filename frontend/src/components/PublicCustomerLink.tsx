@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { PRODUCT_NAME } from '../productBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
 
 export function PublicCustomerLinkHeader() {
@@ -10,7 +11,7 @@ export function PublicCustomerLinkHeader() {
             <path d="M6 25c5-1 9-5 11-11 4 2 7 6 8 11" />
             <path d="M8 24c0-8 5-14 13-17-1 8-5 14-13 17Z" />
           </svg>
-          <span>Grover</span>
+          <span>{PRODUCT_NAME}</span>
         </div>
         <div className="flex items-center gap-2 text-right text-xs font-bold text-slate-600">
           <WorkspaceIcon className="h-4 w-4 shrink-0 text-emerald-700" name="check" />

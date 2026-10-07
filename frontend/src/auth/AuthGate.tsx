@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useAuth, type AccessVerificationStatus } from './AuthProvider';
 import { GroverBrand } from '../components/GroverBrand';
+import { PRODUCT_NAME } from '../productBrand';
 
 export type AuthGateState =
   | 'authentication-loading'
@@ -152,7 +153,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">We couldn’t confirm your access</p>
         <h1 className="mt-4 text-2xl font-bold text-white">Your information is still protected</h1>
         <p className="mt-3 text-sm leading-6 text-slate-300">
-          Grover couldn’t confirm which company or properties this account can open. Nothing has been shown or changed.
+          {PRODUCT_NAME} couldn’t confirm which company or properties this account can open. Nothing has been shown or changed.
         </p>
         <button
           className="mt-6 w-full rounded-xl bg-emerald-500 px-5 py-3 font-black text-emerald-950 hover:bg-emerald-400"

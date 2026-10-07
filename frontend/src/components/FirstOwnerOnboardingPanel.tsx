@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { isApiErrorCode } from '../api/apiError';
 import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
+import { PRODUCT_NAME } from '../productBrand';
 import {
   bootstrapOrganization,
   createOrganizationCrew,
@@ -300,7 +301,7 @@ export function FirstOwnerOnboardingPanel({
           </h2>
           <p className="mt-1 text-sm leading-6 text-emerald-900">
             {providerEntryMode === 'owner-operator'
-              ? 'Grover sets up one company account for you, even if you also do field work. Every crew, customer, and property remains protected inside that company.'
+              ? `${PRODUCT_NAME} sets up one company account for you, even if you also do field work. Every crew, customer, and property remains protected inside that company.`
               : 'Create or continue one landscaping company, then invite each teammate with the access their role needs.'}
           </p>
           <p className="mt-2 text-xs font-bold text-emerald-800">We’ll confirm your signed-in account and active company access before allowing changes.</p>
@@ -341,7 +342,7 @@ export function FirstOwnerOnboardingPanel({
       ) : null}
       {setupReadsUnavailable ? (
         <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
-          We couldn’t load your saved company profile or setup progress. To protect your work, Grover won’t guess which steps are complete.
+          We couldn’t load your saved company profile or setup progress. To protect your work, {PRODUCT_NAME} won’t guess which steps are complete.
         </p>
       ) : null}
       {membershipConflict ? (
@@ -358,7 +359,7 @@ export function FirstOwnerOnboardingPanel({
               <input
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
                 onChange={(event) => setOrganizationName(event.target.value)}
-                placeholder="Grover Landscaping"
+                placeholder="Desert Bloom Landscaping"
                 value={organizationName}
               />
             </label>
@@ -530,7 +531,7 @@ export function FirstOwnerOnboardingPanel({
                       ['desert_landscape_care', 'Desert landscape care'],
                     ].map(([value, label]) => <label className="flex min-h-11 items-center gap-3 rounded-lg bg-slate-50 px-3 text-sm font-semibold" key={value}><input checked={supportedServiceCategories.includes(value)} onChange={(event) => setSupportedServiceCategories((current) => event.target.checked ? [...current, value] : current.filter((item) => item !== value))} type="checkbox" />{label}</label>)}
                   </div>
-                  <p className="mt-2 text-xs leading-5 text-slate-500">These are details you provide about your company. They are not Grover verification, ranking, or credential approval.</p>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">These are details you provide about your company. They are not {PRODUCT_NAME} verification, ranking, or credential approval.</p>
                 </fieldset>
                 <fieldset className="rounded-xl border border-slate-200 p-3 sm:col-span-2">
                   <legend className="px-1 text-sm font-bold text-slate-800">Customer communication languages</legend>

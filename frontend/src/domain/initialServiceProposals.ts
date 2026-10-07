@@ -1,3 +1,5 @@
+import { PRODUCT_NAME } from '../productBrand';
+
 export type InitialServiceProposalStatus = 'sent' | 'superseded' | 'accepted'
   | 'declined' | 'expired';
 
@@ -142,7 +144,7 @@ export const OWNER_PROVIDER_ACTIVATION_AFFIRMATION_VERSION =
   'owner_provider_relationship_activation_v1';
 
 export const OWNER_PROVIDER_ACTIVATION_AFFIRMATION_TEXT =
-  'I want Grover to create this provider relationship and my provider-facing customer and property setup from the accepted proposal. I understand that this does not confirm a first visit, collect payment, create a schedule, or assign a crew.';
+  `I want ${PRODUCT_NAME} to create this provider relationship and my provider-facing customer and property setup from the accepted proposal. I understand that this does not confirm a first visit, collect payment, create a schedule, or assign a crew.`;
 
 export const OWNER_PROVIDER_FIRST_VISIT_CONFIRMATION_VERSION =
   'owner_provider_first_visit_confirmation_v1';

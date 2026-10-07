@@ -1,5 +1,14 @@
 # Version History
 
+- 2026-10-06: Centralized customer-visible runtime product naming so the
+  family-name-based working title can be replaced without editing workflow copy
+  throughout the application. Public, onboarding, field, diagnostics, access,
+  and recovery language now composes from one product-brand module; a
+  misleading hard-coded landscaping-provider name was removed from customer
+  reports and example company copy is neutral. The rename boundary documents
+  the remaining metadata/PWA/server surfaces and deliberately retains legacy
+  storage, IndexedDB, event, header, and infrastructure identifiers to protect
+  existing sessions and offline work.
 - 2026-10-06: Aligned manager photo-preview recovery with notification
   recovery. The panel now describes preview outcomes instead of queue/worker
   states, hides raw processing failures, expands phone actions, and confirms

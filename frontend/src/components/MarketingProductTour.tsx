@@ -3,6 +3,7 @@ import type { MarketingPersonaId } from '../domain/marketingRoute';
 import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
 import type { MarketingPersona } from '../api/marketingLeadsClient';
 import { MarketingOperationsPlanner } from './MarketingOperationsPlanner';
+import { PRODUCT_NAME } from '../productBrand';
 
 type TourStepId = 'plan' | 'care' | 'prove';
 type PreviewTone = 'amber' | 'emerald' | 'sky';
@@ -104,7 +105,7 @@ const tourContentByPersona: Record<MarketingPersonaId, PersonaTourContent> = {
   'property-manager': {
     eyebrow: 'Portfolio care in context',
     title: 'Move from an authorized portfolio to delivered proof.',
-    description: 'See how Grover keeps authorized access, property service status, and delivered evidence connected by address.',
+    description: `See how ${PRODUCT_NAME} keeps authorized access, property service status, and delivered evidence connected by address.`,
     steps: [
       {
         id: 'plan',

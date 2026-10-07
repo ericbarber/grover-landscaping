@@ -10,6 +10,7 @@ import {
   type JobAddOn,
   type PhotoUploadTicket,
 } from '../../../api/client';
+import { PRODUCT_NAME } from '../../../productBrand';
 import {
   assessPhotoQuality,
   photoQualityMessage,
@@ -177,7 +178,7 @@ export function runChecklistMutationCommand({
     storageUnavailableMessage:
       'Task changed on this phone, but offline saving is unavailable. Reconnect before continuing.',
     tenantUnresolvedMessage:
-      'Task changed on this phone, but Grover could not confirm company access. Reconnect before continuing.',
+      `Task changed on this phone, but ${PRODUCT_NAME} could not confirm company access. Reconnect before continuing.`,
   });
 }
 
@@ -242,8 +243,8 @@ export async function runFieldPhotoUploadCommand({
       activity: {
         title: queued ? 'Job photo saved on phone' : 'Job photo needs connection',
         message: queued
-          ? `${photoType} photo for ${jobId} is saved on this phone until Grover reconnects.`
-          : `${photoType} photo for ${jobId} is only available in this session until Grover reconnects.`,
+          ? `${photoType} photo for ${jobId} is saved on this phone until ${PRODUCT_NAME} reconnects.`
+          : `${photoType} photo for ${jobId} is only available in this session until ${PRODUCT_NAME} reconnects.`,
         tone: 'warning',
         source: 'photo',
       },

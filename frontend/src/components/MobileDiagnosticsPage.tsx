@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../api/baseUrl';
 import { buildDiagnosticsReport } from '../domain/diagnosticsReport';
+import { FIELD_APP_NAME, PRODUCT_API_NAME } from '../productBrand';
 
 type ApiCheck = 'checking' | 'ready' | 'unavailable';
 
@@ -130,7 +131,7 @@ export function MobileDiagnosticsPage() {
     if (!nativeShare) return;
     try {
       await nativeShare.call(navigator, {
-        title: 'Grover Field mobile diagnostics',
+        title: `${FIELD_APP_NAME} mobile diagnostics`,
         text: supportDetails(),
       });
       setShareStatus('shared');
@@ -156,7 +157,7 @@ export function MobileDiagnosticsPage() {
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-950">
       <section className="mx-auto max-w-xl">
-        <p className="text-sm font-bold uppercase tracking-wide text-emerald-800">Grover Field</p>
+        <p className="text-sm font-bold uppercase tracking-wide text-emerald-800">{FIELD_APP_NAME}</p>
         <h1 className="mt-1 text-3xl font-black">Mobile diagnostics</h1>
         <p className="mt-2 text-slate-600">
           Use these checks when the app will not load, sync, or install correctly on this phone.
@@ -171,8 +172,8 @@ export function MobileDiagnosticsPage() {
           />
           <DiagnosticRow
             healthy={apiReady}
-            guidance="Confirm Tailscale is connected and the Grover API container or hosted service is running."
-            label="Grover API"
+            guidance={`Confirm Tailscale is connected and the ${PRODUCT_API_NAME} container or hosted service is running.`}
+            label={PRODUCT_API_NAME}
             value={apiCheck === 'checking' ? 'Checking…' : apiReady ? 'Ready' : 'Unavailable'}
           />
           <DiagnosticRow
@@ -189,7 +190,7 @@ export function MobileDiagnosticsPage() {
           />
           <DiagnosticRow
             healthy={workerSupported}
-            guidance="Update this browser or open Grover Field in Safari, Chrome, or Edge."
+            guidance={`Update this browser or open ${FIELD_APP_NAME} in Safari, Chrome, or Edge.`}
             label="Offline shell support"
             value={workerSupported ? 'Supported' : 'Not supported'}
           />

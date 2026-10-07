@@ -1,4 +1,5 @@
 import { classifyRouteDate, type CrewRouteOverview } from '../../../domain/dayPlans';
+import { PRODUCT_NAME } from '../../../productBrand';
 import type { CustomerPortalReadState } from '../customer/customerWorkspace';
 import type {
   WorkspacePersona,
@@ -166,7 +167,7 @@ export function homeContinuityStatus(
     if (routeOverview.source === 'local') {
       return {
         title: 'Local route preview',
-        detail: 'Grover could not confirm this crew plan with the office. Check with a manager before starting stops.',
+        detail: `${PRODUCT_NAME} could not confirm this crew plan with the office. Check with a manager before starting stops.`,
         tone: 'attention',
         progressAvailable: true,
       };

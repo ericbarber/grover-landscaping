@@ -1,3 +1,5 @@
+import { FIELD_APP_NAME } from './productBrand';
+
 export function registerProductionServiceWorker() {
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
 
@@ -18,7 +20,7 @@ export function registerProductionServiceWorker() {
         });
       })
       .catch((error: unknown) => {
-        console.error('Grover Field service worker registration failed.', error);
+        console.error(`${FIELD_APP_NAME} service worker registration failed.`, error);
       });
   });
 }

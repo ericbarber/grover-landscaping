@@ -1,4 +1,5 @@
 import type { FirstOwnerSetupProgress } from '../api/client';
+import { PRODUCT_NAME } from '../productBrand';
 
 export type ProviderReadinessFactState = 'supplied' | 'recorded' | 'operational' | 'missing' | 'not_collected' | 'not_evaluated';
 
@@ -91,7 +92,7 @@ export function providerReadinessFacts(input: ProviderReadinessInput): ProviderR
     {
       id: 'credentials',
       label: 'Insurance, license, and certification facts',
-      detail: 'Grover does not collect or check provider credentials in this release.',
+      detail: `${PRODUCT_NAME} does not collect or check provider credentials in this release.`,
       state: 'not_collected',
     },
     {

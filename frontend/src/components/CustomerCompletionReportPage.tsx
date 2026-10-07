@@ -143,8 +143,8 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
                   <dd className="mt-2 text-base font-black text-forest">{serviceDateLabel(report.scheduledDate)}</dd>
                 </div>
                 <div className="rounded-2xl bg-slate-100 p-4">
-                  <dt className="text-xs font-black uppercase tracking-wide text-slate-600">Provided by</dt>
-                  <dd className="mt-2 text-base font-black text-forest">Grover Landscaping</dd>
+                  <dt className="text-xs font-black uppercase tracking-wide text-slate-600">Report source</dt>
+                  <dd className="mt-2 text-base font-black text-forest">Landscaping service team</dd>
                 </div>
                 <div className="rounded-2xl bg-slate-100 p-4">
                   <dt className="text-xs font-black uppercase tracking-wide text-slate-600">Photos</dt>

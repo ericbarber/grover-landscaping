@@ -305,6 +305,15 @@ resolve the most consequential continuity flaws in reviewable design slices.
 
 Current state:
 
+- Customer-visible runtime naming now comes from one frontend product-brand
+  module, so a future replacement for the family-name-based working title does
+  not require editing workflow copy component by component. Static metadata,
+  the PWA manifest, and server-rendered public titles remain explicit rename
+  targets, while browser storage, offline data, request headers, and other
+  legacy technical identifiers remain stable behind the documented
+  [product-renaming boundary](docs/product-renaming.md). Final naming still
+  requires trademark, domain, app-store, visual identity, and rollout approval.
+
 - The public website now has an approved company-first positioning boundary:
   landscaping company owners/managers are the primary buyer, company setup is
   the primary conversion, and planning, field progress, customer-ready proof,

@@ -6,6 +6,7 @@ import {
 } from '../domain/bidDelivery';
 import { AccountStatusCard } from './AccountStatusCard';
 import type { CompletionReportSnapshot, JobDetail, PhotoUploadTicket } from '../api/client';
+import { PRODUCT_NAME } from '../productBrand';
 
 type CompletionReportProps = {
   job: JobDetail;
@@ -113,7 +114,7 @@ export function CompletionReport({
         </p>
         {reportSnapshot && (
           <p className="mt-3 text-xs font-medium text-slate-500">
-            {reportSnapshot.persisted ? 'Saved to Grover' : 'Prepared on this device'} ·{' '}
+            {reportSnapshot.persisted ? `Saved to ${PRODUCT_NAME}` : 'Prepared on this device'} ·{' '}
             {reportSnapshot.photoEvidence.length} attached photo
             {reportSnapshot.photoEvidence.length === 1 ? '' : 's'}.
           </p>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { API_BASE_URL } from '../api/baseUrl';
+import { PRODUCT_API_NAME } from '../productBrand';
 
 export function ApiStatusBanner() {
   const [status, setStatus] = useState<'ready' | 'unavailable' | 'recovered'>('ready');
@@ -93,8 +94,8 @@ export function ApiStatusBanner() {
     >
       <p>
         {status === 'unavailable'
-          ? 'The Grover API is temporarily unavailable. This screen will retry automatically.'
-          : 'The Grover API is available again. Syncing and new requests can resume.'}
+          ? `The ${PRODUCT_API_NAME} is temporarily unavailable. This screen will retry automatically.`
+          : `The ${PRODUCT_API_NAME} is available again. Syncing and new requests can resume.`}
       </p>
       {status === 'unavailable' ? (
         <button
