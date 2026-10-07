@@ -124,6 +124,8 @@ boundary; inclusion here alone does not mean a feature shipped.
   another sync attempt, and manager review without exposing queue-state values
 - Customer-report previews and delivered proof use task/photo language and hide
   internal report IDs, storage object keys, upload modes, and lifecycle labels
+- Manager report review queue with plain-language missing-item filters,
+  state-specific next actions, scannable status colors, and phone-width actions
 - Centralized field-data continuity policy for job-detail fallbacks, typed local
   photo evidence, and authoritative evidence merges that preserve unsaved work
 - Field job-selection coordinator owning detail and add-on request lifecycle,

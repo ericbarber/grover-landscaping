@@ -45,7 +45,7 @@ describe('manager Today queue', () => {
 
     expect(queue.map(({ jobId }) => jobId)).toEqual(['job-review', 'job-field', 'job-past']);
     expect(queue[0]).toMatchObject({
-      title: 'Completion proof is ready for review', workflow: 'report', tone: 'review',
+      title: 'Completion report is ready for review', workflow: 'report', tone: 'review',
     });
     expect(queue.some(({ jobId }) => jobId === 'job-future')).toBe(false);
   });
@@ -69,9 +69,9 @@ describe('manager Today queue', () => {
     })], new Date(2026, 9, 1, 10));
 
     expect(queue[0]).toMatchObject({
-      title: 'Completion proof is blocked', statusLabel: 'Evidence gap', workflow: 'report',
+      title: 'Completion report needs more work', statusLabel: 'Missing items', workflow: 'report',
     });
-    expect(queue[0].detail).toContain('Finish checklist');
-    expect(queue[0].detail).toContain('Capture after photo');
+    expect(queue[0].detail).toContain('Finish tasks');
+    expect(queue[0].detail).toContain('Add after photo');
   });
 });

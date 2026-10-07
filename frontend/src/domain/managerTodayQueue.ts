@@ -38,8 +38,8 @@ function reportQueueItem(
   if (report.reportStatus === 'changes_requested') {
     return {
       ...base,
-      title: 'Completion proof needs field changes',
-      detail: 'Open the exact report to review the requested correction and current evidence.',
+      title: 'Completion report needs field changes',
+      detail: 'Open the report to review the requested correction and current tasks and photos.',
       statusLabel: 'Changes requested',
       tone: 'attention',
       priority: 0,
@@ -48,8 +48,8 @@ function reportQueueItem(
   if (report.reportStatus === 'submitted') {
     return {
       ...base,
-      title: 'Completion proof is ready for review',
-      detail: 'Review the submitted checklist, evidence, and customer-safe service story.',
+      title: 'Completion report is ready for review',
+      detail: 'Review the completed tasks, photos, and customer summary.',
       statusLabel: 'Manager review',
       tone: 'review',
       priority: 1,
@@ -58,8 +58,8 @@ function reportQueueItem(
   if (report.reportStatus === 'in_review') {
     return {
       ...base,
-      title: 'Completion proof review is in progress',
-      detail: 'Continue the exact report review before delivery or a change request.',
+      title: 'Completion report review is in progress',
+      detail: 'Continue the report review before delivery or a change request.',
       statusLabel: 'In review',
       tone: 'review',
       priority: 3,
@@ -71,9 +71,9 @@ function reportQueueItem(
     return blockers.length > 0
       ? {
         ...base,
-        title: 'Completion proof is blocked',
-        detail: `Resolve before customer delivery: ${blockers.join(', ')}.`,
-        statusLabel: 'Evidence gap',
+        title: 'Completion report needs more work',
+        detail: `Finish before customer delivery: ${blockers.join(', ')}.`,
+        statusLabel: 'Missing items',
         tone: 'attention',
         priority: 2,
       }
@@ -102,7 +102,7 @@ function jobQueueItem(job: YardCareJob, today: string): ManagerTodayQueueItem | 
     return {
       ...base,
       title: 'Service is in progress',
-      detail: 'Review current field progress, evidence, and any service exception.',
+      detail: 'Review current field progress, photos, and any service exception.',
       statusLabel: 'Field work active',
       tone: 'active',
       priority: 4,

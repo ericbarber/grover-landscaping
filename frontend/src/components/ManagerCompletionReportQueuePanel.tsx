@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   buildCompletionReportQueue,
+  completionReportQueueActionLabel,
   completionReportQueueReadinessFilterLabel,
   completionReportQueueGroupLabel,
   completionReportQueueStatusFilterLabel,
@@ -27,8 +28,8 @@ type ManagerCompletionReportQueuePanelProps = {
 };
 
 function readinessLabel(item: CompletionReportQueueItem): string {
-  if (item.readyForCustomer) return 'Delivery ready';
-  return `${item.checklistProgress}% checklist`;
+  if (item.readyForCustomer) return 'Ready to deliver';
+  return `${item.checklistProgress}% of tasks complete`;
 }
 
 const statusFilters: CompletionReportQueueStatusFilter[] = [
@@ -43,14 +44,22 @@ const statusFilters: CompletionReportQueueStatusFilter[] = [
 
 const readinessFilters: CompletionReportQueueReadinessFilter[] = ['all', 'ready', 'blocked', 'local_only'];
 const readinessBlockers = [
-  ['all', 'All blockers'],
-  ['any', 'Any blocker'],
-  ['checklist', 'Checklist'],
+  ['all', 'All reports'],
+  ['any', 'Any missing item'],
+  ['checklist', 'Tasks'],
   ['before_photos', 'Before photos'],
   ['after_photos', 'After photos'],
-  ['add_ons', 'Add-on work'],
+  ['add_ons', 'Approved extras'],
   ['route_stop', 'Route stop'],
 ] as const;
+
+function reportGroupClass(group: CompletionReportQueueItem['group']): string {
+  if (group === 'changes_requested') return 'bg-amber-100 text-amber-900';
+  if (group === 'needs_review') return 'bg-emerald-100 text-emerald-900';
+  if (group === 'in_review') return 'bg-sky-100 text-sky-900';
+  if (group === 'delivered') return 'bg-indigo-100 text-indigo-900';
+  return 'bg-slate-200 text-slate-700';
+}
 
 export function ManagerCompletionReportQueuePanel({
   reports,
@@ -124,7 +133,7 @@ export function ManagerCompletionReportQueuePanel({
         <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Manager reports</p>
         <h2 className="grover-type-operational mt-2 text-3xl font-black">Reports and communication</h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-mist">
-          Review field proof, resolve readiness gaps, and move customer-safe reports toward delivery.
+          Review completed work, finish missing tasks or photos, and send clear customer reports.
         </p>
       </section>
 
@@ -132,17 +141,17 @@ export function ManagerCompletionReportQueuePanel({
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
           <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Completion review</p>
-          <h3 className="mt-1 text-xl font-black text-slate-950">Completion review queue</h3>
+          <h3 className="mt-1 text-xl font-black text-slate-950">Reports to review</h3>
         </div>
         <div className="grid gap-2 sm:grid-cols-3">
           <label className="text-xs font-semibold text-slate-600">
-            Organization
+            Company
             <select
               className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-normal text-slate-900"
               onChange={(event) => setOrganizationId(event.target.value)}
               value={organizationId}
             >
-              <option value="">All organizations</option>
+              <option value="">All companies</option>
               {organizationIds.map((id) => <option key={id} value={id}>{id}</option>)}
             </select>
           </label>
@@ -182,7 +191,7 @@ export function ManagerCompletionReportQueuePanel({
             }}
             type="button"
           >
-            {isLoading ? 'Applying' : 'Apply'}
+            {isLoading ? 'Applying…' : 'Apply filters'}
           </button>
         </div>
       </div>
@@ -234,8 +243,8 @@ export function ManagerCompletionReportQueuePanel({
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <p aria-live="polite" className="text-xs font-medium text-slate-500">
           {appliedFilterCount === 0
-            ? 'Using the default active-report queue.'
-            : `${appliedFilterCount} persisted ${appliedFilterCount === 1 ? 'filter' : 'filters'} applied.`}
+            ? 'Showing current report work.'
+            : `${appliedFilterCount} ${appliedFilterCount === 1 ? 'filter' : 'filters'} applied.`}
         </p>
         {appliedFilterCount > 0 ? (
           <button
@@ -269,11 +278,11 @@ export function ManagerCompletionReportQueuePanel({
       <div aria-label="Completion report summary" className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
         <div className="rounded-xl bg-amber-50 p-3">
           <p className="text-lg font-bold text-amber-900">{summary.changesRequested}</p>
-          <p className="text-xs text-amber-700">Changes</p>
+          <p className="text-xs text-amber-700">Needs changes</p>
         </div>
         <div className="rounded-xl bg-emerald-50 p-3">
           <p className="text-lg font-bold text-emerald-900">{summary.needsReview}</p>
-          <p className="text-xs text-emerald-700">Review</p>
+          <p className="text-xs text-emerald-700">Ready to review</p>
         </div>
         <div className="rounded-xl bg-sky-50 p-3">
           <p className="text-lg font-bold text-sky-900">{summary.inReview}</p>
@@ -326,7 +335,7 @@ export function ManagerCompletionReportQueuePanel({
       </div>
 
       <label className="mt-3 block max-w-xs text-xs font-semibold text-slate-600">
-        Readiness blocker
+        Missing item
         <select
           className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-normal text-slate-900"
           onChange={(event) => setReadinessBlocker(
@@ -357,20 +366,20 @@ export function ManagerCompletionReportQueuePanel({
                   <p className="break-words text-sm font-semibold text-slate-950">{item.customerName}</p>
                   <p className="mt-1 break-words text-xs text-slate-600">{item.propertyAddress}</p>
                 </div>
-                <span className="shrink-0 rounded-full bg-white px-2 py-1 text-[11px] font-bold uppercase text-slate-600">
+                <span className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold uppercase ${reportGroupClass(item.group)}`}>
                   {completionReportQueueGroupLabel(item.group)}
                 </span>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
                 <span>{readinessLabel(item)}</span>
-                <span>{item.beforePhotos} before</span>
-                <span>{item.afterPhotos} after</span>
-                {item.issuePhotos > 0 ? <span>{item.issuePhotos} issue</span> : null}
-                {!item.persisted ? <span>Local only</span> : null}
+                <span>{item.beforePhotos} before {item.beforePhotos === 1 ? 'photo' : 'photos'}</span>
+                <span>{item.afterPhotos} after {item.afterPhotos === 1 ? 'photo' : 'photos'}</span>
+                {item.issuePhotos > 0 ? <span>{item.issuePhotos} issue {item.issuePhotos === 1 ? 'photo' : 'photos'}</span> : null}
+                {!item.persisted ? <span>Saved on device</span> : null}
               </div>
               {item.readinessBlockers.length > 0 ? (
                 <div className="mt-3 rounded-lg bg-amber-100 p-2">
-                  <p className="text-xs font-semibold text-amber-900">Recovery needed</p>
+                  <p className="text-xs font-semibold text-amber-900">Still needed</p>
                   <div className="mt-1 flex flex-wrap gap-1.5">
                     {item.readinessBlockers.map((blocker) => (
                       <span
@@ -384,11 +393,11 @@ export function ManagerCompletionReportQueuePanel({
                 </div>
               ) : null}
               <button
-                className="mt-3 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+                className="mt-3 min-h-11 w-full rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 sm:w-auto"
                 onClick={() => onSelectJob(item.jobId)}
                 type="button"
               >
-                {item.readinessBlockers.length > 0 ? 'Resolve report blockers' : 'Open report'}
+                {completionReportQueueActionLabel(item)}
               </button>
             </article>
           ))}

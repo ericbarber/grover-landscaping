@@ -1350,9 +1350,9 @@ test('manager completion review opens the selected Job report workflow', async (
   await page.getByRole('button', { name: /Completion reports/ }).click();
 
   const review = page.getByRole('heading', { name: 'Reports and communication' }).locator('xpath=ancestor::div[1]');
-  await expect(review.getByRole('heading', { name: 'Completion review queue' })).toBeVisible();
+  await expect(review.getByRole('heading', { name: 'Reports to review' })).toBeVisible();
   await expect(review.getByText('Oak Street Residence', { exact: true })).toBeVisible();
-  await review.getByRole('button', { name: 'Open report' }).click();
+  await review.getByRole('button', { name: 'Review report' }).click();
 
   const jobDetail = page.locator('#job-detail');
   await expect(jobDetail).toBeVisible();

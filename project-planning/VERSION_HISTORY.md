@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-10-06: Made the manager report queue task-first. Report cards now name
+  the next action for their current state, translate readiness blockers into
+  missing tasks/photos/extras, distinguish work saved on a device, use
+  scannable state colors, and provide full-width phone actions. Filter and
+  summary language now describes company work without persistence terminology.
+  The complete frontend gate passes 148 files / 617 tests, TypeScript, and the
+  production build; all artifact budgets and the focused mobile/desktop
+  Chromium report-review journey also pass.
 - 2026-10-06: Simplified the public entry hero to one persona-specific
   conversion and one product-tour action, added a tracked three-stage sample for
   every campaign, strengthened the Yard Owner promise, and improved the hero

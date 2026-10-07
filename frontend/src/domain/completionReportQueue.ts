@@ -61,27 +61,36 @@ export function completionReportQueueGroupLabel(group: CompletionReportQueueGrou
 
 export function completionReportQueueStatusFilterLabel(filter: CompletionReportQueueStatusFilter): string {
   if (filter === 'all') return 'All';
-  if (filter === 'active') return 'Active';
+  if (filter === 'active') return 'Current work';
   return completionReportQueueGroupLabel(filter);
 }
 
 export function completionReportQueueReadinessFilterLabel(filter: CompletionReportQueueReadinessFilter): string {
   if (filter === 'ready') return 'Ready';
   if (filter === 'blocked') return 'Blocked';
-  if (filter === 'local_only') return 'Local only';
-  return 'All readiness';
+  if (filter === 'local_only') return 'Saved on device';
+  return 'Any readiness';
 }
 
 export function completionReportReadinessBlockerLabel(
   blocker: NonNullable<CompletionReportSnapshot['readinessBlockers']>[number],
 ): string {
   return {
-    checklist: 'Finish checklist',
-    before_photos: 'Capture before photo',
-    after_photos: 'Capture after photo',
-    add_ons: 'Finish add-on work',
+    checklist: 'Finish tasks',
+    before_photos: 'Add before photo',
+    after_photos: 'Add after photo',
+    add_ons: 'Finish approved extras',
     route_stop: 'Finish route stop',
   }[blocker];
+}
+
+export function completionReportQueueActionLabel(item: CompletionReportQueueItem): string {
+  if (item.readinessBlockers.length > 0) return 'Finish report';
+  if (item.group === 'changes_requested') return 'Review changes';
+  if (item.group === 'needs_review') return 'Review report';
+  if (item.group === 'in_review') return 'Continue review';
+  if (item.group === 'delivered') return 'View report';
+  return 'Open draft';
 }
 
 export function toCompletionReportQueueItem(report: CompletionReportSnapshot): CompletionReportQueueItem {

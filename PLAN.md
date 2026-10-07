@@ -150,6 +150,10 @@ membership, or persistence mechanics. Crew work now uses tasks, job photos, and
 "saved on this phone" recovery states consistently from assignment through
 customer handoff. Completion-report previews no longer expose report IDs,
 storage object keys, upload modes, or backend lifecycle terminology.
+The manager report queue now presents the next useful action for each report,
+uses task/photo language for missing work, distinguishes reports saved on a
+device, and adds color-coded states plus full-width phone actions for faster
+scanning and handoff.
 
 ### Raspberry Pi development hosting
 
