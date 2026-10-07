@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-10-07: Narrowed the long-term market to residential property care while
+  allowing the service model to expand beyond yards and landscaping. In-scope
+  properties now include owner-occupied and rental homes, residential
+  communities and HOAs, and residential portfolios; commercial facilities,
+  construction-project management, and generic field-service operations are
+  explicitly out of scope. Yardfolio remains a temporary working name pending
+  selection and screening of a broader residential-property brand.
 - 2026-10-07: Adopted Yardfolio as the customer-facing working name after a
   preliminary exact-name collision screen. Runtime copy, browser/social
   metadata, Field PWA labels, icon accessibility, server-rendered public

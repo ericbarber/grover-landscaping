@@ -1,30 +1,44 @@
 # Mission and Core Values
 
-Status: Working brand foundation, written 2026-09-21 for content and messaging
-review. The product owner has directed Yardfolio to take greater responsibility for
-the beauty and maintenance of the physical places where people live and work.
+Status: Working category and brand foundation, written 2026-09-21 and narrowed
+2026-10-07 for content and messaging review. The product owner has directed the
+product to focus on the care of residential properties while supporting more
+than landscape and yard services.
+
+## Market boundary
+
+The product serves work performed for residential properties: owner-occupied
+homes, rental homes, residential communities and HOAs, and residential property
+portfolios. It may coordinate landscaping, pools, cleaning, inspections,
+repairs, and other recurring or one-time residential services.
+
+Commercial facilities, construction-project management, and generic field-
+service operations are outside the product boundary. The current delivered
+landscape workflows remain the starting point; broader residential service
+support must be introduced and validated in explicit future slices.
 
 ## Mission
 
-> We take an active role in making the outdoor places where people live and work
-> more beautiful and better maintained. We bring owners, managers, and
-> landscaping teams together around clear plans, practical work, and lasting
+> We take an active role in making residential properties better cared for. We
+> bring homeowners, residential property managers, and service teams together
+> around clear plans, practical work, trustworthy proof, and lasting
 > follow-through.
 
 ## Core values
 
 ### 1. Stewardship
 
-We care about the condition of the places people experience every day. We
-consider each property's character, ongoing needs, and long-term upkeep when
-deciding what good care looks like. Beauty matters most when people can sustain
-it.
+We care about the condition of the homes and residential places people
+experience every day. We consider each property's character, ongoing needs,
+and long-term upkeep when deciding what good care looks like. Quality matters
+most when people can sustain it.
 
 ### 2. Craft
 
-We respect the skill and effort behind excellent landscape care. We help teams
-understand the job, do it well, and see that their work is represented fairly.
-Quality is built through attentive visits and reliable follow-through.
+We respect the skill and effort behind excellent residential property care. We
+help teams understand the job, do it well, and see that their work is
+represented fairly. Quality is built through attentive visits and reliable
+follow-through.
 
 ### 3. Accountability
 
@@ -47,12 +61,12 @@ dignity, or useful context.
 
 ## Applying this foundation to messaging
 
-- Lead with the physical result Yardfolio exists to support: outdoor places that
-  are beautiful and consistently maintained. Explain the software and service
+- Lead with the physical result the product exists to support: residential
+  properties that are consistently cared for. Explain the software and service
   coordination as the means to that result.
 - Show how each audience contributes: owners set goals and control sharing;
-  managers keep needs visible; landscaping teams plan and perform the work;
-  crews record progress and exceptions.
+  managers keep needs visible; residential service teams plan and perform the
+  work; crews record progress and exceptions.
 - Use concrete, supportable claims. Distinguish planned work, work in progress,
   reviewed proof, and completed care. Keep product capabilities and provider
   performance claims within their actual evidence and approval boundaries.

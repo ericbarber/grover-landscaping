@@ -3,6 +3,12 @@
 This is the consolidated review version of the Yardfolio development
 plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
+The strategic market boundary is residential property care: owner-occupied and
+rental homes, residential communities and HOAs, and residential property
+portfolios. The roadmap may grow beyond landscaping into other residential
+services, but it does not target commercial facilities, construction-project
+management, or generic field-service operations.
+
 Current execution order and phase exit evidence live in
 [`DELIVERY_BOARD.md`](DELIVERY_BOARD.md). The remaining sections of this file
 are strategic scope and delivered context; section order is not an active work
@@ -893,7 +899,8 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
   never expose internal crews as owner-selectable marketplace inventory.
 - Provide authenticated access to scoped accounts, properties, portfolios,
   schedules, reports, photos, bids, and service history.
-- Support homeowners, property managers, HOAs, and commercial portfolio groups.
+- Support homeowners, residential property managers, HOAs and residential
+  communities, and residential portfolio groups.
 - Show immutable report history and customer-safe evidence.
 - Show active, rejected, expired, and converted bids.
 - Add notification preferences, quiet hours, and recipient validation.

@@ -5,6 +5,15 @@ capability areas. Use [`../PLAN.md`](../PLAN.md) for delivery status and
 [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md) for the exact design-to-React
 boundary; inclusion here alone does not mean a feature shipped.
 
+## Market Boundary
+
+The catalog is scoped to residential property care across owner-occupied and
+rental homes, residential communities and HOAs, and residential portfolios.
+Landscape care is the delivered foundation, not the permanent category limit;
+future service families may include pools, cleaning, inspections, repairs, and
+other residential maintenance. Commercial-facility and generic field-service
+workflows are not product targets.
+
 ## Public Product Experience
 
 - Shared working-design foundation across the public homepage, Yard Crew

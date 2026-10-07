@@ -26,6 +26,21 @@ infer execution order from section position.
 | Planned | Prioritized upcoming work |
 | Backlog | Valuable but not part of the next delivery slice |
 
+## Product Market Boundary
+
+The product is now intentionally bounded to residential properties rather than
+yards alone or generic field-service operations. In-scope customers include
+homeowners, residential property managers, residential HOAs and communities,
+and residential portfolio operators. The service model may expand from the
+delivered landscape-care foundation into pools, cleaning, inspections, repairs,
+and other residential property services.
+
+Commercial facilities and general-purpose trade or construction operations are
+out of scope. Yardfolio remains a temporary working name while a broader
+residential-property brand is selected and screened. This decision changes the
+future category and messaging direction; it does not claim that the additional
+service workflows are already delivered.
+
 ## In Progress
 
 ### Best-in-class product delivery program
