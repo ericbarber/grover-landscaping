@@ -64,7 +64,7 @@ describe('CompletionReport', () => {
     }));
 
     expect(markup).toContain('Customer report preview');
-    expect(markup).toContain('Saved to Grover');
+    expect(markup).toContain('Saved to Yardfolio');
     expect(markup).toContain('Current status: In Review.');
     expect(markup).toContain('Job photos');
     expect(markup).toContain('Ready For Review');

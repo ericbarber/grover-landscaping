@@ -294,7 +294,7 @@ validate_external_inputs() {
   fi
 }
 
-printf 'Grover Landscaping protected-release preflight\n\n'
+printf 'Yardfolio protected-release preflight\n\n'
 if [[ "${external_only}" == false ]]; then
   require_files
   validate_render_blueprint

@@ -12,7 +12,7 @@ import {
 } from '../workspaces/features/home/workspaceHome';
 import type { CustomerPortalReadState } from '../workspaces/features/customer/customerWorkspace';
 import type { ManagerTodayQueueItem } from '../domain/managerTodayQueue';
-import { GroverBrand } from './GroverBrand';
+import { ProductBrand } from './ProductBrand';
 import { ManagerTodayQueue, type ManagerTodayQueueState } from './ManagerTodayQueue';
 import { WorkspaceIcon } from './WorkspaceIcon';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
@@ -116,7 +116,7 @@ export function WorkspaceHomePanel({
         <span className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-slate-950/80 to-transparent" />
         <div className="relative flex min-h-[8.5rem] flex-col">
           <div className="flex items-center justify-between gap-3">
-            <GroverBrand className="text-sand" />
+            <ProductBrand className="text-sand" />
             <p className="rounded-lg border border-white/15 bg-slate-950/30 px-2.5 py-1 text-xs font-semibold text-slate-100 backdrop-blur-sm">
               {now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
             </p>

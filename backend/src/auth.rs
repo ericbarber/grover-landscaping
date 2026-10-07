@@ -459,7 +459,7 @@ pub async fn require_api_auth(
             tracing::warn!(reason = %error, path, "API authentication rejected");
             return (
                 StatusCode::UNAUTHORIZED,
-                [("www-authenticate", "Bearer realm=\"Grover Landscaping\"")],
+                [("www-authenticate", "Bearer realm=\"Yardfolio\"")],
                 Json(AuthFailureResponse {
                     error: "authentication_required",
                     message: "A valid sign-in session is required.",

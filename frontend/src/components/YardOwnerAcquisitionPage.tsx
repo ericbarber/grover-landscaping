@@ -24,7 +24,7 @@ import {
 import { useAuth } from '../auth/AuthProvider';
 import { OwnerProviderAssessmentPanel } from './OwnerProviderAssessmentPanel';
 import { OwnerProviderDisclosurePanel } from './OwnerProviderDisclosurePanel';
-import { GroverBrand } from './GroverBrand';
+import { ProductBrand } from './ProductBrand';
 import { PRODUCT_NAME } from '../productBrand';
 
 type PropertyDraft = Omit<CreateOwnerPropertyInput, 'addressConfirmed' | 'authorityAttested'>;
@@ -562,7 +562,7 @@ export function YardOwnerAcquisitionPage() {
         <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_80%_10%,#fbbf24,transparent_35%)]" />
         <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <a aria-label={`${PRODUCT_NAME} home`} className="rounded-lg text-sand focus:outline-none focus:ring-2 focus:ring-sky" href="/">
-            <GroverBrand />
+            <ProductBrand />
           </a>
           <a className="rounded-lg px-3 py-2 text-sm font-bold text-emerald-100 hover:bg-white/10 hover:text-white" href="/app">
             My workspace

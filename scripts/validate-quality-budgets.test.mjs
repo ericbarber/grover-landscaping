@@ -16,7 +16,7 @@ async function fixture(overrides = {}) {
   await writeFile(join(assets, 'manager-workspaces-hash.js'), 'b'.repeat(90));
   await writeFile(join(assets, 'PublicLandingPage-hash.js'), 'c'.repeat(50));
   await writeFile(join(assets, 'index.css'), 'd'.repeat(40));
-  await writeFile(join(dist, 'index.html'), '<main>Grover</main>');
+  await writeFile(join(dist, 'index.html'), '<main>Yardfolio</main>');
   await writeFile(join(publicDirectory, 'hero.webp'), 'e'.repeat(30));
   const budget = join(root, 'quality-budgets.json');
   await writeFile(budget, JSON.stringify({

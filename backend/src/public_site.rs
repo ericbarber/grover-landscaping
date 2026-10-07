@@ -15,31 +15,31 @@ pub struct PublicRouteMetadata {
 pub const PUBLIC_ROUTES: [PublicRouteMetadata; 5] = [
     PublicRouteMetadata {
         path: "/",
-        title: "Clearer yard care for homeowners | Grover",
+        title: "Clearer yard care for homeowners | Yardfolio",
         description: "See what’s planned, what was completed, and what your yard may need next—without chasing an update.",
         headline: "Your yard. Every visit. One clear story.",
     },
     PublicRouteMetadata {
         path: "/for-landscaping-companies",
-        title: "Landscaping operations software | Grover",
+        title: "Landscaping operations software | Yardfolio",
         description: "Connect daily planning, field progress, customer-ready proof, and follow-through in one calm operating view.",
         headline: "Plan the day. Guide the crew. Prove the work.",
     },
     PublicRouteMetadata {
         path: "/for-yard-owners",
-        title: "Clearer yard care for homeowners | Grover",
+        title: "Clearer yard care for homeowners | Yardfolio",
         description: "See what’s planned, what was completed, and what your yard may need next—without chasing an update.",
         headline: "Your yard. Every visit. One clear story.",
     },
     PublicRouteMetadata {
         path: "/for-property-managers",
-        title: "Landscaping oversight for property managers | Grover",
+        title: "Landscaping oversight for property managers | Yardfolio",
         description: "Review service status and delivered completion evidence across the properties you are authorized to access.",
         headline: "Keep your entire property portfolio in view.",
     },
     PublicRouteMetadata {
         path: "/for-crew-leads",
-        title: "Field workflow for landscaping crews | Grover",
+        title: "Field workflow for landscaping crews | Yardfolio",
         description: "Give crews the route, service details, and evidence requirements they need without the office back-and-forth.",
         headline: "Know the next stop—and what done looks like.",
     },

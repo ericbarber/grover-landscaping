@@ -11,7 +11,7 @@ import {
 } from './MarketingLeadDialog';
 import { MarketingProductTour } from './MarketingProductTour';
 import { OWNER_ACQUISITION_PATH } from '../domain/ownerAcquisitionRoute';
-import { GroverBrand } from './GroverBrand';
+import { ProductBrand } from './ProductBrand';
 import { providerEntryHref } from '../domain/providerEntryRoute';
 import { PRODUCT_NAME, productPageTitle } from '../productBrand';
 
@@ -473,7 +473,7 @@ export function PublicLandingPage({
       <header className="sticky inset-x-0 top-0 z-30 border-b border-slate-200 bg-paper/95 backdrop-blur-xl">
         <nav className="mx-auto flex min-h-20 max-w-[86rem] items-center justify-between px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
           <a aria-label={`${PRODUCT_NAME} home`} className="text-emerald-800" href="/">
-            <GroverBrand />
+            <ProductBrand />
           </a>
           <div className="hidden items-center gap-7 text-sm font-bold text-slate-600 md:flex">
             <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#tour">How it works</a>
@@ -747,7 +747,7 @@ export function PublicLandingPage({
 
       <footer className="border-t border-slate-800 bg-slate-950 px-4 py-8 text-slate-400 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <GroverBrand className="text-white" />
+          <ProductBrand className="text-white" />
           <p>Plan the work. Care for the property. Prove the difference.</p>
         </div>
       </footer>

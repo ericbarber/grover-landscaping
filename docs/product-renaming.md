@@ -1,19 +1,21 @@
-# Product Renaming Boundary
+# Yardfolio Rename and Compatibility Boundary
 
-The current display name is temporary. A replacement must not use a family
-name, and adopting one must not invalidate installed apps, authenticated
-sessions, queued field changes, or offline photo records.
+Yardfolio was adopted as the customer-facing working name on 2026-10-07. The
+rename removes the family name from the product experience without invalidating
+installed apps, authenticated sessions, queued field changes, or offline photo
+records. Preliminary exact-name web searches found no obvious landscaping,
+software, property, or trademark collision; professional clearance remains a
+public-launch gate.
 
 ## Display name boundary
 
 Runtime customer-facing React copy reads the current name from
 `frontend/src/productBrand.ts`. That module owns the product name, field-app
-name, API status label, and browser title suffix. Component and domain type
-names such as `GroverBrand`, along with `grover-*` CSS classes, remain internal
-implementation identifiers and do not control displayed text.
+name, API status label, and browser title suffix. Legacy `grover-*` CSS classes
+remain internal implementation identifiers and do not control displayed text.
 
-A final rename must also update the static and server-rendered surfaces that
-cannot import the frontend module:
+Static and server-rendered surfaces that cannot import the frontend module must
+remain synchronized with it:
 
 - `frontend/index.html` application, Open Graph, Twitter, and document metadata
 - `frontend/public/manifest.webmanifest` installed-app name and short name
@@ -39,9 +41,9 @@ saved field work appear lost. Changing headers or infrastructure identifiers
 requires a coordinated compatibility window across clients, servers, CI, and
 operations. They may retain a documented legacy namespace indefinitely.
 
-## Rename release gate
+## Public-launch gate
 
-Before changing the display name:
+Before presenting Yardfolio as a cleared public brand:
 
 1. Complete professional trademark clearance in the intended jurisdictions;
    search results and domain availability are only preliminary screens.
@@ -49,15 +51,15 @@ Before changing the display name:
    app-store names.
 3. Approve the wordmark, pronunciation, capitalization, tagline, and any field
    app qualifier.
-4. Update the runtime source plus every static/server-rendered surface above,
-   then search the production source for old customer-visible copy.
+4. Search production source and built artifacts for former customer-visible
+   copy while keeping allowlisted legacy technical identifiers intact.
 5. Validate metadata, sitemap/canonical URLs, install/update behavior, customer
    links, notification templates, analytics continuity, and redirects.
 6. Publish customer and operator communication before any URL or installed-app
    identity changes.
 
-Until those gates pass, the repository keeps the current display name while
-making the eventual change bounded and reviewable. The local and CI
-`quality:brand` gate rejects new hard-coded runtime brand copy and fails when
-the approved static metadata, PWA, icon, or server-rendered title surfaces drift
-from `PRODUCT_NAME`.
+Until those gates pass, Yardfolio remains a working product name rather than a
+claim of legal clearance. The local and CI `quality:brand` gate rejects new
+hard-coded runtime brand copy, rejects the former display name in runtime
+source, and fails when static metadata, PWA, icon, or server-rendered title
+surfaces drift from `PRODUCT_NAME`.

@@ -2444,7 +2444,7 @@ fn seed_memberships(user_id: &str) -> Vec<OrganizationMembership> {
     vec![OrganizationMembership {
         id: "membership_local_owner_demo".to_string(),
         organization_id: "org_demo_landscaping".to_string(),
-        organization_name: "Grover Demo Landscaping".to_string(),
+        organization_name: "Desert Bloom Landscaping".to_string(),
         organization_type: "yard_care_company".to_string(),
         user_id: user_id.to_string(),
         display_name: "Local Development Owner".to_string(),
@@ -2476,7 +2476,7 @@ fn local_review_membership(
             profile.reviewer_id.replace('-', "_")
         ),
         organization_id: LOCAL_REVIEW_ORGANIZATION_ID.to_string(),
-        organization_name: "Grover Demo Landscaping".to_string(),
+        organization_name: "Desert Bloom Landscaping".to_string(),
         organization_type: "yard_care_company".to_string(),
         user_id: profile.user_id.clone(),
         display_name: profile.display_name.clone(),
@@ -2774,7 +2774,7 @@ fn local_invitation_acceptance(
     let membership = OrganizationMembership {
         id: invitation.membership_id.clone(),
         organization_id: invitation.organization_id.clone(),
-        organization_name: "Grover Demo Landscaping".to_string(),
+        organization_name: "Desert Bloom Landscaping".to_string(),
         organization_type: "yard_care_company".to_string(),
         user_id: accepting_user_id.to_string(),
         display_name: invitation.invitee_email.clone(),
@@ -2883,7 +2883,7 @@ mod tests {
     fn validates_first_owner_organization_bootstrap() {
         assert_eq!(
             validate_bootstrap_organization_request(&BootstrapOrganizationRequest {
-                display_name: "Grover Landscaping".to_string(),
+                display_name: "Desert Bloom Landscaping".to_string(),
                 organization_type: "yard_care_company".to_string(),
             }),
             Ok(())
@@ -2897,7 +2897,7 @@ mod tests {
         );
         assert_eq!(
             validate_bootstrap_organization_request(&BootstrapOrganizationRequest {
-                display_name: "Grover Landscaping".to_string(),
+                display_name: "Desert Bloom Landscaping".to_string(),
                 organization_type: "platform".to_string(),
             }),
             Err("organization_type_invalid")

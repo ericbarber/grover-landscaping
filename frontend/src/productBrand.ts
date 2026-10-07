@@ -1,4 +1,4 @@
-export const PRODUCT_NAME = 'Grover';
+export const PRODUCT_NAME = 'Yardfolio';
 export const FIELD_APP_NAME = `${PRODUCT_NAME} Field`;
 export const PRODUCT_API_NAME = `${PRODUCT_NAME} API`;
 

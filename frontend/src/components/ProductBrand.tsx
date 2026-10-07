@@ -1,6 +1,6 @@
 import { PRODUCT_NAME } from '../productBrand';
 
-export function GroverBrand({ className = '' }: { className?: string }) {
+export function ProductBrand({ className = '' }: { className?: string }) {
   return (
     <span className={`grover-brand ${className}`}>
       <svg aria-hidden="true" className="grover-brand-mark" viewBox="0 0 32 32">

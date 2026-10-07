@@ -1,5 +1,15 @@
 # Version History
 
+- 2026-10-07: Adopted Yardfolio as the customer-facing working name after a
+  preliminary exact-name collision screen. Runtime copy, browser/social
+  metadata, Field PWA labels, icon accessibility, server-rendered public
+  titles, authentication challenges, local-review demo identity, and operator
+  messages now use the new name. Persistent browser storage, IndexedDB, events,
+  headers, source identifiers, asset paths, and infrastructure retain the
+  documented legacy namespace to protect compatibility. The brand gate now
+  also rejects former customer-visible runtime copy. Professional trademark
+  clearance, domain/app-store confirmation, and public rollout approval remain
+  open.
 - 2026-10-06: Enforced the product-renaming boundary with a tested local and CI
   consistency gate. It rejects new hard-coded customer-visible runtime brand
   copy and detects stale HTML metadata, installed-app manifest/icon labels, or

@@ -11,9 +11,11 @@ boundary; inclusion here alone does not mean a feature shipped.
   acquisition, Yard Owner acquisition, and Yard Owner portal, including
   canonical palette, wordmark, typography roles, banners, controls, surfaces,
   focus treatment, public headers, and application-rail materials
-- Centralized customer-visible runtime product naming with an explicit rename
-  boundary that preserves installed-app, offline-data, storage, request-header,
-  and infrastructure compatibility until a separately approved migration
+- Yardfolio customer-facing working brand across runtime copy, metadata, PWA,
+  icon accessibility, server-rendered titles, authentication challenges, and
+  operator messages, with an automated consistency gate and an explicit legacy
+  namespace boundary protecting installed-app, offline-data, storage,
+  request-header, and infrastructure compatibility
 - Documented navigation system separating public discovery,
   acquisition-progress, and authenticated-destination models without changing
   their common brand treatment

@@ -5,6 +5,7 @@ import { extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
+const legacyDisplayNames = ['Grover'];
 
 function productNameFrom(source) {
   const match = source.match(/export const PRODUCT_NAME = '([^']+)'/);
@@ -29,9 +30,13 @@ export function validateProductBrandSources({
 
   const fieldAppName = `${productName} Field`;
   for (const [path, source] of runtimeSources) {
-    const withoutLegacyComponentName = source.replaceAll('GroverBrand', '');
-    if (withoutLegacyComponentName.includes(productName)) {
+    if (source.includes(productName)) {
       errors.push(`customer-visible product name must come from productBrand.ts: ${path}`);
+    }
+    for (const legacyName of legacyDisplayNames) {
+      if (legacyName !== productName && source.includes(legacyName)) {
+        errors.push(`former customer-visible product name remains in runtime source: ${path}`);
+      }
     }
   }
 
@@ -63,7 +68,7 @@ export function validateProductBrandSources({
     }
   }
 
-  if (!iconSource.includes(`>${productName} Landscaping</title>`)) {
+  if (!iconSource.includes(`>${productName}</title>`)) {
     errors.push('app icon accessible title is not aligned with PRODUCT_NAME');
   }
   if (occurrencesOf(publicSiteSource, `| ${productName}"`) !== 5) {

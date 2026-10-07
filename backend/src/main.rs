@@ -516,7 +516,7 @@ async fn main() -> Result<(), DynError> {
         .map_err(|error| configuration_error(format!("PORT must be a valid TCP port: {error}")))?;
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
-    tracing::info!(%addr, "starting Grover Landscaping API");
+    tracing::info!(%addr, "starting Yardfolio API");
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
 
@@ -12949,7 +12949,7 @@ mod tests {
                     .uri("/organizations/bootstrap")
                     .header("content-type", "application/json")
                     .body(Body::from(
-                        r#"{"display_name":"Grover Landscaping","organization_type":"yard_care_company"}"#,
+                        r#"{"display_name":"Desert Bloom Landscaping","organization_type":"yard_care_company"}"#,
                     ))
                     .unwrap(),
             )
@@ -12985,7 +12985,7 @@ mod tests {
                     .uri("/organizations/org_demo_landscaping")
                     .header("content-type", "application/json")
                     .body(Body::from(
-                        r#"{"display_name":"Grover Property Services","organization_type":"property_management_company","time_zone":"America/Phoenix","service_area_label":"Phoenix metro","default_daily_stop_capacity":12}"#,
+                        r#"{"display_name":"Sonoran Property Services","organization_type":"property_management_company","time_zone":"America/Phoenix","service_area_label":"Phoenix metro","default_daily_stop_capacity":12}"#,
                     ))
                     .unwrap(),
             )
@@ -13363,7 +13363,7 @@ mod tests {
                     .method("PUT")
                     .uri("/organizations/org_demo_landscaping/memberships/membership_local_owner_demo/profile")
                     .header("content-type", "application/json")
-                    .body(Body::from(r#"{"display_name":"Jordan Grover"}"#))
+                    .body(Body::from(r#"{"display_name":"Jordan Rivera"}"#))
                     .unwrap(),
             )
             .await
@@ -14058,7 +14058,7 @@ mod tests {
         std::fs::create_dir_all(&frontend_dist).unwrap();
         std::fs::write(
             frontend_dist.join("index.html"),
-            "<!doctype html><html><head><title>Grover production</title><meta name=\"description\" content=\"Fallback\" /><meta property=\"og:title\" content=\"Fallback\" /><meta property=\"og:description\" content=\"Fallback\" /><meta property=\"og:image\" content=\"/fallback.webp\" /><meta name=\"twitter:title\" content=\"Fallback\" /><meta name=\"twitter:description\" content=\"Fallback\" /><meta name=\"twitter:image\" content=\"/fallback.webp\" /></head><body><div id=\"root\"></div></body></html>",
+            "<!doctype html><html><head><title>Yardfolio production</title><meta name=\"description\" content=\"Fallback\" /><meta property=\"og:title\" content=\"Fallback\" /><meta property=\"og:description\" content=\"Fallback\" /><meta property=\"og:image\" content=\"/fallback.webp\" /><meta name=\"twitter:title\" content=\"Fallback\" /><meta name=\"twitter:description\" content=\"Fallback\" /><meta name=\"twitter:image\" content=\"/fallback.webp\" /></head><body><div id=\"root\"></div></body></html>",
         )
         .unwrap();
         std::fs::write(
@@ -14172,7 +14172,7 @@ mod tests {
             .await
             .unwrap()
             .to_bytes();
-        assert!(String::from_utf8_lossy(&shared_bid_body).contains("Grover production"));
+        assert!(String::from_utf8_lossy(&shared_bid_body).contains("Yardfolio production"));
 
         let shared_report_response = seed_app_with_frontend(frontend_dist.clone())
             .oneshot(
@@ -14190,7 +14190,7 @@ mod tests {
             .await
             .unwrap()
             .to_bytes();
-        assert!(String::from_utf8_lossy(&shared_report_body).contains("Grover production"));
+        assert!(String::from_utf8_lossy(&shared_report_body).contains("Yardfolio production"));
 
         for route in [
             "/not-a-real-route",

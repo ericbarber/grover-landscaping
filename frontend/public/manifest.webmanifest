@@ -1,6 +1,6 @@
 {
-  "name": "Grover Landscaping Field Work",
-  "short_name": "Grover Field",
+  "name": "Yardfolio Field Work",
+  "short_name": "Yardfolio Field",
   "description": "Mobile field workflow for landscaping routes, jobs, and completion evidence.",
   "start_url": "/app",
   "scope": "/",

@@ -35,7 +35,7 @@ describe('PropertyManagerAuthorizedPortfolioPanel', () => {
     expect(markup).toContain('Sage Lane');
     expect(markup).toContain('2 properties available to your account');
     expect(markup).not.toContain('123 Oak Street');
-    expect(markup).not.toContain('Grover Demo Landscaping');
+    expect(markup).not.toContain('Desert Bloom Landscaping');
   });
 
   it.each(['loading', 'access_required', 'inconsistent', 'unavailable'] as const)(

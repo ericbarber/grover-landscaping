@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useAuth, type AccessVerificationStatus } from './AuthProvider';
-import { GroverBrand } from '../components/GroverBrand';
+import { ProductBrand } from '../components/ProductBrand';
 import { PRODUCT_NAME } from '../productBrand';
 
 export type AuthGateState =
@@ -41,7 +41,7 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
       <span className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-slate-950/40" />
       <section className="relative grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950/55 text-white shadow-2xl shadow-slate-950/50 backdrop-blur-md lg:grid-cols-[1.15fr_0.85fr]">
         <aside className="hidden min-h-[31rem] flex-col justify-between border-r border-white/10 p-10 text-left lg:flex">
-          <GroverBrand className="text-sand" />
+          <ProductBrand className="text-sand" />
           <div>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">
               Built for better care
@@ -62,7 +62,7 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
           </div>
         </aside>
         <div className="flex min-h-[27rem] flex-col justify-center p-7 text-center sm:p-10">
-          <GroverBrand className="mb-7 justify-center text-sand lg:hidden" />
+          <ProductBrand className="mb-7 justify-center text-sand lg:hidden" />
           {children}
         </div>
       </section>

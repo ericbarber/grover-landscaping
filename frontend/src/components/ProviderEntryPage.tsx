@@ -1,4 +1,4 @@
-import { GroverBrand } from './GroverBrand';
+import { ProductBrand } from './ProductBrand';
 import { PROVIDER_INVITATION_PATH } from '../domain/providerInvitationRoute';
 import { providerWorkspaceHref } from '../domain/providerEntryRoute';
 import { PRODUCT_NAME } from '../productBrand';
@@ -16,7 +16,7 @@ export function ProviderEntryPage() {
     <main className="min-h-screen overflow-x-hidden bg-bone text-ink">
       <header className="border-b border-slate-200 bg-paper">
         <nav aria-label="Provider entry navigation" className="mx-auto flex min-h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <a aria-label={`${PRODUCT_NAME} home`} className="text-emerald-800" href="/"><GroverBrand /></a>
+          <a aria-label={`${PRODUCT_NAME} home`} className="text-emerald-800" href="/"><ProductBrand /></a>
           <a className="grover-button-secondary" href="/app">Existing provider sign in</a>
         </nav>
       </header>

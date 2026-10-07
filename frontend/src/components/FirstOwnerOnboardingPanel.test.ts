@@ -39,7 +39,7 @@ describe('first owner onboarding steps', () => {
       memberships: [{
         id: 'membership_1',
         organizationId: 'org_1',
-        organizationName: 'Grover Landscaping',
+        organizationName: 'Desert Bloom Landscaping',
         organizationType: 'yard_care_company',
         userId: 'user_1',
         role: 'OrganizationOwner',

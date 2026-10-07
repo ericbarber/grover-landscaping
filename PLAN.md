@@ -305,16 +305,16 @@ resolve the most consequential continuity flaws in reviewable design slices.
 
 Current state:
 
-- Customer-visible runtime naming now comes from one frontend product-brand
-  module, so a future replacement for the family-name-based working title does
-  not require editing workflow copy component by component. Static metadata,
-  the PWA manifest, and server-rendered public titles remain explicit rename
-  targets, while browser storage, offline data, request headers, and other
-  legacy technical identifiers remain stable behind the documented
-  [product-renaming boundary](docs/product-renaming.md). Final naming still
-  requires trademark, domain, app-store, visual identity, and rollout approval.
-  A tested local/CI gate rejects new hard-coded runtime brand copy and detects
-  drift in static metadata, the PWA manifest/icon, and server-rendered titles.
+- Yardfolio is now the customer-facing working name across runtime copy, HTML
+  and social metadata, the installed Field app, accessible icon text,
+  server-rendered public titles, authentication challenges, and operator-facing
+  startup/release messages. Browser storage, offline data, request headers,
+  source identifiers, and infrastructure retain their legacy technical
+  namespace behind the documented [rename boundary](docs/product-renaming.md),
+  protecting installed sessions and queued work. A tested local/CI gate rejects
+  new hard-coded or former runtime brand copy and detects drift across static
+  surfaces. Professional trademark clearance, domain/app-store confirmation,
+  final visual identity, and public rollout approval remain required.
 
 - The public website now has an approved company-first positioning boundary:
   landscaping company owners/managers are the primary buyer, company setup is
