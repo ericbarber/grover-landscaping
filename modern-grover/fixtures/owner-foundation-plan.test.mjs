@@ -101,7 +101,7 @@ test('builds separate supported owner-foundation request plans', () => {
 
   for (const plan of plans) {
     assert.equal(
-      plan.requests.createProperty.headers['x-grover-local-reviewer'],
+      plan.requests.createProperty.headers['x-yardfolio-local-reviewer'],
       plan.reviewerId,
     );
     assert.equal(plan.requests.saveWorkspace.journal.table, 'owner_workspaces');

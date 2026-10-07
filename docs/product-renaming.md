@@ -30,14 +30,15 @@ Do not mechanically rename identifiers beginning with `grover` in the same
 release as the display brand. They include:
 
 - local/session storage keys and the `grover-field-offline` IndexedDB database
-- local-review request headers
-- database, container, package, infrastructure, and environment identifiers
+- database, container, infrastructure, and environment identifiers
 - test fixtures and historical planning artifacts
 
 These names are not customer-visible branding. Current service-worker cache,
 browser event, diagnostic-download, test-output, and frontend package names now
 use Yardfolio; cache cleanup recognizes prior shells structurally without
-retaining the former brand string. Changing persistent browser
+retaining the former brand string. The Rust crate/binary, health-service label,
+local-review request header, and local-review session key also use Yardfolio.
+Changing persistent browser
 keys or IndexedDB names without a versioned copy-and-verify migration can make
 saved field work appear lost. Changing headers or infrastructure identifiers
 requires a coordinated compatibility window across clients, servers, CI, and

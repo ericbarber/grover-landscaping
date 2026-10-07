@@ -16,7 +16,9 @@
   public hero asset, frontend package, service-worker event/current cache,
   diagnostic downloads, temporary browser-test output, and current browser
   assertions use a Yardfolio namespace. Prior shell caches remain removable
-  through a brand-neutral matcher. The brand gate now also rejects former
+  through a brand-neutral matcher. The Rust crate/binary, health-service label,
+  local-review request header/session key, log targets, image build, and runtime
+  commands also use Yardfolio. The brand gate now rejects former
   customer-visible runtime copy. Professional trademark clearance,
   domain/app-store confirmation, and public rollout approval remain open.
 - 2026-10-06: Enforced the product-renaming boundary with a tested local and CI

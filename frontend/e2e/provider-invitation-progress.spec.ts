@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test.beforeEach(async ({ page }) => {
   await page.route('**/health/ready', (route) => route.fulfill({
     contentType: 'application/json',
-    body: JSON.stringify({ status: 'ready', service: 'grover-landscaping-api' }),
+    body: JSON.stringify({ status: 'ready', service: 'yardfolio-api' }),
   }));
   await page.route('**/provider-invitations/preview', async (route) => {
     const token = route.request().postDataJSON().token;

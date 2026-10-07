@@ -1,4 +1,6 @@
-use grover_landscaping_api::{
+use sqlx::Row;
+use std::time::{SystemTime, UNIX_EPOCH};
+use yardfolio_api::{
     db::JobRepository,
     notifications::NotificationResolveResult,
     notifications::NotificationRetryResult,
@@ -7,22 +9,20 @@ use grover_landscaping_api::{
         NotificationOutboxRepository,
     },
 };
-use sqlx::Row;
-use std::time::{SystemTime, UNIX_EPOCH};
 mod common;
 
 trait NotificationHistoryTestExt {
     fn expect_loaded(
         self,
         context: &str,
-    ) -> Vec<grover_landscaping_api::notifications::NotificationHistoryItem>;
+    ) -> Vec<yardfolio_api::notifications::NotificationHistoryItem>;
 }
 
 impl NotificationHistoryTestExt for NotificationHistoryListResult {
     fn expect_loaded(
         self,
         context: &str,
-    ) -> Vec<grover_landscaping_api::notifications::NotificationHistoryItem> {
+    ) -> Vec<yardfolio_api::notifications::NotificationHistoryItem> {
         match self {
             NotificationHistoryListResult::Loaded(items) => items,
             NotificationHistoryListResult::Unavailable => panic!("{context}: history unavailable"),

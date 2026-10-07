@@ -120,7 +120,7 @@ COGNITO_ISSUER_URL='<issuer_url output>' \
 COGNITO_CLIENT_ID='<app_client_id output>' \
 COGNITO_LOGIN_DOMAIN='<login_domain output>' \
 CORS_ALLOWED_ORIGIN=http://localhost:5173 \
-cargo run --manifest-path backend/Cargo.toml --bin grover-landscaping-api
+cargo run --manifest-path backend/Cargo.toml --bin yardfolio-api
 ```
 
 Then start the frontend with `npm run dev --prefix frontend` and open <http://localhost:5173>.

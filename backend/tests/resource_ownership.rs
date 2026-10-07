@@ -1,6 +1,6 @@
-use grover_landscaping_api::db::{JobRepository, ResourceOwnershipResult, ResourceReadResult};
 use sqlx::postgres::PgPoolOptions;
 use std::time::Duration;
+use yardfolio_api::db::{JobRepository, ResourceOwnershipResult, ResourceReadResult};
 mod common;
 
 #[tokio::test]

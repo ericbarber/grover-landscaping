@@ -1,7 +1,7 @@
 use crate::access_control::AccessRole;
 use serde::Serialize;
 
-pub const LOCAL_REVIEWER_HEADER: &str = "x-grover-local-reviewer";
+pub const LOCAL_REVIEWER_HEADER: &str = "x-yardfolio-local-reviewer";
 pub const LOCAL_REVIEW_ORGANIZATION_ID: &str = "org_demo_landscaping";
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]

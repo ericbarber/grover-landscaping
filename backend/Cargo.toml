@@ -1,8 +1,8 @@
 [package]
-name = "grover-landscaping-api"
+name = "yardfolio-api"
 version = "0.1.0"
 edition = "2021"
-default-run = "grover-landscaping-api"
+default-run = "yardfolio-api"
 
 [dependencies]
 axum = "0.8"

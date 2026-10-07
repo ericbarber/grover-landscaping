@@ -48,7 +48,7 @@ test.beforeEach(async ({ page }) => {
       });
     }
     if (path === '/me/access') {
-      const reviewerId = request.headers()['x-grover-local-reviewer'] ?? reviewers[0][0];
+      const reviewerId = request.headers()['x-yardfolio-local-reviewer'] ?? reviewers[0][0];
       const reviewer = reviewers.find(([id]) => id === reviewerId) ?? reviewers[0];
       const [, displayName, role] = reviewer;
       return route.fulfill({
@@ -135,7 +135,7 @@ test('workspace access verification fails closed and recovers without a reload',
 
 test('an unscoped role claim receives Home only until membership is assigned', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-member');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'crew-member');
   });
   await page.route('http://localhost:8080/me/access', (route) => route.fulfill({
     contentType: 'application/json',
@@ -217,8 +217,8 @@ test('desktop local review changes the rendered workspace, not only its title', 
 
 test('desktop management categories are filtered for portfolio and support roles', async ({ page }) => {
   await page.addInitScript(() => {
-    if (!window.sessionStorage.getItem('grover.local-reviewer-id')) {
-      window.sessionStorage.setItem('grover.local-reviewer-id', 'property-manager');
+    if (!window.sessionStorage.getItem('yardfolio.local-reviewer-id')) {
+      window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'property-manager');
     }
   });
   await page.goto('/app');
@@ -247,7 +247,7 @@ test('desktop management categories are filtered for portfolio and support roles
 
 test('mobile Home keeps its final action clear of fixed navigation', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'manager');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'manager');
   });
 
   for (const viewport of [
@@ -292,7 +292,7 @@ test('mobile Home keeps its final action clear of fixed navigation', async ({ pa
 
 test('property manager portfolio uses protected visits and withholds them after access ends', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'property-manager');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'property-manager');
   });
   let accessActive = true;
   await page.route('http://localhost:8080/customer-portal/visits', (route) => {
@@ -362,7 +362,7 @@ test('property manager portfolio uses protected visits and withholds them after 
 
 test('property manager accepts a minimized invitation before property details appear', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'property-manager');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'property-manager');
   });
   let accepted = false;
   await page.route('http://localhost:8080/customer-property-manager-invitations', (route) => (
@@ -427,7 +427,7 @@ test('property manager accepts a minimized invitation before property details ap
 test('organization owner Team opens the responsive team and access command center', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'organization-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'organization-owner');
   });
   await page.route('http://localhost:8080/organizations/org_demo_landscaping/memberships', (route) => (
     route.fulfill({
@@ -566,7 +566,7 @@ test('organization owner Team opens the responsive team and access command cente
 
 test('team overview preserves available counts during a partial API outage', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'organization-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'organization-owner');
   });
   await page.route('http://localhost:8080/organizations/org_demo_landscaping/memberships', (route) => (
     route.fulfill({
@@ -606,7 +606,7 @@ test('team overview preserves available counts during a partial API outage', asy
 
 test('member directory warns before changing the signed-in owner access', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'organization-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'organization-owner');
   });
   const member = (id: string, userId: string, displayName: string) => ({
     id,
@@ -657,7 +657,7 @@ test('member directory warns before changing the signed-in owner access', async 
 
 test('member directory distinguishes unavailable persistence from an empty team', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'organization-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'organization-owner');
   });
   await page.route('http://localhost:8080/organizations/org_demo_landscaping/memberships', (route) => (
     route.fulfill({
@@ -800,7 +800,7 @@ test('field Route prioritizes progress, current stop, and up-next work', async (
   let activeServiceDate = serviceDate;
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-lead');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'crew-lead');
   });
   await page.route('http://localhost:8080/crews/crew_1001/day-plan/today', (route) => (
     route.fulfill({
@@ -904,7 +904,7 @@ test('field Route prioritizes progress, current stop, and up-next work', async (
 test('field Jobs supports compact status and customer filtering', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-lead');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'crew-lead');
   });
   await page.route('http://localhost:8080/jobs', (route) => route.fulfill({
     contentType: 'application/json',
@@ -980,7 +980,7 @@ test('field Jobs supports compact status and customer filtering', async ({ page 
 test('field Job keeps context and primary actions while opening one workflow panel', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-lead');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'crew-lead');
   });
   const job = {
     id: 'job_oak',
@@ -1053,7 +1053,7 @@ test('field Job keeps context and primary actions while opening one workflow pan
 test('manager Schedule opens a responsive route board and planning inspector', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'manager');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'manager');
   });
   await page.route('http://localhost:8080/crews', (route) => route.fulfill({
     contentType: 'application/json',
@@ -1170,7 +1170,7 @@ test('manager Recovery inspects an exception and returns to affected work', asyn
   await page.setViewportSize({ width: 1440, height: 1000 });
   const today = new Date().toISOString().slice(0, 10);
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'manager');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'manager');
   });
   await page.route(/http:\/\/localhost:8080\/operational-exceptions(?:\?.*)?$/, (route) => route.fulfill({
     contentType: 'application/json',
@@ -1270,7 +1270,7 @@ test('manager Recovery inspects an exception and returns to affected work', asyn
 test('manager completion review opens the selected Job report workflow', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'manager');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'manager');
   });
   const job = {
     id: 'job_report',
@@ -1369,7 +1369,7 @@ test('manager completion review opens the selected Job report workflow', async (
 test('yard owner phone Home opens compact one-visit-at-a-time service history', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'property-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'property-owner');
   });
   await page.route('http://localhost:8080/customer-portal/visits', (route) => route.fulfill({
     contentType: 'application/json',
@@ -1469,7 +1469,7 @@ test('yard owner phone Home opens compact one-visit-at-a-time service history', 
 test('yard owner protected visit recovery withholds facts and returns Home', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'property-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'property-owner');
   });
   let visitReadUnavailable = true;
   await page.route('http://localhost:8080/customer-portal/visits', (route) => {

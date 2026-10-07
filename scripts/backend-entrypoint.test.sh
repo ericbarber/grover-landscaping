@@ -13,12 +13,12 @@ assert_contains() {
 }
 
 assert_contains "${repository_root}/backend/Cargo.toml" \
-  'default-run = "grover-landscaping-api"'
+  'default-run = "yardfolio-api"'
 assert_contains "${repository_root}/scripts/run-backend-with-watchdog.sh" \
-  'cargo run --bin grover-landscaping-api &'
+  'cargo run --bin yardfolio-api &'
 assert_contains "${repository_root}/scripts/mobile-review.sh" \
-  'cargo run --bin grover-landscaping-api'
+  'cargo run --bin yardfolio-api'
 assert_contains "${repository_root}/docs/authentication.md" \
-  'cargo run --manifest-path backend/Cargo.toml --bin grover-landscaping-api'
+  'cargo run --manifest-path backend/Cargo.toml --bin yardfolio-api'
 
 echo "Backend entrypoint contract tests passed."

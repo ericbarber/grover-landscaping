@@ -16,7 +16,7 @@ async function read(path, reviewer) {
     const response = await fetch(new URL(path, `${apiBase}/`), {
       headers: {
         accept: 'application/json',
-        ...(reviewer ? { 'x-grover-local-reviewer': reviewer } : {}),
+        ...(reviewer ? { 'x-yardfolio-local-reviewer': reviewer } : {}),
       },
       signal: AbortSignal.timeout(10_000),
     });

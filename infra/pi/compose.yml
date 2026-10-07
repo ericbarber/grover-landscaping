@@ -25,7 +25,7 @@ services:
       PUBLIC_APP_URL: ${PUBLIC_APP_URL:?Set PUBLIC_APP_URL in .env}
       PHOTO_STORAGE_MODE: local
       NOTIFICATION_DISPATCH_MODE: disabled
-      RUST_LOG: grover_landscaping_api=info,tower_http=info
+      RUST_LOG: yardfolio_api=info,tower_http=info
     ports:
       - "127.0.0.1:10000:10000"
     depends_on:

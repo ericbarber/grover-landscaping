@@ -1,6 +1,6 @@
-use grover_landscaping_api::organizations::{OrganizationCollectionResult, OrganizationRepository};
 use sqlx::postgres::PgPoolOptions;
 use uuid::Uuid;
+use yardfolio_api::organizations::{OrganizationCollectionResult, OrganizationRepository};
 
 mod common;
 

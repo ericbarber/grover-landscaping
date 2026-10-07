@@ -90,7 +90,7 @@ echo
     CORS_ALLOWED_ORIGIN="$frontend_url" \
     PUBLIC_APP_URL="$frontend_url" \
     PORT=8080 \
-    cargo run --bin grover-landscaping-api
+    cargo run --bin yardfolio-api
 ) &
 backend_pid=$!
 

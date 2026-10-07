@@ -1,12 +1,12 @@
-use grover_landscaping_api::organizations::{
+use sqlx::postgres::PgPoolOptions;
+use std::time::Duration;
+use yardfolio_api::organizations::{
     CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, MembershipStatusUpdateResult,
     OrganizationCollectionResult, OrganizationMutationResult, OrganizationProfileUpdateResult,
     OrganizationRepository, OrganizationResourceResult, ReissueOrganizationInvitationRequest,
     UpdateOrganizationMembershipProfileRequest, UpdateOrganizationMembershipRoleRequest,
     UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
 };
-use sqlx::postgres::PgPoolOptions;
-use std::time::Duration;
 
 mod common;
 
@@ -162,7 +162,7 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
                 },
             )
             .await,
-        grover_landscaping_api::organizations::MembershipProfileUpdateResult::Unavailable
+        yardfolio_api::organizations::MembershipProfileUpdateResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -323,7 +323,7 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
                 },
             )
             .await,
-        grover_landscaping_api::organizations::MembershipProfileUpdateResult::Unavailable
+        yardfolio_api::organizations::MembershipProfileUpdateResult::Unavailable
     ));
     assert!(matches!(
         repository

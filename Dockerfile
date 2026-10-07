@@ -16,7 +16,7 @@ COPY backend/migrations ./migrations
 RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
     --mount=type=cache,target=/build/backend/target,sharing=locked \
     cargo build --locked --release \
-    && cp target/release/grover-landscaping-api /build/grover-landscaping-api
+    && cp target/release/yardfolio-api /build/yardfolio-api
 
 FROM debian:bookworm-slim AS runtime
 RUN apt-get update \
@@ -25,15 +25,15 @@ RUN apt-get update \
     && useradd --system --uid 10001 --create-home grover
 
 WORKDIR /app
-COPY --from=backend-builder /build/grover-landscaping-api /usr/local/bin/grover-landscaping-api
+COPY --from=backend-builder /build/yardfolio-api /usr/local/bin/yardfolio-api
 COPY --from=frontend-builder /build/frontend/dist /app/frontend
 
 ENV APP_ENV=production \
     FRONTEND_DIST_DIR=/app/frontend \
     PORT=10000 \
-    RUST_LOG=grover_landscaping_api=info,tower_http=info
+    RUST_LOG=yardfolio_api=info,tower_http=info
 
 USER grover
 EXPOSE 10000
 
-CMD ["grover-landscaping-api"]
+CMD ["yardfolio-api"]

@@ -1029,7 +1029,7 @@ mod tests {
         let service = AuthService::local_review();
         let mut headers = HeaderMap::new();
         headers.insert(
-            "x-grover-local-reviewer",
+            "x-yardfolio-local-reviewer",
             HeaderValue::from_static("crew-member"),
         );
 
@@ -1044,7 +1044,7 @@ mod tests {
         );
 
         headers.insert(
-            "x-grover-local-reviewer",
+            "x-yardfolio-local-reviewer",
             HeaderValue::from_static("unconfigured-user"),
         );
         assert!(service.authenticate(&headers).await.is_err());
@@ -1846,7 +1846,7 @@ mod tests {
                 .oneshot(
                     Request::builder()
                         .uri(path)
-                        .header("x-grover-local-reviewer", "property-owner")
+                        .header("x-yardfolio-local-reviewer", "property-owner")
                         .body(Body::empty())
                         .unwrap(),
                 )
@@ -1859,7 +1859,7 @@ mod tests {
                 .oneshot(
                     Request::builder()
                         .uri(path)
-                        .header("x-grover-local-reviewer", "manager")
+                        .header("x-yardfolio-local-reviewer", "manager")
                         .body(Body::empty())
                         .unwrap(),
                 )

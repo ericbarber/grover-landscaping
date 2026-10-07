@@ -25,7 +25,7 @@ function request(reviewerId, method, path, body, journal) {
     path,
     headers: {
       accept: 'application/json',
-      'x-grover-local-reviewer': reviewerId,
+      'x-yardfolio-local-reviewer': reviewerId,
       ...(body ? { 'content-type': 'application/json' } : {}),
     },
     ...(body ? { body } : {}),

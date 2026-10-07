@@ -80,7 +80,7 @@ jobs:
 
     env:
       DATABASE_URL: postgres://grover:grover@localhost:5432/grover_landscaping
-      RUST_LOG: grover_landscaping_api=debug,tower_http=debug
+      RUST_LOG: yardfolio_api=debug,tower_http=debug
 
     steps:
       - name: Checkout repository

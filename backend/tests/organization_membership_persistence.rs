@@ -1,4 +1,5 @@
-use grover_landscaping_api::{
+use sqlx::Row;
+use yardfolio_api::{
     access_control::{can_manage_schedule, AccessRole},
     day_plans::{
         CreateCrewRequest, CreateOrganizationBranchRequest, CreateOrganizationBranchResult,
@@ -13,7 +14,6 @@ use grover_landscaping_api::{
         UpdateOrganizationMembershipProfileRequest, UpdateOrganizationProfileRequest,
     },
 };
-use sqlx::Row;
 mod common;
 
 fn loaded<T>(result: OrganizationCollectionResult<T>, context: &str) -> Vec<T> {
@@ -371,7 +371,7 @@ async fn repository_bootstraps_first_owner_once() {
         .expect("current service date should be available");
     let current_draft = applied(
         day_plans
-            .create_draft_day_plan(grover_landscaping_api::day_plans::CreateDayPlanRequest {
+            .create_draft_day_plan(yardfolio_api::day_plans::CreateDayPlanRequest {
                 crew_id: crew.id.clone(),
                 service_date: current_service_date,
             })

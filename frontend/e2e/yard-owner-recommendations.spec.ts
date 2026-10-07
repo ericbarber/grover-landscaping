@@ -23,7 +23,7 @@ test('yard owner reviews version history and approves the exact recommendation o
   let decisionBody: Record<string, unknown> | null = null;
 
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'property-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'property-owner');
   });
   await page.route('**/auth/config', (route) => route.fulfill({
     contentType: 'application/json',

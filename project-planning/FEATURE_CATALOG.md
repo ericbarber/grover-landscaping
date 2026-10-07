@@ -14,9 +14,10 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Yardfolio customer-facing working brand across runtime copy, metadata, PWA,
   icon accessibility, server-rendered titles, authentication challenges, and
   operator messages, with Yardfolio-namespaced active visual primitives and
-  public hero assets, an automated consistency gate, and an explicit legacy
-  namespace boundary protecting installed-app, offline-data, storage,
-  request-header, and infrastructure compatibility
+  public hero assets, frontend and Rust packages, health labels, and local-review
+  identifiers, an automated consistency gate, and an explicit legacy namespace
+  boundary protecting installed-app, offline-data, storage, database, and
+  infrastructure compatibility
 - Documented navigation system separating public discovery,
   acquisition-progress, and authenticated-destination models without changing
   their common brand treatment

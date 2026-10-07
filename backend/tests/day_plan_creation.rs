@@ -1,4 +1,6 @@
-use grover_landscaping_api::{
+use sqlx::{postgres::PgPoolOptions, PgPool, Row};
+use std::time::Duration;
+use yardfolio_api::{
     day_plans::{
         draft_day_plan_id, AssignDayPlanStopRequest, CreateDayPlanRequest, DayPlanRepository,
         PersistedMutationResult, PersistedReadResult, ReorderDayPlanStopsRequest,
@@ -6,8 +8,6 @@ use grover_landscaping_api::{
     },
     db::JobRepository,
 };
-use sqlx::{postgres::PgPoolOptions, PgPool, Row};
-use std::time::Duration;
 mod common;
 
 fn applied<T: std::fmt::Debug>(result: PersistedMutationResult<T>, context: &str) -> T {
@@ -63,7 +63,7 @@ async fn repository_distinguishes_unavailable_dispatch_setup_collections() {
         repository
             .create_crew(
                 "org_demo_landscaping",
-                grover_landscaping_api::day_plans::CreateCrewRequest {
+                yardfolio_api::day_plans::CreateCrewRequest {
                     name: "Unavailable Crew".to_string(),
                 },
             )
@@ -76,7 +76,7 @@ async fn repository_distinguishes_unavailable_dispatch_setup_collections() {
                 "org_demo_landscaping",
                 "crew_1001",
                 "integration_user",
-                grover_landscaping_api::day_plans::UpdateCrewRequest {
+                yardfolio_api::day_plans::UpdateCrewRequest {
                     name: "Unavailable Crew".to_string(),
                     status: "active".to_string(),
                     daily_stop_capacity: Some(10),
@@ -86,7 +86,7 @@ async fn repository_distinguishes_unavailable_dispatch_setup_collections() {
                 },
             )
             .await,
-        grover_landscaping_api::day_plans::UpdateCrewResult::Unavailable
+        yardfolio_api::day_plans::UpdateCrewResult::Unavailable
     );
 }
 

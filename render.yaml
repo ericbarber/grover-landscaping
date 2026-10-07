@@ -15,7 +15,7 @@ services:
       - key: AUTH_MODE
         value: cognito
       - key: RUST_LOG
-        value: grover_landscaping_api=info,tower_http=info
+        value: yardfolio_api=info,tower_http=info
       - key: NOTIFICATION_DISPATCH_MODE
         value: disabled
       - key: PUBLIC_APP_URL

@@ -9,7 +9,17 @@ use axum::{
     routing::{delete, get, post, put},
     Json, Router,
 };
-use grover_landscaping_api::{
+use serde::{Deserialize, Serialize};
+use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
+use tower_http::{
+    cors::CorsLayer,
+    services::{ServeDir, ServeFile},
+    set_header::SetResponseHeaderLayer,
+    trace::TraceLayer,
+};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use uuid::Uuid;
+use yardfolio_api::{
     access_control::{
         can_deliver_completion_report, can_manage_crew_assignments, can_manage_organization,
         can_manage_property_portfolios, can_manage_schedule, can_review_completion_report,
@@ -214,16 +224,6 @@ use grover_landscaping_api::{
     },
     JobAddOn, JobSummary, PhotoEvidence, PhotoUploadMetadata, PhotoUploadRequest,
 };
-use serde::{Deserialize, Serialize};
-use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
-use tower_http::{
-    cors::CorsLayer,
-    services::{ServeDir, ServeFile},
-    set_header::SetResponseHeaderLayer,
-    trace::TraceLayer,
-};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use uuid::Uuid;
 
 type DynError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -504,7 +504,7 @@ async fn main() -> Result<(), DynError> {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
             std::env::var("RUST_LOG")
-                .unwrap_or_else(|_| "grover_landscaping_api=info,tower_http=info".into()),
+                .unwrap_or_else(|_| "yardfolio_api=info,tower_http=info".into()),
         ))
         .with(tracing_subscriber::fmt::layer())
         .init();
@@ -1459,7 +1459,7 @@ async fn public_sitemap(Extension(public_site): Extension<Arc<PublicSite>>) -> R
 async fn health(persistence: &'static str) -> impl IntoResponse {
     Json(HealthResponse {
         status: "ok",
-        service: "grover-landscaping-api",
+        service: "yardfolio-api",
         persistence,
         database_name: None,
     })
@@ -1603,7 +1603,7 @@ async fn readiness(
                 StatusCode::SERVICE_UNAVAILABLE,
                 Json(HealthResponse {
                     status: "unavailable",
-                    service: "grover-landscaping-api",
+                    service: "yardfolio-api",
                     persistence,
                     database_name: None,
                 }),
@@ -1617,7 +1617,7 @@ async fn readiness(
 
     Json(HealthResponse {
         status: "ok",
-        service: "grover-landscaping-api",
+        service: "yardfolio-api",
         persistence,
         database_name,
     })
@@ -5197,7 +5197,7 @@ fn cors_layer(production: bool) -> Result<Option<CorsLayer>, DynError> {
                     .allow_headers([
                         CONTENT_TYPE,
                         AUTHORIZATION,
-                        HeaderName::from_static("x-grover-local-reviewer"),
+                        HeaderName::from_static("x-yardfolio-local-reviewer"),
                     ])
                     .allow_credentials(true),
             ))
@@ -6436,9 +6436,7 @@ async fn update_organization_membership_role(
     Path((organization_id, membership_id)): Path<(String, String)>,
     Json(request): Json<UpdateOrganizationMembershipRoleRequest>,
 ) -> Response {
-    if grover_landscaping_api::organizations::access_role_from_storage(request.role.trim())
-        .is_none()
-    {
+    if yardfolio_api::organizations::access_role_from_storage(request.role.trim()).is_none() {
         return (
             StatusCode::BAD_REQUEST,
             Json(ErrorResponse {
@@ -12660,7 +12658,7 @@ mod tests {
         let json: Value = serde_json::from_slice(&body).unwrap();
 
         assert_eq!(json["status"], "ok");
-        assert_eq!(json["service"], "grover-landscaping-api");
+        assert_eq!(json["service"], "yardfolio-api");
     }
 
     #[tokio::test]

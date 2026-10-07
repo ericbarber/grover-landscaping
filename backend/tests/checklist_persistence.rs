@@ -1,8 +1,8 @@
-use grover_landscaping_api::db::{
-    ChecklistWriteResult, JobLifecycleWriteResult, JobRepository, ResourceReadResult,
-};
 use sqlx::postgres::PgPoolOptions;
 use std::time::Duration;
+use yardfolio_api::db::{
+    ChecklistWriteResult, JobLifecycleWriteResult, JobRepository, ResourceReadResult,
+};
 mod common;
 
 #[tokio::test]
