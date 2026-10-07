@@ -1,4 +1,4 @@
-const CACHE_NAME = 'grover-field-shell-v3';
+const CACHE_NAME = 'grover-field-shell-v4';
 const SHELL_ASSETS = ['/', '/manifest.webmanifest', '/app-icon.svg'];
 
 self.addEventListener('install', (event) => {

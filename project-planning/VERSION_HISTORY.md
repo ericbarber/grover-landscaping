@@ -9,10 +9,12 @@
   historical Modern Grover track retains its original internal name.
   Persistent browser storage, IndexedDB, events,
   headers, source identifiers, asset paths, and infrastructure retain the
-  documented legacy namespace to protect compatibility. The brand gate now
-  also rejects former customer-visible runtime copy. Professional trademark
-  clearance, domain/app-store confirmation, and public rollout approval remain
-  open.
+  documented legacy namespace to protect compatibility. The production shell
+  cache version advances so existing installations receive the renamed shell
+  through the established update prompt without clearing offline work. The
+  brand gate now also rejects former customer-visible runtime copy.
+  Professional trademark clearance, domain/app-store confirmation, and public
+  rollout approval remain open.
 - 2026-10-06: Enforced the product-renaming boundary with a tested local and CI
   consistency gate. It rejects new hard-coded customer-visible runtime brand
   copy and detects stale HTML metadata, installed-app manifest/icon labels, or

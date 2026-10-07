@@ -313,8 +313,11 @@ Current state:
   namespace behind the documented [rename boundary](docs/product-renaming.md),
   protecting installed sessions and queued work. A tested local/CI gate rejects
   new hard-coded or former runtime brand copy and detects drift across static
-  surfaces. Professional trademark clearance, domain/app-store confirmation,
-  final visual identity, and public rollout approval remain required.
+  surfaces. The production shell cache was advanced so existing installed apps
+  discover the renamed shell through the normal update-and-reload flow without
+  clearing field queues. Professional trademark clearance, domain/app-store
+  confirmation, final visual identity, and public rollout approval remain
+  required.
 
 - The public website now has an approved company-first positioning boundary:
   landscaping company owners/managers are the primary buyer, company setup is
