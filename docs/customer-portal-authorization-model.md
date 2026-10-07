@@ -5,7 +5,7 @@ Home/Visits adoption delivered through 2026-08-26.
 
 ## Decision
 
-Grover uses a hybrid authorization model for customer portal access:
+Yardfolio uses a hybrid authorization model for customer portal access:
 
 - a verified customer-account owner receives customer-account scope and
   inherits every current and future active property linked to that account in

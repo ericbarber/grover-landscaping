@@ -1,6 +1,6 @@
 # Project Planning and Version History
 
-This directory is the review entry point for Grover Landscaping product planning.
+This directory is the review entry point for Yardfolio product planning.
 It brings the roadmap, feature specifications, and release history together without
 moving their existing canonical documents.
 

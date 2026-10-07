@@ -4,7 +4,10 @@
   preliminary exact-name collision screen. Runtime copy, browser/social
   metadata, Field PWA labels, icon accessibility, server-rendered public
   titles, authentication challenges, local-review demo identity, and operator
-  messages now use the new name. Persistent browser storage, IndexedDB, events,
+  messages now use the new name. Current repository overviews, operational
+  guides, trust language, and active planning records use Yardfolio while the
+  historical Modern Grover track retains its original internal name.
+  Persistent browser storage, IndexedDB, events,
   headers, source identifiers, asset paths, and infrastructure retain the
   documented legacy namespace to protect compatibility. The brand gate now
   also rejects former customer-visible runtime copy. Professional trademark

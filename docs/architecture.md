@@ -1,6 +1,6 @@
 # Architecture
 
-Grover Landscaping is currently a modular-monolith web application with a React
+Yardfolio is currently a modular-monolith web application with a React
 client, Rust/Axum API, and PostgreSQL persistence. Local development runs through
 Docker Compose; the protected-pilot deployment contract packages the frontend and
 API into one Render web service. AWS remains a demand-driven growth path, not a

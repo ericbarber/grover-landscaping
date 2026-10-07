@@ -1,7 +1,7 @@
 # Mission and Core Values
 
 Status: Working brand foundation, written 2026-09-21 for content and messaging
-review. The product owner has directed Grover to take greater responsibility for
+review. The product owner has directed Yardfolio to take greater responsibility for
 the beauty and maintenance of the physical places where people live and work.
 
 ## Mission
@@ -47,7 +47,7 @@ dignity, or useful context.
 
 ## Applying this foundation to messaging
 
-- Lead with the physical result Grover exists to support: outdoor places that
+- Lead with the physical result Yardfolio exists to support: outdoor places that
   are beautiful and consistently maintained. Explain the software and service
   coordination as the means to that result.
 - Show how each audience contributes: owners set goals and control sharing;

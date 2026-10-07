@@ -1,6 +1,6 @@
 # Application Continuation Roadmap
 
-This is the consolidated review version of the Grover Landscaping development
+This is the consolidated review version of the Yardfolio development
 plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 Current execution order and phase exit evidence live in
@@ -610,7 +610,7 @@ Reviews should approve page composition and responsive behavior before producing
 high-fidelity screens or beginning the corresponding UI slice. Back-end and
 infrastructure work without a visual consequence can continue independently.
 
-The public root homepage now introduces Grover through a single-property Yard
+The public root homepage now introduces Yardfolio through a single-property Yard
 Owner hero, followed by persona-selectable benefits for yard owners, property
 managers, landscaping companies, and crew leads, the Plan-Care-Proof workflow,
 a product preview, capability proof points, and clear workspace calls to action.

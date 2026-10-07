@@ -1,6 +1,6 @@
 # Delivery Board
 
-This is the authoritative execution queue for Grover Landscaping. It answers
+This is the authoritative execution queue for Yardfolio. It answers
 three questions: what is active, what can start next, and what evidence closes
 each phase. [`../PLAN.md`](../PLAN.md) remains the detailed delivery-status
 record; [`ROADMAP.md`](ROADMAP.md) remains the long-range product strategy.

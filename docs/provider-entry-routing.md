@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Grover routes landscaping professionals into the provider organization and
+Yardfolio routes landscaping professionals into the provider organization and
 invitation model that matches their actual authority. “Yard Crew” remains an
 audience name; it is not a public marketplace account type.
 
@@ -35,7 +35,7 @@ explains the selected model. The query is presentation context only:
 
 Public entry explains the preparation sequence: verified account, provider
 organization, business profile, and operating setup. Authenticated Company setup
-now projects the fields Grover actually reads into distinct fact states:
+now projects the fields Yardfolio actually reads into distinct fact states:
 
 - business identity, contact, website, and service area are **supplied by the
   provider** or explicitly need information;

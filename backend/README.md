@@ -1,4 +1,4 @@
-# Grover Backend
+# Yardfolio Backend
 
 The backend is a Rust 2021 Axum service using Tokio, SQLx, and PostgreSQL. It
 serves the API in development and, in the production image, also serves the

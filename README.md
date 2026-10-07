@@ -1,6 +1,9 @@
-# Grover Landscaping
+# Yardfolio
 
-Grover Landscaping is a multi-persona operations platform for landscaping businesses and their customers. It combines mobile crew execution, manager scheduling and review, customer-facing completion evidence and bids, and a privacy-first Yard Owner onboarding flow for connecting an existing provider.
+Yardfolio is a multi-persona operations platform for landscaping businesses and
+their customers. It combines mobile crew execution, manager scheduling and
+review, customer-facing completion evidence and bids, and a privacy-first Yard
+Owner onboarding flow for connecting an existing provider.
 
 The project is built as a Rust + React application with local-first and remote-first development support. The frontend can run with seeded browser data when the backend is unavailable, while PostgreSQL-backed APIs provide tenant-scoped operational and acquisition workflows.
 

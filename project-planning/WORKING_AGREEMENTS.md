@@ -1,7 +1,7 @@
 # Working Agreements
 
 This document records durable collaboration and delivery expectations for the
-Grover Landscaping project.
+Yardfolio project.
 
 ## Completed Feature Commits
 
