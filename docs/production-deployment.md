@@ -47,7 +47,7 @@ before provisioning Cognito or optional S3 photo storage.
 3. Provision the production Cognito Terraform environment using the final Render application URL and the hosted pilot runbook. Enable the optional S3 photo bucket in Terraform only when the pilot is ready for S3-backed photo evidence.
 4. Render reads `render.yaml` and requests the Cognito issuer URL, public app client ID, login domain, and optional photo bucket outputs from Terraform.
 5. Wait for the database and web service to become healthy. The web service applies all embedded SQLx migrations before opening its listener.
-6. Record the generated `https://grover-landscaping.onrender.com` URL or attach a custom domain.
+6. Record the generated `https://yardfolio.onrender.com` URL or attach a custom domain.
 
 The database has `ipAllowList: []`, so it is reachable only through Render's private network. Do not add public database access for routine administration.
 
@@ -71,8 +71,8 @@ Run the complete preflight from the operator shell to classify both repository
 readiness and external inputs:
 
 ```bash
-TF_VAR_application_url=https://grover-landscaping.onrender.com \
-BASE_URL=https://grover-landscaping.onrender.com \
+TF_VAR_application_url=https://yardfolio.onrender.com \
+BASE_URL=https://yardfolio.onrender.com \
 OWNER_EMAIL='approved-owner@example.com' \
 ACCESS_TOKEN='current-cognito-access-token' \
 SMOKE_JOB_ID='authorized-pilot-job-id' \
@@ -100,7 +100,7 @@ bash scripts/validate-cognito-hosted-pilot.sh
 Run the production smoke test after the first deploy and after material platform changes:
 
 ```bash
-BASE_URL=https://grover-landscaping.onrender.com \
+BASE_URL=https://yardfolio.onrender.com \
 ACCESS_TOKEN='current-cognito-access-token' \
 SMOKE_JOB_ID=job_1001 \
 SMOKE_OTHER_TENANT_JOB_ID=job_other_tenant_1001 \
@@ -162,7 +162,7 @@ Validate the notification webhook gateway before setting `NOTIFICATION_DISPATCH_
 
 ```bash
 NOTIFICATION_DISPATCH_MODE=webhook \
-PUBLIC_APP_URL=https://grover-landscaping.onrender.com \
+PUBLIC_APP_URL=https://yardfolio.onrender.com \
 NOTIFICATION_WEBHOOK_URL=https://notifications.example.com/deliver \
 NOTIFICATION_WEBHOOK_BEARER_TOKEN='provider-gateway-token' \
 bash scripts/validate-notification-webhook.sh

@@ -40,7 +40,7 @@ The recommended production boundary is:
 
 ```text
 AWS Organizations management account
-└── Grover production member account
+└── Yardfolio production member account
     ├── Cognito production user pool
     ├── optional S3 photo bucket
     └── S3 Terraform state bucket
@@ -105,7 +105,7 @@ From the AWS Organizations management account:
 
 1. Open **AWS Organizations** and choose **Add an AWS account** then **Create an
    AWS account**.
-2. Use a name such as `Grover Production` and the dedicated production root
+2. Use a name such as `Yardfolio Production` and the dedicated production root
    mailbox. Root email addresses must be unique across AWS accounts.
 3. Create a `Workloads` organizational unit and place the production account in
    it.
@@ -124,7 +124,7 @@ Use the AWS procedure for
 [creating a member account](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_create.html).
 AWS documents the preferred credentialless member-account posture in
 [Centralize root access for member accounts](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-enable-root-access.html).
-Do not deploy Grover resources into the management account.
+Do not deploy Yardfolio resources into the management account.
 
 ## 5. Configure cost and activity safeguards
 
@@ -156,9 +156,9 @@ Install AWS CLI version 2 from AWS's
 then create an IAM Identity Center profile:
 
 ```bash
-aws configure sso --profile grover-prod-admin
-aws sso login --profile grover-prod-admin
-aws sts get-caller-identity --profile grover-prod-admin
+aws configure sso --profile yardfolio-prod-admin
+aws sso login --profile yardfolio-prod-admin
+aws sts get-caller-identity --profile yardfolio-prod-admin
 ```
 
 The final command must report the production member-account ID and an assumed
@@ -167,7 +167,7 @@ Identity Center role. It must not report the management account or a root user.
 For the current shell session:
 
 ```bash
-export AWS_PROFILE=grover-prod-admin
+export AWS_PROFILE=yardfolio-prod-admin
 export AWS_REGION=us-east-1
 export AWS_DEFAULT_REGION=us-east-1
 aws sts get-caller-identity
@@ -181,7 +181,7 @@ root access keys.
 ## 7. Establish the Terraform operator boundary
 
 The initial administrator may bootstrap the account, but routine Terraform
-operations should use a separate `GroverTerraformOperator` permission set.
+operations should use a separate `YardfolioTerraformOperator` permission set.
 Start with temporary `PowerUserAccess` only for the first controlled plan if a
 reviewed custom policy is not ready, then replace it with least privilege from
 the observed plan and CloudTrail activity.
@@ -189,8 +189,8 @@ the observed plan and CloudTrail activity.
 The current production Terraform requires access only to:
 
 - `sts:GetCallerIdentity`;
-- the Grover production Cognito user pool, client, domain, and groups;
-- the optional Grover production S3 photo bucket and its public-access,
+- the Yardfolio production Cognito user pool, client, domain, and groups;
+- the optional Yardfolio production S3 photo bucket and its public-access,
   ownership, encryption, versioning, CORS, lifecycle, and tagging settings;
 - the exact Terraform-state bucket, state object, and `.tflock` object.
 
@@ -209,35 +209,35 @@ Terraform is initialized. The bucket must not be managed by the same state it
 stores.
 
 Choose a globally unique, lowercase bucket name, for example
-`grover-landscaping-prod-tfstate-123456789012-unique`. Replace the example value
+`yardfolio-prod-tfstate-123456789012-unique`. Replace the example value
 before running these commands:
 
 ```bash
-export AWS_PROFILE=grover-prod-admin
+export AWS_PROFILE=yardfolio-prod-admin
 export AWS_REGION=us-east-1
-export GROVER_STATE_BUCKET=grover-landscaping-prod-tfstate-123456789012-unique
+export YARDFOLIO_STATE_BUCKET=yardfolio-prod-tfstate-123456789012-unique
 
 aws sts get-caller-identity
 aws s3api create-bucket \
-  --bucket "${GROVER_STATE_BUCKET}" \
+  --bucket "${YARDFOLIO_STATE_BUCKET}" \
   --region "${AWS_REGION}"
 aws s3api put-public-access-block \
-  --bucket "${GROVER_STATE_BUCKET}" \
+  --bucket "${YARDFOLIO_STATE_BUCKET}" \
   --public-access-block-configuration \
   BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
 aws s3api put-bucket-ownership-controls \
-  --bucket "${GROVER_STATE_BUCKET}" \
+  --bucket "${YARDFOLIO_STATE_BUCKET}" \
   --ownership-controls 'Rules=[{ObjectOwnership=BucketOwnerEnforced}]'
 aws s3api put-bucket-encryption \
-  --bucket "${GROVER_STATE_BUCKET}" \
+  --bucket "${YARDFOLIO_STATE_BUCKET}" \
   --server-side-encryption-configuration \
   'Rules=[{ApplyServerSideEncryptionByDefault={SSEAlgorithm=AES256}}]'
 aws s3api put-bucket-versioning \
-  --bucket "${GROVER_STATE_BUCKET}" \
+  --bucket "${YARDFOLIO_STATE_BUCKET}" \
   --versioning-configuration Status=Enabled
 aws s3api put-bucket-tagging \
-  --bucket "${GROVER_STATE_BUCKET}" \
-  --tagging 'TagSet=[{Key=Application,Value=grover-landscaping},{Key=Environment,Value=prod},{Key=ManagedBy,Value=account-bootstrap},{Key=DataClass,Value=terraform-state}]'
+  --bucket "${YARDFOLIO_STATE_BUCKET}" \
+  --tagging 'TagSet=[{Key=Application,Value=yardfolio},{Key=Environment,Value=prod},{Key=ManagedBy,Value=account-bootstrap},{Key=DataClass,Value=terraform-state}]'
 ```
 
 Copy
@@ -248,8 +248,8 @@ TLS-only requests:
 
 ```bash
 aws s3api put-bucket-policy \
-  --bucket "${GROVER_STATE_BUCKET}" \
-  --policy file:///restricted/path/grover-state-bucket-policy.json
+  --bucket "${YARDFOLIO_STATE_BUCKET}" \
+  --policy file:///restricted/path/yardfolio-state-bucket-policy.json
 ```
 
 The policy contains no credential, but use the actual bucket name and do not
@@ -258,12 +258,12 @@ apply it to any other bucket.
 Verify the controls:
 
 ```bash
-aws s3api get-public-access-block --bucket "${GROVER_STATE_BUCKET}"
-aws s3api get-bucket-ownership-controls --bucket "${GROVER_STATE_BUCKET}"
-aws s3api get-bucket-encryption --bucket "${GROVER_STATE_BUCKET}"
-aws s3api get-bucket-versioning --bucket "${GROVER_STATE_BUCKET}"
-aws s3api get-bucket-tagging --bucket "${GROVER_STATE_BUCKET}"
-aws s3api get-bucket-policy-status --bucket "${GROVER_STATE_BUCKET}"
+aws s3api get-public-access-block --bucket "${YARDFOLIO_STATE_BUCKET}"
+aws s3api get-bucket-ownership-controls --bucket "${YARDFOLIO_STATE_BUCKET}"
+aws s3api get-bucket-encryption --bucket "${YARDFOLIO_STATE_BUCKET}"
+aws s3api get-bucket-versioning --bucket "${YARDFOLIO_STATE_BUCKET}"
+aws s3api get-bucket-tagging --bucket "${YARDFOLIO_STATE_BUCKET}"
+aws s3api get-bucket-policy-status --bucket "${YARDFOLIO_STATE_BUCKET}"
 ```
 
 The policy status must report `IsPublic: false`. Remove the restricted temporary
@@ -273,7 +273,7 @@ Record these non-secret backend inputs in the restricted operations record:
 
 ```text
 bucket = <actual state bucket name>
-key = grover-landscaping/prod/terraform.tfstate
+key = yardfolio/prod/terraform.tfstate
 region = us-east-1
 use_lockfile = true
 encrypt = true
@@ -302,7 +302,7 @@ state position is confirmed, and `TERRAFORM_STATE_CONFIRMED=1` is justified.
 - [ ] The administrator can reach the production member account through the
       access portal.
 - [ ] `aws sts get-caller-identity` reports the production account and an
-      assumed role using the `grover-prod-admin` profile.
+      assumed role using the `yardfolio-prod-admin` profile.
 - [ ] A monthly budget, cost anomaly monitor, and confirmed alert recipients
       exist.
 - [ ] A multi-Region CloudTrail trail records management activity outside the
@@ -311,7 +311,7 @@ state position is confirmed, and `TERRAFORM_STATE_CONFIRMED=1` is justified.
       the production account.
 - [ ] The state bucket name, state key, AWS Region, production account ID, and
       Identity Center access owner are recorded without credentials.
-- [ ] No Cognito, S3 photo, or other Grover workload has been manually created;
+- [ ] No Cognito, S3 photo, or other Yardfolio workload has been manually created;
       those resources remain Terraform-owned.
 
 ## Safe handoff values
@@ -322,9 +322,9 @@ After this checklist passes, development needs only these non-secret facts:
 AWS production account ID: <12 digits>
 AWS workload Region: us-east-1
 Terraform state bucket: <bucket name>
-Terraform state key: grover-landscaping/prod/terraform.tfstate
+Terraform state key: yardfolio/prod/terraform.tfstate
 Terraform S3 lock file: enabled
-CLI profile verified locally: grover-prod-admin
+CLI profile verified locally: yardfolio-prod-admin
 Photo storage for initial pilot: disabled or enabled
 ```
 

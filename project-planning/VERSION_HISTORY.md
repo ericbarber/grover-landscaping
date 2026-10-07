@@ -24,8 +24,11 @@
   Local Compose container names, production/local image tags, and the
   unprivileged production-image account now use Yardfolio without changing the
   persisted PostgreSQL volume or credentials.
-  Source identifiers and infrastructure retain the documented legacy namespace
-  until their coordinated migrations. The production shell
+  Unprovisioned Render and AWS definitions, example origins, resource names,
+  state-key guidance, tags, and operator profiles now use Yardfolio; existing
+  external resources remain subject to provider-specific migration. Persistent
+  database and Pi identifiers retain the documented legacy namespace until
+  their coordinated migrations. The production shell
   cache version advances so existing installations receive the renamed shell
   through the established update prompt without clearing offline work. The
   active CSS variables, reusable component classes, Tailwind shadow utilities,

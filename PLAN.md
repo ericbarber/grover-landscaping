@@ -326,9 +326,10 @@ Current state:
   active bundle. The complete design archive now uses Yardfolio in prototype
   copy, accessibility labels, generated SVGs, shared-foundation links, and
   source asset names, so historical design evidence no longer presents the
-  family name as a current product identity. Database/container defaults and
-  external infrastructure identifiers remain isolated behind the compatibility
-  plan.
+  family name as a current product identity. Planned Render/AWS resources and
+  their operator runbooks use the Yardfolio namespace. Local and Pi database
+  credentials plus already-issued Pi network and repository identifiers remain
+  isolated behind the compatibility plan.
   Professional trademark clearance, domain/app-store confirmation, final
   visual identity, and public rollout approval remain required.
 

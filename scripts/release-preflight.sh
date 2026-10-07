@@ -86,18 +86,18 @@ validate_render_blueprint() {
   local pattern
 
   for pattern in \
-    'type:\s*web.*?name:\s*grover-landscaping.*?runtime:\s*docker' \
+    'type:\s*web.*?name:\s*yardfolio.*?runtime:\s*docker' \
     'dockerfilePath:\s*\./Dockerfile' \
     'healthCheckPath:\s*/health/ready' \
     'autoDeployTrigger:\s*checksPass' \
     'key:\s*APP_ENV\s*\n\s*value:\s*production' \
     'key:\s*AUTH_MODE\s*\n\s*value:\s*cognito' \
     'key:\s*PUBLIC_APP_URL\s*\n\s*value:\s*https://' \
-    'key:\s*DATABASE_URL\s*\n\s*fromDatabase:\s*\n\s*name:\s*grover-landscaping-db\s*\n\s*property:\s*connectionString' \
+    'key:\s*DATABASE_URL\s*\n\s*fromDatabase:\s*\n\s*name:\s*yardfolio-db\s*\n\s*property:\s*connectionString' \
     'key:\s*COGNITO_ISSUER_URL\s*\n\s*sync:\s*false' \
     'key:\s*COGNITO_CLIENT_ID\s*\n\s*sync:\s*false' \
     'key:\s*COGNITO_LOGIN_DOMAIN\s*\n\s*sync:\s*false' \
-    'databases:.*?name:\s*grover-landscaping-db.*?postgresMajorVersion:\s*"16".*?ipAllowList:\s*\[\]'; do
+    'databases:.*?name:\s*yardfolio-db.*?postgresMajorVersion:\s*"16".*?ipAllowList:\s*\[\]'; do
     if ! PREFLIGHT_PATTERN="${pattern}" perl -0ne '
       BEGIN { $pattern = qr/$ENV{PREFLIGHT_PATTERN}/s }
       exit($_ =~ $pattern ? 0 : 1)

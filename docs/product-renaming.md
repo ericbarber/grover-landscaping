@@ -42,6 +42,10 @@ its repository directory, private review route, fixture tooling, isolated
 database contract, and backend safety gate.
 The design archive also uses Yardfolio in its visible copy, accessibility
 labels, generated visual sources, shared stylesheet, and image filenames.
+Unprovisioned Render and AWS definitions, example origins, resource tags, and
+operator profiles use Yardfolio as well. Already-created external resources
+must still be renamed or replaced through their provider-specific migration
+procedures rather than by editing state.
 Persistent local-storage keys and the field IndexedDB database now use a
 Yardfolio namespace. On first access, the browser adopts values and queued work
 from matching earlier namespaces by stable suffix, copies only missing

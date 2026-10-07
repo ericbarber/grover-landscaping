@@ -16,7 +16,7 @@ provider "aws" {
 module "cognito" {
   source = "../../modules/cognito"
 
-  application_name    = "grover-landscaping"
+  application_name    = "yardfolio"
   environment         = "prod"
   callback_urls       = ["${trimsuffix(var.application_url, "/")}/auth/callback"]
   logout_urls         = ["${trimsuffix(var.application_url, "/")}/"]
@@ -28,7 +28,7 @@ module "photo_storage" {
   count  = var.enable_photo_storage ? 1 : 0
   source = "../../modules/s3-photos"
 
-  application_name             = "grover-landscaping"
+  application_name             = "yardfolio"
   environment                  = "prod"
   bucket_name                  = var.photo_bucket_name
   key_prefix                   = var.photo_key_prefix

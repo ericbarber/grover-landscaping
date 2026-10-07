@@ -16,7 +16,7 @@ provider "aws" {
 module "cognito" {
   source = "../../modules/cognito"
 
-  application_name    = "grover-landscaping"
+  application_name    = "yardfolio"
   environment         = "dev"
   callback_urls       = ["http://localhost:5173/auth/callback"]
   logout_urls         = ["http://localhost:5173/"]

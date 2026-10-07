@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: grover-landscaping
+    name: yardfolio
     runtime: docker
     plan: starter
     region: oregon
@@ -19,10 +19,10 @@ services:
       - key: NOTIFICATION_DISPATCH_MODE
         value: disabled
       - key: PUBLIC_APP_URL
-        value: https://grover-landscaping.onrender.com
+        value: https://yardfolio.onrender.com
       - key: DATABASE_URL
         fromDatabase:
-          name: grover-landscaping-db
+          name: yardfolio-db
           property: connectionString
       - key: COGNITO_ISSUER_URL
         sync: false
@@ -32,10 +32,10 @@ services:
         sync: false
 
 databases:
-  - name: grover-landscaping-db
+  - name: yardfolio-db
     plan: basic-256mb
     region: oregon
-    databaseName: grover_landscaping
-    user: grover_landscaping
+    databaseName: yardfolio
+    user: yardfolio
     postgresMajorVersion: "16"
     ipAllowList: []
