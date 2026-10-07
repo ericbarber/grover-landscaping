@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite';
 
 const designReviewRoot = fileURLToPath(new URL('../design/', import.meta.url));
-const modernGroverReviewRoot = fileURLToPath(new URL('../modern-grover/', import.meta.url));
+const yardfolioStudyReviewRoot = fileURLToPath(new URL('../yardfolio-study/', import.meta.url));
 
 const designContentTypes: Record<string, string> = {
   '.css': 'text/css; charset=utf-8',
@@ -21,12 +21,12 @@ const designContentTypes: Record<string, string> = {
 
 function designReviewPlugin(): Plugin {
   return {
-    name: 'grover-design-review',
+    name: 'yardfolio-design-review',
     apply: 'serve',
     configureServer(server) {
       const reviewRoots = [
         { route: '/design', root: realpathSync(designReviewRoot) },
-        { route: '/modern-grover', root: realpathSync(modernGroverReviewRoot) },
+        { route: '/yardfolio-study', root: realpathSync(yardfolioStudyReviewRoot) },
       ];
 
       server.middlewares.use((request, response, next) => {

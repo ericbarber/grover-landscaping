@@ -2,7 +2,7 @@
 
 Status: prior design hypotheses for review, 2026-09-16. These are task and
 authority profiles, not interview findings or new production roles. The active
-[Modern Grover track](../../modern-grover/README.md) uses them as input only.
+[Yardfolio Study track](../../yardfolio-study/README.md) uses them as input only.
 Validate the needs and language in moderated sessions before using them as
 adoption evidence.
 

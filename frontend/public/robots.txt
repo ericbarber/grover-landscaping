@@ -8,4 +8,4 @@ Disallow: /organization-invitations/
 Disallow: /bid-review/
 Disallow: /report-view/
 Disallow: /design
-Disallow: /modern-grover
+Disallow: /yardfolio-study

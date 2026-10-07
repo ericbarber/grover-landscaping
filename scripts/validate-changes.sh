@@ -308,13 +308,13 @@ for scope in "${ordered_scopes[@]}"; do
       node_command scripts/validate-product-brand.mjs
       node_command --test scripts/validate-crawler-policy.test.mjs
       node_command scripts/validate-crawler-policy.mjs
-      node_command --test modern-grover/fixtures/validate-manifest.test.mjs
-      node_command --test modern-grover/fixtures/validate-target.test.mjs
-      node_command --test modern-grover/fixtures/prepare-manifest.test.mjs
-      node_command --test modern-grover/fixtures/fixture-state.test.mjs
-      node_command --test modern-grover/fixtures/owner-foundation-plan.test.mjs
-      node_command --test modern-grover/fixtures/reset-plan.test.mjs
-      node_command modern-grover/fixtures/validate-manifest.mjs --allow-template modern-grover/fixtures/fixture-manifest.example.json
+      node_command --test yardfolio-study/fixtures/validate-manifest.test.mjs
+      node_command --test yardfolio-study/fixtures/validate-target.test.mjs
+      node_command --test yardfolio-study/fixtures/prepare-manifest.test.mjs
+      node_command --test yardfolio-study/fixtures/fixture-state.test.mjs
+      node_command --test yardfolio-study/fixtures/owner-foundation-plan.test.mjs
+      node_command --test yardfolio-study/fixtures/reset-plan.test.mjs
+      node_command yardfolio-study/fixtures/validate-manifest.mjs --allow-template yardfolio-study/fixtures/fixture-manifest.example.json
       run_command docker compose config --quiet
       ;;
     docs)

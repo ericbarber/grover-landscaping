@@ -51,7 +51,7 @@ no grant may widen the organization or account recorded by another grant.
   properties are not returned as active portal content.
 
 The customer-controlled Property Manager invitation and revocation rule is
-decided in [Modern Grover MG-D6](../modern-grover/PRODUCT_DECISIONS.md).
+decided in [Yardfolio Study MG-D6](../yardfolio-study/PRODUCT_DECISIONS.md).
 Invitation persistence and accepted-invitation read validation are delivered;
 issuance, acceptance, and revocation routes are not. Any non-owner delegation
 must be persisted at property scope and must not receive provider-management

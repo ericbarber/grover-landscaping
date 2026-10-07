@@ -12,7 +12,7 @@ const requiredDisallows = [
   '/bid-review/',
   '/report-view/',
   '/design',
-  '/modern-grover',
+  '/yardfolio-study',
 ];
 const publicPaths = [
   '/',

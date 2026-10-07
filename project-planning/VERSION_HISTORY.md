@@ -5,8 +5,10 @@
   metadata, Field PWA labels, icon accessibility, server-rendered public
   titles, authentication challenges, local-review demo identity, and operator
   messages now use the new name. Current repository overviews, operational
-  guides, trust language, and active planning records use Yardfolio while the
-  historical Modern Grover track retains its original internal name.
+  guides, trust language, and active planning records use Yardfolio. The former
+  internal study name, `/yardfolio-study` review route, isolated fixture
+  database contract, request namespaces, environment variables, response
+  header, CI commands, and linked prototype paths now use Yardfolio Study.
   Source identifiers and infrastructure retain the documented legacy namespace
   until their coordinated migrations. The production shell
   cache version advances so existing installations receive the renamed shell
@@ -144,7 +146,7 @@
 - 2026-10-03: Added a fail-closed B9 target-boundary preflight for matched
   fixture work. It permits only the dedicated port-8081 loopback or Tailscale
   study origin, requires local-review PostgreSQL readiness, verifies the
-  operator-selected `grover_modern_study` database and successful migration
+  operator-selected `yardfolio_study` database and successful migration
   ledger, and rejects occupied Canyon View or Sage Lane namespaces without
   exposing connection details or record values. Contract tests and local/CI
   repository gates cover safe and rejected boundaries. The API now reports its
@@ -154,7 +156,7 @@
   also replaces the impossible caller-defined-primary-key assumption with
   per-record API ID ownership and allowlisted table prefixes. A separate
   disabled-by-default fixture mode is startup-rejected outside non-production
-  local review on `grover_modern_study`; on that exact target it records a new
+  local review on `yardfolio_study`; on that exact target it records a new
   namespaced invitation's normal delivered transition and returns the bearer
   once in a response header, never JSON or the manifest. Separate fixed Canyon
   View and Sage Lane Property Owner reviewers now preserve user-level isolation
@@ -390,50 +392,50 @@
   Formatting, backend type check, and the isolated database lifecycle test
   passed. This is a prerequisite for customer-controlled manager delegation;
   grant issuance remains unimplemented.
-- 2026-09-17: Decided Modern Grover MG-D6: the customer controls Property
+- 2026-09-17: Decided Yardfolio Study MG-D6: the customer controls Property
   Manager access after accepting the company as the service team. The first
   access contract maps that moment to completed provider relationship
   activation, scopes each grant to one property, and requires recipient
   acceptance and customer revocation. Existing code still issues only an
   owner grant, so no manager access or matched task is claimed yet.
-- 2026-09-16: Started and enabled a separate `grover-modern-study-api` user
+- 2026-09-16: Started and enabled a separate `yardfolio-study-api` user
   service against the isolated study database on port 8081. Its process
   identity and `local_review` mode were verified without exposing credentials;
   the endpoint returns 200 through Tailscale. The read-only probe confirms no
   customer fixture yet and the historical migration route. The phone review
   app remains on the shared port-8080 API; no study frontend or seeder exists.
-- 2026-09-16: Created a separate local `grover_modern_study` PostgreSQL
-  database for Modern Grover fixture work. The current migrator completed
+- 2026-09-16: Created a separate local `yardfolio_study` PostgreSQL
+  database for Yardfolio Study fixture work. The current migrator completed
   twice; all 124 migrations succeeded. Owner properties, portal grants, and
   operational exceptions are empty. A June 15 sample day plan comes from an
   existing migration and is explicitly outside the future fixture namespace.
   The shared review API/database was not used for fixture writes. A separate
   study API, seeder, and manifest reset remained open at this point.
-- 2026-09-16: Added independent Modern Grover personas for Yard Owner,
+- 2026-09-16: Added independent Yardfolio Study personas for Yard Owner,
   Property Manager, Company Owner, Company Manager, and Crew Lead, with
   secondary/recovery perspectives for five more roles. Each first-wave
   profile ties a task to source-backed access limits, prototype gaps, and a
   research question. They remain hypotheses, not interview findings or new
   backend permissions.
-- 2026-09-16: Prepared an independent Modern Grover formative session protocol
+- 2026-09-16: Prepared an independent Yardfolio Study formative session protocol
   and anonymous notes template. The script separates public claim/path
   comprehension from authenticated work, records normal entry and recovery,
   and marks role tasks directional until matched snapshots exist. Property
   Manager delegation, Plan 8/9 revision, and Crew Lead access transfer cannot
   be scored as equivalent current-app completion. No participant result is
   claimed.
-- 2026-09-16: Added Modern Grover decision MG-D6 for Property Manager portal
+- 2026-09-16: Added Yardfolio Study decision MG-D6 for Property Manager portal
   delegation authority, scope, and revocation after confirming the current
   activation issues only an owner grant. A manager fixture and equivalent
   completion task remain gated on this decision and a supported API contract.
-- 2026-09-16: Specified the isolated Modern Grover seed contract after tracing
+- 2026-09-16: Specified the isolated Yardfolio Study seed contract after tracing
   the backend owner acquisition persistence fixture. It requires a dedicated
   study database, manifest-owned reset, immutable proposal v1→v3 progression,
   exact acceptance/activation/visit/service-release checks, a current route
   date, and delivered-only proof. It marks Property Manager grant issuance,
   Crew Lead access handoff, and Plan 8/9 revision as unsupported comparisons.
   No seeder or matched data was created.
-- 2026-09-16: Added a read-only Modern Grover fixture probe. It verifies
+- 2026-09-16: Added a read-only Yardfolio Study fixture probe. It verifies
   local-review mode, then reports protected portal status, owner acquisition
   counts, Crew Lead route date/stops, and open manager exceptions without
   printing customer records. On the September 16 as-of date the private review
@@ -451,20 +453,20 @@
   also found no supported Property Manager grant-issuance write: activation
   creates an owner grant and allows one portal grant per activation.
 - 2026-09-16: Added independent Property Manager and Company Owner task pages
-  to the Modern Grover prototype. The portfolio concept finds one access
+  to the Yardfolio Study prototype. The portfolio concept finds one access
   question among two scoped properties, checks the exact request, and hands
   guidance to the manager for verification. The company view names an
   accountable operator for the service risk. Changed state, unavailable read,
   and ended-access branches keep protected information and actions hidden.
   All actions remain simulated; no shared state or current-app fixture exists.
-- 2026-09-16: Mapped Modern Grover's current-app proposal, portal grant,
+- 2026-09-16: Mapped Yardfolio Study's current-app proposal, portal grant,
   release/job/route, exception, proof, and portfolio paths to the matched task
   moments. The source review identifies the prerequisite record chain and
   authorization checks, plus three noncomparable transitions: Plan 8/9 is not
   a persisted route version, Crew Lead access questions do not enter the
   manager exception API, and Property Manager Portfolio still receives preview
   properties and visits. No matched records or participant results are claimed.
-- 2026-09-16: Completed the six core simulated Modern Grover task moments with
+- 2026-09-16: Completed the six core simulated Yardfolio Study task moments with
   manager proof correction and Yard Owner outcome pages. Rejected package 1
   remains private; corrected package 2 requires exact-version review before
   simulated delivery. A newer package blocks stale delivery. The customer
@@ -487,12 +489,12 @@
   Failed-read retry and 320/390/1440px browser checks passed. Durable offline
   storage, manager exception review, and real writes are not claimed.
 - 2026-09-16: Connected a simulated Yard Owner proposal decision to the new
-  Modern Grover manager study. Proposal v3 shows exact scope, $420 total,
+  Yardfolio Study manager study. Proposal v3 shows exact scope, $420 total,
   planning consequence, and next owner without provider-private plan detail.
   Revision, stale version, failed read, and recovery branches were checked at
   320, 390, and 1440px. The cross-page link is a study control, not a real
   authorization or persisted acceptance.
-- 2026-09-16: Started Modern Grover M2 in its independent directory with an
+- 2026-09-16: Started Yardfolio Study M2 in its independent directory with an
   interactive Company Manager service decision concept. The synthetic Canyon
   View flow connects accepted proposal v3, draft Plan 8, crew fit, correction,
   exact-version simulated release, accountable next owner, stale Plan 9
@@ -507,7 +509,7 @@
   passed. The diagnostic reviewer selector also fits at 320px. No new Modern
   Grover composition was adopted.
 - 2026-09-16: Specified two equivalent synthetic cross-role service records for
-  Modern Grover comparison. The fixtures preserve exact proposal/plan versions,
+  Yardfolio Study comparison. The fixtures preserve exact proposal/plan versions,
   customer/field privacy, current service day, offline state, proof review, and
   reset/replay requirements; they are not seeded or participant evidence.
 - 2026-09-16: Traced the current local-review Home-to-work paths for five Modern
@@ -515,18 +517,18 @@
   limits from design findings and identifies Yard Owner access and Crew Lead
   route-date contradictions between Home and destination. Matched service
   fixtures are still needed before a comparative task study.
-- 2026-09-16: Began Modern Grover M1 with a source-based public claim inventory.
+- 2026-09-16: Began Yardfolio Study M1 with a source-based public claim inventory.
   It separates locally implemented private-yard, portfolio, offline, and proof
   capability from gated marketplace, billing, invoice, and payment promises;
   proposed wording awaits product and participant review. No live marketing
   copy changed.
-- 2026-09-16: Isolated the new Modern Grover planning and review in its own
+- 2026-09-16: Isolated the new Yardfolio Study planning and review in its own
   top-level track. The prior website, persona, and service-thread artifacts are
   now explicit inputs rather than an approved target. A track workplan and open
   product-decision register identify capability truth, entry, role context,
   matched fixtures, a new cross-role prototype, participant study, and bounded
   adoption as the next sequence; production UI is unchanged.
-- 2026-09-16: Reviewed the current local-review workflow and modern Grover
+- 2026-09-16: Reviewed the current local-review workflow and Yardfolio study
   concept against the service-thread direction. The critical review prioritizes
   manager task discovery, public capability claims, prototype task depth,
   audience entry, and next-owner clarity; it defines a cross-role service
@@ -537,7 +539,7 @@
   and customer outcome across five core roles. It names the source of truth and
   failure branch at each handoff without claiming participant validation or
   production implementation of every transition.
-- 2026-09-16: Added a responsive HTML plan page to the modern Grover prototype
+- 2026-09-16: Added a responsive HTML plan page to the Yardfolio study prototype
   and routed its review link there. The Markdown plan remains canonical;
   desktop, phone, and narrow-phone browser checks verify the styled page and
   return path.

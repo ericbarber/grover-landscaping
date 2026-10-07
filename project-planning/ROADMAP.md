@@ -140,8 +140,8 @@ progress rail into a shared typed lifecycle component with semantic tests. This
 does not adopt the proposed service-thread composition before participant
 evidence.
 
-Modern Grover now has an independent planning and review home in
-[`../modern-grover/`](../modern-grover/README.md). The prior public website,
+Yardfolio Study now has an independent planning and review home in
+[`../yardfolio-study/`](../yardfolio-study/README.md). The prior public website,
 ten persona hypotheses, and five role-filtered workspace previews in `design/`
 remain comparison inputs, not the new track's approved target. Its M1 work
 reconciles public claims, audience entry, role context, and matched service

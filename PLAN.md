@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Pi has an ARM64 runtime, healthy PostgreSQL, private HTTPS, and restricted CI SSH grant; deployment remains disabled and unhosted | Publish the workflow, run CI, then verify the first gated deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered; B1/B3 and repository-owned B7/B8 work are implemented, B6/B9 preparations are ready, and a bounded B10 decision packet awaits approval | Approve or revise B10 boundaries while B4/B5/B6/B8/B9 evidence proceeds in an authorized environment |
-| Design | Prior concepts remain review inputs; Modern Grover M1 remains open and eight M2 task moments are simulated | Complete matched access/fixture prerequisites and run B9 participant sessions before B2 expansion |
+| Design | Prior concepts remain review inputs; Yardfolio Study M1 remains open and eight M2 task moments are simulated | Complete matched access/fixture prerequisites and run B9 participant sessions before B2 expansion |
 
 ## Status Legend
 
@@ -74,7 +74,7 @@ connection details. Manifest schema 2 attributes normal API-generated IDs to
 their Canyon View or Sage Lane owner while reserving the synthetic namespace
 for request/idempotency keys. A disabled-by-default fixture runtime can return a
 newly created provider invitation token once, outside JSON, only after proving
-non-production local-review PostgreSQL on `grover_modern_study`; it also records
+non-production local-review PostgreSQL on `yardfolio_study`; it also records
 the normal delivered transition. No record has been seeded; the updated API
 must be restarted and the preflight run before writes, followed by exact access
 and denial verification. Canyon View and Sage Lane now have separate fixed
@@ -120,7 +120,7 @@ public route is approved until B4 evidence and accountable owner reviews exist.
 
 B8 repository delivery now enforces a tested crawler policy for the five public
 routes and excludes authenticated, auth-callback, diagnostics, invitation,
-shared-token, design-review, and Modern Grover review paths. The production
+shared-token, design-review, and Yardfolio Study review paths. The production
 server returns durable 404 responses for unknown, invalid nested marketing,
 missing-asset, and unshipped review paths. It also emits route-specific copy and
 metadata in initial HTML and generates absolute canonical/share URLs, robots,
@@ -188,7 +188,7 @@ preview requires confirming that no new preview is needed.
   reach the Pi after the policy change. Verify the tagged runner and first
   deployment after publication. No application image has been deployed yet.
 
-### Modern Grover independent planning and review
+### Yardfolio Study independent planning and review
 
 The [working mission and core values](project-planning/MISSION_AND_VALUES.md)
 now give the content review a physical-environment outcome: outdoor places that
@@ -196,20 +196,20 @@ are more beautiful and better maintained through clear plans, practical work,
 and lasting follow-through. This is a messaging foundation; specific public
 capability claims still require the existing claim review and product decisions.
 
-The [Modern Grover track](modern-grover/README.md) owns the active
-[workplan](modern-grover/WORKPLAN.md), [product decisions](modern-grover/PRODUCT_DECISIONS.md),
-[critical workflow review](modern-grover/review/application-workflow-critical-review-2026-09-16.md),
-and [cross-role blueprint](modern-grover/review/application-experience-blueprint.md).
+The [Yardfolio Study track](yardfolio-study/README.md) owns the active
+[workplan](yardfolio-study/WORKPLAN.md), [product decisions](yardfolio-study/PRODUCT_DECISIONS.md),
+[critical workflow review](yardfolio-study/review/application-workflow-critical-review-2026-09-16.md),
+and [cross-role blueprint](yardfolio-study/review/application-experience-blueprint.md).
 Earlier website, persona, and service-thread designs remain comparison inputs;
 none is the approved target for this track. The prior
-[website and role preview](design/prototypes/modern-grover/README.md) remains a
+[website and role preview](design/prototypes/yardfolio-study/README.md) remains a
 validated illustrative concept with no React adoption or participant result.
 The current React app and production access contracts remain authoritative.
 
 M0 separation is delivered. M1 is in progress: a
-[first-pass public claim inventory](modern-grover/CLAIM_INVENTORY.md) now marks
+[first-pass public claim inventory](yardfolio-study/CLAIM_INVENTORY.md) now marks
 supported, ambiguous, and gated promises. A
-[first-pass current journey trace](modern-grover/CURRENT_JOURNEYS.md) records
+[first-pass current journey trace](yardfolio-study/CURRENT_JOURNEYS.md) records
 five phone entry paths and local-review Home/destination state mismatches.
 The bounded current-app Home continuity repair is delivered in local review:
 Yard Owner Home now reflects the protected portal read, while Crew Lead Home
@@ -222,14 +222,14 @@ Next, prepare consistent service fixtures and resolve the open audience and
 role-context choices. Customer-controlled one-property Property Manager
 invitation, acceptance, and revocation are implemented; B9 still requires
 matched study fixtures before that role's task can be scored. The
-[linked Yard Owner, Company Manager, and Crew Lead prototypes](modern-grover/prototype/README.md)
+[linked Yard Owner, Company Manager, and Crew Lead prototypes](yardfolio-study/prototype/README.md)
 are interactive and clearly simulated: they cover proposal acceptance,
 customer consequence, crew fit, exact-version release, field access questions,
 tab-held offline state, manager access verification, revised Plan 9 release,
 proof correction, reviewed customer outcome, stale versions, and failed-read
 recovery. The six task moments have no shared persistence or real photo. Next,
 prepare matched synthetic fixtures using the
-[current-app authority map](modern-grover/FIXTURE_READINESS.md), resolve the
+[current-app authority map](yardfolio-study/FIXTURE_READINESS.md), resolve the
 open audience/role choices, and connect Company Owner accountability and
 Property Manager decisions to authorized current-app records before participant
 comparison or bounded React/API adoption. Two additional role perspectives are
@@ -240,7 +240,7 @@ actions do not persist or transfer across pages.
 The continuity repair is a truth correction to the existing UI; the proposed
 new composition is not approved for production adoption.
 
-The [matched synthetic fixture specification](modern-grover/MATCHED_FIXTURES.md)
+The [matched synthetic fixture specification](yardfolio-study/MATCHED_FIXTURES.md)
 now defines two equivalent cross-role services for fair current/new tasks.
 Those records are not seeded. The prototype uses one specified synthetic task
 moment, not a current-app fixture. The route/API and authority map is now
@@ -248,12 +248,12 @@ recorded; it identifies current-app gaps in plan revision and field-to-office
 access questions. Portfolio's protected data-source repair is delivered, while
 the old preview-only Proof and Approvals tabs are not claimed as live. Matched
 grants/records, fixture reset, and participant sessions remain open.
-The [read-only local fixture probe](modern-grover/fixtures/README.md) now
+The [read-only local fixture probe](yardfolio-study/fixtures/README.md) now
 records the private review baseline for the study date: no Yard Owner
 acquisition properties, protected portal reads denied for Yard Owner and
 Property Manager, a past two-stop Crew Lead route, and no open manager
 exceptions. It makes fixture gaps reproducible without changing shared data.
-The [isolated fixture seed contract](modern-grover/fixtures/SEED_CONTRACT.md)
+The [isolated fixture seed contract](yardfolio-study/fixtures/SEED_CONTRACT.md)
 now defines supported owner transitions, reset ownership, and date/role gates.
 Its non-secret working-tree manifest template and tested validator establish the
 allowed record namespaces, provenance, lifecycle, and reset receipt, while
@@ -270,14 +270,14 @@ owner-foundation plan now pins synthetic inputs and public API request shapes,
 including deterministic invitation keys and exact workspace, property, and
 ready-brief discovery/recovery; it has no executable entry point and cannot
 seed records.
-The [separate local study database](modern-grover/fixtures/LOCAL_STUDY_ENV.md)
+The [separate local study database](yardfolio-study/fixtures/LOCAL_STUDY_ENV.md)
 is now created and migrated, with its own active local-review API on port 8081.
 It contains only migration baseline records, including a historical June
 route; a seeder, reset, and matched records are not yet available. The phone
 review app still uses the shared API on port 8080.
-The [MG-D6 product decision](modern-grover/PRODUCT_DECISIONS.md) now assigns
+The [MG-D6 product decision](yardfolio-study/PRODUCT_DECISIONS.md) now assigns
 Property Manager access to the customer after the provider relationship is
-active. The [delegation contract](modern-grover/PROPERTY_MANAGER_ACCESS.md)
+active. The [delegation contract](yardfolio-study/PROPERTY_MANAGER_ACCESS.md)
 requires property-scoped invitation, recipient acceptance, customer
 revocation, and protected read checks. The invitation/grant schema, customer
 issuance, recipient acceptance, revocation routes, minimized UI, and
@@ -288,12 +288,12 @@ The customer portal property and visit read now also requires the provider
 relationship behind an active grant to remain active. An ended relationship
 with a stale active grant fails closed; the isolated database lifecycle test
 covers both property and visit reads.
-The [Modern Grover formative protocol](modern-grover/research/SESSION_PROTOCOL.md)
-and [session notes template](modern-grover/research/SESSION_NOTES_TEMPLATE.md)
+The [Yardfolio Study formative protocol](yardfolio-study/research/SESSION_PROTOCOL.md)
+and [session notes template](yardfolio-study/research/SESSION_NOTES_TEMPLATE.md)
 now define neutral public and role tasks, comparison eligibility, and evidence
 capture. They are ready for preparation, but no participant sessions or
 matched task-completion comparison have occurred.
-The [independent Modern Grover persona set](modern-grover/personas/README.md)
+The [independent Yardfolio Study persona set](yardfolio-study/personas/README.md)
 now covers five first-wave task/authority hypotheses and five secondary or
 recovery perspectives. It is a separate planning artifact, not participant
 evidence or a new role contract.

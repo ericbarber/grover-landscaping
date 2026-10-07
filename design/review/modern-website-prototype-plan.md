@@ -1,10 +1,10 @@
-# Modern Grover website and application prototype plan
+# Yardfolio Study website and application prototype plan
 
 Status: prior prototype plan, retained as design input, 2026-09-16. The active
 planning and review are in the independent
-[Modern Grover track](../../modern-grover/README.md).
+[Yardfolio Study track](../../yardfolio-study/README.md).
 
-The [styled browser view](../prototypes/modern-grover/plan.html) presents this
+The [styled browser view](../prototypes/yardfolio-study/plan.html) presents this
 plan on phones; this Markdown document remains the source for that earlier
 prototype, not the new track's workplan.
 

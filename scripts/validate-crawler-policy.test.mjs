@@ -17,10 +17,10 @@ test('accepts the repository crawler policy', () => {
 test('rejects a policy that exposes protected or review routes', () => {
   const unsafe = repositoryPolicy
     .replace('Disallow: /app\n', '')
-    .replace('Disallow: /modern-grover\n', '');
+    .replace('Disallow: /yardfolio-study\n', '');
   assert.deepEqual(validateCrawlerPolicy(unsafe), [
     'required private/review exclusion is missing: /app',
-    'required private/review exclusion is missing: /modern-grover',
+    'required private/review exclusion is missing: /yardfolio-study',
   ]);
 });
 

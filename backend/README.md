@@ -103,13 +103,13 @@ rejected and the mode cannot start with `APP_ENV=production`. The API exposes
 runtime configuration at `GET /auth/config`. See
 [`../docs/authentication.md`](../docs/authentication.md).
 
-The isolated Modern Grover study runtime may additionally set
-`MODERN_GROVER_FIXTURE_MODE=enabled`. Startup rejects that setting unless the
+The isolated Yardfolio Study runtime may additionally set
+`YARDFOLIO_STUDY_FIXTURE_MODE=enabled`. Startup rejects that setting unless the
 runtime is non-production, uses `local_review`, has PostgreSQL persistence, and
-is connected to the exact `grover_modern_study` database. In that mode only,
+is connected to the exact `yardfolio_study` database. In that mode only,
 new Canyon View or Sage Lane provider-invitation requests are marked delivered
 through the normal repository transition and return their one-time bearer value
-in `x-grover-local-fixture-invitation-token`. The token remains absent from JSON,
+in `x-yardfolio-local-fixture-invitation-token`. The token remains absent from JSON,
 logs, manifests, ordinary local review, and every production configuration.
 
 ## Production runtime

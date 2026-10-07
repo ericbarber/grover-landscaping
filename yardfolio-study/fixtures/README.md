@@ -1,0 +1,176 @@
+# Local-review fixture probe
+
+This directory holds preparation tools for the independent Yardfolio Study
+comparison. [`probe.mjs`](probe.mjs) makes only GET requests. It first verifies
+`/auth/config` is in `local_review` mode, then reports status, counts, and the
+Crew Lead route date for the fixed local reviewer identities. Canyon View and
+Sage Lane use separate synthetic Property Owner reviewers so their owner-scoped
+records and denial checks cannot collapse into one principal. The probe does not
+print property names, addresses, message bodies, tokens, or full API records.
+
+From the repository root, with the local-review API running:
+
+```bash
+YARDFOLIO_STUDY_AS_OF=2026-09-16 \
+YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8080 \
+node yardfolio-study/fixtures/probe.mjs
+```
+
+Set `YARDFOLIO_STUDY_API_URL` to the Tailscale API URL when probing the private
+review service remotely. The as-of date is a comparison input, not a route
+write. The script does not seed records, reset state, or validate role access
+to a specific Canyon View/Sage Lane resource. Treat a 200 response and a
+nonzero count as readiness clues; exact grant/scope, proposal version, and
+record linkage still need direct verification before a study task can be
+scored. The [fixture authority map](../FIXTURE_READINESS.md) lists the record
+chain and unsupported transitions.
+
+The [isolated seed contract](SEED_CONTRACT.md) defines the supported owner
+record sequence, reset ownership, and date/role gates for a future writable
+fixture utility. Property Manager delegation prerequisites are delivered, but
+no seeder or matched record is available yet.
+
+## Manifest contract
+
+[`fixture-manifest.example.json`](fixture-manifest.example.json) is a
+non-runnable, non-secret template for the local manifest required by the seed
+contract. Validate the repository template from the repository root with:
+
+```bash
+node --test yardfolio-study/fixtures/validate-manifest.test.mjs
+node yardfolio-study/fixtures/validate-manifest.mjs \
+  --allow-template yardfolio-study/fixtures/fixture-manifest.example.json
+```
+
+The eventual seeder must write its real `local_fixture` manifest under the
+ignored `.localdev/yardfolio-study/` directory and validate it without
+`--allow-template`. Passing this structural validator does not prove the target
+database identity, create a record, or satisfy the read/denial checks in the
+seed contract; those remain runtime gates.
+
+After restarting the exact study API build and configuring libpq for the study
+database, prepare that real manifest with:
+
+```bash
+YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8081 \
+YARDFOLIO_STUDY_SOURCE_COMMIT='<exact 40-character commit running on the API>' \
+YARDFOLIO_STUDY_AS_OF=2026-09-16 \
+node yardfolio-study/fixtures/prepare-manifest.mjs
+```
+
+The preparation utility runs the full target preflight again, requires both
+fixed study-owner profiles from `/auth/config`, writes the ignored manifest
+with mode `0600`, and refuses to replace an existing file. It creates no
+application records. Do not substitute the current Git commit unless that is
+the exact source running on port 8081.
+
+Manifest schema 2 keeps API-generated IDs under the Canyon View or Sage Lane
+record that owns them and now journals the fixed workspace owner ID under the
+same record before property work begins. It accepts only an allowlisted table
+and the table's exact ID rule; the `yardfolio_study_canyon_` and
+`yardfolio_study_sage_` values are request/idempotency namespaces, not fabricated
+database IDs. This preserves exact reset ownership without pretending supported
+APIs accept caller-selected primary keys. Each record also pins its fixed
+local-review owner user ID so owner-scope denial checks and reset queries cannot
+conflate the two records.
+
+[`fixture-state.mjs`](fixture-state.mjs) is the crash-safe manifest journal for
+the future seeder/reset process. It takes an exclusive private lock, validates
+the current manifest before every change, writes API-generated IDs and verified
+snapshot markers through an atomic mode-`0600` replacement, rejects delegation
+lifecycle regressions, and records reset completion only with a zero-remaining
+receipt. Repeating the same ID, snapshot, or completed reset is idempotent. A
+leftover `.lock` file fails closed; remove it only after confirming that no
+fixture process still owns the recorded PID.
+
+The journal can be imported by the future orchestrator or exercised directly:
+
+```bash
+node yardfolio-study/fixtures/fixture-state.mjs \
+  .localdev/yardfolio-study/fixture-manifest.json \
+  record-id canyon owner_properties owner_property_<generated-id>
+```
+
+Other commands are `record-snapshot`, `record-delegation`, and
+`complete-reset`. The utility prints only counts and lifecycle state. It does
+not call application APIs, delete database records, verify that a reset count
+is true, or make the fixture participant-ready; those remain responsibilities
+of the bounded seeder/reset orchestrator. Never pass an invitation token or
+protected content to this journal.
+
+[`owner-foundation-plan.mjs`](owner-foundation-plan.mjs) defines the next
+non-executable orchestration boundary. It derives separate public-API request
+plans for the Canyon and Sage workspaces, synthetic properties, ready briefs,
+and delivered provider invitations from a validated manifest. Before an
+eventual executor writes a property, the fixed workspace must be discovered,
+matched, and journaled. Property recovery requires an owner-scoped discovery
+result to match every fixed synthetic field: one exact unjournaled match is
+recovered, zero matches permits creation, and scope leaks, same-label
+collisions, duplicates, or stale journal IDs fail closed. Ready-brief recovery
+likewise requires the exact journaled property, content, API ID, and persisted
+version before a retry is skipped. The plan marks the invitation header as
+same-process memory only. It does not perform network requests, expose a write
+command, or make reset optional.
+
+[`reset-plan.mjs`](reset-plan.mjs) builds the non-executable direct ownership
+inventory for a future reset. It validates the manifest, refuses `prepared` or
+already-reset state, covers every allowlisted ID table, and orders each exact
+primary key child before parent. The only non-`id` key is the exact
+`owner_workspaces.owner_user_id` already owned by that manifest record. It emits
+neither SQL nor a free-form predicate and supports the earliest workspace-only
+partial run. The plan deliberately marks itself non-executable because API
+transitions also create event, delivery, conversation, operational, and other
+derived child rows. The plan now catalogs those selectors for acquisition
+events; invitation delivery, recipient, claim, and capability children;
+disclosure, assessment, proposal, activation, first-visit, delegation, release,
+visit, recommendation, route, job, checklist, photo, report, add-on, mutation,
+and operational-exception records. Each selector carries an exact manifest root
+ID and a declarative relation path, never SQL. Selector interpretation in one
+transaction, rollback behavior, and zero-remaining verification are still
+required before deletion.
+
+## Target-boundary preflight
+
+Before any fixture seeder writes a record, run this fail-closed boundary
+preflight. It accepts only the dedicated port-8081 loopback or Tailscale
+origin, requires `local_review` mode and ready PostgreSQL persistence, queries
+the API's local-review-only readiness identity and the operator-selected
+PostgreSQL target for the exact `yardfolio_study` database, verifies a
+successful migration count, and scans every public text column for either
+reserved fixture namespace. It prints only those summary facts; it does not
+print connection settings, record locations, or record values.
+
+Configure libpq through the normal `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`,
+and exact database-name variables in the operator shell, then run:
+
+```bash
+PGDATABASE=yardfolio_study \
+YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8081 \
+node yardfolio-study/fixtures/validate-target.mjs
+```
+
+The command must report `target_boundary_preflight_passed`, a positive
+migration count, and zero namespace matches. That result is one prerequisite,
+not authorization to seed: it proves that the API and operator inspection both
+name the isolated database, but it does not approve a seed payload. Before
+writes, the seeding workflow must also validate the real manifest. Re-run exact
+read and denial checks after the future seeder completes.
+
+## Isolated invitation handoff
+
+The supported provider workflow needs the one-time invitation bearer value,
+which production owner responses intentionally withhold. The dedicated study
+service may set:
+
+```bash
+YARDFOLIO_STUDY_FIXTURE_MODE=enabled
+```
+
+Startup fails unless that process is non-production, in `local_review`, backed
+by PostgreSQL, and connected to exactly `yardfolio_study`. In this mode,
+only invitation requests using a `yardfolio_study_canyon_` or
+`yardfolio_study_sage_` idempotency key are accepted. A newly created invitation
+is marked delivered through the existing delivery transition and returns its
+token once in `x-yardfolio-local-fixture-invitation-token`. The future seeder must
+keep that value only in process memory. Never print it or store it in the local
+manifest.

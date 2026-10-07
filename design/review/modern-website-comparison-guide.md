@@ -1,7 +1,7 @@
 # Modern website comparison guide
 
 Status: prior candidate session guide; no participant evidence collected. The
-active Modern Grover [workplan](../../modern-grover/WORKPLAN.md) treats this
+active Yardfolio Study [workplan](../../yardfolio-study/WORKPLAN.md) treats this
 guide as research input, not a completed comparison or adoption decision.
 
 Date: 2026-09-16
@@ -24,7 +24,7 @@ role hypotheses; this round covers the five core perspectives only.
 | --- | --- | --- |
 | Current app | Live local-review React at a recorded commit, with the [dated mirror](../prototypes/current-frontend-review/index.html) as fallback | Real navigation and current workflow, subject to fixture and deployment limits |
 | Service thread | [Existing working prototype](../prototypes/simplified-service-thread/index.html) | Role-filtered service comprehension and illustrative task composition |
-| Modern concept | [Public website and role preview](../prototypes/modern-grover/index.html) | Entry-path choice, visual hierarchy, next-step comprehension, and role boundary |
+| Modern concept | [Public website and role preview](../prototypes/yardfolio-study/index.html) | Entry-path choice, visual hierarchy, next-step comprehension, and role boundary |
 
 The modern concept has inspect-only actions. Do not score it as completing a
 decision, publishing a plan, starting a job, or persisting proof. Compare

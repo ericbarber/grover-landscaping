@@ -61,5 +61,5 @@ dignity, or useful context.
   work.
 
 This foundation guides the content review. It does not by itself approve new
-public capability claims; use the [public claim inventory](../modern-grover/CLAIM_INVENTORY.md)
+public capability claims; use the [public claim inventory](../yardfolio-study/CLAIM_INVENTORY.md)
 to check those claims before publication.

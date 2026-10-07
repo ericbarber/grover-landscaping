@@ -144,7 +144,7 @@ Delivered preparation:
 
 - A `template_only` working-tree manifest defines the two fixed Canyon View and
   Sage Lane namespaces without tokens, connection data, or protected content.
-- A dependency-free validator requires the isolated `grover_modern_study`
+- A dependency-free validator requires the isolated `yardfolio_study`
   target, `local_review` API mode, real runtime commit/migration provenance,
   fixed reviewers, per-record API-generated IDs with allowlisted table
   prefixes, valid lifecycle snapshots, and a complete zero-remaining-record

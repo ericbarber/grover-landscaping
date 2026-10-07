@@ -37,6 +37,9 @@ browser event, diagnostic-download, test-output, and frontend package names now
 use Yardfolio; cache cleanup recognizes prior shells structurally without
 retaining the former brand string. The Rust crate/binary, health-service label,
 local-review request header, and local-review session key also use Yardfolio.
+The independent research/review track now uses the Yardfolio Study name across
+its repository directory, private review route, fixture tooling, isolated
+database contract, and backend safety gate.
 Persistent local-storage keys and the field IndexedDB database now use a
 Yardfolio namespace. On first access, the browser adopts values and queued work
 from matching earlier namespaces by stable suffix, copies only missing

@@ -17,7 +17,7 @@ Open [`index.html`](index.html) in a browser to review the complete visual set.
 The individual SVG files can also be opened directly in a browser, Figma, or an
 SVG-capable editor.
 
-The independent [Modern Grover planning track](../modern-grover/README.md)
+The independent [Yardfolio Study planning track](../yardfolio-study/README.md)
 owns the current workflow review and workplan. Artifacts in this directory are
 earlier candidates or implementation evidence for that track.
 
@@ -52,7 +52,7 @@ design/
 │   ├── current-frontend-review/        # Dated production-parity review mirror
 │   ├── frontend-truth-recovery/        # Adopted owner/crew continuity states
 │   ├── minimalist-personas/            # Ten task-first persona experiences
-│   ├── modern-grover/                   # Public website and five-role app preview
+│   ├── yardfolio-study/                   # Public website and five-role app preview
 │   ├── property-manager-portfolio/     # Connected portfolio command center
 │   ├── shared/                         # Canonical tokens and shell primitives
 │   ├── yard-crew-acquisition/           # Provider entry, opportunity, assessment, and support
@@ -242,11 +242,11 @@ renderer or a design-tool account to see a proposed screen.
 
 ## Current review order
 
-For the active Modern Grover work, start with its
-[independent workplan](../modern-grover/WORKPLAN.md) and
-[critical review](../modern-grover/review/application-workflow-critical-review-2026-09-16.md).
-The [earlier website prototype](prototypes/modern-grover/index.html), its
-[styled plan](prototypes/modern-grover/plan.html), and
+For the active Yardfolio Study work, start with its
+[independent workplan](../yardfolio-study/WORKPLAN.md) and
+[critical review](../yardfolio-study/review/application-workflow-critical-review-2026-09-16.md).
+The [earlier website prototype](prototypes/yardfolio-study/index.html), its
+[styled plan](prototypes/yardfolio-study/plan.html), and
 [persona profiles](personas/README.md) are comparison inputs, not the new
 track's approved target or a current production mirror.
 

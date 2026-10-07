@@ -43,7 +43,7 @@ and incomplete reset receipts. Schema 2 associates normal
 API-generated IDs with their Canyon View or Sage Lane owner and validates known
 table prefixes. A second tested preflight requires a port-8081 local-review API
 and an independently inspected database to report the same
-`grover_modern_study` identity, successful migrations, and empty reserved
+`yardfolio_study` identity, successful migrations, and empty reserved
 namespaces. A disabled-by-default fixture runtime now provides the transient
 provider invitation value only on that isolated target and records delivery
 through the existing transition. Two fixed study-owner profiles keep owner

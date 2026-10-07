@@ -233,7 +233,7 @@ Manager recipient after the provider relationship is active.
 ### Scope
 
 - Implement the approved rules in
-  [`../modern-grover/PROPERTY_MANAGER_ACCESS.md`](../modern-grover/PROPERTY_MANAGER_ACCESS.md).
+  [`../yardfolio-study/PROPERTY_MANAGER_ACCESS.md`](../yardfolio-study/PROPERTY_MANAGER_ACCESS.md).
 - Add immutable invitation/grant identity, recipient verification, expiry,
   acceptance, revocation, audit, and exact property/provider-relationship scope.
 - Require separate grants for separate properties; no implicit account-wide,

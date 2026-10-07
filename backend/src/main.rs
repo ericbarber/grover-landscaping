@@ -274,7 +274,7 @@ struct AppState {
     local_fixture_mode: bool,
 }
 
-const LOCAL_FIXTURE_INVITATION_TOKEN_HEADER: &str = "x-grover-local-fixture-invitation-token";
+const LOCAL_FIXTURE_INVITATION_TOKEN_HEADER: &str = "x-yardfolio-local-fixture-invitation-token";
 
 macro_rules! organization_ids_or_return {
     ($result:expr) => {
@@ -644,7 +644,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         .map_err(configuration_error)?;
 
     let auth = AuthService::from_env(production).await?;
-    let local_fixture_mode_value = std::env::var("MODERN_GROVER_FIXTURE_MODE").ok();
+    let local_fixture_mode_value = std::env::var("YARDFOLIO_STUDY_FIXTURE_MODE").ok();
     let local_fixture_database_name = if local_fixture_mode_value.as_deref() == Some("enabled") {
         jobs.database_name().await
     } else {
@@ -1406,16 +1406,16 @@ fn validate_local_fixture_mode(
             if !production
                 && local_review
                 && persistence == "postgres"
-                && database_name == Some("grover_modern_study") =>
+                && database_name == Some("yardfolio_study") =>
         {
             Ok(true)
         }
         Some("enabled") => Err(
-            "MODERN_GROVER_FIXTURE_MODE=enabled requires non-production local_review auth and PostgreSQL database grover_modern_study"
+            "YARDFOLIO_STUDY_FIXTURE_MODE=enabled requires non-production local_review auth and PostgreSQL database yardfolio_study"
                 .to_string(),
         ),
         Some(_) => Err(
-            "MODERN_GROVER_FIXTURE_MODE must be exactly enabled or disabled".to_string(),
+            "YARDFOLIO_STUDY_FIXTURE_MODE must be exactly enabled or disabled".to_string(),
         ),
     }
 }
@@ -3659,7 +3659,7 @@ async fn create_owner_provider_invitation(
         )
             .into_response();
     }
-    if state.local_fixture_mode && !is_modern_grover_fixture_key(&request.idempotency_key) {
+    if state.local_fixture_mode && !is_yardfolio_study_fixture_key(&request.idempotency_key) {
         return (
             StatusCode::BAD_REQUEST,
             Json(ErrorResponse {
@@ -3691,7 +3691,7 @@ async fn create_owner_provider_invitation(
                     RecordOwnerProviderInvitationDeliveryRequest {
                         outcome: "delivered".to_string(),
                         provider_message_id: Some(format!(
-                            "modern-grover-fixture-{invitation_id}"
+                            "yardfolio-study-fixture-{invitation_id}"
                         )),
                         failure_code: None,
                     },
@@ -3768,9 +3768,9 @@ async fn create_owner_provider_invitation(
     }
 }
 
-fn is_modern_grover_fixture_key(value: &str) -> bool {
+fn is_yardfolio_study_fixture_key(value: &str) -> bool {
     let value = value.trim();
-    value.starts_with("modern_study_canyon_") || value.starts_with("modern_study_sage_")
+    value.starts_with("yardfolio_study_canyon_") || value.starts_with("yardfolio_study_sage_")
 }
 
 async fn revoke_owner_provider_invitation(
@@ -10834,7 +10834,7 @@ mod tests {
                 false,
                 true,
                 "postgres",
-                Some("grover_modern_study"),
+                Some("yardfolio_study"),
             ),
             Ok(true),
         );
@@ -10844,14 +10844,14 @@ mod tests {
                 true,
                 true,
                 "postgres",
-                Some("grover_modern_study"),
+                Some("yardfolio_study"),
             ),
             validate_local_fixture_mode(
                 Some("enabled"),
                 false,
                 false,
                 "postgres",
-                Some("grover_modern_study"),
+                Some("yardfolio_study"),
             ),
             validate_local_fixture_mode(
                 Some("enabled"),
@@ -10868,11 +10868,13 @@ mod tests {
             validate_local_fixture_mode(None, true, false, "seed-local", None),
             Ok(false),
         );
-        assert!(is_modern_grover_fixture_key(
-            "modern_study_canyon_invitation"
+        assert!(is_yardfolio_study_fixture_key(
+            "yardfolio_study_canyon_invitation"
         ));
-        assert!(is_modern_grover_fixture_key("modern_study_sage_invitation"));
-        assert!(!is_modern_grover_fixture_key("ordinary-request"));
+        assert!(is_yardfolio_study_fixture_key(
+            "yardfolio_study_sage_invitation"
+        ));
+        assert!(!is_yardfolio_study_fixture_key("ordinary-request"));
     }
 
     fn seed_state() -> Arc<AppState> {
@@ -11346,7 +11348,7 @@ mod tests {
                             "provider_name": "Fixture Yard Care",
                             "recipient_business_email": "owner.local@example.test",
                             "expires_in_days": 7,
-                            "idempotency_key": "modern_study_canyon_invitation"
+                            "idempotency_key": "yardfolio_study_canyon_invitation"
                         })
                         .to_string(),
                     ))
@@ -14193,7 +14195,7 @@ mod tests {
         for route in [
             "/not-a-real-route",
             "/for-yard-owners/not-a-real-route",
-            "/modern-grover/",
+            "/yardfolio-study/",
             "/design/",
             "/assets/missing.js",
         ] {

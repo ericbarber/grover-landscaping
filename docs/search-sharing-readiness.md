@@ -22,7 +22,7 @@ outcome, certification, or protected-hosting claims.
 
 `frontend/public/robots.txt` allows public discovery and excludes the
 authenticated application, auth callback, diagnostics, organization invitation,
-shared bid/report token, design-review, and Modern Grover review routes. The
+shared bid/report token, design-review, and Yardfolio Study review routes. The
 dependency-free `scripts/validate-crawler-policy.mjs` contract runs locally and
 in CI. It rejects missing protected/review exclusions, exclusions that hide a
 public audience path, query/fragment-bearing rules, and a future sitemap URL
@@ -32,7 +32,7 @@ The production Rust server now allowlists only the five public routes and the
 known `/app`, callback, diagnostics, organization-invitation, shared-bid, and
 shared-report frontend entries. Existing built assets continue through the
 static-file service; unknown paths, invalid nested marketing paths, missing
-assets, and unshipped `/design` or `/modern-grover` review paths return HTTP 404
+assets, and unshipped `/design` or `/yardfolio-study` review paths return HTTP 404
 instead of duplicate company-page HTML. The server test covers each entry and
 denial group.
 
