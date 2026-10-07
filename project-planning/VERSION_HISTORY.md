@@ -29,7 +29,9 @@
   external resources remain subject to provider-specific migration. The next
   Pi release uses a Yardfolio image tag, release-environment key, and deployment
   directory; its database, private hostname, CI ACL tag, and repository identity
-  still require coordinated migration. The production shell
+  still require coordinated migration. A forward-only data migration renames
+  the seeded demo organization while preserving applied migration history. The
+  production shell
   cache version advances so existing installations receive the renamed shell
   through the established update prompt without clearing offline work. The
   active CSS variables, reusable component classes, Tailwind shadow utilities,

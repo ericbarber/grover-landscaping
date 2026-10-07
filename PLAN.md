@@ -332,6 +332,9 @@ Current state:
   isolated behind the compatibility plan. The Pi release image, environment
   key, and deployment directory are Yardfolio-namespaced for the next gated
   release; its private hostname and CI ACL tag still require external changes.
+  A forward-only database migration replaces the seeded organization display
+  name without altering the checksum of the applied migration that introduced
+  it.
   Professional trademark clearance, domain/app-store confirmation, final
   visual identity, and public rollout approval remain required.
 
