@@ -327,9 +327,10 @@ Current state:
   copy, accessibility labels, generated SVGs, shared-foundation links, and
   source asset names, so historical design evidence no longer presents the
   family name as a current product identity. Planned Render/AWS resources and
-  their operator runbooks use the Yardfolio namespace. Local and Pi database
-  credentials plus already-issued Pi network and repository identifiers remain
-  isolated behind the compatibility plan. The Pi release image, environment
+  their operator runbooks use the Yardfolio namespace. The local Compose
+  database, role, and volume now use Yardfolio after a logical backup and
+  no-owner restore. Pi database credentials plus already-issued Pi network and
+  repository identifiers remain isolated behind the compatibility plan. The Pi release image, environment
   key, and deployment directory are Yardfolio-namespaced for the next gated
   release; its private hostname and CI ACL tag still require external changes.
   A forward-only database migration replaces the seeded organization display

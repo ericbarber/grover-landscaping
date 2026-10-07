@@ -3,16 +3,16 @@ services:
     image: postgres:16
     container_name: yardfolio-postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-grover_landscaping}
-      POSTGRES_USER: ${POSTGRES_USER:-grover}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-grover}
+      POSTGRES_DB: ${POSTGRES_DB:-yardfolio}
+      POSTGRES_USER: ${POSTGRES_USER:-yardfolio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-yardfolio}
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-grover} -d ${POSTGRES_DB:-grover_landscaping}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-yardfolio} -d ${POSTGRES_DB:-yardfolio}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,7 +29,7 @@ services:
       CARGO_HOME: /tmp/cargo
       PORT: 8080
       RUST_LOG: ${RUST_LOG:-yardfolio_api=debug,tower_http=debug}
-      DATABASE_URL: ${COMPOSE_DATABASE_URL:-postgres://grover:grover@postgres:5432/grover_landscaping}
+      DATABASE_URL: ${COMPOSE_DATABASE_URL:-postgres://yardfolio:yardfolio@postgres:5432/yardfolio}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-}
       AUTH_MODE: ${AUTH_MODE:-local_review}
       COGNITO_ISSUER_URL: ${COGNITO_ISSUER_URL:-}
@@ -88,3 +88,4 @@ services:
 
 volumes:
   postgres-data:
+    name: yardfolio-postgres-data

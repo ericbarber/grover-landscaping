@@ -53,8 +53,9 @@ IndexedDB records and photo blobs, and removes a prior database only after a
 successful copy. Browsers that cannot enumerate IndexedDB databases leave the
 earlier database untouched rather than risking data loss. Changing
 infrastructure identifiers still requires a coordinated compatibility window
-across clients, servers, CI, and operations. They may retain a documented
-legacy namespace until that migration is available.
+across clients, servers, CI, and operations. The local Compose database has
+completed that migration; Pi and already-created external resources may retain
+a documented legacy namespace until their migrations are available.
 
 ## Public-launch gate
 

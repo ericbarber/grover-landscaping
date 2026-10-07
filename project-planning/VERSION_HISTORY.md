@@ -31,6 +31,9 @@
   directory; its database, private hostname, CI ACL tag, and repository identity
   still require coordinated migration. A forward-only data migration renames
   the seeded demo organization while preserving applied migration history. The
+  local Compose database, login, and volume now use Yardfolio after a logical
+  backup and no-owner restore that retains application data without carrying
+  the bootstrap role into the new cluster. The
   production shell
   cache version advances so existing installations receive the renamed shell
   through the established update prompt without clearing offline work. The
