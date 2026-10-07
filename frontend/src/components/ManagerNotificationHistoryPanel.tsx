@@ -41,10 +41,14 @@ const statusFilters: NotificationHistoryStatusFilter[] = [
 ];
 
 function statusLabel(status: NotificationHistoryStatusFilter): string {
-  if (status === 'dead_letter') return 'Needs attention';
-  if (status === 'resolved') return 'Resolved';
+  if (status === 'queued') return 'Waiting to send';
+  if (status === 'sending') return 'Sending';
+  if (status === 'sent') return 'Delivered';
+  if (status === 'failed' || status === 'dead_letter') return 'Needs attention';
+  if (status === 'resolved') return 'Closed';
+  if (status === 'skipped') return 'Not sent';
   if (status === 'all') return 'All statuses';
-  return status.replace('_', ' ');
+  return status;
 }
 
 export function notificationHistoryEntityLabel(
@@ -54,6 +58,23 @@ export function notificationHistoryEntityLabel(
   if (entity === 'project_bid') return 'Bids';
   if (entity === 'organization_invitation') return 'Invitations';
   return 'All work';
+}
+
+export function notificationHistoryItemLabel(entity: NotificationHistoryEntityType): string {
+  if (entity === 'completion_report') return 'Customer report';
+  if (entity === 'project_bid') return 'Customer proposal';
+  return 'Team invitation';
+}
+
+function deliveryIssueLabel(notification: NotificationHistoryItem): string {
+  const responseCode = notification.providerResponseCode;
+  if (responseCode && responseCode >= 400 && responseCode < 500 && responseCode !== 408 && responseCode !== 429) {
+    return 'The delivery service rejected the recipient or message. Confirm the address or phone number before retrying.';
+  }
+  if (responseCode === 408 || responseCode === 429 || (responseCode && responseCode >= 500)) {
+    return 'The delivery service was temporarily unavailable. Retry when ready.';
+  }
+  return 'The delivery could not be completed. Retry it or contact the customer another way.';
 }
 
 function statusClassName(status: NotificationHistoryStatus): string {
@@ -86,6 +107,7 @@ export function ManagerNotificationHistoryPanel({
 }: ManagerNotificationHistoryPanelProps) {
   const [entityType, setEntityType] = useState<NotificationHistoryEntityFilter>('all');
   const [status, setStatus] = useState<NotificationHistoryStatusFilter>('all');
+  const [resolveCandidateId, setResolveCandidateId] = useState<string | null>(null);
   const failedCount = useMemo(
     () => notifications.filter((item) => item.status === 'failed' || item.status === 'dead_letter').length,
     [notifications],
@@ -110,7 +132,7 @@ export function ManagerNotificationHistoryPanel({
           <h2 className="mt-1 text-xl font-bold text-slate-950">Delivery history</h2>
           <p className="mt-1 text-xs text-slate-500">
             {isUnavailable
-              ? 'The latest persisted delivery state could not be loaded.'
+              ? 'The latest delivery history could not be loaded.'
               : failedCount > 0
                 ? `${failedCount} delivery item${failedCount === 1 ? '' : 's'} need attention.`
                 : 'No failed deliveries in the current view.'}
@@ -122,7 +144,7 @@ export function ManagerNotificationHistoryPanel({
           onClick={() => onRefresh({ entityType, status })}
           type="button"
         >
-          {isLoading ? 'Refreshing' : 'Refresh'}
+          {isLoading ? 'Refreshing…' : 'Refresh'}
         </button>
       </div>
 
@@ -165,7 +187,7 @@ export function ManagerNotificationHistoryPanel({
       {isUnavailable ? (
         <WorkspaceStatusNotice
           className="mt-4"
-          detail="Persisted notification history is temporarily unavailable. Retry after API and database readiness recover; no empty history is being assumed."
+          detail="Your delivery records remain protected. Try again when the service is available."
           title="Delivery history could not be loaded."
           tone="warning"
         />
@@ -180,7 +202,7 @@ export function ManagerNotificationHistoryPanel({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="break-words text-sm font-semibold text-slate-950">
-                    {notificationHistoryEntityLabel(notification.entityType)} · {notification.templateKey.replace(/_/g, ' ')}
+                    {notificationHistoryItemLabel(notification.entityType)}
                   </p>
                   <p className="mt-1 break-all text-xs text-slate-600">
                     {notification.channel.toUpperCase()} to {notification.recipient}
@@ -191,39 +213,65 @@ export function ManagerNotificationHistoryPanel({
                 </span>
               </div>
               <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-3">
-                <p>Attempts: {notification.attemptCount}</p>
+                <p>Delivery attempts: {notification.attemptCount}</p>
                 <p>Last attempt: {formatDate(notification.lastAttemptAt)}</p>
-                <p>Next available: {formatDate(notification.availableAt)}</p>
+                <p>{notification.status === 'sent'
+                  ? `Delivered: ${formatDate(notification.sentAt)}`
+                  : `Retry available: ${formatDate(notification.availableAt)}`}</p>
               </div>
-              {notification.lastError ? (
+              {notification.status === 'failed' || notification.status === 'dead_letter' ? (
                 <p className="mt-2 break-words rounded-lg bg-white p-2 text-xs text-rose-700">
-                  {notification.lastError}
-                </p>
-              ) : null}
-              {notification.providerMessageId ? (
-                <p className="mt-2 break-all text-xs text-slate-500">
-                  Provider message: {notification.providerMessageId}
+                  {deliveryIssueLabel(notification)}
                 </p>
               ) : null}
               {notification.status === 'failed' || notification.status === 'dead_letter' ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
-                    disabled={isLoading}
-                    onClick={() => onRetry(notification.id, { entityType, status })}
-                    type="button"
-                  >
-                    Retry delivery
-                  </button>
-                  <button
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                    disabled={isLoading}
-                    onClick={() => onResolve(notification.id, { entityType, status })}
-                    type="button"
-                  >
-                    Mark resolved
-                  </button>
-                </div>
+                resolveCandidateId === notification.id ? (
+                  <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3">
+                    <p className="text-xs leading-5 text-amber-950">
+                      Close this only if the recipient was reached another way or no delivery is needed. Closing the issue will not send this message.
+                    </p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      <button
+                        className="min-h-11 rounded-lg bg-amber-800 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-900 disabled:opacity-60"
+                        disabled={isLoading}
+                        onClick={() => {
+                          setResolveCandidateId(null);
+                          onResolve(notification.id, { entityType, status });
+                        }}
+                        type="button"
+                      >
+                        Close without sending
+                      </button>
+                      <button
+                        className="min-h-11 rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-950 hover:bg-amber-100 disabled:opacity-60"
+                        disabled={isLoading}
+                        onClick={() => setResolveCandidateId(null)}
+                        type="button"
+                      >
+                        Keep open
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <button
+                      className="min-h-11 rounded-lg border border-rose-300 bg-white px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
+                      disabled={isLoading}
+                      onClick={() => onRetry(notification.id, { entityType, status })}
+                      type="button"
+                    >
+                      Retry delivery
+                    </button>
+                    <button
+                      className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                      disabled={isLoading}
+                      onClick={() => setResolveCandidateId(notification.id)}
+                      type="button"
+                    >
+                      Close issue
+                    </button>
+                  </div>
+                )
               ) : null}
             </article>
           ))}

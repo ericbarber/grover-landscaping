@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-10-06: Improved manager notification recovery after report delivery.
+  Delivery history now translates queue/provider states into waiting, delivered,
+  attention, and closed language; replaces raw template keys, provider message
+  IDs, and provider errors with safe work labels and actionable guidance; and
+  requires confirmation before closing a failed message without sending it.
+  Focused component tests, TypeScript, the production build, and all artifact
+  budgets pass.
 - 2026-10-06: Made the manager report queue task-first. Report cards now name
   the next action for their current state, translate readiness blockers into
   missing tasks/photos/extras, distinguish work saved on a device, use

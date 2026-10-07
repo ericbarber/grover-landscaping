@@ -154,6 +154,9 @@ The manager report queue now presents the next useful action for each report,
 uses task/photo language for missing work, distinguishes reports saved on a
 device, and adds color-coded states plus full-width phone actions for faster
 scanning and handoff.
+Notification delivery history now uses customer-facing work labels and clear
+delivery states, withholds provider/template/error identifiers, and confirms
+before closing a failed delivery without sending it.
 
 ### Raspberry Pi development hosting
 

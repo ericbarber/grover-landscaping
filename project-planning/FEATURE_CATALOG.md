@@ -126,6 +126,9 @@ boundary; inclusion here alone does not mean a feature shipped.
   internal report IDs, storage object keys, upload modes, and lifecycle labels
 - Manager report review queue with plain-language missing-item filters,
   state-specific next actions, scannable status colors, and phone-width actions
+- Manager notification history with customer-report/proposal/invitation labels,
+  user-safe failure guidance, hidden provider internals, and confirmation before
+  closing an undelivered message
 - Centralized field-data continuity policy for job-detail fallbacks, typed local
   photo evidence, and authoritative evidence merges that preserve unsaved work
 - Field job-selection coordinator owning detail and add-on request lifecycle,
