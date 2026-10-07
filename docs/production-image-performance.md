@@ -44,7 +44,7 @@ The local cache-hit reduction is 754.46 seconds (96.3%). Hosted cache import,
 export, and eviction behavior cannot be asserted locally and must be read from
 the next published Buildx job summary.
 
-The resulting image is 39,838,759 bytes and runs as the unprivileged `grover`
+The resulting image is 39,838,759 bytes and runs as the unprivileged `yardfolio`
 user. A local PostgreSQL-backed smoke run passed `/health` and `/health/ready`
 and served the compiled frontend from `/`. The smoke used the explicit local
 review runtime mode because no external Cognito tenant was in scope; an

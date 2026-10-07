@@ -1089,7 +1089,7 @@ Current state:
 - Phase 6B7 closes the local production-artifact gate. The multi-stage image now
   copies the complete backend crate, including its migration-aware build script;
   the final 39.8 MB image builds successfully and runs as the unprivileged
-  `grover` user (UID 10001). Runtime validation serves the packaged frontend,
+  `yardfolio` user (UID 10001). Runtime validation serves the packaged frontend,
   reports PostgreSQL readiness, and confirms the 122-version migration ledger.
   Production mode exits nonzero for local-review auth and incomplete Cognito
   configuration. This completes every repository-owned Phase 6B gate without

@@ -266,7 +266,7 @@ jobs:
         with:
           context: .
           load: true
-          tags: grover-landscaping:ci
+          tags: yardfolio:ci
           cache-from: type=gha,scope=production-image
           cache-to: type=gha,mode=max,scope=production-image
 

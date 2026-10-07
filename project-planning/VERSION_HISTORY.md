@@ -21,6 +21,9 @@
   Ephemeral CI PostgreSQL and unreachable persistence-test URLs also use a
   Yardfolio namespace; local and deployed database defaults remain behind the
   compatibility boundary until their data-preserving migration is delivered.
+  Local Compose container names, production/local image tags, and the
+  unprivileged production-image account now use Yardfolio without changing the
+  persisted PostgreSQL volume or credentials.
   Source identifiers and infrastructure retain the documented legacy namespace
   until their coordinated migrations. The production shell
   cache version advances so existing installations receive the renamed shell

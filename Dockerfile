@@ -22,7 +22,7 @@ FROM debian:bookworm-slim AS runtime
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends ca-certificates libssl3 \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --uid 10001 --create-home grover
+    && useradd --system --uid 10001 --create-home yardfolio
 
 WORKDIR /app
 COPY --from=backend-builder /build/yardfolio-api /usr/local/bin/yardfolio-api
@@ -33,7 +33,7 @@ ENV APP_ENV=production \
     PORT=10000 \
     RUST_LOG=yardfolio_api=info,tower_http=info
 
-USER grover
+USER yardfolio
 EXPOSE 10000
 
 CMD ["yardfolio-api"]

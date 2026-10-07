@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16
-    container_name: grover-landscaping-postgres
+    container_name: yardfolio-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-grover_landscaping}
       POSTGRES_USER: ${POSTGRES_USER:-grover}
@@ -19,7 +19,7 @@ services:
 
   backend:
     image: rust:1.88
-    container_name: grover-landscaping-backend
+    container_name: yardfolio-backend
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     working_dir: /workspace/backend
     command: /workspace/scripts/run-backend-with-watchdog.sh
@@ -59,7 +59,7 @@ services:
 
   frontend:
     image: node:22
-    container_name: grover-landscaping-frontend
+    container_name: yardfolio-frontend
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     working_dir: /workspace/frontend
     command: /workspace/scripts/run-frontend-with-watchdog.sh
