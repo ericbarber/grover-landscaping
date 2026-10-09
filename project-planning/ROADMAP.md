@@ -53,8 +53,9 @@ rolls back on failure, and requires zero verification. Three isolated
 full-lifecycle live cycles, stopped-run cleanup, and a selected open-decision
 checkpoint/reset passed on 2026-10-09. A fail-closed port-5174 frontend now
 validates and proxies the isolated API, and its mobile normal-entry gate passes.
-Instantiating the chosen session checkpoint and collecting participant
-observations is next; placeholder evidence does not establish image quality.
+An exact matched-checkpoint receipt also passed a second open-decision
+seed/reset. Selecting and instantiating the participant task checkpoint, then
+collecting observations, is next; placeholder evidence does not establish image quality.
 Protected browser/runtime evidence remains blocked by protected infrastructure
 rather than by a product implementation decision; the local cross-browser gate
 is complete.

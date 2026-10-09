@@ -111,6 +111,22 @@ test('promotes to verified only after both records have validated snapshots', ()
     snapshot: 'open_customer_decision',
   });
   assert.equal(verified.phase, 'verified');
+  assert.equal(recordVerifiedSnapshot(verified, {
+    recordKey: 'sage',
+    snapshot: 'open_customer_decision',
+  }).phase, 'verified');
+  const canyonAdvanced = recordVerifiedSnapshot(verified, {
+    recordKey: 'canyon',
+    snapshot: 'accepted_not_scheduled',
+  });
+  assert.equal(canyonAdvanced.phase, 'seeded');
+  assert.throws(
+    () => recordVerifiedSnapshot(verified, {
+      recordKey: 'canyon',
+      snapshot: 'field_route',
+    }),
+    /next lifecycle checkpoint/,
+  );
   assert.throws(
     () => recordVerifiedSnapshot(preparedManifest(), {
       recordKey: 'canyon',

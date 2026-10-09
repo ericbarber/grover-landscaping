@@ -16,7 +16,10 @@ import {
   resolveOwnerReadyBriefRecovery,
   resolveOwnerWorkspaceRecovery,
 } from './owner-foundation-plan.mjs';
-import { validateFixtureManifest } from './validate-manifest.mjs';
+import {
+  fixtureSnapshotOrder,
+  validateFixtureManifest,
+} from './validate-manifest.mjs';
 import {
   normalizeStudyApiUrl,
   validateStudyTarget,
@@ -29,15 +32,7 @@ const providerOrganizationId = 'org_demo_landscaping';
 const managerRecipient = 'property.manager.local@example.test';
 const scheduleReviewerId = 'manager';
 const crewId = 'crew_1001';
-const supportedStopAfter = new Set([
-  'open_customer_decision',
-  'accepted_not_scheduled',
-  'confirmed_visit',
-  'field_route',
-  'exception_handoff',
-  'proof_review',
-  'delivered_outcome',
-]);
+const supportedStopAfter = new Set(fixtureSnapshotOrder());
 
 function fail(message) {
   throw new Error(`Cannot seed Yardfolio Study fixtures: ${message}`);

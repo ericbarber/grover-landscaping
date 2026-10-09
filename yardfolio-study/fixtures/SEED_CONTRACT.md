@@ -74,6 +74,12 @@ delivered. Prepare an independent fixture copy when a participant must interact
 with an earlier moment. Never rewrite immutable proposals, releases, events, or
 report snapshots to make that state reappear.
 
+Snapshot history must be the ordered lifecycle prefix above. `verified` is
+valid only when Canyon View and Sage Lane have the same non-empty prefix. Before
+a session, `validate-session-checkpoint.mjs` must match that prefix to the
+facilitator's requested checkpoint and emit the privacy-minimized provenance
+receipt; a generally valid or later manifest is not sufficient.
+
 ## Date and role gates
 
 `GET /crews/{crew_id}/day-plan/today` uses the database server's

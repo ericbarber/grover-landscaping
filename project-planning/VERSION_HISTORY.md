@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-10-09: Made B9 session checkpoint admission auditable. Snapshot history
+  must now form the exact forward lifecycle prefix, and a manifest becomes
+  verified only when Canyon View and Sage Lane are aligned. The new receipt
+  validator rejects partial, mismatched, skipped, reset, unsupported, and
+  later-than-requested state while returning only non-secret provenance. A
+  fresh open-decision seed produced the exact receipt and reset back to zero
+  records and namespace matches.
 - 2026-10-09: Added the separate Yardfolio Study frontend gate. The launcher
   refuses any runtime other than the port-8081 `local_review` API bound to
   `yardfolio_study`, verifies the required study identities, and serves the app

@@ -13,6 +13,7 @@ Do not fill a result from a facilitator expectation or an earlier prototype.
 | Date, device, viewport, connection | |
 | Current app commit / prototype commit | |
 | Fixture revision / displayed as-of date / reset ID | |
+| Exact checkpoint / receipt verified at | |
 | External service or role limitation | |
 | Condition order / record-label order | |
 

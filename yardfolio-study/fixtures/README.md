@@ -210,6 +210,17 @@ node yardfolio-study/fixtures/seed-fixtures.mjs \
   .localdev/yardfolio-study/fixture-manifest-session.json
 ```
 
+Before admitting a participant, require an exact checkpoint receipt. This
+rejects skipped lifecycle moments, mismatched Canyon/Sage state, partial seed
+runs, later checkpoints presented as earlier ones, and reset manifests. Its
+output includes only non-secret provenance and the two synthetic labels.
+
+```bash
+node yardfolio-study/fixtures/validate-session-checkpoint.mjs \
+  open_customer_decision \
+  .localdev/yardfolio-study/fixture-manifest-session.json
+```
+
 Serve the current application separately from shared review. The launcher
 fails before startup unless port 8081 reports `local_review`, PostgreSQL,
 `yardfolio_study`, and every required study identity. Browser API calls use the

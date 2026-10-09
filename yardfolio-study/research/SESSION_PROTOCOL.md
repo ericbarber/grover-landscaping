@@ -28,8 +28,9 @@ simulated action as a completed product action.
 
 Before scoring **comparative completion**, the facilitator must select the exact
 forward-only checkpoint, prepare a fresh Canyon View/Sage Lane manifest, start
-the verified study frontend, and record role/scope, service day, app/prototype
-commits, and working actions in both conditions. The
+the verified study frontend, validate an exact checkpoint receipt, and record
+role/scope, service day, app/prototype commits, and working actions in both
+conditions. The
 [seed contract](../fixtures/SEED_CONTRACT.md) defines the verified checkpoint
 and reset gate. The frontend gate has passed locally, but a task is still
 **directional comprehension and navigation only** until its exact checkpoint

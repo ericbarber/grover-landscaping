@@ -4,7 +4,12 @@ import { randomUUID } from 'node:crypto';
 import { chmod, open, readFile, rename, unlink } from 'node:fs/promises';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validateFixtureManifest } from './validate-manifest.mjs';
+import {
+  fixtureSnapshotOrder,
+  validateFixtureManifest,
+} from './validate-manifest.mjs';
+
+const snapshotOrder = fixtureSnapshotOrder();
 
 function fail(message) {
   throw new Error(`Cannot update Yardfolio Study fixture state: ${message}`);
@@ -47,8 +52,17 @@ export function recordVerifiedSnapshot(manifest, { recordKey, snapshot }) {
   if (recordIdCount(record) === 0) {
     fail(`${record.syntheticLabel} must journal a generated record before verification`);
   }
-  if (!record.snapshots.includes(snapshot)) record.snapshots.push(snapshot);
-  next.phase = next.records.every((candidate) => candidate.snapshots.length > 0)
+  if (!record.snapshots.includes(snapshot)) {
+    if (snapshot !== snapshotOrder[record.snapshots.length]) {
+      fail(`${record.syntheticLabel} snapshot must advance to the next lifecycle checkpoint`);
+    }
+    record.snapshots.push(snapshot);
+  }
+  const [first, ...remaining] = next.records.map(
+    (candidate) => JSON.stringify(candidate.snapshots),
+  );
+  next.phase = record.snapshots.length > 0
+    && remaining.every((snapshots) => snapshots === first)
     ? 'verified'
     : 'seeded';
   validateFixtureManifest(next);

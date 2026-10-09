@@ -46,7 +46,14 @@ function seededManifest() {
     ]) {
       manifest = recordGeneratedId(manifest, { recordKey: key, table, id });
     }
-    manifest = recordVerifiedSnapshot(manifest, { recordKey: key, snapshot: 'field_route' });
+    for (const snapshot of [
+      'open_customer_decision',
+      'accepted_not_scheduled',
+      'confirmed_visit',
+      'field_route',
+    ]) {
+      manifest = recordVerifiedSnapshot(manifest, { recordKey: key, snapshot });
+    }
   }
   return manifest;
 }

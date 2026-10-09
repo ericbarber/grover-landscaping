@@ -317,8 +317,10 @@ workflows are not product targets.
   checkpoint selector live-verified independent forward-only session setup at
   open decision; a fail-closed port-5174 frontend validates the study runtime,
   proxies it same-origin, and passes mobile normal entry with fixed owner
-  selection. Participant evidence remains open, and placeholder evidence does
-  not claim image quality
+  selection. Ordered snapshot-prefix validation and an exact matched-checkpoint
+  receipt prevent partial or later fixtures from entering a scored session; a
+  second live open-decision receipt/reset passed. Participant evidence remains
+  open, and placeholder evidence does not claim image quality
 - Repository release-contract tests are self-contained in restricted shells:
   Terraform behavior is represented by an injected test double and protected
   release evidence is validated in-process without changing operator-facing

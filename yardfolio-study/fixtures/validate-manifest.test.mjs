@@ -85,6 +85,30 @@ test('rejects placeholder provenance and incomplete seeded lifecycle evidence', 
   assert.throws(() => validateFixtureManifest(seeded), /retain generated record IDs/);
 });
 
+test('requires ordered snapshot prefixes and matched verified checkpoints', () => {
+  const manifest = {
+    ...localFixture(),
+    phase: 'verified',
+    records: example().records.map((record) => ({
+      ...record,
+      generatedRecordIds: {
+        owner_workspaces: [record.ownerUserId],
+        owner_properties: [`owner_property_${record.key}123`],
+      },
+      snapshots: ['open_customer_decision'],
+    })),
+  };
+  assert.equal(validateFixtureManifest(manifest).phase, 'verified');
+
+  const skipped = structuredClone(manifest);
+  skipped.records[0].snapshots = ['open_customer_decision', 'field_route'];
+  assert.throws(() => validateFixtureManifest(skipped), /ordered lifecycle prefix/);
+
+  const mismatched = structuredClone(manifest);
+  mismatched.records[0].snapshots.push('accepted_not_scheduled');
+  assert.throws(() => validateFixtureManifest(mismatched), /same lifecycle checkpoint/);
+});
+
 test('accepts a complete reset receipt and rejects incomplete reset proof', () => {
   const reset = {
     ...localFixture(),

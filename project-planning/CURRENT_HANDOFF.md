@@ -73,7 +73,9 @@ partial attempts also cleaned up. A fail-closed checkpoint selector prepares bot
 at any verified forward-only moment; a live open-decision checkpoint/reset
 passed. A fail-closed port-5174 frontend now verifies the exact study runtime,
 uses a same-origin `/study-api` proxy, and passed the mobile normal-entry gate
-with both fixed owner identities available. Session instantiation and
+with both fixed owner identities available. Manifests now require an ordered,
+matched snapshot prefix, and an exact checkpoint receipt passed a second live
+open-decision seed/reset. Selecting and instantiating the participant task plus
 participant observation are the remaining B9 gates; real-image quality and
 unsupported handoffs are not claimed.
 The repository package, database, and infrastructure scopes pass in this shell.

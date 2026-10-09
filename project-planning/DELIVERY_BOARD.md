@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-delivered-outcome seed/reset chain are implemented; three full cycles, an open-decision checkpoint/reset, and isolated frontend normal entry are live-verified | First value, delegation, public-hero, search/share, field commands, and repeatable Canyon/Sage proposal-to-proof fixtures pass repository and local live gates; deployed-origin evidence remains gated | Instantiate the selected session checkpoint and keep exact reset green |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-delivered-outcome seed/reset chain are implemented; three full cycles, two open-decision checkpoint/resets, an exact receipt, and isolated frontend normal entry are live-verified | First value, delegation, public-hero, search/share, field commands, and repeatable Canyon/Sage proposal-to-proof fixtures pass repository and local live gates; deployed-origin evidence remains gated | Select and instantiate the participant task checkpoint; keep exact reset green |
 | Design review | B9 study materials and live provider-to-outcome fixtures are ready; participant evidence is incomplete | Ten persona profiles, responsive public-to-workspace preview, matched comprehension tasks, and repeatable two-owner live records cover supported task moments | Conduct participant sessions and synthesize findings before B2 expansion |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
@@ -139,7 +139,8 @@ Validation:
 
 State: repository preparation, three local live provider-to-outcome seed/reset
 cycles, checkpoint selection, and isolated frontend normal entry delivered;
-session instantiation and participant sessions remain.
+ordered matched-checkpoint receipts now fail closed. Task selection, session
+instantiation, and participant sessions remain.
 
 Delivered preparation:
 

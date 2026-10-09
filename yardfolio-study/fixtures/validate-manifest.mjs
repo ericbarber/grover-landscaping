@@ -48,7 +48,7 @@ export function fixtureOwnedIdTables() {
   return [...generatedIdPrefixes.keys()];
 }
 const prohibitedKeyPattern = /(address|contact|email|message|note|payload|phone|photo|token)/i;
-const allowedSnapshots = new Set([
+const snapshotOrder = [
   'open_customer_decision',
   'accepted_not_scheduled',
   'confirmed_visit',
@@ -56,7 +56,12 @@ const allowedSnapshots = new Set([
   'exception_handoff',
   'proof_review',
   'delivered_outcome',
-]);
+];
+const allowedSnapshots = new Set(snapshotOrder);
+
+export function fixtureSnapshotOrder() {
+  return [...snapshotOrder];
+}
 const allowedTopLevelKeys = new Set([
   'schemaVersion',
   'manifestKind',
@@ -182,6 +187,9 @@ export function validateFixtureManifest(manifest, { allowTemplate = false } = {}
     if (new Set(record.snapshots).size !== record.snapshots.length) {
       fail(`record ${record.key} contains duplicate snapshots`);
     }
+    if (record.snapshots.some((snapshot, index) => snapshot !== snapshotOrder[index])) {
+      fail(`record ${record.key} snapshots must be an ordered lifecycle prefix`);
+    }
 
     if (!record.generatedRecordIds || Array.isArray(record.generatedRecordIds)
       || typeof record.generatedRecordIds !== 'object') {
@@ -234,6 +242,14 @@ export function validateFixtureManifest(manifest, { allowTemplate = false } = {}
   if (manifest.phase === 'verified'
     && manifest.records.some((record) => record.snapshots.length === 0)) {
     fail('verified manifests require at least one validated snapshot for each record');
+  }
+  if (manifest.phase === 'verified') {
+    const [firstSnapshots, ...remainingSnapshots] = manifest.records.map(
+      (record) => JSON.stringify(record.snapshots),
+    );
+    if (remainingSnapshots.some((snapshots) => snapshots !== firstSnapshots)) {
+      fail('verified manifests require both records at the same lifecycle checkpoint');
+    }
   }
   const { attemptedAt, remainingManifestRecords } = manifest.resetVerification;
   if (manifest.phase === 'reset') {
