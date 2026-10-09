@@ -23,22 +23,21 @@ simulated action as a completed product action.
 | Condition | Entry | What can be observed now |
 | --- | --- | --- |
 | Current public site | `/` at a recorded commit | Entry choice and claim comprehension. A healthy protected deployment is not established. |
-| Current application | `/app` with the assigned local-review identity | Real navigation and the actual authorized read outcome. The current shared fixture is not a matched cross-role service. |
+| Current application | `/app` in a study frontend bound to the isolated port-8081 API, with the assigned local-review identity | Supported matched API fixtures are repeatable; the separate frontend binding and normal-entry browser check must pass before a scored session. |
 | Yardfolio Study review | `/yardfolio-study/`, then the named task page | Public framing and eight simulated task moments. Each page resets on reload; actions do not cross pages or persist. |
 
-Before scoring **comparative completion**, the facilitator must record two
-equivalent, independently resettable Canyon View/Sage Lane snapshots; exact
-authorized role/scope, current service day, app and prototype commits, and
-working task actions in both conditions. The [seed contract](../fixtures/SEED_CONTRACT.md)
-defines the isolation and reset gate. Until then, use the tasks below for
-**directional comprehension and navigation only**, marking current-app
-completion `not comparable` where its record or action is absent. Never count a
-prototype click as a backend write.
+Before scoring **comparative completion**, the facilitator must select the exact
+forward-only checkpoint, prepare a fresh Canyon View/Sage Lane manifest, bind
+the study frontend to that isolated API, and record role/scope, service day,
+app/prototype commits, and working actions in both conditions. The
+[seed contract](../fixtures/SEED_CONTRACT.md) defines the verified checkpoint
+and reset gate. Until the frontend check passes, use the tasks below for
+**directional comprehension and navigation only**. Never count a prototype
+click as a backend write.
 
-The Property Manager grant and delegation workflow now implements the decided
-[MG-D6](../PRODUCT_DECISIONS.md) rule, but cannot be a completion comparison
-until separate Canyon View and Sage Lane grants are created and verified
-through it. The provider-originated access-question response remains
+The Property Manager grant and delegation workflow implements the decided
+[MG-D6](../PRODUCT_DECISIONS.md) rule and two isolated grants/read scopes passed
+live verification. The provider-originated access-question response remains
 unsupported. The Plan 8/9 revision and Crew Lead access-question transfer also lack
 equivalent current-app transitions. Test whether people understand those
 proposed concepts, but do not score them as comparative task completion.
@@ -67,12 +66,12 @@ proposed concepts, but do not score them as comparative task completion.
 | --- | --- | --- | --- |
 | MG-P1 | Yard Owner visitor: “You want to know what happens before and after a yard visit. Show where you would start, and tell me what service you expect to find.” | Owner path; known-provider connection versus open marketplace; what is private before sharing. | Entry comprehension can run now; claim approval remains MG-D1/D2. |
 | MG-P2 | Provider visitor: “Your company already works with a customer. Show where you would start to coordinate the office and field, and tell me what Yardfolio would do with billing.” | Provider path; scheduling/field/proof capabilities; no assumed invoice or payment. | Entry and claim comprehension can run now. |
-| MG-Y1 | Yard Owner: “Find the service that needs your decision. Explain the scope, total, what your choice does, and who acts next. Later, show what proves the work was delivered.” | Current proposal v3 and $420; acceptance requests planning, not scheduling or charging; only manager-reviewed delivered proof is customer-visible. | Directional only until separate proposal and delivered-proof snapshots exist. |
-| MG-PM1 | Property Manager: “One of your properties needs an access answer. Find it, respond with what you know, and explain who can restart the affected work.” | Exact authorized property/request; guidance versus verification; Company Manager owns field instruction; no gate secret or provider-private route. | Delegation exists but matched grants are unseeded; provider question handoff remains prototype-only. |
-| MG-O1 | Company Owner: “A customer commitment is at risk. Find who owns the response and tell me whether you need to edit today's route.” | Business impact; named accountable manager; assignment is not route release. | Directional navigation only until a linked business-risk record is prepared. |
-| MG-M1 | Company Manager: “Find the accepted service and decide what must happen before work is released. A field access question then arrives; show who verifies it and what can be sent back.” | Accepted scope, draft/released state, crew fit, exact version; field question held for verification; no silent plan change. | Proposal/release portion needs fixture; Plan 8/9 and crew handoff are prototype comprehension only. |
-| MG-C1 | Crew Lead: “At the assigned stop, coverage drops. Show what you can keep doing, what has reached the office, and what you do when the plan changes.” | Current assigned stop; device-held versus sent; safe pause and manager ownership of a plan conflict; no customer price. | Offline/route portion needs current-day fixture; access-question handoff and version replay are prototype comprehension only. |
-| MG-R1 | Company Manager and Yard Owner: “A completion package has a photo problem. Show what must happen before the customer sees proof, then explain what the customer can decide next.” | Reject/request correction; review exact corrected package; only delivered proof visible; future care idea is a separate proposal. | Directional only until report and outcome snapshots exist. |
+| MG-Y1 | Yard Owner: “Find the service that needs your decision. Explain the scope, total, what your choice does, and who acts next. Later, show what proves the work was delivered.” | Current proposal v3 and $420; acceptance requests planning, not scheduling or charging; only manager-reviewed delivered proof is customer-visible. | Open-decision and delivered checkpoints are selectable; score only after normal-entry frontend verification. |
+| MG-PM1 | Property Manager: “One of your properties needs an access answer. Find it, respond with what you know, and explain who can restart the affected work.” | Exact authorized property/request; guidance versus verification; Company Manager owns field instruction; no gate secret or provider-private route. | Two-property delegation/proof is verified; provider question handoff remains prototype-only. |
+| MG-O1 | Company Owner: “A customer commitment is at risk. Find who owns the response and tell me whether you need to edit today's route.” | Business impact; named accountable manager; assignment is not route release. | Linked assigned exceptions are selectable; normal-entry frontend verification remains. |
+| MG-M1 | Company Manager: “Find the accepted service and decide what must happen before work is released. A field access question then arrives; show who verifies it and what can be sent back.” | Accepted scope, draft/released state, crew fit, exact version; field question held for verification; no silent plan change. | Accepted/route/exception checkpoints are selectable; Plan 8/9 and crew-origin handoff are prototype comprehension only. |
+| MG-C1 | Crew Lead: “At the assigned stop, coverage drops. Show what you can keep doing, what has reached the office, and what you do when the plan changes.” | Current assigned stop; device-held versus sent; safe pause and manager ownership of a plan conflict; no customer price. | Current route/field state is verified; study-device offline replay and access-question handoff remain non-comparable. |
+| MG-R1 | Company Manager and Yard Owner: “A completion package has a photo problem. Show what must happen before the customer sees proof, then explain what the customer can decide next.” | Reject/request correction; review exact corrected package; only delivered proof visible; future care idea is a separate proposal. | Review and delivered checkpoints are selectable with placeholder evidence; real-image quality is not comparable. |
 
 For every role task, add one unavailable-read branch **after** the normal task.
 For MG-Y1/MG-M1 add a stale-version branch; for MG-PM1 add ended access; for

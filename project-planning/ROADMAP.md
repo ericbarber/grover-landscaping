@@ -49,10 +49,11 @@ confirmed first visit, service release, current published route, assigned
 access exception, field completion, placeholder evidence, manager correction
 and re-review, immutable delivery, and minimized owner/manager proof. Its
 transactional reset owns exact child-before-parent roots and derived children,
-rolls back on failure, and requires zero verification. Two isolated
-full-lifecycle live cycles and stopped-run cleanup passed on 2026-10-09.
-Preparing independent task-moment copies and collecting participant
-observations is next; placeholder evidence does not establish image quality.
+rolls back on failure, and requires zero verification. Three isolated
+full-lifecycle live cycles, stopped-run cleanup, and a selected open-decision
+checkpoint/reset passed on 2026-10-09. Binding a study frontend to the isolated
+API, verifying normal entry, and collecting participant observations is next;
+placeholder evidence does not establish image quality.
 Protected browser/runtime evidence remains blocked by protected infrastructure
 rather than by a product implementation decision; the local cross-browser gate
 is complete.

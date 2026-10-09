@@ -97,8 +97,9 @@ delegated properties, visits, and delivered-proof indicators. The earlier
 preview-only Proof and Approvals tabs are not claimed in this protected
 workspace. Plan 8/9 and Crew Lead-originated access transfer remain
 non-comparable; the supported exception, review, and proof states are verified.
-Next prepare independent copies for task moments that cannot coexist in the
-forward-only lifecycle, then run the participant comparison.
+A fail-closed selector now prepares both records at any verified forward-only
+checkpoint, and an open-decision checkpoint/reset passed live. Next bind the
+study frontend to the isolated API, verify normal entry, and run the comparison.
 The [isolated seed contract](fixtures/SEED_CONTRACT.md) now fixes the target
 database boundary, transition order, reset ownership, and acceptance checks.
 The [local study database](fixtures/LOCAL_STUDY_ENV.md) has 127 successful

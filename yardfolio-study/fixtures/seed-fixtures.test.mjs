@@ -423,6 +423,47 @@ test('executes and journals the complete two-record provider-to-outcome journey 
   }
 });
 
+test('stops both records at one verified forward-only session checkpoint', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'yardfolio-seed-checkpoint-'));
+  const manifestPath = join(directory, 'fixture-manifest.json');
+  const journey = createJourneyFetch();
+  try {
+    await writeFile(manifestPath, `${JSON.stringify(preparedManifest(), null, 2)}\n`, { mode: 0o600 });
+    const manifest = await seedFixtureManifest({
+      manifestPath,
+      apiUrl: 'http://127.0.0.1:8081',
+      fetchImpl: journey.fetchImpl,
+      validateEmptyTarget: async () => ({
+        databaseName: 'yardfolio_study', migrationCount: 126, namespaceMatches: 0,
+      }),
+      now: () => new Date('2026-10-03T12:00:00.000Z'),
+      stopAfter: 'open_customer_decision',
+    });
+    assert.equal(manifest.phase, 'verified');
+    for (const record of manifest.records) {
+      assert.deepEqual(record.snapshots, ['open_customer_decision']);
+      assert.equal(record.managerDelegationStatus, 'not_created');
+      assert.equal(record.generatedRecordIds.owner_provider_initial_service_proposals.length, 3);
+      assert.equal(record.generatedRecordIds.owner_provider_relationship_activations, undefined);
+    }
+    assert.equal(journey.requests.some((request) => request.path.endsWith('/activation')), false);
+    assert.equal(journey.requests.some((request) => request.path.endsWith('/publish')), false);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('rejects an unknown session checkpoint before target access', async () => {
+  await assert.rejects(
+    seedFixtureManifest({
+      apiUrl: 'http://127.0.0.1:8081',
+      stopAfter: 'rewound_proposal',
+      validateEmptyTarget: async () => assert.fail('invalid checkpoint must fail before preflight'),
+    }),
+    /stopAfter must name a supported verified checkpoint/,
+  );
+});
+
 test('withholds transport details from API failures', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'yardfolio-seed-redaction-'));
   const manifestPath = join(directory, 'fixture-manifest.json');

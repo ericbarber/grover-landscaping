@@ -15,7 +15,10 @@
   Reset now captures and removes exact route/report/exception audit targets and
   fails if any remain; a final fresh cycle ended with zero study-actor audits.
   Sixty-two orphaned synthetic audit events from earlier development runs were
-  removed transactionally by those exact roots. The
+  removed transactionally by those exact roots. A fail-closed checkpoint
+  selector can now stop both records at any verified forward-only task moment;
+  a live open-decision checkpoint/reset passed without creating activation or
+  route state. The
   placeholder evidence verifies workflow/privacy, not real-image quality;
   participant observation remains open.
 - 2026-10-09: Completed and live-verified the isolated Yardfolio Study

@@ -29,6 +29,15 @@ const providerOrganizationId = 'org_demo_landscaping';
 const managerRecipient = 'property.manager.local@example.test';
 const scheduleReviewerId = 'manager';
 const crewId = 'crew_1001';
+const supportedStopAfter = new Set([
+  'open_customer_decision',
+  'accepted_not_scheduled',
+  'confirmed_visit',
+  'field_route',
+  'exception_handoff',
+  'proof_review',
+  'delivered_outcome',
+]);
 
 function fail(message) {
   throw new Error(`Cannot seed Yardfolio Study fixtures: ${message}`);
@@ -216,7 +225,17 @@ async function seedFoundation({ manifestPath, manifest, record, apiUrl, fetchImp
   return { manifest, plan, propertyId };
 }
 
-async function seedProviderToField({ manifestPath, manifest, record, plan, propertyId, apiUrl, fetchImpl, now }) {
+async function seedProviderToField({
+  manifestPath,
+  manifest,
+  record,
+  plan,
+  propertyId,
+  apiUrl,
+  fetchImpl,
+  now,
+  stopAfter,
+}) {
   if (manifest.records.find((candidate) => candidate.key === record.key)
     .generatedRecordIds.owner_provider_invitations) {
     fail(`${record.syntheticLabel} invitation is already journaled; its memory-only token cannot be recovered, so reset this manifest before retrying`);
@@ -421,6 +440,7 @@ async function seedProviderToField({ manifestPath, manifest, record, plan, prope
   });
   if (staleDecision.status !== 409) fail(`${record.syntheticLabel} stale proposal acceptance did not fail closed`);
   manifest = await snapshot(manifestPath, record.key, 'open_customer_decision');
+  if (stopAfter === 'open_customer_decision') return manifest;
 
   const decision = requirePersisted(await owner(
     'POST',
@@ -437,6 +457,7 @@ async function seedProviderToField({ manifestPath, manifest, record, plan, prope
   const decisionId = requireId(decision, 'decision_id', 'owner_provider_proposal_decision_', `${record.syntheticLabel} proposal decision`);
   manifest = await journal(manifestPath, record.key, 'owner_provider_initial_service_proposal_decisions', decisionId);
   manifest = await snapshot(manifestPath, record.key, 'accepted_not_scheduled');
+  if (stopAfter === 'accepted_not_scheduled') return manifest;
 
   const activation = requirePersisted(await owner(
     'POST',
@@ -531,6 +552,7 @@ async function seedProviderToField({ manifestPath, manifest, record, plan, prope
   manifest = await journal(manifestPath, record.key, 'owner_provider_service_releases', releaseId);
   manifest = await journal(manifestPath, record.key, 'service_jobs', jobId);
   manifest = await snapshot(manifestPath, record.key, 'confirmed_visit');
+  if (stopAfter === 'confirmed_visit') return manifest;
 
   const serviceDate = addDays(manifest.asOfDate, record.key === 'canyon' ? 0 : 1);
   const dayPlan = requirePersisted(await scheduler('POST', '/day-plans', {
@@ -549,6 +571,7 @@ async function seedProviderToField({ manifestPath, manifest, record, plan, prope
   const published = requirePersisted(await scheduler('POST', `/day-plans/${encodeURIComponent(dayPlanId)}/publish`), `${record.syntheticLabel} published route`);
   if (published.id !== dayPlanId || published.status !== 'published') fail(`${record.syntheticLabel} route did not publish`);
   manifest = await snapshot(manifestPath, record.key, 'field_route');
+  if (stopAfter === 'field_route') return manifest;
 
   let exception = requireRecord(await scheduler('POST', '/operational-exceptions', {
     organization_id: providerOrganizationId,
@@ -579,6 +602,7 @@ async function seedProviderToField({ manifestPath, manifest, record, plan, prope
     fail(`${record.syntheticLabel} exception handoff was not assigned and started`);
   }
   manifest = await snapshot(manifestPath, record.key, 'exception_handoff');
+  if (stopAfter === 'exception_handoff') return manifest;
 
   const customerVisitsBeforeProof = requireRecord(await owner(
     'GET',
@@ -691,6 +715,7 @@ async function seedProviderToField({ manifestPath, manifest, record, plan, prope
   ), `${record.syntheticLabel} second report review`);
   if (reportAction.report_status !== 'in_review') fail(`${record.syntheticLabel} corrected report did not enter review`);
   manifest = await snapshot(manifestPath, record.key, 'proof_review');
+  if (stopAfter === 'proof_review') return manifest;
 
   const delivered = requirePersisted(await scheduler(
     'POST',
@@ -745,8 +770,12 @@ export async function seedFixtureManifest({
   validateEmptyTarget = validateStudyTarget,
   validateBoundTarget = validateStudyTargetBinding,
   now = () => new Date(),
+  stopAfter = 'delivered_outcome',
 } = {}) {
   if (!apiUrl) fail('YARDFOLIO_STUDY_API_URL is required');
+  if (!supportedStopAfter.has(stopAfter)) {
+    fail('stopAfter must name a supported verified checkpoint');
+  }
   const normalizedApiUrl = normalizeStudyApiUrl(apiUrl);
   const resolvedPath = resolve(manifestPath);
   return withFixtureOperationLock(resolvedPath, 'seed', async () => {
@@ -774,6 +803,7 @@ export async function seedFixtureManifest({
         apiUrl: normalizedApiUrl,
         fetchImpl,
         now,
+        stopAfter,
       });
     }
     validateFixtureManifest(manifest);
@@ -787,10 +817,12 @@ async function main() {
   const manifest = await seedFixtureManifest({
     manifestPath: process.argv[2] ?? defaultManifestPath,
     apiUrl: process.env.YARDFOLIO_STUDY_API_URL,
+    stopAfter: process.env.YARDFOLIO_STUDY_STOP_AFTER ?? 'delivered_outcome',
   });
   process.stdout.write(`${JSON.stringify({
     status: 'fixture_seed_verified',
     fixtureRevision: manifest.fixtureRevision,
+    stopAfter: process.env.YARDFOLIO_STUDY_STOP_AFTER ?? 'delivered_outcome',
     records: manifest.records.map((record) => ({
       key: record.key,
       snapshotCount: record.snapshots.length,

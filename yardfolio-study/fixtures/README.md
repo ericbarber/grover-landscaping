@@ -194,6 +194,22 @@ YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8081 \
 node yardfolio-study/fixtures/seed-fixtures.mjs
 ```
 
+For a session that needs an earlier forward-only moment, prepare a fresh
+manifest and set `YARDFOLIO_STUDY_STOP_AFTER` to exactly one of
+`open_customer_decision`, `accepted_not_scheduled`, `confirmed_visit`,
+`field_route`, `exception_handoff`, `proof_review`, or `delivered_outcome`.
+The executor advances both records only through that checkpoint and verifies
+the manifest; it never rewinds a later record. A live open-decision checkpoint
+and exact reset passed on 2026-10-09.
+
+```bash
+PGDATABASE=yardfolio_study \
+YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8081 \
+YARDFOLIO_STUDY_STOP_AFTER=open_customer_decision \
+node yardfolio-study/fixtures/seed-fixtures.mjs \
+  .localdev/yardfolio-study/fixture-manifest-session.json
+```
+
 Reset with the same API and libpq target binding:
 
 ```bash

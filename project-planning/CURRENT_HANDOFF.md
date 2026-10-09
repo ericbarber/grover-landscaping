@@ -20,7 +20,7 @@ This is the short restart document. Execution order lives in
 
 ## Active and next work
 
-### Active: B9 session preparation; participant execution gated
+### Active: B9 isolated frontend binding; participant execution gated
 
 [`BEST_IN_CLASS_DELIVERY_PLAN.md`](BEST_IN_CLASS_DELIVERY_PLAN.md) is the
 detailed plan for the approved ten-initiative quality program. B0, B1, B3, B7,
@@ -69,9 +69,11 @@ assessment, proposal, activation, and visit children; delegation records;
 customer visit/recommendation records; and field job/route/proof artifacts in
 exact manifest IDs. Three complete isolated full-lifecycle seed/read/reset cycles
 passed on 2026-10-09; the latest verified zero derived audits, and stopped
-partial attempts also cleaned up. Independent
-copies for non-coexisting task moments and participant observation are the
-remaining B9 gates; real-image quality and unsupported handoffs are not claimed.
+partial attempts also cleaned up. A fail-closed checkpoint selector prepares both records
+at any verified forward-only moment; a live open-decision checkpoint/reset
+passed. Session instantiation, participant observation, isolated study frontend
+binding, and normal-entry browser checks are the remaining B9 gates; real-image
+quality and unsupported handoffs are not claimed.
 The repository package, database, and infrastructure scopes pass in this shell.
 Release-preflight tests inject a deterministic Terraform double, and the
 protected-release evidence validator exports its pure contract so tests no
