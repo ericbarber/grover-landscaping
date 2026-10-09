@@ -53,6 +53,13 @@ function requirePersisted(value, label) {
   return value;
 }
 
+function containsObjectKey(value, prohibitedKeys) {
+  if (!value || typeof value !== 'object') return false;
+  return Object.entries(value).some(([key, child]) => (
+    prohibitedKeys.has(key) || containsObjectKey(child, prohibitedKeys)
+  ));
+}
+
 async function requestJson(fetchImpl, apiUrl, {
   reviewerId,
   method = 'GET',
@@ -60,6 +67,7 @@ async function requestJson(fetchImpl, apiUrl, {
   body,
   allowNotFound = false,
   captureHeader,
+  clientMutationId,
   expectedStatuses,
 }) {
   let response;
@@ -69,6 +77,9 @@ async function requestJson(fetchImpl, apiUrl, {
       headers: {
         accept: 'application/json',
         'x-yardfolio-local-reviewer': reviewerId,
+        ...(clientMutationId === undefined
+          ? {}
+          : { 'x-client-mutation-id': clientMutationId }),
         ...(body === undefined ? {} : { 'content-type': 'application/json' }),
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -97,6 +108,11 @@ function addDays(dateText, offset) {
   const date = new Date(`${dateText}T12:00:00Z`);
   date.setUTCDate(date.getUTCDate() + offset);
   return date.toISOString().slice(0, 10);
+}
+
+function fixtureMutationId(recordKey, sequence) {
+  const recordSuffix = recordKey === 'canyon' ? '8000' : '8001';
+  return `00000000-0000-4000-${recordSuffix}-${String(sequence).padStart(12, '0')}`;
 }
 
 function proposalBody(record, token, expectedVersion, expiresAtEpochSeconds) {
@@ -234,6 +250,9 @@ async function seedProviderToField({ manifestPath, manifest, record, plan, prope
   })).value;
   const scheduler = async (method, path, body) => (await requestJson(fetchImpl, apiUrl, {
     reviewerId: scheduleReviewerId, method, path, body,
+  })).value;
+  const crew = async (method, path, body, clientMutationId) => (await requestJson(fetchImpl, apiUrl, {
+    reviewerId: record.crewReviewerId, method, path, body, clientMutationId,
   })).value;
 
   const preview = requireRecord(await provider('POST', '/provider-invitations/preview', { token }), `${record.syntheticLabel} invitation preview`);
@@ -440,6 +459,7 @@ async function seedProviderToField({ manifestPath, manifest, record, plan, prope
     manifest = await journal(manifestPath, record.key, table, requireId(activation, field, prefix, `${record.syntheticLabel} activation`));
   }
   const activationId = activation.activation_id;
+  const customerPropertyId = activation.customer_property_id;
 
   const managerInvitation = requirePersisted(await owner(
     'POST',
@@ -529,6 +549,180 @@ async function seedProviderToField({ manifestPath, manifest, record, plan, prope
   const published = requirePersisted(await scheduler('POST', `/day-plans/${encodeURIComponent(dayPlanId)}/publish`), `${record.syntheticLabel} published route`);
   if (published.id !== dayPlanId || published.status !== 'published') fail(`${record.syntheticLabel} route did not publish`);
   manifest = await snapshot(manifestPath, record.key, 'field_route');
+
+  let exception = requireRecord(await scheduler('POST', '/operational-exceptions', {
+    organization_id: providerOrganizationId,
+    category: 'access',
+    priority: 'high',
+    title: `${record.syntheticLabel} gate access needs confirmation`,
+    description: 'Confirm synthetic gate access before the crew begins the scheduled cleanup.',
+    affected_resource_type: 'job',
+    affected_resource_id: jobId,
+    assigned_user_id: null,
+  }), `${record.syntheticLabel} operational exception`);
+  const exceptionId = requireId(exception, 'id', 'exception_', `${record.syntheticLabel} operational exception`);
+  exception = requireRecord(await scheduler('PUT', `/operational-exceptions/${encodeURIComponent(exceptionId)}`, {
+    action: 'assign',
+    assigned_user_id: 'local-review-manager',
+    resolution_note: null,
+    expected_updated_at: exception.updated_at,
+  }), `${record.syntheticLabel} assigned exception`);
+  exception = requireRecord(await scheduler('PUT', `/operational-exceptions/${encodeURIComponent(exceptionId)}`, {
+    action: 'start',
+    assigned_user_id: null,
+    resolution_note: null,
+    expected_updated_at: exception.updated_at,
+  }), `${record.syntheticLabel} started exception`);
+  if (exception.status !== 'in_progress'
+    || exception.assigned_user_id !== 'local-review-manager'
+    || exception.affected_resource_id !== jobId) {
+    fail(`${record.syntheticLabel} exception handoff was not assigned and started`);
+  }
+  manifest = await snapshot(manifestPath, record.key, 'exception_handoff');
+
+  const customerVisitsBeforeProof = requireRecord(await owner(
+    'GET',
+    '/customer-portal/visits',
+  ), `${record.syntheticLabel} customer visits`);
+  const customerVisit = customerVisitsBeforeProof.visits?.find(
+    (visit) => visit.property_id === customerPropertyId,
+  );
+  const customerVisitReference = requireId(
+    customerVisit,
+    'customer_visit_reference',
+    'customer_visit_',
+    `${record.syntheticLabel} customer visit`,
+  );
+  const pendingProof = await requestJson(fetchImpl, apiUrl, {
+    reviewerId: record.ownerReviewerId,
+    path: `/customer-portal/visits/${encodeURIComponent(customerVisitReference)}/proof`,
+    expectedStatuses: [404],
+  });
+  if (pendingProof.status !== 404 || pendingProof.value?.error !== 'customer_visit_proof_pending') {
+    fail(`${record.syntheticLabel} proof was not withheld before delivery`);
+  }
+  const deniedProof = await requestJson(fetchImpl, apiUrl, {
+    reviewerId: otherOwnerReviewerId,
+    path: `/customer-portal/visits/${encodeURIComponent(customerVisitReference)}/proof`,
+    expectedStatuses: [403, 404],
+  });
+  if (![403, 404].includes(deniedProof.status)
+    || !['customer_portal_access_required', 'customer_visit_proof_not_found']
+      .includes(deniedProof.value?.error)) {
+    fail(`${record.syntheticLabel} proof was visible across owner scope`);
+  }
+
+  const stopPath = `/day-plans/${encodeURIComponent(dayPlanId)}/stops/${encodeURIComponent(stopId)}/status`;
+  const stopInProgress = requirePersisted(await crew('POST', stopPath, {
+    status: 'in_progress',
+    client_mutation_id: fixtureMutationId(record.key, 1),
+  }), `${record.syntheticLabel} started route stop`);
+  if (stopInProgress.status !== 'in_progress') fail(`${record.syntheticLabel} route stop did not start`);
+  const startedJob = requirePersisted(await crew(
+    'POST',
+    `/jobs/${encodeURIComponent(jobId)}/start`,
+    undefined,
+    fixtureMutationId(record.key, 2),
+  ), `${record.syntheticLabel} started job`);
+  if (startedJob.status !== 'accepted') fail(`${record.syntheticLabel} job did not start`);
+
+  for (const [photoType, sequence] of [['before', 3], ['after', 4]]) {
+    const upload = requireRecord(await crew('POST', `/jobs/${encodeURIComponent(jobId)}/photos/presign`, {
+      file_name: `${record.key}-${photoType}-placeholder.jpg`,
+      content_type: 'image/jpeg',
+      photo_type: photoType,
+      client_mutation_id: fixtureMutationId(record.key, sequence),
+    }), `${record.syntheticLabel} ${photoType} evidence ticket`);
+    const photoId = requireId(upload, 'photo_id', 'photo_offline_', `${record.syntheticLabel} ${photoType} evidence`);
+    if (upload.upload_mode !== 'local-placeholder') {
+      fail(`${record.syntheticLabel} evidence unexpectedly required external storage`);
+    }
+    const completedUpload = await crew('POST', `/jobs/${encodeURIComponent(jobId)}/photos/complete`, {
+      photo_id: photoId,
+      file_size_bytes: 1,
+      image_width_px: 1,
+      image_height_px: 1,
+    });
+    if (completedUpload.status !== 'accepted') fail(`${record.syntheticLabel} ${photoType} evidence did not complete`);
+  }
+
+  const completedJob = requirePersisted(await crew(
+    'POST',
+    `/jobs/${encodeURIComponent(jobId)}/complete`,
+    undefined,
+    fixtureMutationId(record.key, 5),
+  ), `${record.syntheticLabel} completed job`);
+  if (completedJob.status !== 'accepted') fail(`${record.syntheticLabel} job did not complete`);
+  const stopFinished = requirePersisted(await crew('POST', stopPath, {
+    status: 'finished',
+    client_mutation_id: fixtureMutationId(record.key, 6),
+  }), `${record.syntheticLabel} finished route stop`);
+  if (stopFinished.status !== 'finished') fail(`${record.syntheticLabel} route stop did not finish`);
+
+  const report = requirePersisted(await crew(
+    'GET',
+    `/jobs/${encodeURIComponent(jobId)}/report`,
+  ), `${record.syntheticLabel} submitted completion report`);
+  const reportId = requireId(report, 'report_id', 'report_', `${record.syntheticLabel} completion report`);
+  if (report.job_id !== jobId || report.report_status !== 'submitted'
+    || report.ready_for_customer !== true || report.checklist_progress !== 100
+    || report.before_photos < 1 || report.after_photos < 1) {
+    fail(`${record.syntheticLabel} completion report was not ready for review`);
+  }
+  let reportAction = requirePersisted(await scheduler(
+    'POST',
+    `/completion-reports/${encodeURIComponent(reportId)}/review`,
+  ), `${record.syntheticLabel} report review`);
+  if (reportAction.report_status !== 'in_review') fail(`${record.syntheticLabel} report did not enter review`);
+  reportAction = requirePersisted(await scheduler(
+    'POST',
+    `/completion-reports/${encodeURIComponent(reportId)}/request-changes`,
+    { reason: 'Confirm the synthetic before/after evidence labels before delivery.' },
+  ), `${record.syntheticLabel} report change request`);
+  if (reportAction.report_status !== 'changes_requested') fail(`${record.syntheticLabel} report changes were not requested`);
+  reportAction = requirePersisted(await crew(
+    'POST',
+    `/completion-reports/${encodeURIComponent(reportId)}/resubmit`,
+  ), `${record.syntheticLabel} report resubmission`);
+  if (reportAction.report_status !== 'submitted') fail(`${record.syntheticLabel} report did not resubmit`);
+  reportAction = requirePersisted(await scheduler(
+    'POST',
+    `/completion-reports/${encodeURIComponent(reportId)}/review`,
+  ), `${record.syntheticLabel} second report review`);
+  if (reportAction.report_status !== 'in_review') fail(`${record.syntheticLabel} corrected report did not enter review`);
+  manifest = await snapshot(manifestPath, record.key, 'proof_review');
+
+  const delivered = requirePersisted(await scheduler(
+    'POST',
+    `/completion-reports/${encodeURIComponent(reportId)}/deliver`,
+  ), `${record.syntheticLabel} report delivery`);
+  if (delivered.report_status !== 'delivered') fail(`${record.syntheticLabel} report did not deliver`);
+  const deliveredProof = requireRecord(await owner(
+    'GET',
+    `/customer-portal/visits/${encodeURIComponent(customerVisitReference)}/proof`,
+  ), `${record.syntheticLabel} delivered owner proof`);
+  const managerProof = requireRecord(await propertyManager(
+    'GET',
+    `/customer-portal/visits/${encodeURIComponent(customerVisitReference)}/proof`,
+  ), `${record.syntheticLabel} delivered manager proof`);
+  for (const proof of [deliveredProof, managerProof]) {
+    if (proof.report_status !== 'delivered' || proof.checklist_progress !== 100
+      || proof.before_photos < 1 || proof.after_photos < 1
+      || containsObjectKey(proof, new Set(['report_id', 'job_id', 'share_url']))) {
+      fail(`${record.syntheticLabel} delivered proof was not customer-safe`);
+    }
+  }
+  const customerVisitsAfterProof = requireRecord(await owner(
+    'GET',
+    '/customer-portal/visits',
+  ), `${record.syntheticLabel} delivered customer visits`);
+  const deliveredVisit = customerVisitsAfterProof.visits?.find(
+    (visit) => visit.customer_visit_reference === customerVisitReference,
+  );
+  if (deliveredVisit?.delivered_proof_available !== true) {
+    fail(`${record.syntheticLabel} delivered proof was not advertised on the customer visit`);
+  }
+  manifest = await snapshot(manifestPath, record.key, 'delivered_outcome');
   return manifest;
 }
 

@@ -58,13 +58,14 @@ separately from completion.
 5. For any write-intent task, use safe local or non-production records and
    document reset/replay behavior. The new prototype remains visibly simulated.
 
-Implementing the records in the current app is separate development work. The
+The records are implemented and live-verified through the current app's
+supported APIs. The
 [current-app fixture and authority map](FIXTURE_READINESS.md) identifies the
 supported route/API chain, source-backed gaps, and a safe snapshot sequence.
 The customer-controlled [delegation contract](PROPERTY_MANAGER_ACCESS.md) is
 implemented through owner invitation, verified-recipient acceptance, and owner
-revocation. The matched fixture must exercise those APIs; a direct SQL grant is
-not equivalent evidence.
-The [workplan](WORKPLAN.md) requires matched records and reset verification
-before participant sessions. The [read-only fixture probe](fixtures/README.md)
-captures baseline API states and counts; it does not seed the matched records.
+revocation. The verified fixture exercises those APIs; a direct SQL grant is
+not equivalent evidence. Prepare independent copies for task moments that
+cannot coexist in the forward-only lifecycle. The [workplan](WORKPLAN.md) now
+requires session execution and synthesis. The [read-only fixture probe](fixtures/README.md)
+captures privacy-minimized API states and counts; the executor performs writes.

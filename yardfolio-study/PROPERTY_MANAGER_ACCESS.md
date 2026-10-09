@@ -3,8 +3,10 @@
 Status: product authority decided under [MG-D6](PRODUCT_DECISIONS.md).
 Invitation/grant schema, accepted-invitation read checks, customer issuance,
 verified-recipient acceptance, revocation routes, and bounded UI are implemented
-and package-validated in the working tree. Live study grants and participant
-validation remain open.
+and package-validated in the working tree. Two isolated Canyon/Sage grant
+cycles passed supported owner issuance, verified-recipient acceptance, exact
+two-property/visit/proof reads, and zero-reset verification. Participant
+validation remains open.
 
 ## Customer action and timing
 

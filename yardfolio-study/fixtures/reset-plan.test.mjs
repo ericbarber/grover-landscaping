@@ -142,12 +142,17 @@ test('roots operational cleanup in exact job, stop, and plan IDs', () => {
     'operational_exceptions',
     'stop_progress_mutations',
     'day_plan_amendment_requests',
+    'access_audit_events',
   ]) {
     const selector = selectors.find((candidate) => candidate.table === table);
     assert.ok(selector, `${table} selector should be planned`);
     assert.equal(selector.recordKey, 'canyon');
     assert.match(selector.rootId, /canyon123$/);
   }
+  assert.equal(
+    selectors.filter((selector) => selector.table === 'access_audit_events').length,
+    3,
+  );
 });
 
 test('refuses prepared and already-reset manifests', () => {

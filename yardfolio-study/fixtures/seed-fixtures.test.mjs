@@ -60,6 +60,9 @@ function recordKeyFor(request, body) {
 function createJourneyFetch() {
   const proposalVersions = new Map([['canyon', 0], ['sage', 0]]);
   const assessmentVersions = new Map([['canyon', 1], ['sage', 1]]);
+  const reportStatuses = new Map([['canyon', 'draft'], ['sage', 'draft']]);
+  const deliveredProof = new Set();
+  const exceptions = new Map();
   const properties = new Map();
   const requests = [];
   const fetchImpl = async (url, request) => {
@@ -269,12 +272,114 @@ function createJourneyFetch() {
       key = path.includes('canyon') ? 'canyon' : 'sage';
       return jsonResponse(200, persisted({ id: `day_plan_${key}123`, status: 'published' }));
     }
+    if (path === '/operational-exceptions' && method === 'POST') {
+      const exception = {
+        id: `exception_${key}123`,
+        status: 'open',
+        assigned_user_id: null,
+        affected_resource_id: `job_${key}123`,
+        updated_at: `${key}-exception-created`,
+      };
+      exceptions.set(key, exception);
+      return jsonResponse(201, exception);
+    }
+    if (path.startsWith('/operational-exceptions/') && method === 'PUT') {
+      key = path.includes('canyon') ? 'canyon' : 'sage';
+      const current = exceptions.get(key);
+      const exception = {
+        ...current,
+        status: body.action === 'start' ? 'in_progress' : current.status,
+        assigned_user_id: body.action === 'assign' ? body.assigned_user_id : current.assigned_user_id,
+        updated_at: `${key}-exception-${body.action}`,
+      };
+      exceptions.set(key, exception);
+      return jsonResponse(200, exception);
+    }
+    if (path === '/customer-portal/visits' && method === 'GET') {
+      const reference = `customer_visit_${key}123`;
+      return jsonResponse(200, {
+        properties: [{ property_id: `property_${key}123` }],
+        visits: [{
+          property_id: `property_${key}123`,
+          customer_visit_reference: reference,
+          delivered_proof_available: deliveredProof.has(key),
+        }],
+      });
+    }
+    if (path.includes('/customer-portal/visits/') && path.endsWith('/proof')) {
+      key = path.includes('customer_visit_canyon') ? 'canyon' : 'sage';
+      const expectedOwner = `property-owner-${key}`;
+      const reviewer = request.headers['x-yardfolio-local-reviewer'];
+      if (reviewer !== expectedOwner && reviewer !== 'property-manager') {
+        return jsonResponse(403, { error: 'customer_portal_access_required' });
+      }
+      if (!deliveredProof.has(key)) {
+        return jsonResponse(404, { error: 'customer_visit_proof_pending' });
+      }
+      return jsonResponse(200, {
+        report_status: 'delivered',
+        checklist_progress: 100,
+        before_photos: 1,
+        after_photos: 1,
+        issue_photos: 0,
+        service: { checklist: [] },
+        photo_evidence: [],
+        completed_recommendations: [],
+      });
+    }
+    if (path.includes('/stops/') && path.endsWith('/status')) {
+      return jsonResponse(200, persisted({ status: body.status }));
+    }
+    if (path.endsWith('/start') && path.startsWith('/jobs/')) {
+      return jsonResponse(202, persisted({ status: 'accepted' }));
+    }
+    if (path.endsWith('/photos/presign')) {
+      return jsonResponse(201, {
+        photo_id: `photo_offline_${body.client_mutation_id.replaceAll('-', '')}`,
+        upload_mode: 'local-placeholder',
+      });
+    }
+    if (path.endsWith('/photos/complete')) {
+      return jsonResponse(202, { status: 'accepted' });
+    }
+    if (path.endsWith('/complete') && path.startsWith('/jobs/')) {
+      reportStatuses.set(key, 'submitted');
+      return jsonResponse(202, persisted({ status: 'accepted' }));
+    }
+    if (path.endsWith('/report') && path.startsWith('/jobs/')) {
+      return jsonResponse(200, persisted({
+        report_id: `report_job_${key}123`,
+        job_id: `job_${key}123`,
+        report_status: reportStatuses.get(key),
+        ready_for_customer: true,
+        checklist_progress: 100,
+        before_photos: 1,
+        after_photos: 1,
+      }));
+    }
+    if (path.includes('/completion-reports/') && path.endsWith('/review')) {
+      reportStatuses.set(key, 'in_review');
+      return jsonResponse(200, persisted({ report_status: 'in_review' }));
+    }
+    if (path.endsWith('/request-changes')) {
+      reportStatuses.set(key, 'changes_requested');
+      return jsonResponse(200, persisted({ report_status: 'changes_requested' }));
+    }
+    if (path.endsWith('/resubmit')) {
+      reportStatuses.set(key, 'submitted');
+      return jsonResponse(200, persisted({ report_status: 'submitted' }));
+    }
+    if (path.endsWith('/deliver')) {
+      reportStatuses.set(key, 'delivered');
+      deliveredProof.add(key);
+      return jsonResponse(200, persisted({ report_status: 'delivered' }));
+    }
     throw new Error(`unexpected fixture request: ${method} ${path}`);
   };
   return { fetchImpl, requests };
 }
 
-test('executes and journals the complete two-record provider-to-field journey without tokens', async () => {
+test('executes and journals the complete two-record provider-to-outcome journey without tokens', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'yardfolio-seed-fixtures-'));
   const manifestPath = join(directory, 'fixture-manifest.json');
   const journey = createJourneyFetch();
@@ -300,6 +405,9 @@ test('executes and journals the complete two-record provider-to-field journey wi
         'accepted_not_scheduled',
         'confirmed_visit',
         'field_route',
+        'exception_handoff',
+        'proof_review',
+        'delivered_outcome',
       ]);
       assert.equal(record.managerDelegationStatus, 'accepted');
       assert.equal(record.generatedRecordIds.owner_provider_initial_service_proposals.length, 3);
@@ -308,6 +416,8 @@ test('executes and journals the complete two-record provider-to-field journey wi
     const manifestText = await readFile(manifestPath, 'utf8');
     assert.doesNotMatch(manifestText, /fixture-token|recipient_business_email|address_line_1/);
     assert.equal(journey.requests.filter((request) => request.path.endsWith('/publish')).length, 2);
+    assert.equal(journey.requests.filter((request) => request.path.endsWith('/deliver')).length, 2);
+    assert.equal(journey.requests.filter((request) => request.path.endsWith('/proof')).length, 8);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

@@ -2,7 +2,7 @@
 
 // Read-only local-review fixture probe. It reports counts and states, never
 // customer names, addresses, messages, tokens, or protected record bodies.
-const apiBase = (process.env.YARDFOLIO_STUDY_API_URL ?? 'http://127.0.0.1:8080').replace(/\/+$/, '');
+const apiBase = (process.env.YARDFOLIO_STUDY_API_URL ?? 'http://127.0.0.1:8081').replace(/\/+$/, '');
 const asOf = process.env.YARDFOLIO_STUDY_AS_OF ?? new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Phoenix', year: 'numeric', month: '2-digit', day: '2-digit',
 }).format(new Date());
@@ -49,7 +49,7 @@ const [ownerPortal, managerPortal, crewRoute, exceptions, ...studyOwnerPropertie
   read('/customer-portal/visits', 'property-owner'),
   read('/customer-portal/visits', 'property-manager'),
   read('/crews/crew_1001/day-plan/today', 'crew-lead'),
-  read('/operational-exceptions?status=open&limit=25', 'manager'),
+  read('/operational-exceptions?limit=25', 'manager'),
   ...studyOwners.map(({ reviewer }) => read('/owner-properties', reviewer)),
 ]);
 
@@ -67,6 +67,8 @@ const studyOwnerReports = await Promise.all(studyOwners.map(async ({ key, review
   const proposals = proposalReads.flatMap((result) => (
     Array.isArray(result.payload) ? result.payload : []
   ));
+  const portalResult = await read('/customer-portal/visits', reviewer);
+  const visits = portalResult.payload?.visits;
   return {
     key,
     status: propertiesResult.status,
@@ -80,9 +82,20 @@ const studyOwnerReports = await Promise.all(studyOwners.map(async ({ key, review
       (proposal.proposal_version ?? proposal.proposalVersion) === 3
       && (proposal.status === 'sent' || proposal.status === 'accepted')
     )).length,
+    customerPortal: {
+      status: portalResult.status,
+      error: errorCode(portalResult),
+      properties: count(portalResult.payload?.properties),
+      visits: count(visits),
+      deliveredProofAvailable: Array.isArray(visits)
+        ? visits.filter((visit) => visit.delivered_proof_available === true).length
+        : undefined,
+    },
   };
 }));
 const route = crewRoute.payload;
+const managerVisits = managerPortal.payload?.visits;
+const managerExceptionRecords = Array.isArray(exceptions.payload) ? exceptions.payload : [];
 
 const report = {
   checkedAt: new Date().toISOString(),
@@ -98,7 +111,10 @@ const report = {
     status: managerPortal.status,
     error: errorCode(managerPortal),
     properties: count(managerPortal.payload?.properties),
-    visits: count(managerPortal.payload?.visits),
+    visits: count(managerVisits),
+    deliveredProofAvailable: Array.isArray(managerVisits)
+      ? managerVisits.filter((visit) => visit.delivered_proof_available === true).length
+      : undefined,
   },
   ownerAcquisition: {
     records: studyOwnerReports,
@@ -113,7 +129,9 @@ const report = {
   managerExceptions: {
     status: exceptions.status,
     error: errorCode(exceptions),
-    open: count(exceptions.payload),
+    open: managerExceptionRecords.filter((exception) => exception.status === 'open').length,
+    inProgress: managerExceptionRecords.filter((exception) => exception.status === 'in_progress').length,
+    resolved: managerExceptionRecords.filter((exception) => exception.status === 'resolved').length,
   },
 };
 

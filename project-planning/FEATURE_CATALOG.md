@@ -306,12 +306,15 @@ workflows are not product targets.
   and ready briefs while rejecting scope leaks, collisions, broken linkage,
   duplicates, and stale ownership; an API executor continues through current
   proposal v3, stale/cross-owner denial, acceptance, activation, Property
-  Manager delegation, confirmed first visit, service release, and published
-  route; the transactional reset snapshots exact manifest roots, removes direct
+  Manager delegation, confirmed first visit, service release, published route,
+  assigned access exception, field completion, placeholder evidence, manager
+  correction/re-review, immutable delivery, and minimized delivered proof; the
+  transactional reset snapshots exact manifest roots, removes direct
   and derived acquisition/visit/field rows, rolls back on failure, and records
-  only a verified zero receipt. Two live isolated cycles passed matched reads
-  and zero-namespace resets; proof/outcome fixtures and participant evidence
-  remain open
+  only a verified zero receipt. Three live full-lifecycle isolated cycles passed
+  pending/cross-owner proof denial, delivered owner/manager reads, matched
+  counts, zero-namespace resets, and finally zero derived audits; session-specific copies and participant
+  evidence remain open, and placeholder evidence does not claim image quality
 - Repository release-contract tests are self-contained in restricted shells:
   Terraform behavior is represented by an injected test double and protected
   release evidence is validated in-process without changing operator-facing

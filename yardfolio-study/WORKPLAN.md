@@ -83,7 +83,7 @@ work. No actual photo is supplied. All six moments pass 320, 390, and 1440px
 state, privacy, focus, and overflow checks. The current-app route/API authority
 review is recorded in the [fixture map](FIXTURE_READINESS.md), and separate
 Property Manager and Company Owner task perspectives are available for study.
-Matched records and participant evidence remain before React adoption.
+Matched records are live-verified; participant evidence remains before React adoption.
 
 The separate Property Manager and Company Owner task concepts now cover an
 authorized two-property scan, a versioned access-guidance response, company
@@ -92,22 +92,18 @@ ended property access. These are simulated task moments with no shared state
 or current-app data. The first source review found that the current route has
 no Plan 8/9 version field and Crew Lead access questions do not enter the
 manager exception path. Property Manager Portfolio and Home now read the
-protected visit collection; the local reviewer has no valid grant, so sample
-properties are withheld. The earlier preview-only Proof and Approvals tabs
-are not claimed in this protected workspace. These moments cannot be scored
-as matched task completion by seeding records alone. The activation path issues
-a Property Owner portal grant; the separate customer-controlled Property
-Manager invitation, acceptance, and revocation lifecycle is implemented. The
-matched fixture must exercise it rather than insert grants directly. Next safe
-slice: prepare repeatable Yard Owner proposal/portal fixture copies and verify
-their grant, scope, and normal entry before a participant comparison.
+protected visit collection; the fixed reviewer live-read two separately
+delegated properties, visits, and delivered-proof indicators. The earlier
+preview-only Proof and Approvals tabs are not claimed in this protected
+workspace. Plan 8/9 and Crew Lead-originated access transfer remain
+non-comparable; the supported exception, review, and proof states are verified.
+Next prepare independent copies for task moments that cannot coexist in the
+forward-only lifecycle, then run the participant comparison.
 The [isolated seed contract](fixtures/SEED_CONTRACT.md) now fixes the target
 database boundary, transition order, reset ownership, and acceptance checks.
-The [local study database](fixtures/LOCAL_STUDY_ENV.md) has been created and
-migrated twice with 125 successful migrations as of the recorded environment
-check. A separate local-review study
-API now runs on port 8081 and reports the expected baseline through the
-read-only probe. A tested, privacy-minimized target-boundary preflight now
+The [local study database](fixtures/LOCAL_STUDY_ENV.md) has 127 successful
+migrations. A separate local-review study API on port 8081 reports its exact
+identity through the read-only probe. A tested, privacy-minimized target-boundary preflight
 rejects the shared database, non-local API origins or mode, missing migrations,
 and occupied fixture namespaces. The backend returns its database name only
 from ready PostgreSQL responses in `local_review` mode, and the preflight
@@ -118,36 +114,32 @@ keys. A fixture-only, production-rejected runtime handoff advances a new
 namespaced provider invitation through its delivered transition and returns the
 bearer value once outside JSON. Canyon View and Sage Lane now use distinct
 fixed Property Owner principals, and a create-once preparation utility verifies
-those profiles plus target/provenance before writing the private manifest. Live
-preflight execution, record seeding, reset, and matched-record validation remain
-open.
+those profiles plus target/provenance before writing the private manifest. Two
+full-lifecycle runs passed proposal, delegation, current route, assigned
+exception, field completion, report correction/re-review, delivered-only proof,
+role denial, and exact zero-reset checks for both records.
 
-The first read-only fixture probe on the September 16 as-of date found zero
-Yard Owner acquisition properties, 403 portal reads for both customer roles,
-an older June 15 Crew Lead route with two stops, and zero open manager
-exceptions. These are local-review baseline counts, not evidence that the
-matched Canyon View/Sage Lane records exist. The next fixture work must use
-isolated synthetic identities and a tested reset path before writes.
+The privacy-minimized probe now reports one fixed property, visit, current v3,
+and delivered-proof indicator per owner; two delegated Property Manager
+properties/visits/proofs; the current route; and two in-progress exceptions.
+The generic owner remains denied and the final reset restores zero namespaces.
 The customer-controlled Property Manager delegation rule is now decided in
 [MG-D6](PRODUCT_DECISIONS.md): the customer may delegate one property after
 the company relationship is active, and may revoke that access. The
 [access contract](PROPERTY_MANAGER_ACCESS.md) defines the required API and
 recipient checks. Its invitation/grant migration, accepted-invitation read
 gate, issuance/revocation endpoints, and bounded UI are implemented; matched
-study grants remain open. The local environment has an active shared review API and a
-separate migrated study database/API, but no fixture reset path. The next
-writable fixture slice must restart the study API, run the boundary preflight
-in the live study environment, and prove manifest-owned reset before any
-participant use.
+study grants passed supported issuance and acceptance. The local environment
+has an active shared review API plus a separate migrated study database/API and
+transactional exact-root reset.
 The fresh migrations add a June 15 sample route, which remains baseline data
 and cannot be mistaken for a matched current-day record.
 
 The [independent session protocol](research/SESSION_PROTOCOL.md) and
 [blank notes template](research/SESSION_NOTES_TEMPLATE.md) are ready for a
 formative round. Public path and claim comprehension can be observed now.
-Role tasks remain directional until matched records meet the fixture gate;
-Property Manager delegation, Plan 8/9 revision, and Crew Lead access transfer
-remain explicitly noncomparable completion tasks until their workflows exist.
+Supported role tasks now meet the fixture gate. Plan 8/9 revision, Crew Lead
+access transfer, and real-image proof quality remain explicitly non-comparable.
 No participant has been observed in this track.
 The [independent persona set](personas/README.md) now states the five
 first-wave tasks and authority boundaries plus five secondary/recovery

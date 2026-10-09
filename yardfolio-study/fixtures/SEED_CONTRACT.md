@@ -1,7 +1,7 @@
 # Isolated matched-record seed contract
 
-Status: provider-to-field contract implemented and live-verified; proof/outcome
-and participant evidence remain. A fail-closed manifest preparation utility
+Status: the supported provider-to-delivered-outcome contract is implemented and
+live-verified; participant evidence remains. A fail-closed manifest preparation utility
 records the verified target, exact running commit, and
 distinct study-owner principals before any write. Customer-controlled
 Property Manager delegation and a strictly gated local-fixture invitation-token
@@ -14,11 +14,11 @@ identity before property work, recovers only a single exact owner-scoped
 property after an uncertain create response, and avoids replaying an exact
 persisted ready brief. It rejects scope leaks, collisions, duplicates, broken
 linkage, and stale journal IDs and retains no invitation token. The paired
-provider-to-field executor and exact-root transactional reset are implemented
+provider-to-outcome executor and exact-root transactional reset are implemented
 and tested with a complete simulated two-record journey, rollback gates, and
-zero-remaining receipt enforcement. Two complete live cycles passed against the
-separate local study database and returned it to zero reserved namespace
-matches, as recorded in [LOCAL_STUDY_ENV.md](LOCAL_STUDY_ENV.md). Use the
+zero-remaining receipt enforcement. Three complete live outcome cycles passed
+against the separate local study database and returned it to zero reserved
+namespace matches, as recorded in [LOCAL_STUDY_ENV.md](LOCAL_STUDY_ENV.md). Use the
 [matched facts](../MATCHED_FIXTURES.md)
 and [authority map](../FIXTURE_READINESS.md) as the task source. The
 [read-only probe](README.md) reports the current local-review baseline.
@@ -49,8 +49,8 @@ and [authority map](../FIXTURE_READINESS.md) as the task source. The
   used as a study reset against the shared database.
 - The direct reset inventory covers all manifest ID tables without free-form or broad
   predicates. Its derived selector catalog traces the current matched sequence's
-  acquisition, provider, delegation, visit/recommendation, and field-operation
-  children through declarative paths to exact manifest-owned parents. The plan
+  acquisition, provider, delegation, visit/recommendation, field-operation, and
+  derived audit children through declarative paths to exact manifest-owned parents. The plan
   is interpreted from exact manifest roots inside the same transaction as the
   direct child-to-parent order. Any SQL or nonzero verification result rolls
   back the reset and leaves the manifest outside the `reset` phase.
@@ -63,14 +63,16 @@ and [authority map](../FIXTURE_READINESS.md) as the task source. The
 | Accepted, not scheduled | Owner accepts exact v3 with affirmation and idempotency key; activation is a separate owner-confirmed transition | Acceptance snapshot matches v3 and $420. Acceptance alone creates no route, crew assignment, visit date, or payment. Activation creates the owner's portal grant and account/property relationship. |
 | Confirmed visit | Provider proposes a first-visit window; owner confirms the current version with affirmation; provider releases the exact initial service | Portal visit read is authorized and matches the synthetic service/date. Service release links accepted proposal, activation, first-visit proposal, and created job. Wrong user and invalid grant/scope fail closed. |
 | Field route | Manager creates a draft day plan, assigns the released job to a stop, and publishes for the study day | Crew Lead reads a published route for the as-of day and exact job/stop. The route has a plan ID but no Plan 8/9 revision number, so prototype revision tasks remain comprehension-only. |
-| Exception/proof/outcome | Use supported operational exception, stop/job progress, evidence, report review/request-changes/resubmit/deliver, and customer proof reads | Crew-originated access-question handoff is unsupported; do not assert it completed. Customer proof is pending before delivery and comes only from the delivered snapshot afterward. No real image means visual proof quality remains untested. |
+| Exception handoff | Manager creates a job-linked access exception, assigns the fixed manager, and starts work using optimistic timestamps | The exception remains linked to the exact fixture job and exposes one accountable manager. Crew-originated access-question creation is unsupported and is not claimed. |
+| Proof review | Crew progresses the stop/job, records local placeholder before/after evidence, completes the job, then resubmits after one manager change request and a second review | The persisted report is ready, has complete checklist and evidence counts, and is back in review. Placeholder records exercise workflow and privacy, not real-image quality. |
+| Delivered outcome | Manager delivers the reviewed immutable snapshot; exact owner and delegated Property Manager read the minimized proof | Proof returns pending before delivery, cross-owner access fails closed, and delivered reads omit report/job IDs and share links. The customer visit advertises proof only after delivery. |
 
-Keep these as **separate snapshots or independent copies**. A proposal cannot
+The manifest records checkpoints that were verified during one forward-only
+journey; it is not a set of restorable database snapshots. A proposal cannot
 remain open after acceptance, and a report cannot be both under review and
-delivered. Do not rewrite immutable proposals, releases, events, or report
-snapshots to make an earlier task moment reappear. The backend persistence
-test demonstrates the owner and first-visit sequence and its version conflicts;
-it is a test fixture, not a reusable browser-study seed script.
+delivered. Prepare an independent fixture copy when a participant must interact
+with an earlier moment. Never rewrite immutable proposals, releases, events, or
+report snapshots to make that state reappear.
 
 ## Date and role gates
 

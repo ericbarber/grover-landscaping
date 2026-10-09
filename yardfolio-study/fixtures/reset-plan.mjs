@@ -32,6 +32,9 @@ const directResetOrder = [
 ];
 
 const derivedResetSelectors = [
+  { table: 'access_audit_events', rootTable: 'day_plans', path: ['target_id'] },
+  { table: 'access_audit_events', rootTable: 'service_jobs', path: ['job_completion_reports.job_id', 'target_id'] },
+  { table: 'access_audit_events', rootTable: 'service_jobs', path: ['operational_exceptions.affected_resource_type=job', 'operational_exceptions.affected_resource_id', 'target_id'] },
   { table: 'customer_visit_recommendation_events', rootTable: 'owner_provider_service_releases', path: ['customer_visit_recommendation_series.release_id'] },
   { table: 'customer_visit_recommendation_messages', rootTable: 'owner_provider_service_releases', path: ['customer_visit_recommendation_publications.customer_recommendation_reference', 'customer_visit_recommendation_series.release_id'] },
   { table: 'customer_visit_recommendation_decisions', rootTable: 'owner_provider_service_releases', path: ['customer_visit_recommendation_publications.customer_recommendation_reference', 'customer_visit_recommendation_series.release_id'] },

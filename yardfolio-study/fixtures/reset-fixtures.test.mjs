@@ -58,6 +58,10 @@ test('builds one fail-closed transaction rooted only in exact manifest IDs', () 
   assert.match(sql, /local-review-property-owner-canyon/);
   assert.match(sql, /local-review-property-owner-sage/);
   assert.match(sql, /CREATE TEMP TABLE fixture_activations/);
+  assert.match(sql, /CREATE TEMP TABLE fixture_reports/);
+  assert.match(sql, /CREATE TEMP TABLE fixture_exceptions/);
+  assert.match(sql, /DELETE FROM access_audit_events/);
+  assert.match(sql, /fixture derived audit reset verification failed/);
   assert.match(sql, /fixture reset verification failed/);
   assert.match(sql, /remaining_manifest_records=0/);
   assert.doesNotMatch(sql, /yardfolio_study_canyon_%|yardfolio_study_sage_%/);

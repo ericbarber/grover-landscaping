@@ -53,6 +53,7 @@ const allowedSnapshots = new Set([
   'accepted_not_scheduled',
   'confirmed_visit',
   'field_route',
+  'exception_handoff',
   'proof_review',
   'delivered_outcome',
 ]);

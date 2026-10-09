@@ -11,11 +11,11 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-field seed/reset toolchain are implemented and live-verified through two isolated zero-reset cycles; field command coordination and the local cross-browser acceptance gate are complete | Extend B9 through proof/delivered outcome, then run matched participant sessions |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-delivered-outcome seed/reset toolchain are implemented and live-verified through three isolated full-lifecycle zero-reset cycles; field command coordination and the local cross-browser acceptance gate are complete | Prepare session-specific fixture copies, then run matched participant sessions |
 | Private review | Pi has an ARM64 runtime, healthy PostgreSQL, private HTTPS, and restricted CI SSH grant; deployment remains disabled and unhosted | Publish the workflow, run CI, then verify the first gated deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered; B1/B3 and repository-owned B7/B8 work are implemented, B6/B9 preparations are ready, and a bounded B10 decision packet awaits approval | Approve or revise B10 boundaries while B4/B5/B6/B8/B9 evidence proceeds in an authorized environment |
-| Design | Prior concepts remain review inputs; Yardfolio Study M1 remains open, eight M2 task moments are simulated, and live provider-to-field fixtures are repeatable | Complete proof/outcome fixture evidence and run B9 participant sessions before B2 expansion |
+| Design | Prior concepts remain review inputs; Yardfolio Study M1 remains open, eight M2 task moments are simulated, and live provider-to-outcome fixtures are repeatable | Run B9 participant sessions and synthesize evidence before B2 expansion |
 
 ## Status Legend
 
@@ -79,8 +79,8 @@ privacy-bounded operational indicator contracts, an actionable validator with
 failure tests, and local/CI enforcement after production builds. The measured
 B0/B1/B3 build passes every artifact limit. Protected dashboards, alert routing,
 runtime browser measurements, and real-user measurement approval remain external
-gates and are not claimed. B9 matched study fixtures are the next live evidence
-phase when an isolated study API is reachable. B9 preparation now includes
+gates and are not claimed. B9 matched study fixtures are now live-verified
+through the supported delivered outcome. B9 delivery includes
 a strict, versioned, privacy-minimized fixture-manifest template and validator
 in local and CI repository gates. It rejects the shared database, non-review
 API mode, placeholder runtime provenance, records outside the Canyon/Sage
@@ -93,9 +93,7 @@ their Canyon View or Sage Lane owner while reserving the synthetic namespace
 for request/idempotency keys. A disabled-by-default fixture runtime can return a
 newly created provider invitation token once, outside JSON, only after proving
 non-production local-review PostgreSQL on `yardfolio_study`; it also records
-the normal delivered transition. No record has been seeded; the updated API
-must be restarted and the preflight run before writes, followed by exact access
-and denial verification. Canyon View and Sage Lane now have separate fixed
+the normal delivered transition. Canyon View and Sage Lane have separate fixed
 local-review Property Owner principals, preventing their owner-scoped records
 from collapsing under one synthetic user. A tested create-once preparer runs
 the boundary preflight, verifies both principals, and writes the ignored
@@ -110,10 +108,11 @@ same-label collisions, duplicates, or stale journal IDs. Its exact-match
 recovery rules journal and resume the fixed workspace identity, close the
 non-idempotent property-create crash window, and avoid replaying an already
 saved ready brief without persisting invitation tokens. The paired
-provider-to-field executor now drives both records through proposal v3,
+provider-to-outcome executor drives both records through proposal v3,
 acceptance, activation, manager delegation, first-visit confirmation, service
-release, and published field routes with stable request keys and immediate
-atomic ID journaling. A tested reset
+release, published field routes, assigned exceptions, field completion,
+placeholder evidence, manager correction/re-review, immutable delivery, and
+minimized owner/manager proof with stable request keys. A tested reset
 inventory now covers every allowlisted manifest table, orders exact primary keys
 child before parent, supports a workspace-only partial run, and emits no SQL or
 broad owner predicate. Derived selectors now trace the owner/provider,
@@ -122,8 +121,10 @@ manifest workspace, invitation, capability, assessment, proposal, activation,
 release, job, stop, or plan IDs. Its executor snapshots those exact roots and
 removes derived/direct records inside one rollback-safe PostgreSQL transaction;
 the manifest reaches `reset` only after exact IDs verify absent. Repository
-simulation passes, while live isolated seed/reset and access evidence remain
-unclaimed.
+tests and three isolated full-lifecycle live seed/read/reset cycles pass; the
+latest also proved zero derived audits. Each ended with zero manifest records
+and namespace matches. Participant evidence,
+real-image quality, and unsupported Crew Lead-originated handoff remain open.
 Repository validation is now deterministic in restricted development shells:
 the release-preflight contract supplies its own fake Terraform command, and
 protected-release evidence tests call the exported validator directly instead
@@ -239,23 +240,18 @@ Yard Owner Home now reflects the protected portal read, while Crew Lead Home
 uses the loaded route date and stop count rather than assigned-job totals.
 The route header also shows the loaded service date. Property Manager Home and
 Portfolio now use the protected customer visit collection; inactive or failed
-access withholds the former preview properties and progress. The local reviewer
-still needs matched multi-property grants for the two-property study task.
-Next, prepare consistent service fixtures and resolve the open audience and
-role-context choices. Customer-controlled one-property Property Manager
-invitation, acceptance, and revocation are implemented; B9 still requires
-matched study fixtures before that role's task can be scored. The
+access withholds the former preview properties and progress. The fixed Property
+Manager now live-reads two separately delegated synthetic properties, visits,
+and delivered-proof indicators. Next, prepare independent copies for lifecycle
+moments that cannot coexist and run the participant protocol. The
 [linked Yard Owner, Company Manager, and Crew Lead prototypes](yardfolio-study/prototype/README.md)
 are interactive and clearly simulated: they cover proposal acceptance,
 customer consequence, crew fit, exact-version release, field access questions,
 tab-held offline state, manager access verification, revised Plan 9 release,
 proof correction, reviewed customer outcome, stale versions, and failed-read
-recovery. The six task moments have no shared persistence or real photo. Next,
-prepare matched synthetic fixtures using the
-[current-app authority map](yardfolio-study/FIXTURE_READINESS.md), resolve the
-open audience/role choices, and connect Company Owner accountability and
-Property Manager decisions to authorized current-app records before participant
-comparison or bounded React/API adoption. Two additional role perspectives are
+recovery. The six prototype task moments have no shared persistence or real
+photo; the supported current-app records are now repeatable, while Plan 8/9 and
+Crew Lead-originated access handoff remain non-comparable. Two additional role perspectives are
 now simulated:
 Property Manager scans two properties and responds to an access question;
 Company Owner assigns an accountable manager to the business risk. Their
@@ -265,17 +261,17 @@ new composition is not approved for production adoption.
 
 The [matched synthetic fixture specification](yardfolio-study/MATCHED_FIXTURES.md)
 now defines two equivalent cross-role services for fair current/new tasks.
-Those records are not seeded. The prototype uses one specified synthetic task
-moment, not a current-app fixture. The route/API and authority map is now
+Those records have been live-verified and reset through supported APIs. The
+prototype uses one specified synthetic task moment, not the current-app fixture.
+The route/API and authority map
 recorded; it identifies current-app gaps in plan revision and field-to-office
 access questions. Portfolio's protected data-source repair is delivered, while
-the old preview-only Proof and Approvals tabs are not claimed as live. Matched
-grants/records, fixture reset, and participant sessions remain open.
+the old preview-only Proof and Approvals tabs are not claimed as live.
+Session-specific copies and participant sessions remain open.
 The [read-only local fixture probe](yardfolio-study/fixtures/README.md) now
-records the private review baseline for the study date: no Yard Owner
-acquisition properties, protected portal reads denied for Yard Owner and
-Property Manager, a past two-stop Crew Lead route, and no open manager
-exceptions. It makes fixture gaps reproducible without changing shared data.
+reports fixed-owner proposal, visit, delivered-proof, delegated manager,
+current route, and manager-exception counts without exposing protected fields.
+The final reset returns the isolated namespace to zero.
 The [isolated fixture seed contract](yardfolio-study/fixtures/SEED_CONTRACT.md)
 now defines supported owner transitions, reset ownership, and date/role gates.
 Its non-secret working-tree manifest template and tested validator establish the

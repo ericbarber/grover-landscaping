@@ -65,12 +65,27 @@ WHERE job_id IN (SELECT id FROM fixture_jobs)
    OR day_plan_id IN (SELECT id FROM fixture_day_plans)
 UNION
 SELECT id FROM fixture_ids WHERE table_name = 'day_plan_stops';
+CREATE TEMP TABLE fixture_reports ON COMMIT DROP AS
+SELECT report.id
+FROM job_completion_reports report
+WHERE report.job_id IN (SELECT id FROM fixture_jobs);
+CREATE TEMP TABLE fixture_exceptions ON COMMIT DROP AS
+SELECT exception.id
+FROM operational_exceptions exception
+WHERE (exception.affected_resource_type = 'job' AND exception.affected_resource_id IN (SELECT id FROM fixture_jobs))
+   OR (exception.affected_resource_type = 'stop' AND exception.affected_resource_id IN (SELECT id FROM fixture_stops))
+   OR (exception.affected_resource_type = 'route' AND exception.affected_resource_id IN (SELECT id FROM fixture_day_plans));
 CREATE TEMP TABLE fixture_manager_invitations ON COMMIT DROP AS
 SELECT invitation.*
 FROM customer_property_manager_invitations invitation
 WHERE invitation.owner_user_id IN (
   SELECT id FROM fixture_ids WHERE table_name = 'owner_workspaces'
 );
+
+DELETE FROM access_audit_events
+WHERE target_id IN (SELECT id FROM fixture_day_plans)
+   OR target_id IN (SELECT id FROM fixture_reports)
+   OR target_id IN (SELECT id FROM fixture_exceptions);
 
 DELETE FROM customer_visit_recommendation_events
 WHERE customer_recommendation_reference IN (
@@ -289,6 +304,14 @@ BEGIN
       RAISE EXCEPTION 'fixture reset verification failed';
     END IF;
   END LOOP;
+  SELECT count(*) INTO remaining
+  FROM access_audit_events
+  WHERE target_id IN (SELECT id FROM fixture_day_plans)
+     OR target_id IN (SELECT id FROM fixture_reports)
+     OR target_id IN (SELECT id FROM fixture_exceptions);
+  IF remaining <> 0 THEN
+    RAISE EXCEPTION 'fixture derived audit reset verification failed';
+  END IF;
 END
 $yardfolio_study_reset$;
 SELECT 'remaining_manifest_records=0';

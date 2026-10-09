@@ -26,8 +26,8 @@ the record chain and unsupported transitions.
 The [isolated seed contract](SEED_CONTRACT.md) defines the supported owner
 record sequence, reset ownership, and date/role gates. The API-driven seeder
 and transactional reset are implemented, repository-tested, and verified
-through two local live provider-to-field cycles. Participant sessions and the
-proof/delivered-outcome extension remain separate gates.
+through three local live provider-to-outcome cycles. Participant sessions remain
+a separate human-evidence gate.
 
 ## Manifest contract
 
@@ -120,7 +120,7 @@ partial run. The plan catalogs selectors for acquisition
 events; invitation delivery, recipient, claim, and capability children;
 disclosure, assessment, proposal, activation, first-visit, delegation, release,
 visit, recommendation, route, job, checklist, photo, report, add-on, mutation,
-and operational-exception records. Each selector carries an exact manifest root
+operational-exception, and derived audit records. Each selector carries an exact manifest root
 ID and a declarative relation path. The reset executor snapshots those exact
 roots, removes derived children and direct rows in one PostgreSQL transaction,
 rolls back on any SQL or verification failure, verifies every journaled ID is
@@ -178,10 +178,13 @@ attempting to resume that record.
 
 [`seed-fixtures.mjs`](seed-fixtures.mjs) executes both isolated owner journeys
 through current proposal v3, acceptance, activation, customer-controlled
-Property Manager delegation, confirmed first visit, service release, and a
-published crew route. It uses stable request keys, atomically journals returned
-ownership IDs, verifies owner isolation and stale-proposal denial, and stores
-only snapshot names—not protected response content.
+Property Manager delegation, confirmed first visit, service release, a
+published crew route, assigned access exception, field completion, report
+correction/review, and immutable customer delivery. It verifies pending-only
+proof before delivery, cross-owner denial, and minimized owner/manager proof
+after delivery. Local placeholder evidence exercises workflow and privacy but
+does not claim real-image quality. The manifest stores checkpoint names—not
+protected response content.
 
 Run it only after preparing the manifest against the exact API build:
 

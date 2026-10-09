@@ -20,7 +20,7 @@ This is the short restart document. Execution order lives in
 
 ## Active and next work
 
-### Active: B9 proof/outcome extension; participant execution gated
+### Active: B9 session preparation; participant execution gated
 
 [`BEST_IN_CLASS_DELIVERY_PLAN.md`](BEST_IN_CLASS_DELIVERY_PLAN.md) is the
 detailed plan for the approved ten-initiative quality program. B0, B1, B3, B7,
@@ -56,18 +56,22 @@ owner-foundation plan fixes both owners' supported workspace/property/brief/invi
 and journals each fixed workspace identity before property work. Exact recovery
 now covers workspace, the uncertain property-create window, and persisted ready
 briefs with owner-scope, field, linkage, collision, duplicate, and journal
-checks. The provider-to-field executor now completes organization claim and
+checks. The provider-to-outcome executor now completes organization claim and
 capability, assessment, proposal v3, owner acceptance, activation, Property
-Manager delegation, first visit, service release, and route publication. The
+Manager delegation, first visit, service release, route publication, assigned
+access exception, field completion, placeholder evidence, manager correction
+and re-review, immutable delivery, and minimized owner/manager proof. The
 paired transactional reset covers the complete manifest table allowlist,
 orders exact keys child before parent, supports partial state, rolls back on
 failure, and records completion only after zero verification. The derived selector catalog now
 roots acquisition events; provider invitation,
 assessment, proposal, activation, and visit children; delegation records;
 customer visit/recommendation records; and field job/route/proof artifacts in
-exact manifest IDs. Two complete isolated live seed/read/reset cycles passed on
-2026-10-09, as did cleanup of stopped partial attempts. Proof/delivered-outcome
-fixtures and participant observation are the remaining B9 gates.
+exact manifest IDs. Three complete isolated full-lifecycle seed/read/reset cycles
+passed on 2026-10-09; the latest verified zero derived audits, and stopped
+partial attempts also cleaned up. Independent
+copies for non-coexisting task moments and participant observation are the
+remaining B9 gates; real-image quality and unsupported handoffs are not claimed.
 The repository package, database, and infrastructure scopes pass in this shell.
 Release-preflight tests inject a deterministic Terraform double, and the
 protected-release evidence validator exports its pure contract so tests no

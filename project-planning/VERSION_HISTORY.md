@@ -1,5 +1,23 @@
 # Version History
 
+- 2026-10-09: Extended the isolated Yardfolio Study executor from published
+  routes through supported outcome delivery. Each record now creates and starts
+  an assigned job-linked access exception, progresses its stop and job, records
+  local placeholder before/after evidence, exercises manager change request and
+  crew resubmission, re-enters review, and atomically delivers an immutable
+  completion snapshot. Direct checks prove proof is pending before delivery,
+  cross-owner access fails closed, exact owners and the delegated Property
+  Manager receive only minimized delivered proof, and visit projections expose
+  availability afterward. The privacy-minimized probe now reports per-owner and
+  manager proof availability plus exception lifecycle counts. Three complete
+  live full-lifecycle seed/read/reset cycles passed on the 127-migration
+  isolated database and ended with zero manifest records and namespace matches.
+  Reset now captures and removes exact route/report/exception audit targets and
+  fails if any remain; a final fresh cycle ended with zero study-actor audits.
+  Sixty-two orphaned synthetic audit events from earlier development runs were
+  removed transactionally by those exact roots. The
+  placeholder evidence verifies workflow/privacy, not real-image quality;
+  participant observation remains open.
 - 2026-10-09: Completed and live-verified the isolated Yardfolio Study
   provider-to-field fixture lifecycle. The API executor now recovers exact
   owner foundations, keeps one-time invitation tokens in memory, journals every

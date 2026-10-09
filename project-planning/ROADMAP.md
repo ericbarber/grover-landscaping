@@ -43,13 +43,16 @@ zero-remaining reset receipt. A tested owner-foundation plan pins both isolated 
 workspace/property/brief/invitation requests, journals the exact fixed workspace
 before property work, recovers only one exact owner-scoped property across the
 non-idempotent create crash window, and avoids replaying a matching persisted
-ready brief. The provider-to-field executor advances both records through
+ready brief. The provider-to-outcome executor advances both records through
 proposal v3, owner acceptance, activation, customer-controlled delegation,
-confirmed first visit, service release, and a current published route. Its
+confirmed first visit, service release, current published route, assigned
+access exception, field completion, placeholder evidence, manager correction
+and re-review, immutable delivery, and minimized owner/manager proof. Its
 transactional reset owns exact child-before-parent roots and derived children,
-rolls back on failure, and requires zero verification. Two isolated live cycles
-and stopped-run cleanup passed on 2026-10-09. Extending fixtures through
-proof/delivered outcome, then collecting participant observations, is next.
+rolls back on failure, and requires zero verification. Two isolated
+full-lifecycle live cycles and stopped-run cleanup passed on 2026-10-09.
+Preparing independent task-moment copies and collecting participant
+observations is next; placeholder evidence does not establish image quality.
 Protected browser/runtime evidence remains blocked by protected infrastructure
 rather than by a product implementation decision; the local cross-browser gate
 is complete.

@@ -15,8 +15,8 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-field seed/reset chain are implemented and live-verified through two isolated cycles; the bounded field command extraction and local browser gate are complete | First value, delegation, public-hero, search/share, field commands, and repeatable Canyon/Sage proposal-to-route fixtures pass repository and local live gates; deployed-origin evidence remains gated | Extend B9 through proof/delivered outcome and rerun exact reset verification |
-| Design review | B9 study materials and live provider-to-field fixtures are ready; participant evidence is incomplete | Ten persona profiles, responsive public-to-workspace preview, matched comprehension tasks, and repeatable two-owner live records cover the current path | Complete proof/outcome evidence, conduct participant sessions, and synthesize findings before B2 expansion |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-delivered-outcome seed/reset chain are implemented and live-verified through three isolated full-lifecycle cycles; the bounded field command extraction and local browser gate are complete | First value, delegation, public-hero, search/share, field commands, and repeatable Canyon/Sage proposal-to-proof fixtures pass repository and local live gates; deployed-origin evidence remains gated | Prepare session-specific fixture copies and keep the isolated reset gate green |
+| Design review | B9 study materials and live provider-to-outcome fixtures are ready; participant evidence is incomplete | Ten persona profiles, responsive public-to-workspace preview, matched comprehension tasks, and repeatable two-owner live records cover supported task moments | Conduct participant sessions and synthesize findings before B2 expansion |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | B10 decision packet prepared | Core workflows plus exact activity-to-Recovery exception handoff are delivered; the bounded concern proposal remains unapproved | Approve or revise concern ownership, response, retention, privacy, categories, urgent handling, and notification scope before implementation |
@@ -137,8 +137,8 @@ Validation:
 
 ### B9 — Matched participant evidence
 
-State: repository preparation and two local live provider-to-field seed/reset
-cycles delivered; proof/outcome fixtures and participant sessions remain.
+State: repository preparation and three local live provider-to-outcome seed/reset
+cycles delivered; session-specific copies and participant sessions remain.
 
 Delivered preparation:
 
@@ -192,19 +192,25 @@ Delivered preparation:
   foundation recovery, one-time in-memory invitation handoff, existing provider
   organization claim/capability, disclosure, completed remote assessment,
   proposal v1-v3, stale/cross-owner denial, acceptance, activation, manager
-  delegation, confirmed first visit, service release, and published route.
-- Two live 2026-10-09 cycles against the isolated 127-migration database each
-  seeded both records, produced one current v3 per owner, exposed two delegated
-  Property Manager visits and the current Crew Lead route, then returned a
-  zero-remaining reset receipt and zero reserved-namespace matches. Earlier
-  stopped attempts also proved root-based cleanup of an unjournaled invitation.
+  delegation, confirmed first visit, service release, published route, assigned
+  access exception, field completion, placeholder evidence, manager correction
+  and re-review, immutable delivery, and minimized owner/manager proof.
+- Three live 2026-10-09 full-lifecycle cycles against the isolated 127-migration
+  database each produced one current v3 and one delivered outcome per owner,
+  two delegated Property Manager visits/proofs, the current Crew Lead route,
+  and two assigned manager exceptions. Pending proof and cross-owner denial
+  were verified before delivery; customer-safe proof omitted internal IDs and
+  share links afterward. Each cycle returned a zero-remaining reset receipt and
+  zero reserved-namespace matches; the latest also verified zero derived audit
+  events. Earlier stopped attempts proved exact
+  cleanup after unjournaled invitation and denial-expectation boundaries.
 
 Remaining gate:
 
-- Extend the matched fixtures through supported exception, completion-proof,
-  report-review, and delivered-outcome states; verify delivered-only customer
-  proof and exact denials; reset to zero; then conduct the counterbalanced
-  sessions. No participant observation is claimed.
+- Prepare independent copies for task moments that cannot coexist in one
+  forward-only lifecycle, then conduct the counterbalanced sessions. Keep the
+  unsupported Crew Lead-originated access handoff, Plan 8/9 semantics, and
+  real-image proof quality non-comparable. No participant observation is claimed.
 
 ### B2, B4–B6, and B8–B10 — Remaining best-in-class delivery program
 
