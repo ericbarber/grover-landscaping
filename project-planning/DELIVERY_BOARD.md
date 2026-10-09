@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7 quality contract, B8 search/share contract, and B9 manifest/linked-target/token/journal/owner-plan/reset-selector safety are published on `codex-review-feature`; the bounded field command extraction and local browser gate are complete | First value, one-property delegation, stable public-hero entry, search/share delivery, field job/checklist/photo/add-on commands, and 86 cross-browser journeys pass alongside the frontend suite, production build, measured artifact budgets, strict Clippy, the 433-test backend command, live PostgreSQL migrations, and strict crawler/fixture contracts; deployed-origin evidence remains gated | Land the provider-to-field executor and transactional reset/verification together before preflight and isolated seeding |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 manifest, linked-target, token, journal, provider-to-field executor, and transactional reset are implemented on `codex-review-feature`; the bounded field command extraction and local browser gate are complete | First value, one-property delegation, stable public-hero entry, search/share delivery, field commands, and the complete simulated two-record B9 journey pass repository gates; deployed-origin and live fixture evidence remain gated | Run the isolated B9 preflight, seed, exact read/denial verification, and two reset cycles |
 | Design review | B9 study materials ready; matched live grants/fixtures incomplete | Ten persona profiles, responsive public-to-workspace preview, and matched comprehension tasks cover five core roles | Seed and verify the isolated fixtures, conduct participant sessions, and synthesize evidence before B2 expansion |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
@@ -180,22 +180,25 @@ Delivered preparation:
   IDs. The plan has no write entry point and retains no bearer token.
 - A tested direct reset inventory covers every allowlisted manifest ID table,
   emits only exact primary-key ownership, orders direct records child before
-  parent, and supports the earliest workspace-only partial run. It emits no SQL
-  or broad owner predicate and is marked non-executable until derived-child
-  selectors and transactional verification are complete.
-- Declarative derived selectors now root the current matched sequence's
+  parent, and supports the earliest workspace-only partial run.
+- Declarative derived selectors root the current matched sequence's
   acquisition, provider, delegation, visit/recommendation, and field-operation
   children in exact manifest workspace, invitation, capability, assessment,
-  proposal, activation, release, job, stop, and plan IDs. They emit no SQL; the
-  transaction interpreter and verification receipt remain pending.
+  proposal, activation, release, job, stop, and plan IDs. The executor snapshots
+  those roots, deletes derived and direct records inside one transaction, rolls
+  back on failure, verifies every journaled ID is absent, and only then records
+  the zero-remaining receipt.
+- The tested API executor drives both isolated owner records through exact
+  foundation recovery, one-time in-memory invitation handoff, existing provider
+  organization claim/capability, disclosure, completed remote assessment,
+  proposal v1-v3, stale/cross-owner denial, acceptance, activation, manager
+  delegation, confirmed first visit, service release, and published route.
 
 Remaining gate:
 
 - Restart the isolated service with the updated backend and fixture mode, then
-  execute the linked boundary preflight only after the remaining provider-to-
-  field executor and the transactional exact-ID reset/verification land
-  together. Then run the purpose-built
-  seeder through supported APIs, validate exact reads and denials, reset twice,
+  execute the linked boundary preflight. Run the purpose-built seeder through
+  supported APIs, validate exact reads and denials, reset twice,
   and conduct the counterbalanced sessions. No participant observation is
   claimed.
 

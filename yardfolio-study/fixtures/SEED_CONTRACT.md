@@ -1,21 +1,21 @@
 # Isolated matched-record seed contract
 
-Status: implementation contract for a future seeder. A fail-closed manifest
+Status: implemented repository contract awaiting isolated live execution. A fail-closed manifest
 preparation utility now records the verified target, exact running commit, and
 distinct study-owner principals before any write. Customer-controlled
 Property Manager delegation and a strictly gated local-fixture invitation-token
 handoff are now available to that seeder. An atomic, exclusively locked
-manifest journal can persist generated record ownership, verified snapshots,
+manifest journal persists generated record ownership, verified snapshots,
 delegation lifecycle, and a zero-remaining reset receipt without exposing
-tokens or protected content. It does not yet perform the API transitions or
-database reset. A tested owner-foundation plan now pins the exact
+tokens or protected content. A tested owner-foundation plan pins the exact
 workspace/property/brief/invitation requests, journals the fixed workspace
 identity before property work, recovers only a single exact owner-scoped
 property after an uncertain create response, and avoids replaying an exact
 persisted ready brief. It rejects scope leaks, collisions, duplicates, broken
-linkage, and stale journal IDs and retains no invitation token. The remaining
-provider-to-field executor and exact-ID reset must still be completed together
-before live fixture writes. A separate local study
+linkage, and stale journal IDs and retains no invitation token. The paired
+provider-to-field executor and exact-root transactional reset are implemented
+and tested with a complete simulated two-record journey, rollback gates, and
+zero-remaining receipt enforcement. A separate local study
 database has now been created and migrated, as recorded in
 [LOCAL_STUDY_ENV.md](LOCAL_STUDY_ENV.md); no Yardfolio Study fixture records have
 been written. Use the [matched facts](../MATCHED_FIXTURES.md)
@@ -46,12 +46,13 @@ and [authority map](../FIXTURE_READINESS.md) as the task source. The
   `backend/tests/owner_provider_invitation_persistence.rs` shows the
   dependency order for its own test records; its broad cleanup must not be
   used as a study reset against the shared database.
-- The direct reset inventory covers all manifest ID tables without SQL or broad
+- The direct reset inventory covers all manifest ID tables without free-form or broad
   predicates. Its derived selector catalog traces the current matched sequence's
   acquisition, provider, delegation, visit/recommendation, and field-operation
   children through declarative paths to exact manifest-owned parents. The plan
-  remains intentionally non-executable until those selectors are interpreted
-  and verified inside the same transaction as the direct child-to-parent order.
+  is interpreted from exact manifest roots inside the same transaction as the
+  direct child-to-parent order. Any SQL or nonzero verification result rolls
+  back the reset and leaves the manifest outside the `reset` phase.
 
 ## Supported transition sequence
 

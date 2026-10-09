@@ -10,6 +10,7 @@ import {
   recordResetVerification,
   recordVerifiedSnapshot,
   updateFixtureManifest,
+  withFixtureOperationLock,
 } from './fixture-state.mjs';
 
 const preparedManifest = () => buildPreparedManifest({
@@ -201,6 +202,29 @@ test('updates the private manifest atomically and refuses a concurrent writer', 
     } finally {
       await lock.close();
     }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('holds an operation lock across a complete seed or reset workflow', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'yardfolio-fixture-operation-'));
+  const manifestPath = join(directory, 'fixture-manifest.json');
+  try {
+    await writeFile(manifestPath, '{}\n', { mode: 0o600 });
+    let nestedAttempt;
+    const result = await withFixtureOperationLock(manifestPath, 'seed', async () => {
+      nestedAttempt = withFixtureOperationLock(manifestPath, 'seed', async () => 'nested');
+      await assert.rejects(nestedAttempt, /another seed operation owns/);
+      assert.equal((await stat(`${manifestPath}.seed.lock`)).mode & 0o777, 0o600);
+      return 'complete';
+    });
+    assert.equal(result, 'complete');
+    await assert.rejects(stat(`${manifestPath}.seed.lock`), { code: 'ENOENT' });
+    await assert.rejects(
+      withFixtureOperationLock(manifestPath, '../unsafe', async () => undefined),
+      /lock name is invalid/,
+    );
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

@@ -164,6 +164,36 @@ export async function updateFixtureManifest(path, transform) {
   }
 }
 
+export async function withFixtureOperationLock(path, operation, callback) {
+  if (!/^[a-z][a-z0-9-]{1,31}$/.test(operation ?? '')) {
+    fail('operation lock name is invalid');
+  }
+  const resolvedPath = resolve(path);
+  const lockPath = `${resolvedPath}.${operation}.lock`;
+  let lockHandle;
+  try {
+    lockHandle = await open(lockPath, 'wx', 0o600);
+  } catch (error) {
+    if (error?.code === 'EEXIST') fail(`another ${operation} operation owns ${lockPath}`);
+    throw error;
+  }
+  try {
+    await lockHandle.writeFile(`${JSON.stringify({
+      processId: process.pid,
+      operation,
+      startedAt: new Date().toISOString(),
+    })}\n`, 'utf8');
+    await lockHandle.sync();
+    return await callback();
+  } finally {
+    try {
+      await lockHandle.close();
+    } finally {
+      await unlink(lockPath);
+    }
+  }
+}
+
 function parseCommand(arguments_) {
   const [manifestPath, command, ...values] = arguments_;
   if (!manifestPath || !command) {

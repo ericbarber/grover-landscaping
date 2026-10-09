@@ -4,6 +4,7 @@ import {
   normalizeStudyApiUrl,
   parseTargetInspection,
   validateStudyTarget,
+  validateStudyTargetBinding,
 } from './validate-target.mjs';
 
 function response(status, payload) {
@@ -66,6 +67,31 @@ test('accepts a ready isolated target with empty fixture namespaces', async () =
     migrationCount: 125,
     namespaceMatches: 0,
   });
+});
+
+test('binding validation permits only the already-owned namespace during recovery and reset', async () => {
+  const result = await validateStudyTargetBinding({
+    apiUrl: 'http://127.0.0.1:8081',
+    fetchImpl: safeFetch,
+    inspectDatabase: () => ({
+      databaseName: 'yardfolio_study',
+      migrationCount: 125,
+      namespaceMatches: 12,
+    }),
+  });
+  assert.equal(result.namespaceMatches, 12);
+  await assert.rejects(
+    validateStudyTarget({
+      apiUrl: 'http://127.0.0.1:8081',
+      fetchImpl: safeFetch,
+      inspectDatabase: () => ({
+        databaseName: 'yardfolio_study',
+        migrationCount: 125,
+        namespaceMatches: 12,
+      }),
+    }),
+    /namespace is not empty/,
+  );
 });
 
 test('fails closed for the wrong API mode or persistence', async () => {

@@ -314,6 +314,8 @@ for scope in "${ordered_scopes[@]}"; do
       node_command --test yardfolio-study/fixtures/fixture-state.test.mjs
       node_command --test yardfolio-study/fixtures/owner-foundation-plan.test.mjs
       node_command --test yardfolio-study/fixtures/reset-plan.test.mjs
+      node_command --test yardfolio-study/fixtures/seed-fixtures.test.mjs
+      node_command --test yardfolio-study/fixtures/reset-fixtures.test.mjs
       node_command yardfolio-study/fixtures/validate-manifest.mjs --allow-template yardfolio-study/fixtures/fixture-manifest.example.json
       run_command docker compose config --quiet
       ;;

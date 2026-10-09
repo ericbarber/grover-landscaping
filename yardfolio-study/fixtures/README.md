@@ -26,9 +26,10 @@ scored. The [fixture authority map](../FIXTURE_READINESS.md) lists the record
 chain and unsupported transitions.
 
 The [isolated seed contract](SEED_CONTRACT.md) defines the supported owner
-record sequence, reset ownership, and date/role gates for a future writable
-fixture utility. Property Manager delegation prerequisites are delivered, but
-no seeder or matched record is available yet.
+record sequence, reset ownership, and date/role gates. The API-driven seeder
+and transactional reset are implemented and repository-tested. No matched
+record has been written yet; live target and access verification remain a
+separate operator gate.
 
 ## Manifest contract
 
@@ -75,7 +76,7 @@ local-review owner user ID so owner-scope denial checks and reset queries cannot
 conflate the two records.
 
 [`fixture-state.mjs`](fixture-state.mjs) is the crash-safe manifest journal for
-the future seeder/reset process. It takes an exclusive private lock, validates
+the seeder/reset process. It takes an exclusive private lock, validates
 the current manifest before every change, writes API-generated IDs and verified
 snapshot markers through an atomic mode-`0600` replacement, rejects delegation
 lifecycle regressions, and records reset completion only with a zero-remaining
@@ -83,7 +84,7 @@ receipt. Repeating the same ID, snapshot, or completed reset is idempotent. A
 leftover `.lock` file fails closed; remove it only after confirming that no
 fixture process still owns the recorded PID.
 
-The journal can be imported by the future orchestrator or exercised directly:
+The journal is imported by the seed/reset orchestrators and can also be exercised directly:
 
 ```bash
 node yardfolio-study/fixtures/fixture-state.mjs \
@@ -92,42 +93,40 @@ node yardfolio-study/fixtures/fixture-state.mjs \
 ```
 
 Other commands are `record-snapshot`, `record-delegation`, and
-`complete-reset`. The utility prints only counts and lifecycle state. It does
-not call application APIs, delete database records, verify that a reset count
-is true, or make the fixture participant-ready; those remain responsibilities
-of the bounded seeder/reset orchestrator. Never pass an invitation token or
+`complete-reset`. The utility prints only counts and lifecycle state. Direct
+journal commands do not call application APIs or delete records; those actions
+belong to the bounded orchestrators below. Never pass an invitation token or
 protected content to this journal.
 
-[`owner-foundation-plan.mjs`](owner-foundation-plan.mjs) defines the next
-non-executable orchestration boundary. It derives separate public-API request
+[`owner-foundation-plan.mjs`](owner-foundation-plan.mjs) defines the
+declarative owner-foundation boundary consumed by the seeder. It derives separate public-API request
 plans for the Canyon and Sage workspaces, synthetic properties, ready briefs,
-and delivered provider invitations from a validated manifest. Before an
-eventual executor writes a property, the fixed workspace must be discovered,
+and delivered provider invitations from a validated manifest. Before the
+executor writes a property, the fixed workspace must be discovered,
 matched, and journaled. Property recovery requires an owner-scoped discovery
 result to match every fixed synthetic field: one exact unjournaled match is
 recovered, zero matches permits creation, and scope leaks, same-label
 collisions, duplicates, or stale journal IDs fail closed. Ready-brief recovery
 likewise requires the exact journaled property, content, API ID, and persisted
 version before a retry is skipped. The plan marks the invitation header as
-same-process memory only. It does not perform network requests, expose a write
-command, or make reset optional.
+same-process memory only. The plan module does not perform network requests on
+its own; the bounded seeder executes it and keeps reset mandatory.
 
-[`reset-plan.mjs`](reset-plan.mjs) builds the non-executable direct ownership
-inventory for a future reset. It validates the manifest, refuses `prepared` or
+[`reset-plan.mjs`](reset-plan.mjs) builds the exact direct ownership inventory
+for [`reset-fixtures.mjs`](reset-fixtures.mjs). It validates the manifest, refuses `prepared` or
 already-reset state, covers every allowlisted ID table, and orders each exact
 primary key child before parent. The only non-`id` key is the exact
 `owner_workspaces.owner_user_id` already owned by that manifest record. It emits
-neither SQL nor a free-form predicate and supports the earliest workspace-only
-partial run. The plan deliberately marks itself non-executable because API
-transitions also create event, delivery, conversation, operational, and other
-derived child rows. The plan now catalogs those selectors for acquisition
+neither a free-form predicate nor caller-controlled SQL and supports the earliest workspace-only
+partial run. The plan catalogs selectors for acquisition
 events; invitation delivery, recipient, claim, and capability children;
 disclosure, assessment, proposal, activation, first-visit, delegation, release,
 visit, recommendation, route, job, checklist, photo, report, add-on, mutation,
 and operational-exception records. Each selector carries an exact manifest root
-ID and a declarative relation path, never SQL. Selector interpretation in one
-transaction, rollback behavior, and zero-remaining verification are still
-required before deletion.
+ID and a declarative relation path. The reset executor snapshots those exact
+roots, removes derived children and direct rows in one PostgreSQL transaction,
+rolls back on any SQL or verification failure, verifies every journaled ID is
+absent, and only then records the zero-remaining receipt.
 
 ## Target-boundary preflight
 
@@ -153,8 +152,8 @@ The command must report `target_boundary_preflight_passed`, a positive
 migration count, and zero namespace matches. That result is one prerequisite,
 not authorization to seed: it proves that the API and operator inspection both
 name the isolated database, but it does not approve a seed payload. Before
-writes, the seeding workflow must also validate the real manifest. Re-run exact
-read and denial checks after the future seeder completes.
+writes, the seeding workflow must also validate the real manifest. Re-run the
+read-only probe and direct role/scope checks after the seeder completes.
 
 ## Isolated invitation handoff
 
@@ -171,6 +170,33 @@ by PostgreSQL, and connected to exactly `yardfolio_study`. In this mode,
 only invitation requests using a `yardfolio_study_canyon_` or
 `yardfolio_study_sage_` idempotency key are accepted. A newly created invitation
 is marked delivered through the existing delivery transition and returns its
-token once in `x-yardfolio-local-fixture-invitation-token`. The future seeder must
-keep that value only in process memory. Never print it or store it in the local
-manifest.
+token once in `x-yardfolio-local-fixture-invitation-token`. The seeder keeps
+that value only in process memory. Never print it or store it in the local
+manifest. If the process exits after invitation creation, the token cannot be
+recovered; run the transactional reset and prepare a fresh manifest instead of
+attempting to resume that record.
+
+## Seed and reset execution
+
+[`seed-fixtures.mjs`](seed-fixtures.mjs) executes both isolated owner journeys
+through current proposal v3, acceptance, activation, customer-controlled
+Property Manager delegation, confirmed first visit, service release, and a
+published crew route. It uses stable request keys, atomically journals returned
+ownership IDs, verifies owner isolation and stale-proposal denial, and stores
+only snapshot names—not protected response content.
+
+Run it only after preparing the manifest against the exact API build:
+
+```bash
+PGDATABASE=yardfolio_study \
+YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8081 \
+node yardfolio-study/fixtures/seed-fixtures.mjs
+```
+
+Reset with the same API and libpq target binding:
+
+```bash
+PGDATABASE=yardfolio_study \
+YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8081 \
+node yardfolio-study/fixtures/reset-fixtures.mjs
+```

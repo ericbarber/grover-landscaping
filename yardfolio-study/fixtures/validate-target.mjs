@@ -135,7 +135,7 @@ async function readJson(fetchImpl, url) {
   }
 }
 
-export async function validateStudyTarget({
+export async function validateStudyTargetBinding({
   apiUrl,
   fetchImpl = fetch,
   inspectDatabase = inspectTargetWithPsql,
@@ -160,9 +160,6 @@ export async function validateStudyTarget({
   if (!Number.isInteger(inspection.migrationCount) || inspection.migrationCount <= 0) {
     fail('the isolated database must contain successful SQLx migrations');
   }
-  if (inspection.namespaceMatches !== 0) {
-    fail('the Canyon View or Sage Lane fixture namespace is not empty');
-  }
 
   return {
     apiMode: 'local_review',
@@ -171,6 +168,14 @@ export async function validateStudyTarget({
     migrationCount: inspection.migrationCount,
     namespaceMatches: inspection.namespaceMatches,
   };
+}
+
+export async function validateStudyTarget(options = {}) {
+  const inspection = await validateStudyTargetBinding(options);
+  if (inspection.namespaceMatches !== 0) {
+    fail('the Canyon View or Sage Lane fixture namespace is not empty');
+  }
+  return inspection;
 }
 
 async function main() {

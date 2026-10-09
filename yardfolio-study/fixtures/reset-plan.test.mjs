@@ -60,8 +60,8 @@ function foundationManifest() {
 
 test('orders exact foundation IDs child before parent for both records', () => {
   const plan = buildFixtureResetPlan(foundationManifest());
-  assert.equal(plan.executable, false);
-  assert.equal(plan.requiresDerivedDependencyCleanup, true);
+  assert.equal(plan.executable, true);
+  assert.equal(plan.requiresDerivedDependencyCleanup, false);
   assert.deepEqual(
     plan.operations.map(({ recordKey, table, keyColumn }) => ({ recordKey, table, keyColumn })),
     [

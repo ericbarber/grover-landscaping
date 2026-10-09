@@ -3,8 +3,8 @@ import {
   validateFixtureManifest,
 } from './validate-manifest.mjs';
 
-// Direct manifest-owned rows only. A future transactional executor must delete
-// derived child rows before interpreting this order as executable SQL.
+// Direct manifest-owned rows. The transactional executor deletes the derived
+// selector graph before applying and verifying these exact IDs.
 const directResetOrder = [
   'day_plan_stops',
   'day_plans',
@@ -128,8 +128,8 @@ export function buildFixtureResetPlan(manifest) {
     targetDatabaseName: manifest.targetDatabaseName,
     sourceCommit: manifest.sourceCommit,
     fixtureRevision: manifest.fixtureRevision,
-    executable: false,
-    requiresDerivedDependencyCleanup: true,
+    executable: true,
+    requiresDerivedDependencyCleanup: false,
     derivedSelectors,
     operations,
     verification: operations.map((operation) => ({ ...operation })),
