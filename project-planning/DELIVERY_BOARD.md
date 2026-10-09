@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-delivered-outcome seed/reset chain are implemented and live-verified through three isolated full-lifecycle cycles plus an open-decision checkpoint/reset; the bounded field command extraction and local browser gate are complete | First value, delegation, public-hero, search/share, field commands, and repeatable Canyon/Sage proposal-to-proof fixtures pass repository and local live gates; deployed-origin evidence remains gated | Bind a study frontend to the isolated API, verify normal entry, and keep exact reset green |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-delivered-outcome seed/reset chain are implemented; three full cycles, an open-decision checkpoint/reset, and isolated frontend normal entry are live-verified | First value, delegation, public-hero, search/share, field commands, and repeatable Canyon/Sage proposal-to-proof fixtures pass repository and local live gates; deployed-origin evidence remains gated | Instantiate the selected session checkpoint and keep exact reset green |
 | Design review | B9 study materials and live provider-to-outcome fixtures are ready; participant evidence is incomplete | Ten persona profiles, responsive public-to-workspace preview, matched comprehension tasks, and repeatable two-owner live records cover supported task moments | Conduct participant sessions and synthesize findings before B2 expansion |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
@@ -37,8 +37,8 @@ Immediate order:
 1. Preserve the published B0/B1/B3/B7/B8/B9 repository delivery.
 2. Preserve the completed field command boundary and the passing 86-journey
    local cross-browser acceptance gate.
-3. Build complete B9 seed/reset tooling before making any isolated fixture
-   write; do not strand one-time invitation tokens in a partial seeder.
+3. Preserve the complete B9 seed/reset, checkpoint, and isolated frontend gates;
+   do not strand one-time invitation tokens in a partial session fixture.
 4. Run B9 matched participant sessions before expanding B2 service-thread
    production composition.
 5. Continue B4 protected hosting independently when external inputs arrive.
@@ -137,8 +137,9 @@ Validation:
 
 ### B9 — Matched participant evidence
 
-State: repository preparation and three local live provider-to-outcome seed/reset
-cycles delivered; session-specific copies and participant sessions remain.
+State: repository preparation, three local live provider-to-outcome seed/reset
+cycles, checkpoint selection, and isolated frontend normal entry delivered;
+session instantiation and participant sessions remain.
 
 Delivered preparation:
 

@@ -210,6 +210,28 @@ node yardfolio-study/fixtures/seed-fixtures.mjs \
   .localdev/yardfolio-study/fixture-manifest-session.json
 ```
 
+Serve the current application separately from shared review. The launcher
+fails before startup unless port 8081 reports `local_review`, PostgreSQL,
+`yardfolio_study`, and every required study identity. Browser API calls use the
+same-origin `/study-api` proxy on port 5174, avoiding cross-origin failures and
+allowing a Tailscale phone to follow the frontend host.
+
+```bash
+YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8081 \
+bash scripts/study-review.sh
+```
+
+From another shell, run the live normal-entry gate. It refuses any frontend
+origin except loopback or Tailscale port 5174.
+
+```bash
+cd frontend
+E2E_BASE_URL=http://127.0.0.1:5174 npm run test:e2e:study
+```
+
+Use `bash scripts/study-review.sh --check` with the same environment variable
+to verify only the runtime binding without starting the frontend.
+
 Reset with the same API and libpq target binding:
 
 ```bash

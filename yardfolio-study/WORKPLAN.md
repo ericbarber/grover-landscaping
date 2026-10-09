@@ -98,8 +98,10 @@ preview-only Proof and Approvals tabs are not claimed in this protected
 workspace. Plan 8/9 and Crew Lead-originated access transfer remain
 non-comparable; the supported exception, review, and proof states are verified.
 A fail-closed selector now prepares both records at any verified forward-only
-checkpoint, and an open-decision checkpoint/reset passed live. Next bind the
-study frontend to the isolated API, verify normal entry, and run the comparison.
+checkpoint, and an open-decision checkpoint/reset passed live. A separate
+port-5174 frontend now validates and proxies the isolated API; its mobile
+normal-entry gate passed with the fixed Canyon owner selected. Next instantiate
+the chosen checkpoint and run the comparison.
 The [isolated seed contract](fixtures/SEED_CONTRACT.md) now fixes the target
 database boundary, transition order, reset ownership, and acceptance checks.
 The [local study database](fixtures/LOCAL_STUDY_ENV.md) has 127 successful

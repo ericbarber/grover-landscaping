@@ -1,8 +1,9 @@
 # Local isolated study database
 
-Status: local database, separate study API, and three complete provider-to-outcome
-seed/reset cycles verified on 2026-10-09. The final reset restored zero reserved
-fixture-namespace matches. This is an environment record, not a portable
+Status: local database, separate study API/frontend, and three complete
+provider-to-outcome seed/reset cycles verified on 2026-10-09. The final reset
+restored zero reserved fixture-namespace matches, and mobile normal entry passed
+through the isolated frontend. This is an environment record, not a portable
 connection string or participant-session result.
 
 A repository-owned, fail-closed boundary preflight is now available in
@@ -43,6 +44,7 @@ state and is not a durable service definition.
 | Existing baseline route | `day_plans` 1: migration `0003_add_day_plan_tables.sql` inserts a published June 15, 2026 sample for `crew_1001` with two stops. It is not a Yardfolio Study fixture. |
 | Separate API identity | Readiness reported `yardfolio-api`, PostgreSQL, and exact database `yardfolio_study`; fixture-mode startup accepted that binding. |
 | API reachability | `GET /auth/config` returned 200 and `local_review` at `127.0.0.1:8081`. |
+| Study frontend | The fail-closed launcher verified the database, mode, and six required comparison identities before serving port 5174. Mobile Chromium opened `/app`, selected the fixed Canyon owner, read readiness through same-origin `/study-api`, and observed no CORS error. |
 | Read-only fixture probe | The privacy-minimized probe verified the matched owner, delegated Property Manager, and Crew Lead counts without printing IDs, addresses, messages, or tokens. |
 
 These checks establish the isolated provider-to-outcome fixture path and its
@@ -52,9 +54,8 @@ as Canyon View or Sage Lane.
 
 ## Next environment gate
 
-1. Prepare independent session copies at the exact earlier/final lifecycle
-   moments required by each matched task; never mutate an immutable record
-   backward to recreate a state.
+1. Prepare a fresh session manifest at the exact selected lifecycle checkpoint;
+   never mutate an immutable record backward to recreate a state.
 2. Conduct the counterbalanced participant sessions and record device,
    viewport, displayed date, network condition, fixture revision, and app
    commit before treating a task as matched evidence.
@@ -62,9 +63,10 @@ as Canyon View or Sage Lane.
    real-image proof quality explicitly non-comparable until supported evidence
    exists.
 
-The API is a data-isolation endpoint, not a separate styled frontend. The phone
-review app remains at `/app` on port 5173 and uses the shared review API on port
-8080. The Yardfolio Study prototype is separate and simulated.
+The shared phone-review app remains at `/app` on port 5173 and uses the shared
+review API on port 8080. Study sessions instead use the same application on
+port 5174, whose same-origin `/study-api` proxy targets the isolated port-8081
+API. The Yardfolio Study prototype remains separate and simulated.
 
 The database is local machine state. Recreate and revalidate it on another
 host; a Git checkout alone does not provide it.

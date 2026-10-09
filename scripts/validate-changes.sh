@@ -310,6 +310,7 @@ for scope in "${ordered_scopes[@]}"; do
       node_command scripts/validate-crawler-policy.mjs
       node_command --test yardfolio-study/fixtures/validate-manifest.test.mjs
       node_command --test yardfolio-study/fixtures/validate-target.test.mjs
+      node_command --test yardfolio-study/fixtures/validate-study-runtime.test.mjs
       node_command --test yardfolio-study/fixtures/prepare-manifest.test.mjs
       node_command --test yardfolio-study/fixtures/fixture-state.test.mjs
       node_command --test yardfolio-study/fixtures/owner-foundation-plan.test.mjs

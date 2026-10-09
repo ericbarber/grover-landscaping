@@ -7,6 +7,7 @@ import type { Plugin } from 'vite';
 
 const designReviewRoot = fileURLToPath(new URL('../design/', import.meta.url));
 const yardfolioStudyReviewRoot = fileURLToPath(new URL('../yardfolio-study/', import.meta.url));
+const studyApiProxyTarget = process.env.YARDFOLIO_STUDY_PROXY_TARGET;
 
 const designContentTypes: Record<string, string> = {
   '.css': 'text/css; charset=utf-8',
@@ -122,6 +123,13 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    proxy: studyApiProxyTarget ? {
+      '/study-api': {
+        target: studyApiProxyTarget,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/study-api/, ''),
+      },
+    } : undefined,
   },
   test: {
     environment: 'node',

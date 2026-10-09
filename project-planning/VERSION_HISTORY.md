@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-10-09: Added the separate Yardfolio Study frontend gate. The launcher
+  refuses any runtime other than the port-8081 `local_review` API bound to
+  `yardfolio_study`, verifies the required study identities, and serves the app
+  on port 5174 without disturbing shared review. A same-origin `/study-api`
+  proxy avoids cross-origin error-response failures and lets remote browsers
+  follow the frontend host. The mobile Chromium gate opened `/app`, selected
+  the fixed Canyon owner, read isolated readiness through the proxy, and
+  observed no CORS failure. Participant observation remains open.
 - 2026-10-09: Extended the isolated Yardfolio Study executor from published
   routes through supported outcome delivery. Each record now creates and starts
   an assigned job-linked access exception, progresses its stop and job, records

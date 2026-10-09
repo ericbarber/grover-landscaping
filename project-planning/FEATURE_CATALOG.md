@@ -315,8 +315,10 @@ workflows are not product targets.
   pending/cross-owner proof denial, delivered owner/manager reads, matched
   counts, zero-namespace resets, and finally zero derived audits; a fail-closed
   checkpoint selector live-verified independent forward-only session setup at
-  open decision; isolated frontend binding and participant evidence remain
-  open, and placeholder evidence does not claim image quality
+  open decision; a fail-closed port-5174 frontend validates the study runtime,
+  proxies it same-origin, and passes mobile normal entry with fixed owner
+  selection. Participant evidence remains open, and placeholder evidence does
+  not claim image quality
 - Repository release-contract tests are self-contained in restricted shells:
   Terraform behavior is represented by an injected test double and protected
   release evidence is validated in-process without changing operator-facing

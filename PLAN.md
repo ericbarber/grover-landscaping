@@ -11,7 +11,7 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-delivered-outcome seed/reset toolchain are implemented and live-verified through three isolated full-lifecycle zero-reset cycles plus an open-decision checkpoint/reset; field command coordination and the local cross-browser acceptance gate are complete | Bind a study frontend to the isolated API, verify normal entry, then run matched participant sessions |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-delivered-outcome seed/reset toolchain are implemented; three full lifecycle resets, an open-decision checkpoint/reset, and isolated frontend normal entry are live-verified | Instantiate the selected session checkpoint, then run matched participant sessions |
 | Private review | Pi has an ARM64 runtime, healthy PostgreSQL, private HTTPS, and restricted CI SSH grant; deployment remains disabled and unhosted | Publish the workflow, run CI, then verify the first gated deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered; B1/B3 and repository-owned B7/B8 work are implemented, B6/B9 preparations are ready, and a bounded B10 decision packet awaits approval | Approve or revise B10 boundaries while B4/B5/B6/B8/B9 evidence proceeds in an authorized environment |
@@ -290,10 +290,12 @@ including deterministic invitation keys and exact workspace, property, and
 ready-brief discovery/recovery; it has no executable entry point and cannot
 seed records.
 The [separate local study database](yardfolio-study/fixtures/LOCAL_STUDY_ENV.md)
-is now created and migrated, with its own active local-review API on port 8081.
-It contains only migration baseline records, including a historical June
-route; a seeder, reset, and matched records are not yet available. The phone
-review app still uses the shared API on port 8080.
+is created and migrated, with its own active local-review API on port 8081.
+The complete seed/reset toolchain prepares either a selected forward-only
+checkpoint or the delivered outcome. A fail-closed port-5174 study frontend
+validates that runtime, proxies browser requests to it on the same origin, and
+has passed the mobile normal-entry check without changing the shared port-5173
+review app.
 The [MG-D6 product decision](yardfolio-study/PRODUCT_DECISIONS.md) now assigns
 Property Manager access to the customer after the provider relationship is
 active. The [delegation contract](yardfolio-study/PROPERTY_MANAGER_ACCESS.md)

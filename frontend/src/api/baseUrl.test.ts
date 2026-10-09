@@ -13,6 +13,11 @@ describe('API base URL resolution', () => {
       false,
       'http://yardfolio-workstation:5173',
     )).toBe('http://yardfolio-workstation:8080');
+    expect(resolveApiBaseUrl(
+      'http://127.0.0.1:5174/study-api',
+      false,
+      'http://100.88.21.105:5174',
+    )).toBe('http://100.88.21.105:5174/study-api');
   });
 
   it('preserves loopback for workstation use and explicit hosted APIs', () => {
