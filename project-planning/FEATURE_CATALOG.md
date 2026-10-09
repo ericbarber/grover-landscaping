@@ -292,7 +292,7 @@ workflows are not product targets.
   total-build, public-image, and stable chunk boundaries locally and in CI;
   browser experience thresholds and privacy-bounded API/worker/offline indicator
   contracts are prepared without claiming unavailable protected telemetry
-- B9 matched-fixture preparation now includes a strict non-secret manifest
+- B9 matched-fixture delivery now includes a strict non-secret manifest
   template and tested local/CI validators for linked local-review API/database
   identity, runtime provenance, fixed synthetic request namespaces, per-record
   API-generated ID ownership, lifecycle state, empty target namespaces, and
@@ -300,16 +300,18 @@ workflows are not product targets.
   supported provider chain without returning tokens in production or JSON; an
   atomic, exclusively locked private manifest journal records generated IDs,
   verified snapshots, forward-only delegation state, and zero-record reset
-  receipts without performing live writes; a CI-enforced owner-foundation plan
+  receipts; a CI-enforced owner-foundation plan
   pins supported workspace/property/brief/invitation payloads and exact
   discovery recovery for fixed workspaces, the non-idempotent property create,
   and ready briefs while rejecting scope leaks, collisions, broken linkage,
-  duplicates, and stale ownership; neither component claims seeded records or
-  participant evidence; a non-executable reset inventory covers every direct
-  manifest table with exact child-before-parent keys while explicitly gating
-  transactional deletion, and declarative derived selectors trace acquisition,
-  provider, delegation, visit/recommendation, and field-operation children to
-  exact manifest-owned parent IDs without emitting SQL
+  duplicates, and stale ownership; an API executor continues through current
+  proposal v3, stale/cross-owner denial, acceptance, activation, Property
+  Manager delegation, confirmed first visit, service release, and published
+  route; the transactional reset snapshots exact manifest roots, removes direct
+  and derived acquisition/visit/field rows, rolls back on failure, and records
+  only a verified zero receipt. Two live isolated cycles passed matched reads
+  and zero-namespace resets; proof/outcome fixtures and participant evidence
+  remain open
 - Repository release-contract tests are self-contained in restricted shells:
   Terraform behavior is represented by an injected test double and protected
   release evidence is validated in-process without changing operator-facing

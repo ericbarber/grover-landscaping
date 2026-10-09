@@ -11,25 +11,23 @@ print property names, addresses, message bodies, tokens, or full API records.
 From the repository root, with the local-review API running:
 
 ```bash
-YARDFOLIO_STUDY_AS_OF=2026-09-16 \
-YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8080 \
+YARDFOLIO_STUDY_AS_OF=2026-10-09 \
+YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8081 \
 node yardfolio-study/fixtures/probe.mjs
 ```
 
-Set `YARDFOLIO_STUDY_API_URL` to the Tailscale API URL when probing the private
-review service remotely. The as-of date is a comparison input, not a route
-write. The script does not seed records, reset state, or validate role access
-to a specific Canyon View/Sage Lane resource. Treat a 200 response and a
-nonzero count as readiness clues; exact grant/scope, proposal version, and
-record linkage still need direct verification before a study task can be
-scored. The [fixture authority map](../FIXTURE_READINESS.md) lists the record
-chain and unsupported transitions.
+Use only the isolated study API URL; the shared private-review API is not a
+fixture target. The as-of date is a comparison input, not a route write. The
+script does not seed records, reset state, or replace the executor's exact
+role/scope denial checks. Treat its fixed-owner counts as a privacy-minimized
+readiness summary. The [fixture authority map](../FIXTURE_READINESS.md) lists
+the record chain and unsupported transitions.
 
 The [isolated seed contract](SEED_CONTRACT.md) defines the supported owner
 record sequence, reset ownership, and date/role gates. The API-driven seeder
-and transactional reset are implemented and repository-tested. No matched
-record has been written yet; live target and access verification remain a
-separate operator gate.
+and transactional reset are implemented, repository-tested, and verified
+through two local live provider-to-field cycles. Participant sessions and the
+proof/delivered-outcome extension remain separate gates.
 
 ## Manifest contract
 
@@ -43,7 +41,7 @@ node yardfolio-study/fixtures/validate-manifest.mjs \
   --allow-template yardfolio-study/fixtures/fixture-manifest.example.json
 ```
 
-The eventual seeder must write its real `local_fixture` manifest under the
+The seeder writes its real `local_fixture` manifest under the
 ignored `.localdev/yardfolio-study/` directory and validate it without
 `--allow-template`. Passing this structural validator does not prove the target
 database identity, create a record, or satisfy the read/denial checks in the

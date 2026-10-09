@@ -11,11 +11,11 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-field seed/reset toolchain are implemented on `codex-review-feature`; field command coordination and the local cross-browser acceptance gate are complete | Run isolated B9 preflight, seed, exact access/denial verification, and two reset cycles before participant sessions |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-field seed/reset toolchain are implemented and live-verified through two isolated zero-reset cycles; field command coordination and the local cross-browser acceptance gate are complete | Extend B9 through proof/delivered outcome, then run matched participant sessions |
 | Private review | Pi has an ARM64 runtime, healthy PostgreSQL, private HTTPS, and restricted CI SSH grant; deployment remains disabled and unhosted | Publish the workflow, run CI, then verify the first gated deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered; B1/B3 and repository-owned B7/B8 work are implemented, B6/B9 preparations are ready, and a bounded B10 decision packet awaits approval | Approve or revise B10 boundaries while B4/B5/B6/B8/B9 evidence proceeds in an authorized environment |
-| Design | Prior concepts remain review inputs; Yardfolio Study M1 remains open and eight M2 task moments are simulated | Complete matched access/fixture prerequisites and run B9 participant sessions before B2 expansion |
+| Design | Prior concepts remain review inputs; Yardfolio Study M1 remains open, eight M2 task moments are simulated, and live provider-to-field fixtures are repeatable | Complete proof/outcome fixture evidence and run B9 participant sessions before B2 expansion |
 
 ## Status Legend
 

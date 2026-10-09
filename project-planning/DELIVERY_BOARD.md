@@ -15,8 +15,8 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 manifest, linked-target, token, journal, provider-to-field executor, and transactional reset are implemented on `codex-review-feature`; the bounded field command extraction and local browser gate are complete | First value, one-property delegation, stable public-hero entry, search/share delivery, field commands, and the complete simulated two-record B9 journey pass repository gates; deployed-origin and live fixture evidence remain gated | Run the isolated B9 preflight, seed, exact read/denial verification, and two reset cycles |
-| Design review | B9 study materials ready; matched live grants/fixtures incomplete | Ten persona profiles, responsive public-to-workspace preview, and matched comprehension tasks cover five core roles | Seed and verify the isolated fixtures, conduct participant sessions, and synthesize evidence before B2 expansion |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-field seed/reset chain are implemented and live-verified through two isolated cycles; the bounded field command extraction and local browser gate are complete | First value, delegation, public-hero, search/share, field commands, and repeatable Canyon/Sage proposal-to-route fixtures pass repository and local live gates; deployed-origin evidence remains gated | Extend B9 through proof/delivered outcome and rerun exact reset verification |
+| Design review | B9 study materials and live provider-to-field fixtures are ready; participant evidence is incomplete | Ten persona profiles, responsive public-to-workspace preview, matched comprehension tasks, and repeatable two-owner live records cover the current path | Complete proof/outcome evidence, conduct participant sessions, and synthesize findings before B2 expansion |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | B10 decision packet prepared | Core workflows plus exact activity-to-Recovery exception handoff are delivered; the bounded concern proposal remains unapproved | Approve or revise concern ownership, response, retention, privacy, categories, urgent handling, and notification scope before implementation |
@@ -137,8 +137,8 @@ Validation:
 
 ### B9 — Matched participant evidence
 
-State: repository preparation delivered; live record seeding, runtime
-verification, and participant sessions are environment/human gated.
+State: repository preparation and two local live provider-to-field seed/reset
+cycles delivered; proof/outcome fixtures and participant sessions remain.
 
 Delivered preparation:
 
@@ -193,14 +193,18 @@ Delivered preparation:
   organization claim/capability, disclosure, completed remote assessment,
   proposal v1-v3, stale/cross-owner denial, acceptance, activation, manager
   delegation, confirmed first visit, service release, and published route.
+- Two live 2026-10-09 cycles against the isolated 127-migration database each
+  seeded both records, produced one current v3 per owner, exposed two delegated
+  Property Manager visits and the current Crew Lead route, then returned a
+  zero-remaining reset receipt and zero reserved-namespace matches. Earlier
+  stopped attempts also proved root-based cleanup of an unjournaled invitation.
 
 Remaining gate:
 
-- Restart the isolated service with the updated backend and fixture mode, then
-  execute the linked boundary preflight. Run the purpose-built seeder through
-  supported APIs, validate exact reads and denials, reset twice,
-  and conduct the counterbalanced sessions. No participant observation is
-  claimed.
+- Extend the matched fixtures through supported exception, completion-proof,
+  report-review, and delivered-outcome states; verify delivered-only customer
+  proof and exact denials; reset to zero; then conduct the counterbalanced
+  sessions. No participant observation is claimed.
 
 ### B2, B4–B6, and B8–B10 — Remaining best-in-class delivery program
 

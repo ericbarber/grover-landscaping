@@ -218,7 +218,7 @@ async function seedProviderToField({ manifestPath, manifest, record, plan, prope
   const invitation = requirePersisted(invitationResponse.value, `${record.syntheticLabel} invitation`);
   const invitationId = requireId(invitation, 'invitation_id', 'owner_provider_invitation_', `${record.syntheticLabel} invitation`);
   const token = invitationResponse.header;
-  if (invitationResponse.status !== 201 || typeof token !== 'string' || token.length < 16) {
+  if (invitationResponse.status !== 202 || typeof token !== 'string' || token.length < 16) {
     fail(`${record.syntheticLabel} invitation did not return its one-time local fixture token`);
   }
   manifest = await journal(manifestPath, record.key, 'owner_provider_invitations', invitationId);
@@ -260,8 +260,11 @@ async function seedProviderToField({ manifestPath, manifest, record, plan, prope
     idempotency_key: `${record.requestNamespace}organization_claim`,
   }), `${record.syntheticLabel} organization claim`);
   const claimId = requireId(claim, 'claim_id', 'owner_provider_claim_', `${record.syntheticLabel} organization claim`);
-  if (claim.organization_id !== providerOrganizationId || claim.opportunity_response_capability !== true) {
-    fail(`${record.syntheticLabel} organization claim was not cleared for response`);
+  if (claim.organization_id !== providerOrganizationId
+    || claim.status !== 'relationship_checked'
+    || claim.organization_relationship_checked !== true
+    || claim.opportunity_response_capability !== false) {
+    fail(`${record.syntheticLabel} organization relationship was not checked`);
   }
   manifest = await journal(manifestPath, record.key, 'owner_provider_invitation_organization_claims', claimId);
 

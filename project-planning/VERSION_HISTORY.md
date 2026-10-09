@@ -1,5 +1,19 @@
 # Version History
 
+- 2026-10-09: Completed and live-verified the isolated Yardfolio Study
+  provider-to-field fixture lifecycle. The API executor now recovers exact
+  owner foundations, keeps one-time invitation tokens in memory, journals every
+  generated ownership ID atomically, verifies proposal v3 plus stale and
+  cross-owner denials, exercises customer-controlled Property Manager
+  delegation, and publishes the released job to a crew route. The paired reset
+  snapshots exact owner/activation/release/job/route roots, removes derived and
+  direct records in one rollback-safe transaction, and advances the manifest
+  only after every journaled ID is absent. Two complete live seed/read/reset
+  cycles passed against the isolated 127-migration database, with a current-day
+  route, one current proposal per study owner, two delegated manager visits,
+  zero remaining manifest records, and zero reserved namespace matches. Partial
+  attempts also proved recovery of an invitation committed before journaling.
+  Proof/delivered-outcome fixtures and participant observation remain open.
 - 2026-10-07: Decoupled the customer-facing display name from technical
   identity and restored Grover as the temporary display value. React runtime
   copy now composes through `APP_DISPLAY_NAME`; Rust public titles and

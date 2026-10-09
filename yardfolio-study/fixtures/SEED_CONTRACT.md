@@ -1,7 +1,8 @@
 # Isolated matched-record seed contract
 
-Status: implemented repository contract awaiting isolated live execution. A fail-closed manifest
-preparation utility now records the verified target, exact running commit, and
+Status: provider-to-field contract implemented and live-verified; proof/outcome
+and participant evidence remain. A fail-closed manifest preparation utility
+records the verified target, exact running commit, and
 distinct study-owner principals before any write. Customer-controlled
 Property Manager delegation and a strictly gated local-fixture invitation-token
 handoff are now available to that seeder. An atomic, exclusively locked
@@ -15,10 +16,10 @@ persisted ready brief. It rejects scope leaks, collisions, duplicates, broken
 linkage, and stale journal IDs and retains no invitation token. The paired
 provider-to-field executor and exact-root transactional reset are implemented
 and tested with a complete simulated two-record journey, rollback gates, and
-zero-remaining receipt enforcement. A separate local study
-database has now been created and migrated, as recorded in
-[LOCAL_STUDY_ENV.md](LOCAL_STUDY_ENV.md); no Yardfolio Study fixture records have
-been written. Use the [matched facts](../MATCHED_FIXTURES.md)
+zero-remaining receipt enforcement. Two complete live cycles passed against the
+separate local study database and returned it to zero reserved namespace
+matches, as recorded in [LOCAL_STUDY_ENV.md](LOCAL_STUDY_ENV.md). Use the
+[matched facts](../MATCHED_FIXTURES.md)
 and [authority map](../FIXTURE_READINESS.md) as the task source. The
 [read-only probe](README.md) reports the current local-review baseline.
 

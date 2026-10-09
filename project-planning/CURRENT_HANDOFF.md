@@ -20,7 +20,7 @@ This is the short restart document. Execution order lives in
 
 ## Active and next work
 
-### Active: B9 seed/reset design; live execution gated
+### Active: B9 proof/outcome extension; participant execution gated
 
 [`BEST_IN_CLASS_DELIVERY_PLAN.md`](BEST_IN_CLASS_DELIVERY_PLAN.md) is the
 detailed plan for the approved ten-initiative quality program. B0, B1, B3, B7,
@@ -36,7 +36,7 @@ B7 adds a versioned measured artifact baseline, stable chunk limits, browser
 experience thresholds, privacy-bounded operational indicator definitions, and
 tested local/CI enforcement. The current production build passes every artifact
 budget; protected dashboards and runtime evidence remain external gates.
-B9 repository preparation adds a strict non-secret fixture-manifest template,
+B9 delivery includes a strict non-secret fixture-manifest template,
 tested validator, and local/CI enforcement. It refuses the shared database,
 placeholder runtime provenance, unknown fields, IDs with invalid API prefixes,
 and incomplete reset receipts. Schema 2 associates normal
@@ -48,28 +48,26 @@ namespaces. A disabled-by-default fixture runtime now provides the transient
 provider invitation value only on that isolated target and records delivery
 through the existing transition. Two fixed study-owner profiles keep owner
 scope distinct, and a tested create-once utility verifies those identities and
-the target before privately recording exact provenance. The updated study API
-still needs a restart and live preflight; no matched record has been seeded or
-verified. A tested fixture-state journal now serializes concurrent operations,
+the target before privately recording exact provenance. A tested fixture-state journal serializes concurrent operations,
 atomically preserves generated record ownership and verified snapshots with
 private permissions, enforces forward-only manager-delegation state, and
-accepts reset completion only with a zero-remaining receipt. It performs no API
-write or database deletion. A CI-enforced, non-executable owner-foundation plan
-now fixes both owners' supported workspace/property/brief/invitation requests
+accepts reset completion only with a zero-remaining receipt. A CI-enforced
+owner-foundation plan fixes both owners' supported workspace/property/brief/invitation requests
 and journals each fixed workspace identity before property work. Exact recovery
 now covers workspace, the uncertain property-create window, and persisted ready
 briefs with owner-scope, field, linkage, collision, duplicate, and journal
-checks. The provider-to-field executor and exact-ID reset remain next and must
-land together before live writes. A tested direct reset inventory now covers
-the complete manifest table allowlist, orders exact keys child before parent,
-supports workspace-only partial state, and exposes no SQL or broad predicate.
-It remains explicitly non-executable until transactionality, rollback, and
-zero-remaining verification are implemented. The derived selector catalog now
+checks. The provider-to-field executor now completes organization claim and
+capability, assessment, proposal v3, owner acceptance, activation, Property
+Manager delegation, first visit, service release, and route publication. The
+paired transactional reset covers the complete manifest table allowlist,
+orders exact keys child before parent, supports partial state, rolls back on
+failure, and records completion only after zero verification. The derived selector catalog now
 roots acquisition events; provider invitation,
 assessment, proposal, activation, and visit children; delegation records;
 customer visit/recommendation records; and field job/route/proof artifacts in
-exact manifest IDs without emitting SQL. Transactional interpretation and
-verification are the remaining reset implementation boundary.
+exact manifest IDs. Two complete isolated live seed/read/reset cycles passed on
+2026-10-09, as did cleanup of stopped partial attempts. Proof/delivered-outcome
+fixtures and participant observation are the remaining B9 gates.
 The repository package, database, and infrastructure scopes pass in this shell.
 Release-preflight tests inject a deterministic Terraform double, and the
 protected-release evidence validator exports its pure contract so tests no

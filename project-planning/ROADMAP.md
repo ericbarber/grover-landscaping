@@ -37,20 +37,19 @@ API-generated IDs by synthetic owner, and the exact study runtime can expose a
 new invitation bearer once so the supported provider chain is seedable without
 weakening production. Distinct fixed study owners and a create-once manifest
 preparer now lock owner scope and target/provenance before any record write. An
-atomic, exclusively locked fixture-state journal now preserves generated ID
+atomic, exclusively locked fixture-state journal preserves generated ID
 ownership, verified snapshots, forward-only manager delegation, and a
-zero-remaining reset receipt across future orchestration steps. A tested,
-non-executable owner-foundation plan now pins both isolated owners' supported
+zero-remaining reset receipt. A tested owner-foundation plan pins both isolated owners' supported
 workspace/property/brief/invitation requests, journals the exact fixed workspace
 before property work, recovers only one exact owner-scoped property across the
 non-idempotent create crash window, and avoids replaying a matching persisted
-ready brief. The complete allowlist now also has a tested direct reset inventory
-with exact child-before-parent keys and no SQL or broad owner selector.
-Declarative derived-child selectors now cover the current matched owner/provider,
-delegation, visit/recommendation, and field-operation families using exact
-manifest roots. The provider-to-field executor and transactional reset/verified
-receipt must land together next. Live execution, matched record creation, reset
-proof, and participant observation follow only after that pair is complete.
+ready brief. The provider-to-field executor advances both records through
+proposal v3, owner acceptance, activation, customer-controlled delegation,
+confirmed first visit, service release, and a current published route. Its
+transactional reset owns exact child-before-parent roots and derived children,
+rolls back on failure, and requires zero verification. Two isolated live cycles
+and stopped-run cleanup passed on 2026-10-09. Extending fixtures through
+proof/delivered outcome, then collecting participant observations, is next.
 Protected browser/runtime evidence remains blocked by protected infrastructure
 rather than by a product implementation decision; the local cross-browser gate
 is complete.

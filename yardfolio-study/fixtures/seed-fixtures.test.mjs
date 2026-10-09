@@ -114,7 +114,7 @@ function createJourneyFetch() {
       }));
     }
     if (path.endsWith('/provider-invitations') && method === 'POST') {
-      return jsonResponse(201, persisted({ invitation_id: invitationId }), {
+      return jsonResponse(202, persisted({ invitation_id: invitationId }), {
         'x-yardfolio-local-fixture-invitation-token': `fixture-token-${key}-1234567890`,
       });
     }
@@ -135,7 +135,9 @@ function createJourneyFetch() {
       return jsonResponse(201, persisted({
         claim_id: `owner_provider_claim_${key}123`,
         organization_id: 'org_demo_landscaping',
-        opportunity_response_capability: true,
+        status: 'relationship_checked',
+        organization_relationship_checked: true,
+        opportunity_response_capability: false,
       }));
     }
     if (path.endsWith('/response-capabilities')) {

@@ -40,24 +40,48 @@ if (config.status !== 200 || config.payload?.mode !== 'local_review') {
   throw new Error('Fixture probe requires a reachable API in local_review mode.');
 }
 
-const [ownerPortal, managerPortal, ownerProperties, crewRoute, exceptions] = await Promise.all([
+const studyOwners = [
+  { key: 'canyon', reviewer: 'property-owner-canyon' },
+  { key: 'sage', reviewer: 'property-owner-sage' },
+];
+
+const [ownerPortal, managerPortal, crewRoute, exceptions, ...studyOwnerProperties] = await Promise.all([
   read('/customer-portal/visits', 'property-owner'),
   read('/customer-portal/visits', 'property-manager'),
-  read('/owner-properties', 'property-owner'),
   read('/crews/crew_1001/day-plan/today', 'crew-lead'),
   read('/operational-exceptions?status=open&limit=25', 'manager'),
+  ...studyOwners.map(({ reviewer }) => read('/owner-properties', reviewer)),
 ]);
 
-const ownerPropertyList = Array.isArray(ownerProperties.payload) ? ownerProperties.payload
-  : ownerProperties.payload?.properties;
-const proposalReads = ownerProperties.status === 200 && Array.isArray(ownerPropertyList)
-  ? await Promise.all(ownerPropertyList.slice(0, 10).map((property) => {
-    const id = property.property_id ?? property.id;
-    return id ? read(`/owner-properties/${encodeURIComponent(id)}/initial-service-proposals`, 'property-owner')
-      : Promise.resolve({ status: 'invalid_property', payload: null });
-  }))
-  : [];
-const proposals = proposalReads.flatMap((result) => Array.isArray(result.payload) ? result.payload : []);
+const studyOwnerReports = await Promise.all(studyOwners.map(async ({ key, reviewer }, index) => {
+  const propertiesResult = studyOwnerProperties[index];
+  const properties = Array.isArray(propertiesResult.payload) ? propertiesResult.payload
+    : propertiesResult.payload?.properties;
+  const proposalReads = propertiesResult.status === 200 && Array.isArray(properties)
+    ? await Promise.all(properties.slice(0, 10).map((property) => {
+      const id = property.property_id ?? property.id;
+      return id ? read(`/owner-properties/${encodeURIComponent(id)}/initial-service-proposals`, reviewer)
+        : Promise.resolve({ status: 'invalid_property', payload: null });
+    }))
+    : [];
+  const proposals = proposalReads.flatMap((result) => (
+    Array.isArray(result.payload) ? result.payload : []
+  ));
+  return {
+    key,
+    status: propertiesResult.status,
+    error: errorCode(propertiesResult),
+    properties: count(properties),
+    proposalReads: proposalReads.map((result) => ({
+      status: result.status,
+      error: errorCode(result),
+    })),
+    currentVersionThreeProposals: proposals.filter((proposal) => (
+      (proposal.proposal_version ?? proposal.proposalVersion) === 3
+      && (proposal.status === 'sent' || proposal.status === 'accepted')
+    )).length,
+  };
+}));
 const route = crewRoute.payload;
 
 const report = {
@@ -77,14 +101,7 @@ const report = {
     visits: count(managerPortal.payload?.visits),
   },
   ownerAcquisition: {
-    status: ownerProperties.status,
-    error: errorCode(ownerProperties),
-    properties: count(ownerPropertyList),
-    proposalReads: proposalReads.map((result) => ({ status: result.status, error: errorCode(result) })),
-    currentVersionThreeProposals: proposals.filter((proposal) => (
-      (proposal.proposal_version ?? proposal.proposalVersion) === 3
-      && (proposal.status === 'sent' || proposal.status === 'accepted')
-    )).length,
+    records: studyOwnerReports,
   },
   crewRoute: {
     status: crewRoute.status,
