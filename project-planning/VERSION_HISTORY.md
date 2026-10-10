@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-10: Pinned the seven general GitHub Actions jobs to the explicit
+  Ubuntu 24.04 runner image before the announced `ubuntu-latest` migration to
+  Ubuntu 26. The Pi deployment retains its Ubuntu 24.04 ARM64 runner, and the
+  CI foundation test rejects a return to the moving label. The full hosted
+  gate passes on the fixed image before merge, followed by ARM64 Pi activation
+  from `main`.
 - 2026-10-10: Moved both production-image workflows to the supported Node 24
   Docker action majors: `setup-buildx-action@v4` and
   `build-push-action@v7`. Their existing generic and ARM64 build, cache, load,

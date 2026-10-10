@@ -11,7 +11,7 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | Yard Owner care-setup continuity, decoupled application identity, and supported Node 24 Docker image actions are delivered with full hosted validation and automatic Pi activation | Await R2 external access or the P2 product-boundary decision; keep repository maintenance evidence-driven |
+| Repository | Yard Owner care-setup continuity, decoupled application identity, supported Node 24 Docker image actions, and explicit Ubuntu 24.04 hosted runners are delivered with full hosted validation and automatic Pi activation | Await R2 external access or the P2 product-boundary decision; keep repository maintenance evidence-driven |
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |

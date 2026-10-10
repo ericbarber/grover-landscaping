@@ -23,3 +23,23 @@ test('production image jobs use the supported Node 24 Docker action majors', asy
     'Node 20 Docker action majors must not return to the CI workflow',
   );
 });
+
+test('general CI jobs stay on the reviewed Ubuntu 24.04 runner image', async () => {
+  const workflow = await readFile(workflowUrl, 'utf8');
+
+  assert.equal(
+    workflow.match(/^\s+runs-on: ubuntu-24\.04$/gm)?.length,
+    7,
+    'all seven general CI jobs must use the reviewed Ubuntu 24.04 image',
+  );
+  assert.equal(
+    workflow.match(/^\s+runs-on: ubuntu-24\.04-arm$/gm)?.length,
+    1,
+    'the Pi deployment must retain its ARM64 runner',
+  );
+  assert.doesNotMatch(
+    workflow,
+    /^\s+runs-on: ubuntu-latest$/m,
+    'ubuntu-latest must not introduce an unreviewed runner-image migration',
+  );
+});

@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Repository-owned rollout UX, Yard Owner setup continuity, decoupled application identity, and supported Node 24 Docker image actions are delivered | Full hosted CI, production-image construction, and automatic Pi development activation pass; repository contracts reject the deprecated Docker action majors | R2 hosted evidence, the P2 product-boundary decision, or the Dispatcher/Billing role decision |
+| Repository | Repository-owned rollout UX, Yard Owner setup continuity, decoupled application identity, supported Node 24 Docker image actions, and explicit Ubuntu 24.04 hosted runners are delivered | Full hosted CI, production-image construction, and automatic Pi development activation pass; repository contracts reject deprecated Docker action majors and unreviewed `ubuntu-latest` migration | R2 hosted evidence, the P2 product-boundary decision, or the Dispatcher/Billing role decision |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -88,6 +88,23 @@ Exit evidence:
   `build-push-action@v7`. Pull-request CI builds the production image on the
   new runtime before merge, and the resulting `main` run exercises ARM64 image
   construction and Pi activation.
+
+### F4 — Stable hosted runner image
+
+State: delivered.
+
+Deliver:
+
+- Pin all seven general hosted jobs to Ubuntu 24.04 before the announced
+  `ubuntu-latest` migration to Ubuntu 26.
+- Keep the Pi deployment on its existing Ubuntu 24.04 ARM64 runner.
+- Reject a return to the moving `ubuntu-latest` label in repository checks.
+
+Exit evidence:
+
+- The full pull-request gate passes on the explicit Ubuntu 24.04 image, then
+  the resulting `main` run builds and activates the ARM64 Pi image without an
+  implicit operating-system migration.
 
 ### R1 — Release preflight contract
 
