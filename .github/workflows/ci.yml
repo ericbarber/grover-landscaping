@@ -17,7 +17,7 @@ concurrency:
 jobs:
   repository-checks:
     name: Repository checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -52,7 +52,7 @@ jobs:
 
   backend:
     name: Backend checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
@@ -115,7 +115,7 @@ jobs:
 
   frontend:
     name: Frontend checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -172,7 +172,7 @@ jobs:
 
   browser-journeys:
     name: Chromium, Firefox, and WebKit journeys
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: frontend
 
     steps:
@@ -262,7 +262,7 @@ jobs:
 
   pilot-assurance:
     name: Yard Owner pilot assurance contract
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -281,7 +281,7 @@ jobs:
 
   production-image:
     name: Production image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [backend, frontend, browser-journeys, pilot-assurance]
 
     steps:
@@ -302,7 +302,7 @@ jobs:
 
   terraform:
     name: Terraform checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
