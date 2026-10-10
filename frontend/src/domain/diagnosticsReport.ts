@@ -1,3 +1,5 @@
+import { FIELD_APP_DISPLAY_NAME } from '../appIdentity';
+
 export interface DiagnosticsReportInput {
   checkedAt: Date;
   origin: string;
@@ -14,7 +16,7 @@ export interface DiagnosticsReportInput {
 
 export function buildDiagnosticsReport(input: DiagnosticsReportInput): string {
   return [
-    'Grover Field mobile diagnostics',
+    `${FIELD_APP_DISPLAY_NAME} mobile diagnostics`,
     `Checked: ${input.checkedAt.toISOString()}`,
     `App origin: ${input.origin}`,
     `API origin: ${input.apiBaseUrl}`,

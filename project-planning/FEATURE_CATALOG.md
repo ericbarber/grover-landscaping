@@ -14,6 +14,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Documented navigation system separating public discovery,
   acquisition-progress, and authenticated-destination models without changing
   their common brand treatment
+- Explicit application-identity boundary for customer-visible frontend and
+  backend naming, with stable compatibility identifiers and a repository guard
+  covering runtime copy, document metadata, PWA metadata, and icon accessibility
 - Public outcome-led homepage with direct workspace entry
 - Persistent hero invitations for private Yard Owner signup and authenticated
   landscaping-company onboarding

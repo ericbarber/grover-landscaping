@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { APP_DISPLAY_NAME, appPageTitle } from '../appIdentity';
 import type { MarketingPersona } from '../api/marketingLeadsClient';
 import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
 import {
@@ -12,7 +13,7 @@ import {
 import { MarketingProductTour } from './MarketingProductTour';
 import { MarketingOperationsPlanner } from './MarketingOperationsPlanner';
 import { OWNER_ACQUISITION_PATH } from '../domain/ownerAcquisitionRoute';
-import { GroverBrand } from './GroverBrand';
+import { ProductBrand } from './ProductBrand';
 import { PROVIDER_ENTRY_PATH } from '../domain/providerEntryRoute';
 
 const marketingPersonas: Array<{
@@ -92,7 +93,7 @@ const marketingPersonas: Array<{
     proof: {
       eyebrow: 'Clarity for your yard',
       title: 'Yard care should never feel like a mystery.',
-      description: 'Grover keeps your property private while you get started, then connects each visit, update, and recommendation into a story you can actually follow.',
+      description: `${APP_DISPLAY_NAME} keeps your property private while you get started, then connects each visit, update, and recommendation into a story you can actually follow.`,
       cards: [
         { title: 'Start privately', description: 'Describe your yard before choosing what any provider can see.', label: 'Owner control' },
         { title: 'Know the plan', description: 'Find upcoming service expectations without chasing an update.', label: 'Service confidence' },
@@ -150,7 +151,7 @@ const marketingPersonas: Array<{
     proof: {
       eyebrow: 'Control across the portfolio',
       title: 'Every address gets a clear next step.',
-      description: 'Grover turns scattered vendor updates into a portfolio view built around readiness, open needs, accountable follow-through, and property-level evidence.',
+      description: `${APP_DISPLAY_NAME} turns scattered vendor updates into a portfolio view built around readiness, open needs, accountable follow-through, and property-level evidence.`,
       cards: [
         { title: 'See portfolio readiness', description: 'Scan which properties are on track and which need review.', label: 'Portfolio view' },
         { title: 'Own every exception', description: 'Keep open needs connected to an owner and a due date.', label: 'Accountability' },
@@ -208,7 +209,7 @@ const marketingPersonas: Array<{
     proof: {
       eyebrow: 'Operational confidence by design',
       title: 'Run the day without losing the service story.',
-      description: 'Grover connects planning, execution, evidence, customer follow-through, and revenue readiness so the office and field can work from the same operational truth.',
+      description: `${APP_DISPLAY_NAME} connects planning, execution, evidence, customer follow-through, and revenue readiness so the office and field can work from the same operational truth.`,
       cards: [
         { title: 'Plan a workable day', description: 'Balance routes, crew assignments, commitments, and workload risk.', label: 'Daily operations' },
         { title: 'Stay aligned in the field', description: 'Give crews property context and resilient progress capture.', label: 'Field execution' },
@@ -266,7 +267,7 @@ const marketingPersonas: Array<{
     proof: {
       eyebrow: 'A field-ready workday',
       title: 'The next stop should already make sense.',
-      description: 'Grover puts the route, property context, required work, evidence, and exception path together so crews can focus on the yard instead of reconstructing the plan.',
+      description: `${APP_DISPLAY_NAME} puts the route, property context, required work, evidence, and exception path together so crews can focus on the yard instead of reconstructing the plan.`,
       cards: [
         { title: 'Start with the route', description: 'See the ordered day and the context behind each stop.', label: 'Clear direction' },
         { title: 'Know what done means', description: 'Keep service details and required evidence close to the work.', label: 'Completion clarity' },
@@ -288,7 +289,7 @@ const marketingPersonas: Array<{
     invitation: {
       eyebrow: 'Make the field day clearer',
       title: 'Give crews the plan before they reach the property.',
-      description: 'Request a field-workflow demo and see how Grover keeps routes, progress, and proof connected.',
+      description: `Request a field-workflow demo and see how ${APP_DISPLAY_NAME} keeps routes, progress, and proof connected.`,
     },
   },
 ];
@@ -301,10 +302,10 @@ function marketingPersonaFor(id: MarketingPersonaId): MarketingPersona {
 }
 
 function marketingTitleFor(id: MarketingPersonaId): string {
-  if (id === 'owner') return 'Clearer yard care for homeowners | Grover';
-  if (id === 'property-manager') return 'Landscaping oversight for property managers | Grover';
-  if (id === 'crew') return 'Field workflow for landscaping crews | Grover';
-  return 'Landscaping operations software | Grover';
+  if (id === 'owner') return appPageTitle('Clearer yard care for homeowners');
+  if (id === 'property-manager') return appPageTitle('Landscaping oversight for property managers');
+  if (id === 'crew') return appPageTitle('Field workflow for landscaping crews');
+  return appPageTitle('Landscaping operations software');
 }
 
 export function PublicLandingPage({
@@ -359,16 +360,16 @@ export function PublicLandingPage({
     <main className="min-h-screen overflow-x-hidden bg-bone text-ink">
       <header className="sticky inset-x-0 top-0 z-30 border-b border-slate-200 bg-paper/95 backdrop-blur-xl">
         <nav className="mx-auto flex min-h-20 max-w-344 items-center justify-between px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
-          <a aria-label="Grover home" className="text-emerald-800" href="/">
-            <GroverBrand />
+          <a aria-label={`${APP_DISPLAY_NAME} home`} className="text-emerald-800" href="/">
+            <ProductBrand />
           </a>
           <div className="hidden items-center gap-7 text-sm font-bold text-slate-600 md:flex">
             <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#tour">How it works</a>
             <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#who-its-for">Who it helps</a>
-            <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#proof">Why Grover</a>
+            <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#proof">Why {APP_DISPLAY_NAME}</a>
           </div>
           <a className="grover-button-primary px-4 sm:px-5" href="/app">
-            Open Grover
+            Open {APP_DISPLAY_NAME}
           </a>
         </nav>
       </header>
@@ -400,7 +401,7 @@ export function PublicLandingPage({
               })}
             </div>
             <div className="mt-8 lg:mt-3">
-              <p className="text-xs font-extrabold uppercase tracking-widest text-slate-600">Show me Grover as a</p>
+              <p className="text-xs font-extrabold uppercase tracking-widest text-slate-600">Show me {APP_DISPLAY_NAME} as a</p>
               <div className="mt-3 flex flex-wrap gap-2 lg:mt-2" role="tablist" aria-label="Choose your perspective">
                 {marketingPersonas.map((persona) => (
                   <button
@@ -619,7 +620,7 @@ export function PublicLandingPage({
 
       <footer className="border-t border-slate-800 bg-slate-950 px-4 py-8 text-slate-400 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <GroverBrand className="text-white" />
+          <ProductBrand className="text-white" />
           <p>Plan the work. Care for the property. Prove the difference.</p>
         </div>
       </footer>

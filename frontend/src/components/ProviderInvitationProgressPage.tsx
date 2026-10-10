@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import { ApiRequestError } from '../api/apiError';
 import {
   fetchProviderDisclosureAccess,
@@ -14,7 +15,7 @@ import {
 import { firstVisitWindowLabel, type OwnerProviderFirstVisit } from '../domain/initialServiceProposals';
 import { useAuth } from '../auth/AuthProvider';
 import { providerInvitationTokenFromFragment } from '../domain/providerInvitationRoute';
-import { GroverBrand } from './GroverBrand';
+import { ProductBrand } from './ProductBrand';
 import { ProviderAssessmentWorkspace } from './ProviderAssessmentWorkspace';
 import { ProviderConnectionJourney } from './ProviderConnectionJourney';
 import { ProviderInvitationConnectionPanel } from './ProviderInvitationConnectionPanel';
@@ -206,7 +207,7 @@ export function ProviderInvitationProgressPage() {
     <main className="min-h-screen bg-bone text-slate-950">
       <header className="bg-emerald-950 text-white">
         <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-          <a aria-label="Grover home" className="inline-flex rounded-lg text-sand focus:outline-hidden focus:ring-2 focus:ring-sky" href="/"><GroverBrand /></a>
+          <a aria-label={`${APP_DISPLAY_NAME} home`} className="inline-flex rounded-lg text-sand focus:outline-hidden focus:ring-2 focus:ring-sky" href="/"><ProductBrand /></a>
           <p className="mt-8 text-xs font-black uppercase tracking-[0.2em] text-sand">Provider invitation</p>
           <h1 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-5xl">Review your connection progress</h1>
           <p className="mt-4 max-w-2xl leading-7 text-emerald-100">This page confirms your own invitation steps. It does not grant yard details, pricing, proposal, crew assignment, or permission to begin work.</p>

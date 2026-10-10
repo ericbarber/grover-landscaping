@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-10-10: Decoupled the temporary Grover display name from application
+  implementation details. Frontend runtime copy, titles, accessible brand
+  labels, field/API labels, diagnostics, and backend authentication branding
+  now compose through explicit application-identity modules; stable technical
+  identifiers remain unchanged. The product is no longer presented as the
+  landscaping provider in shared proof or demo portfolio UI, and a tested CI
+  guard keeps runtime, document metadata, PWA metadata, icon text, and backend
+  identity aligned.
 - 2026-10-10: Restored the frontend dependency audit to zero findings after new
   high-severity build-chain advisories. The official migration moves Tailwind
   CSS to 4.3.3 with `@tailwindcss/postcss`, Vitest to 4.1.11, and

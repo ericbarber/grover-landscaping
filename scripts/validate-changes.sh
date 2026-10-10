@@ -237,7 +237,7 @@ validate_markdown_links() {
 
 print_scope_commands() {
   case "$1" in
-    repository) echo "  git diff --check; bash -n scripts/*.sh; shell, rollout-smoke, and release-evidence contract tests; docker compose config --quiet" ;;
+    repository) echo "  git diff --check; bash -n scripts/*.sh; shell, product-brand, rollout-smoke, and release-evidence contract tests; docker compose config --quiet" ;;
     docs) echo "  validate changed Markdown links and delivery records" ;;
     frontend) echo "  npm run typecheck; npm test; npm run build" ;;
     backend) echo "  cargo fmt --all -- --check; cargo clippy --all-targets --all-features -- -D warnings; cargo test --all" ;;
@@ -263,6 +263,7 @@ for scope in "${ordered_scopes[@]}"; do
       run_command bash scripts/release-preflight.test.sh
       run_command bash scripts/smoke-production.test.sh
       node_command --test scripts/smoke-workspace-rollout.test.mjs
+      node_command --test scripts/validate-product-brand.test.mjs
       node_command --test scripts/validate-protected-release-evidence.test.mjs
       run_command docker compose config --quiet
       ;;

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { API_DISPLAY_NAME, APP_TECHNICAL_NAMESPACE, FIELD_APP_DISPLAY_NAME } from '../appIdentity';
 import { API_BASE_URL } from '../api/baseUrl';
 import { buildDiagnosticsReport } from '../domain/diagnosticsReport';
 
@@ -130,7 +131,7 @@ export function MobileDiagnosticsPage() {
     if (!nativeShare) return;
     try {
       await nativeShare.call(navigator, {
-        title: 'Grover Field mobile diagnostics',
+        title: `${FIELD_APP_DISPLAY_NAME} mobile diagnostics`,
         text: supportDetails(),
       });
       setShareStatus('shared');
@@ -145,7 +146,7 @@ export function MobileDiagnosticsPage() {
     const blobUrl = URL.createObjectURL(new Blob([supportDetails()], { type: 'text/plain' }));
     const link = document.createElement('a');
     link.href = blobUrl;
-    link.download = `grover-field-diagnostics-${new Date().toISOString().slice(0, 10)}.txt`;
+    link.download = `${APP_TECHNICAL_NAMESPACE}-field-diagnostics-${new Date().toISOString().slice(0, 10)}.txt`;
     link.hidden = true;
     document.body.appendChild(link);
     link.click();
@@ -156,7 +157,7 @@ export function MobileDiagnosticsPage() {
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-950">
       <section className="mx-auto max-w-xl">
-        <p className="text-sm font-bold uppercase tracking-wide text-emerald-800">Grover Field</p>
+        <p className="text-sm font-bold uppercase tracking-wide text-emerald-800">{FIELD_APP_DISPLAY_NAME}</p>
         <h1 className="mt-1 text-3xl font-black">Mobile diagnostics</h1>
         <p className="mt-2 text-slate-600">
           Use these checks when the app will not load, sync, or install correctly on this phone.
@@ -171,8 +172,8 @@ export function MobileDiagnosticsPage() {
           />
           <DiagnosticRow
             healthy={apiReady}
-            guidance="Confirm Tailscale is connected and the Grover API container or hosted service is running."
-            label="Grover API"
+            guidance={`Confirm Tailscale is connected and the ${API_DISPLAY_NAME} container or hosted service is running.`}
+            label={API_DISPLAY_NAME}
             value={apiCheck === 'checking' ? 'Checking…' : apiReady ? 'Ready' : 'Unavailable'}
           />
           <DiagnosticRow
@@ -189,7 +190,7 @@ export function MobileDiagnosticsPage() {
           />
           <DiagnosticRow
             healthy={workerSupported}
-            guidance="Update this browser or open Grover Field in Safari, Chrome, or Edge."
+            guidance={`Update this browser or open ${FIELD_APP_DISPLAY_NAME} in Safari, Chrome, or Edge.`}
             label="Offline shell support"
             value={workerSupported ? 'Supported' : 'Not supported'}
           />

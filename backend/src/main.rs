@@ -26,6 +26,7 @@ use grover_landscaping_api::{
         UpdateCustomerAccountRequest, UpdateCustomerPropertyIdentityRequest,
         UpdateCustomerPropertyStatusRequest,
     },
+    application_identity::APP_DISPLAY_NAME,
     auth::{require_api_auth, AuthPrincipal, AuthService},
     completion_reports::{
         self, apply_completion_report_persistence, build_completion_report,
@@ -503,7 +504,7 @@ async fn main() -> Result<(), DynError> {
         .map_err(|error| configuration_error(format!("PORT must be a valid TCP port: {error}")))?;
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
-    tracing::info!(%addr, "starting Grover Landscaping API");
+    tracing::info!(%addr, application = APP_DISPLAY_NAME, "starting application API");
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
 

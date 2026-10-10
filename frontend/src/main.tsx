@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { FIELD_APP_DISPLAY_NAME } from './appIdentity';
 import { sharedBidTokenFromPath } from './domain/sharedBidRoute';
 import { sharedReportTokenFromPath } from './domain/sharedReportRoute';
 import { organizationInvitationTokenFromPath } from './domain/organizationInvitationRoute';
@@ -69,7 +70,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <React.Suspense fallback={(
         <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
           <p className="text-sm font-semibold text-slate-700" role="status">
-            Loading Grover Field…
+            Loading {FIELD_APP_DISPLAY_NAME}…
           </p>
         </main>
       )}>

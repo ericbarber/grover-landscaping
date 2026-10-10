@@ -144,7 +144,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
                 </div>
                 <div className="rounded-2xl bg-slate-100 p-4">
                   <dt className="text-xs font-black uppercase tracking-wide text-slate-600">Provided by</dt>
-                  <dd className="mt-2 text-base font-black text-forest">Grover Landscaping</dd>
+                  <dd className="mt-2 text-base font-black text-forest">Your service team</dd>
                 </div>
                 <div className="rounded-2xl bg-slate-100 p-4">
                   <dt className="text-xs font-black uppercase tracking-wide text-slate-600">Evidence</dt>

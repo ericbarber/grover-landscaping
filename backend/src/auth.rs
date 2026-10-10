@@ -4,6 +4,7 @@ use crate::access_control::{
     can_submit_completion_report, can_view_crew_route, can_view_customer_property_portfolios,
     AccessRole,
 };
+use crate::application_identity::authentication_realm;
 use crate::local_review::{
     default_local_reviewer, local_reviewer_by_id, local_reviewer_profiles, LocalReviewerProfile,
     LOCAL_REVIEWER_HEADER,
@@ -459,7 +460,7 @@ pub async fn require_api_auth(
             tracing::warn!(reason = %error, path, "API authentication rejected");
             return (
                 StatusCode::UNAUTHORIZED,
-                [("www-authenticate", "Bearer realm=\"Grover Landscaping\"")],
+                [("www-authenticate", authentication_realm())],
                 Json(AuthFailureResponse {
                     error: "authentication_required",
                     message: "A valid sign-in session is required.",

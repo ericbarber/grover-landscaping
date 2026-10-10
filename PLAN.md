@@ -11,7 +11,7 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | R3 production-smoke safety and persistence contract is delivered; the bounded Yard Owner care-setup continuity slice is implemented on a branch based on current `main` | Run pull-request CI for the owner slice, then await R2 external access or the P2 product-boundary decision |
+| Repository | R3 production-smoke safety and persistence contract is delivered; the bounded Yard Owner care-setup continuity slice is green in PR #34, and its stacked application-identity slice is implemented | Review and merge the bounded integration slices, then await R2 external access or the P2 product-boundary decision |
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
@@ -131,6 +131,12 @@ Next design slices:
    place, service, and delivered-care moments. Authenticated task destinations,
    operational headings, loading/failure states, decisions, queues, and monetary
    values now explicitly use the interface family.
+7. Application identity: delivered on the integration branch. Frontend runtime
+   copy and backend authentication branding now compose from explicit display-
+   name constants while compatibility-sensitive browser, API, package, storage,
+   service, asset, and deployment identifiers remain stable. The shared brand
+   component no longer embeds the current name, static metadata/PWA surfaces
+   are alignment-checked, and CI rejects new hard-coded display-name copy.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.
