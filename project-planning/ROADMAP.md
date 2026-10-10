@@ -55,7 +55,10 @@ checkpoint/reset passed on 2026-10-09. A fail-closed port-5174 frontend now
 validates and proxies the isolated API, and its mobile normal-entry gate passes.
 An exact matched-checkpoint receipt also passed a second open-decision
 seed/reset. The consolidated session command subsequently rehearsed prepare,
-verify, and zero-proven reset on 2026-10-10. Selecting and instantiating the
+verify, and zero-proven reset on 2026-10-10. A checkpoint-gated mobile browser
+rehearsal now reaches Canyon proposal v3/$420 from normal `/app` entry through
+the Yard Owner care-setup handoff, then revalidates and resets to zero without
+making a decision. Selecting and instantiating the
 participant task checkpoint, then collecting observations, is next;
 placeholder evidence does not establish image quality.
 Protected browser/runtime evidence remains blocked by protected infrastructure

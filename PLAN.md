@@ -11,7 +11,7 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-delivered-outcome toolchain are implemented; full lifecycles, exact checkpoint receipts, isolated frontend entry, and the consolidated session command are live-verified | Select the participant task checkpoint, instantiate it, then run matched sessions |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-delivered-outcome toolchain are implemented; full lifecycles, exact checkpoint receipts, isolated frontend entry, consolidated session control, and the seeded owner proposal path are live-verified | Select the participant task checkpoint, instantiate it, then run matched sessions |
 | Private review | Pi has an ARM64 runtime, healthy PostgreSQL, private HTTPS, and restricted CI SSH grant; deployment remains disabled and unhosted | Publish the workflow, run CI, then verify the first gated deploy |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered; B1/B3 and repository-owned B7/B8 work are implemented, B6/B9 preparations are ready, and a bounded B10 decision packet awaits approval | Approve or revise B10 boundaries while B4/B5/B6/B8/B9 evidence proceeds in an authorized environment |
@@ -63,7 +63,7 @@ persistence outages, and reports bounded stage telemetry. Customer-controlled
 Property Manager delegation now adds owner invitation/revocation, verified-email
 recipient acceptance, exact-property membership and portal grants, immediate
 fail-closed removal, minimized pre-acceptance reads, and an audit trail. The
-complete gate passes 146 frontend files / 603 tests, TypeScript, the production
+complete gate passes 151 frontend files / 626 tests, TypeScript, the production
 build, strict Clippy, and the 433-test backend command. The Compose-backed run
 also completed live PostgreSQL tests, migrations, and both Terraform environment
 validations. Browser acceptance now passes 86 journeys with 2 intentional skips
@@ -132,6 +132,16 @@ of spawning a child Node process. The complete repository scope—including
 shell contracts, smoke/evidence/budget/manifest tests, and Compose
 configuration—passes without treating unavailable external tooling as a test
 failure.
+
+The signed-in Yard Owner home now keeps property/provider setup reachable. When
+portal access is not active, it recommends continuing care setup instead of
+leading with a protected portal read; owners with active access retain a
+secondary setup path for another property or provider connection. A
+checkpoint-gated mobile browser contract starts at `/app`, selects Canyon,
+follows that handoff through the ready brief and care connection, and verifies
+the one current proposal at version 3 and $420. The live rehearsal made no
+decision, revalidated the checkpoint afterward, and reset to zero. It is
+technical evidence, not participant evidence.
 
 B6 preparation now includes an internal
 [public trust-center content contract](docs/public-trust-center-content-contract.md).

@@ -29,7 +29,7 @@ B8, and the repository-owned B9 preparation are published on
 company first-value path, attribution continuity, fail-closed membership selection, and
 bounded setup telemetry. B3 adds customer-issued, verified-email, one-property
 Property Manager invitation, acceptance, revocation, exact portal scope, and
-audit. The combined gate passes 146 frontend files / 603 tests, TypeScript,
+audit. The combined gate passes 151 frontend files / 626 tests, TypeScript,
 production build, strict Clippy, and the 433-test backend command. The latest
 Compose-backed run also completed the live PostgreSQL branches and migrations.
 B7 adds a versioned measured artifact baseline, stable chunk limits, browser
@@ -77,7 +77,11 @@ with both fixed owner identities available. Manifests now require an ordered,
 matched snapshot prefix, and an exact checkpoint receipt passed a second live
 open-decision seed/reset. A consolidated command now prepares, re-verifies, and
 resets one explicit session manifest; its 2026-10-10 live rehearsal also ended
-at zero. Selecting and instantiating the participant task plus participant
+at zero. Yard Owner home now recommends care setup when portal access has not
+been activated and keeps setup reachable afterward. The checkpoint-gated
+mobile rehearsal reached Canyon proposal v3/$420 from normal `/app` entry,
+made no decision, revalidated the receipt, and reset to zero. Selecting and
+instantiating the participant task plus participant
 observation are the remaining B9 gates; real-image quality and unsupported
 handoffs are not claimed.
 The repository package, database, and infrastructure scopes pass in this shell.

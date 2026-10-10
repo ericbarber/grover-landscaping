@@ -23,7 +23,7 @@ simulated action as a completed product action.
 | Condition | Entry | What can be observed now |
 | --- | --- | --- |
 | Current public site | `/` at a recorded commit | Entry choice and claim comprehension. A healthy protected deployment is not established. |
-| Current application | `/app` on the port-5174 study frontend, with the assigned local-review identity | The frontend validates and same-origin proxies the isolated port-8081 API; mobile normal entry and fixed-owner selection pass. Seed the selected checkpoint before each scored session. |
+| Current application | `/app` on the port-5174 study frontend, with the assigned local-review identity | The frontend validates and same-origin proxies the isolated port-8081 API. Mobile normal entry, fixed-owner selection, and the seeded Canyon open-decision path to proposal v3/$420 pass. Seed the selected checkpoint before each scored session. |
 | Yardfolio Study review | `/yardfolio-study/`, then the named task page | Public framing and eight simulated task moments. Each page resets on reload; actions do not cross pages or persist. |
 
 Before scoring **comparative completion**, the facilitator must select the exact
@@ -37,7 +37,9 @@ and reset gate. The frontend gate has passed locally, but a task is still
 is instantiated and recorded. Never count a prototype click as a backend write.
 Use the fixture README's `study-session.mjs prepare`, `verify`, and `reset`
 commands so the checkpoint choice, runtime recheck, and cleanup remain one
-fail-closed workflow.
+fail-closed workflow. The fixture README also records the checkpoint-gated
+browser command. Its passing result is technical rehearsal evidence only; do
+not enter it as participant behavior, task completion, or comprehension.
 
 The Property Manager grant and delegation workflow implements the decided
 [MG-D6](../PRODUCT_DECISIONS.md) rule and two isolated grants/read scopes passed

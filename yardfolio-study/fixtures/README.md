@@ -55,6 +55,21 @@ node yardfolio-study/fixtures/study-session.mjs verify \
   .localdev/yardfolio-study/fixture-manifest-session.json
 ```
 
+For the `open_customer_decision` checkpoint, the non-mutating browser contract
+also verifies the normal `/app` owner entry, setup handoff, exact current
+proposal version, and fixed total. Run it only while the isolated port-5174
+frontend is serving the prepared fixture:
+
+```bash
+cd frontend
+E2E_BASE_URL=http://127.0.0.1:5174 \
+YARDFOLIO_STUDY_CHECKPOINT=open_customer_decision \
+npm run test:e2e:study-checkpoint
+```
+
+This is technical rehearsal evidence, not a participant observation or scored
+task result.
+
 After the session—or after any partial seed that created records—reset through
 the same manifest. The command completes only after the transactional reset and
 empty-target preflight both pass.

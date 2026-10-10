@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-outcome/session chain are implemented and live-verified through full cycles, exact checkpoint receipts, isolated frontend entry, and consolidated session cleanup | First value, delegation, public-hero, search/share, field commands, and repeatable Canyon/Sage proposal-to-proof fixtures pass repository and local live gates; deployed-origin evidence remains gated | Select and instantiate the participant task checkpoint; keep exact reset green |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-outcome/session chain are implemented and live-verified through full cycles, exact checkpoint receipts, isolated frontend entry, seeded owner-to-proposal navigation, and consolidated cleanup | First value, delegation, public-hero, search/share, field commands, and repeatable Canyon/Sage proposal-to-proof fixtures pass repository and local live gates; deployed-origin evidence remains gated | Select and instantiate the participant task checkpoint; keep exact reset green |
 | Design review | B9 study materials and live provider-to-outcome fixtures are ready; participant evidence is incomplete | Ten persona profiles, responsive public-to-workspace preview, matched comprehension tasks, and repeatable two-owner live records cover supported task moments | Conduct participant sessions and synthesize findings before B2 expansion |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
@@ -39,9 +39,11 @@ Immediate order:
    local cross-browser acceptance gate.
 3. Preserve the complete B9 seed/reset, checkpoint, and isolated frontend gates;
    do not strand one-time invitation tokens in a partial session fixture.
-4. Run B9 matched participant sessions before expanding B2 service-thread
+4. Preserve the normal-entry Yard Owner handoff to care setup and its
+   checkpoint-gated proposal-v3 browser contract.
+5. Run B9 matched participant sessions before expanding B2 service-thread
    production composition.
-5. Continue B4 protected hosting independently when external inputs arrive.
+6. Continue B4 protected hosting independently when external inputs arrive.
 
 Exit evidence:
 
@@ -100,7 +102,7 @@ Validation:
 - The complete 433-test backend command passes, including the live Compose-backed
   PostgreSQL concurrency, recipient binding, exact scope, portal visibility,
   revocation, and audit branches.
-- The complete frontend suite passes 146 files / 603 tests, TypeScript, and the
+- The complete frontend suite passes 151 files / 626 tests, TypeScript, and the
   production build; strict Clippy also passes.
 - Owner and recipient Playwright journeys are implemented; stable execution is
   pending a fresh browser web-server process.

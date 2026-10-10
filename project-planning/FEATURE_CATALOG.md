@@ -322,7 +322,12 @@ workflows are not product targets.
   second live open-decision receipt/reset passed. Participant evidence remains
   open. A consolidated session command now sequences new-manifest preparation,
   seeding, runtime/receipt re-verification, and zero-proven reset; its first
-  live rehearsal passed. Placeholder evidence does not claim image quality
+  live rehearsal passed. Yard Owner home now recommends the existing care-setup
+  journey when portal access is inactive and retains it as a secondary path
+  afterward. A checkpoint-gated mobile browser rehearsal proved normal entry
+  reaches the current Canyon proposal v3 and $420 fixed total without making a
+  decision, then revalidated the receipt and reset to zero. Placeholder evidence
+  does not claim image quality
 - Repository release-contract tests are self-contained in restricted shells:
   Terraform behavior is represented by an injected test double and protected
   release evidence is validated in-process without changing operator-facing

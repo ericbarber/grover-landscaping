@@ -12,6 +12,7 @@ import {
 } from '../workspaces/features/home/workspaceHome';
 import type { CustomerPortalReadState } from '../workspaces/features/customer/customerWorkspace';
 import type { ManagerTodayQueueItem } from '../domain/managerTodayQueue';
+import { OWNER_ACQUISITION_PATH } from '../domain/ownerAcquisitionRoute';
 import { ProductBrand } from './ProductBrand';
 import { ManagerTodayQueue, type ManagerTodayQueueState } from './ManagerTodayQueue';
 import { WorkspaceIcon } from './WorkspaceIcon';
@@ -77,6 +78,9 @@ export function WorkspaceHomePanel({
   const displayedTotal = isCrew ? routeOverview.totalStops : assignedJobCount;
   const displayedCompleted = isCrew ? routeOverview.completedStops : completedJobCount;
   const continuityStatus = homeContinuityStatus(persona.id, portalReadState, routeOverview);
+  const ownerSetupRecommended = persona.id === 'yard-owner'
+    && portalReadState === 'access_required';
+  const secondaryWorkspaceActions = ownerSetupRecommended ? actions : secondaryActions;
   const progressAvailable = continuityStatus?.progressAvailable ?? true;
   const progress = progressAvailable && displayedTotal > 0
     ? Math.min(100, Math.round((displayedCompleted / displayedTotal) * 100))
@@ -135,7 +139,28 @@ export function WorkspaceHomePanel({
         </div>
       </article>
 
-      {primaryAction ? (
+      {ownerSetupRecommended ? (
+        <a
+          className="group flex min-h-24 w-full items-center justify-between gap-4 rounded-2xl bg-emerald-800 p-4 text-left text-white shadow-lg shadow-emerald-950/15 lg:col-span-4"
+          href={OWNER_ACQUISITION_PATH}
+        >
+          <span>
+            <span className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-200">
+              Recommended next
+            </span>
+            <span className="mt-1 block text-xl font-black">Continue care setup</span>
+            <span className="mt-1 block text-xs leading-5 text-emerald-100">
+              Review your property, provider connection, and any proposal waiting for you.
+            </span>
+          </span>
+          <span
+            aria-hidden="true"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/15 text-2xl transition-transform group-hover:translate-x-1"
+          >
+            <WorkspaceIcon className="size-6" name="forward" />
+          </span>
+        </a>
+      ) : primaryAction ? (
         <button
           className="group flex min-h-24 w-full items-center justify-between gap-4 rounded-2xl bg-emerald-800 p-4 text-left text-white shadow-lg shadow-emerald-950/15 lg:col-span-4"
           onClick={() => onOpen(primaryAction.view)}
@@ -223,13 +248,13 @@ export function WorkspaceHomePanel({
         ) : null}
       </WorkspaceStatusNotice>
 
-      {secondaryActions.length > 0 ? (
+      {secondaryWorkspaceActions.length > 0 || persona.id === 'yard-owner' ? (
         <section className="yardfolio-card p-4 lg:col-span-12">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
             Your workspace
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {secondaryActions.map((action) => (
+            {secondaryWorkspaceActions.map((action) => (
               <button
                 className="min-h-24 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left"
                 key={action.view}
@@ -243,6 +268,20 @@ export function WorkspaceHomePanel({
                 </span>
               </button>
             ))}
+            {!ownerSetupRecommended ? (
+              <a
+                className="min-h-24 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left"
+                href={OWNER_ACQUISITION_PATH}
+              >
+                <WorkspaceIcon className="size-5 text-emerald-800" name="forward" />
+                <span className="mt-2 block text-sm font-black text-slate-900">
+                  Set up or connect care
+                </span>
+                <span className="mt-1 line-clamp-2 block text-xs leading-4 text-slate-500">
+                  Add a property, prepare its care brief, or continue a provider connection.
+                </span>
+              </a>
+            ) : null}
           </div>
         </section>
       ) : null}
