@@ -759,7 +759,7 @@ export function ManagerTeamActivityPanel({
 
   return (
     <section
-      className="scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs"
       id="team-activity-review"
       tabIndex={-1}
     >

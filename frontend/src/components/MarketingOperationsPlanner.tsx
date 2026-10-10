@@ -37,7 +37,7 @@ export function MarketingOperationsPlanner({
       className={`${
         isTourPreview
           ? 'relative w-full border-slate-200 bg-paper'
-          : 'absolute bottom-4 left-3 right-3 border-white/60 bg-paper/95 backdrop-blur sm:bottom-7 sm:left-auto sm:right-7 sm:w-[min(40rem,calc(100%-3.5rem))] lg:bottom-4 lg:right-4 xl:bottom-8 xl:right-8'
+          : 'absolute bottom-4 left-3 right-3 border-white/60 bg-paper/95 backdrop-blur-sm sm:bottom-7 sm:left-auto sm:right-7 sm:w-[min(40rem,calc(100%-3.5rem))] lg:bottom-4 lg:right-4 xl:bottom-8 xl:right-8'
       } rounded-[1.35rem] border p-4 text-ink shadow-grover-lg sm:p-5 ${isTourPreview ? '' : 'lg:p-3 xl:p-5'}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">

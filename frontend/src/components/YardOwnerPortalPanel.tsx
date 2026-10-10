@@ -322,7 +322,7 @@ function CustomerDeliveredProof({ visit }: { visit: CustomerPortalVisitSummary }
               <h4 className="text-sm font-black text-forest">Photo evidence</h4>
               <div className="mt-2 grid grid-cols-2 gap-2">{proof.photoEvidence.map((photo) => (
                 <figure className="overflow-hidden rounded-xl border border-slate-200" key={`${photo.photoType}:${photo.imageUrl}`}>
-                  <img alt={`${photo.photoType} service evidence`} className="aspect-[4/3] w-full object-cover" src={photo.imageUrl} />
+                  <img alt={`${photo.photoType} service evidence`} className="aspect-4/3 w-full object-cover" src={photo.imageUrl} />
                   <figcaption className="p-2 text-xs font-bold capitalize text-slate-600">{photo.photoType}</figcaption>
                 </figure>
               ))}</div>

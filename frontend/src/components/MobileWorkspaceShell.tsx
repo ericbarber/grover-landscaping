@@ -97,7 +97,7 @@ export function MobileWorkspaceHeader({
   const context = mobileWorkspaceContext(input);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-paper/95 px-4 py-3 shadow-grover-sm backdrop-blur lg:hidden">
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-paper/95 px-4 py-3 shadow-grover-sm backdrop-blur-sm lg:hidden">
       <div className="mx-auto flex max-w-lg items-center gap-3">
         {input.view === 'job' ? (
           <button
@@ -203,7 +203,7 @@ export function DesktopWorkspaceNavigation({
   signedInName,
 }: DesktopWorkspaceNavigationProps) {
   return (
-    <aside className={`fixed bottom-0 left-0 z-30 hidden w-60 flex-col bg-forest px-5 py-8 text-white shadow-grover-md lg:flex ${hasEnvironmentBanner ? 'top-[3.25rem]' : 'top-0'}`}>
+    <aside className={`fixed bottom-0 left-0 z-30 hidden w-60 flex-col bg-forest px-5 py-8 text-white shadow-grover-md lg:flex ${hasEnvironmentBanner ? 'top-13' : 'top-0'}`}>
       <GroverBrand className="text-sand" />
       <p className="mt-5 text-[0.68rem] font-black uppercase tracking-[0.16em] text-emerald-200">
         {personaLabel}
@@ -218,7 +218,7 @@ export function DesktopWorkspaceNavigation({
               aria-current={active ? 'page' : undefined}
               className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition ${
                 active
-                  ? 'bg-emerald-700 text-white shadow-sm'
+                  ? 'bg-emerald-700 text-white shadow-xs'
                   : 'text-emerald-50 hover:bg-white/10 disabled:text-emerald-950/60'
               }`}
               disabled={disabled}
@@ -283,7 +283,7 @@ export function MobileWorkspaceNavigation({
   return (
     <nav
       aria-label="Mobile workspace"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-paper/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,47,40,0.10)] backdrop-blur md:inset-y-0 md:left-0 md:right-auto md:w-24 md:border-r md:border-t-0 md:px-2 md:py-24 md:shadow-grover-md lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-paper/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,47,40,0.10)] backdrop-blur-sm md:inset-y-0 md:left-0 md:right-auto md:w-24 md:border-r md:border-t-0 md:px-2 md:py-24 md:shadow-grover-md lg:hidden"
       data-mobile-workspace-navigation
       ref={navigationRef}
     >

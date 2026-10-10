@@ -267,7 +267,7 @@ export function FirstOwnerOnboardingPanel({
   const nextMilestone = setupProgress ? firstOwnerNextMilestone(setupProgress) : null;
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
       {providerEntryMode ? (
         <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4" role="note">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-800">Provider entry path</p>

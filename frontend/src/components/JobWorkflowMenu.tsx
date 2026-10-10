@@ -71,7 +71,7 @@ export function JobWorkflowMenu({
           aria-selected={activeSection === item.id}
           className={`min-h-14 rounded-xl border px-2 py-2 text-center transition-colors ${
             activeSection === item.id
-              ? 'border-forest bg-forest text-white shadow-sm'
+              ? 'border-forest bg-forest text-white shadow-xs'
               : 'border-slate-200 bg-paper text-slate-700 hover:border-emerald-500 hover:bg-emerald-50'
           }`}
           key={item.id}

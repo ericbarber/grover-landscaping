@@ -375,7 +375,7 @@ export function OwnerInitialServiceProposalPanel({
             const activation = activations[proposal.proposalId];
             const activationOpen = activationTarget === proposal.proposalId;
             return (
-              <li className={`rounded-2xl border bg-white p-5 ${proposal.status === 'sent' ? 'border-emerald-300 shadow-sm' : 'border-slate-200'}`} key={proposal.proposalId}>
+              <li className={`rounded-2xl border bg-white p-5 ${proposal.status === 'sent' ? 'border-emerald-300 shadow-xs' : 'border-slate-200'}`} key={proposal.proposalId}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div><p className="text-xs font-black uppercase tracking-wide text-emerald-800">{providerFor(proposal)} · Version {proposal.proposalVersion}</p><h5 className="mt-1 text-lg font-black text-slate-950">{proposal.title}</h5><p className="mt-2 text-2xl font-black text-emerald-950">{proposalPriceLabel(proposal)}</p></div>
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-800">{statusCopy[proposal.status]}</span>

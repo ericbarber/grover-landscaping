@@ -66,3 +66,23 @@ summary but do not block this gate.
 
 Validation on 2026-08-29 proves all eight policy cases and the live zero-finding
 Node 22/npm 10 audit.
+
+## 2026-10-10 audit refresh
+
+The registry later classified the final Tailwind CSS 3 build chain as high
+severity because its `braces` dependency had no patched 3.x release. The same
+audit also identified patched `source-map-js` and Vitest releases. Keeping the
+existing major version could not satisfy the no-exception policy, so the
+official Tailwind upgrade tool migrated the frontend to Tailwind CSS 4.3.3 and
+the dedicated `@tailwindcss/postcss` plugin. Vitest moves to 4.1.11 and the
+lockfile resolves `source-map-js` 1.2.2.
+
+The migration retains the existing theme in CSS, updates renamed utilities,
+and removes the obsolete Autoprefixer and JavaScript Tailwind configuration.
+This adopts Tailwind 4's evergreen-browser baseline; the repository's current
+Chromium, Firefox, and mobile WebKit matrix remains the compatibility gate.
+
+Local validation reports zero npm vulnerabilities, passes TypeScript, all 524
+Vitest tests, and the production build. The local browser runner could not
+launch because this host lacks `libnspr4`; hosted Chromium/Firefox/WebKit CI is
+therefore required before merge and must not be inferred from the local build.

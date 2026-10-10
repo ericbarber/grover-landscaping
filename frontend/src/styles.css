@@ -1,124 +1,185 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-:root {
-  color-scheme: light;
-  --grover-forest: #0f2f28;
-  --grover-evergreen: #173f35;
-  --grover-evergreen-hover: #24594a;
-  --grover-bone: #f6f2e8;
-  --grover-paper: #fffdf8;
-  --grover-ink: #17342d;
-  --grover-slate: #5d6e67;
-  --grover-line: #d8ddd7;
-  --grover-sage: #8ea795;
-  --grover-sage-soft: #dce6de;
-  --grover-sand: #dec79d;
-  --grover-gold: #c99f55;
-  --grover-clay: #bd6848;
-  --grover-sky: #dce8eb;
-  --grover-focus: #1685a4;
-  --grover-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
-  --grover-sans: Inter, 'Segoe UI', Arial, ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, sans-serif;
-  font-family: var(--grover-sans);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+@theme {
+  --color-bone: #f6f2e8;
+  --color-paper: #fffdf8;
+  --color-ink: #17342d;
+  --color-forest: #0f2f28;
+  --color-sand: #dec79d;
+  --color-clay: #bd6848;
+  --color-sky: #dce8eb;
+
+  --color-slate-50: #f8f7f2;
+  --color-slate-100: #eef3ef;
+  --color-slate-200: #d8ddd7;
+  --color-slate-300: #b8c7c0;
+  --color-slate-400: #8ea795;
+  --color-slate-500: #6f8179;
+  --color-slate-600: #5d6e67;
+  --color-slate-700: #40584f;
+  --color-slate-800: #29443b;
+  --color-slate-900: #17342d;
+  --color-slate-950: #0f2f28;
+
+  --color-emerald-50: #eef3ef;
+  --color-emerald-100: #dce6de;
+  --color-emerald-200: #c5d6cb;
+  --color-emerald-300: #a6bead;
+  --color-emerald-400: #8ea795;
+  --color-emerald-500: #467a68;
+  --color-emerald-600: #2d6654;
+  --color-emerald-700: #24594a;
+  --color-emerald-800: #173f35;
+  --color-emerald-900: #14372f;
+  --color-emerald-950: #0f2f28;
+
+  --font-sans: Inter, Segoe UI, Arial, ui-sans-serif, system-ui, sans-serif;
+  --font-display: Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif;
+
+  --shadow-grover-sm: 0 8px 24px rgb(15 47 40 / 8%);
+  --shadow-grover-md: 0 20px 52px rgb(15 47 40 / 14%);
+  --shadow-grover-lg: 0 30px 70px rgb(15 47 40 / 20%);
 }
 
-html {
-  min-width: 320px;
-  scroll-behavior: smooth;
-  scroll-padding-top: 5rem;
-  background: var(--grover-bone);
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100dvh;
-  overflow-x: hidden;
-  background: var(--grover-bone);
-  color: var(--grover-ink);
-  padding-right: env(safe-area-inset-right);
-  padding-left: env(safe-area-inset-left);
+@utility grover-brand {
+  @apply inline-flex min-h-11 items-center gap-3 font-sans text-sm font-black uppercase tracking-[0.18em] no-underline;
 }
 
-.authenticated-workspace-shell {
-  padding-bottom: calc(var(--grover-mobile-workspace-nav-height, 5rem) + 1rem);
+@utility grover-brand-mark {
+  @apply h-8 w-8 shrink-0 fill-none stroke-current;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.6;
 }
 
-@media (min-width: 768px) {
+@utility grover-eyebrow {
+  @apply text-[0.7rem] font-black uppercase tracking-[0.18em] text-emerald-700;
+}
+
+@utility grover-display {
+  @apply font-display font-bold text-ink;
+  letter-spacing: -0.035em;
+}
+
+@utility grover-type-operational {
+  @apply font-sans;
+}
+
+@utility grover-card {
+  @apply rounded-2xl border border-slate-200 bg-paper shadow-grover-sm;
+}
+
+@utility grover-button-primary {
+  @apply inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-800 bg-emerald-800 px-5 py-3 text-sm font-extrabold text-white shadow-grover-sm transition hover:border-emerald-700 hover:bg-emerald-700;
+}
+
+@utility grover-button-secondary {
+  @apply inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-paper px-5 py-3 text-sm font-extrabold text-emerald-800 transition hover:border-emerald-700 hover:bg-emerald-50;
+}
+
+@layer utilities {
+  :root {
+    color-scheme: light;
+    --grover-forest: #0f2f28;
+    --grover-evergreen: #173f35;
+    --grover-evergreen-hover: #24594a;
+    --grover-bone: #f6f2e8;
+    --grover-paper: #fffdf8;
+    --grover-ink: #17342d;
+    --grover-slate: #5d6e67;
+    --grover-line: #d8ddd7;
+    --grover-sage: #8ea795;
+    --grover-sage-soft: #dce6de;
+    --grover-sand: #dec79d;
+    --grover-gold: #c99f55;
+    --grover-clay: #bd6848;
+    --grover-sky: #dce8eb;
+    --grover-focus: #1685a4;
+    --grover-display:
+      'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    --grover-sans:
+      Inter, 'Segoe UI', Arial, ui-sans-serif, system-ui, -apple-system,
+      BlinkMacSystemFont, sans-serif;
+    font-family: var(--grover-sans);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  html {
+    min-width: 320px;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+    background: var(--grover-bone);
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    background: var(--grover-bone);
+    color: var(--grover-ink);
+    padding-right: env(safe-area-inset-right);
+    padding-left: env(safe-area-inset-left);
+  }
+
   .authenticated-workspace-shell {
-    padding-bottom: 0;
-  }
-}
-
-button,
-input,
-select,
-textarea {
-  font-family: var(--grover-sans);
-}
-
-button {
-  cursor: pointer;
-  min-height: 44px;
-  touch-action: manipulation;
-}
-
-input,
-select,
-textarea {
-  max-width: 100%;
-}
-
-:focus-visible {
-  outline: 3px solid var(--grover-focus);
-  outline-offset: 3px;
-}
-
-::selection {
-  background: var(--grover-sand);
-  color: var(--grover-forest);
-}
-
-@layer components {
-  .grover-brand {
-    @apply inline-flex min-h-11 items-center gap-3 font-sans text-sm font-black uppercase tracking-[0.18em] no-underline;
+    padding-bottom: calc(
+      var(--grover-mobile-workspace-nav-height, 5rem) + 1rem
+    );
   }
 
-  .grover-brand-mark {
-    @apply h-8 w-8 shrink-0 fill-none stroke-current;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 2.6;
+  @media (min-width: 768px) {
+    .authenticated-workspace-shell {
+      padding-bottom: 0;
+    }
   }
 
-  .grover-eyebrow {
-    @apply text-[0.7rem] font-black uppercase tracking-[0.18em] text-emerald-700;
+  button,
+  input,
+  select,
+  textarea {
+    font-family: var(--grover-sans);
   }
 
-  .grover-display {
-    @apply font-display font-bold text-ink;
-    letter-spacing: -0.035em;
+  button {
+    cursor: pointer;
+    min-height: 44px;
+    touch-action: manipulation;
   }
 
-  .grover-type-operational {
-    @apply font-sans;
+  input,
+  select,
+  textarea {
+    max-width: 100%;
   }
 
-  .grover-card {
-    @apply rounded-2xl border border-slate-200 bg-paper shadow-grover-sm;
+  :focus-visible {
+    outline: 3px solid var(--grover-focus);
+    outline-offset: 3px;
   }
 
-  .grover-button-primary {
-    @apply inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-800 bg-emerald-800 px-5 py-3 text-sm font-extrabold text-white shadow-grover-sm transition hover:border-emerald-700 hover:bg-emerald-700;
-  }
-
-  .grover-button-secondary {
-    @apply inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-paper px-5 py-3 text-sm font-extrabold text-emerald-800 transition hover:border-emerald-700 hover:bg-emerald-50;
+  ::selection {
+    background: var(--grover-sand);
+    color: var(--grover-forest);
   }
 }
 

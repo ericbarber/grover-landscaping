@@ -668,7 +668,7 @@ export function DayPlanPanel({
   ]);
 
   return (
-    <section className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <section className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5">
       <div className="order-1 flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
@@ -906,7 +906,7 @@ export function DayPlanPanel({
           </summary>
           <div className="mt-3 space-y-2">
             {amendmentRequests.map((request) => (
-              <article key={request.id} className="rounded-lg bg-white p-3 text-xs text-slate-600 shadow-sm">
+              <article key={request.id} className="rounded-lg bg-white p-3 text-xs text-slate-600 shadow-xs">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-slate-900">{dayPlanAmendmentTypeLabel(request.amendmentType)}</p>

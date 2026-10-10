@@ -36,10 +36,10 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
         className="absolute inset-0 h-full w-full object-cover object-center"
         src="/brand/grover-landscape-home-hero.webp"
       />
-      <span className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-emerald-950/30" />
-      <span className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-slate-950/40" />
-      <section className="relative grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950/55 text-white shadow-2xl shadow-slate-950/50 backdrop-blur-md lg:grid-cols-[1.15fr_0.85fr]">
-        <aside className="hidden min-h-[31rem] flex-col justify-between border-r border-white/10 p-10 text-left lg:flex">
+      <span className="absolute inset-0 bg-linear-to-r from-slate-950/95 via-slate-950/75 to-emerald-950/30" />
+      <span className="absolute inset-0 bg-linear-to-t from-slate-950/90 via-transparent to-slate-950/40" />
+      <section className="relative grid w-full max-w-5xl overflow-hidden rounded-4xl border border-white/15 bg-slate-950/55 text-white shadow-2xl shadow-slate-950/50 backdrop-blur-md lg:grid-cols-[1.15fr_0.85fr]">
+        <aside className="hidden min-h-124 flex-col justify-between border-r border-white/10 p-10 text-left lg:flex">
           <GroverBrand className="text-sand" />
           <div>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">
@@ -60,7 +60,7 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
             </div>
           </div>
         </aside>
-        <div className="flex min-h-[27rem] flex-col justify-center p-7 text-center sm:p-10">
+        <div className="flex min-h-108 flex-col justify-center p-7 text-center sm:p-10">
           <GroverBrand className="mb-7 justify-center text-sand lg:hidden" />
           {children}
         </div>
@@ -176,12 +176,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
           <span className="font-semibold text-white">{auth.displayName}</span>
           <span className="text-xs text-slate-400">{auth.roles.join(', ') || 'No assigned role'}</span>
           {auth.authMode === 'disabled' ? (
-            <span className="rounded bg-amber-300 px-2 py-0.5 text-xs font-bold text-amber-950">
+            <span className="rounded-sm bg-amber-300 px-2 py-0.5 text-xs font-bold text-amber-950">
               AUTH DISABLED
             </span>
           ) : null}
           {auth.authMode === 'local_review' ? (
-            <span className="rounded bg-sky-300 px-2 py-0.5 text-xs font-bold text-sky-950">
+            <span className="rounded-sm bg-sky-300 px-2 py-0.5 text-xs font-bold text-sky-950">
               LOCAL REVIEW ONLY
             </span>
           ) : null}
