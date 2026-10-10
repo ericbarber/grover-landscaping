@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { FIELD_APP_DISPLAY_NAME } from '../appIdentity';
 import {
   createDayPlanAmendment,
   fetchDayPlanAmendments,
@@ -698,7 +699,7 @@ export function DayPlanPanel({
             <WorkspaceStatusNotice
               className="mt-2"
               compact
-              detail="Keep Grover Field installed and open it regularly."
+              detail={`Keep ${FIELD_APP_DISPLAY_NAME} installed and open it regularly.`}
               title="Offline changes use browser-managed retention."
               tone="neutral"
             />

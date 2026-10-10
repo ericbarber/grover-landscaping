@@ -3652,7 +3652,7 @@ export function App() {
                 projectBids={customerProjectBids}
                 isLoadingProjectBids={isLoadingCustomerProjectBids}
                 hasProjectBidHistoryError={hasCustomerProjectBidHistoryError}
-                providerDisplayName="Grover Demo Landscaping"
+                providerDisplayName="Desert Bloom Landscaping"
               />
             ) : (
               <YardOwnerPortalPanel

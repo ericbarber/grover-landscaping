@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import type { MarketingPersonaId } from '../domain/marketingRoute';
 import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
 import type { MarketingPersona } from '../api/marketingLeadsClient';
@@ -104,7 +105,7 @@ const tourContentByPersona: Record<MarketingPersonaId, PersonaTourContent> = {
   'property-manager': {
     eyebrow: 'Portfolio care in context',
     title: 'Move from portfolio readiness to owner-ready reporting.',
-    description: 'See how Grover helps you prioritize addresses, monitor exceptions, and retain evidence for every property you represent.',
+    description: `See how ${APP_DISPLAY_NAME} helps you prioritize addresses, monitor exceptions, and retain evidence for every property you represent.`,
     steps: [
       {
         id: 'plan',

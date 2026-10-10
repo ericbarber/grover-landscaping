@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import { ApiRequestError, isApiErrorCode } from '../api/apiError';
 import {
   completeOwnerIntakeMediaUpload,
@@ -25,7 +26,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { ownerCareSetupResumeDestination } from '../domain/ownerAcquisitionRoute';
 import { OwnerProviderAssessmentPanel } from './OwnerProviderAssessmentPanel';
 import { OwnerProviderDisclosurePanel } from './OwnerProviderDisclosurePanel';
-import { GroverBrand } from './GroverBrand';
+import { ProductBrand } from './ProductBrand';
 
 type PropertyDraft = Omit<CreateOwnerPropertyInput, 'addressConfirmed' | 'authorityAttested'>;
 type YardBriefDraft = Omit<SaveOwnerYardBriefInput, 'status'>;
@@ -572,8 +573,8 @@ export function YardOwnerAcquisitionPage() {
       <header className="relative overflow-hidden bg-emerald-950 text-white">
         <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_80%_10%,#fbbf24,transparent_35%)]" />
         <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <a aria-label="Grover home" className="rounded-lg text-sand focus:outline-hidden focus:ring-2 focus:ring-sky" href="/">
-            <GroverBrand />
+          <a aria-label={`${APP_DISPLAY_NAME} home`} className="rounded-lg text-sand focus:outline-hidden focus:ring-2 focus:ring-sky" href="/">
+            <ProductBrand />
           </a>
           <a className="rounded-lg px-3 py-2 text-sm font-bold text-emerald-100 hover:bg-white/10 hover:text-white" href="/app">
             My workspace
@@ -688,7 +689,7 @@ export function YardOwnerAcquisitionPage() {
               {activeStep === 1 && showPropertyForm ? (
                 <form className="mt-7 border-t border-slate-200 pt-7" onSubmit={(event) => void submitProperty(event)}>
                   <h3 className="text-xl font-black">Add a property</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">Use the service address. Grover will not publish it or share it with a provider at this step.</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">Use the service address. {APP_DISPLAY_NAME} will not publish it or share it with a provider at this step.</p>
                   <div className="mt-5 grid gap-5 sm:grid-cols-2">
                     <Field className="sm:col-span-2" id={inputId('property-name')} label="Property nickname" onChange={(value) => setProperty((current) => ({ ...current, displayName: value }))} required value={property.displayName} />
                     <Field autoComplete="address-line1" className="sm:col-span-2" id={inputId('address-1')} label="Street address" onChange={(value) => changeAddressField('addressLine1', value)} required value={property.addressLine1} />
@@ -847,7 +848,7 @@ export function YardOwnerAcquisitionPage() {
                                           </p>
                                         ) : media.status === 'processing' ? (
                                           <p className="mt-3 text-xs leading-5 text-slate-600">
-                                            Grover is checking the image and preparing a private preview. It is not
+                                            {APP_DISPLAY_NAME} is checking the image and preparing a private preview. It is not
                                             available for sharing.
                                           </p>
                                         ) : media.status === 'rejected' ? (

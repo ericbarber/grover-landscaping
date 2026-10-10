@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import { isApiErrorCode } from '../api/apiError';
 import {
   acceptOrganizationInvitation,
@@ -35,7 +36,7 @@ export function OrganizationInvitationAcceptancePage({ token }: { token: string 
     <main className="flex min-h-[calc(100vh-41px)] items-center justify-center bg-slate-100 px-4 py-10">
       <section className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
-          Grover Landscaping
+          {APP_DISPLAY_NAME}
         </p>
         <h1 className="mt-2 text-2xl font-bold text-slate-950">Organization invitation</h1>
         {accepted ? (

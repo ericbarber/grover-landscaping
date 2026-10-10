@@ -4,7 +4,7 @@ import {
   OWNER_CARE_SETUP_RESUME_PATH,
 } from '../domain/ownerAcquisitionRoute';
 import type { MobileWorkspaceView } from './MobileWorkspaceShell';
-import { GroverBrand } from './GroverBrand';
+import { ProductBrand } from './ProductBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
 
@@ -260,7 +260,7 @@ export function WorkspaceHomePanel({
         <span className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-slate-950/80 to-transparent" />
         <div className="relative flex min-h-66 flex-col">
           <div className="flex items-center justify-between gap-3">
-            <GroverBrand className="text-sand" />
+            <ProductBrand className="text-sand" />
             <p className="rounded-lg border border-white/15 bg-slate-950/30 px-2.5 py-1 text-xs font-semibold text-slate-100 backdrop-blur-xs">
               {now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
             </p>

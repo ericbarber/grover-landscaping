@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { WorkspacePersona, WorkspacePersonaId } from '../domain/workspacePersona';
-import { GroverBrand } from './GroverBrand';
+import { ProductBrand } from './ProductBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
 
 export type MobileWorkspaceView = 'home' | 'route' | 'jobs' | 'job' | 'manager' | 'customer';
@@ -204,7 +204,7 @@ export function DesktopWorkspaceNavigation({
 }: DesktopWorkspaceNavigationProps) {
   return (
     <aside className={`fixed bottom-0 left-0 z-30 hidden w-60 flex-col bg-forest px-5 py-8 text-white shadow-grover-md lg:flex ${hasEnvironmentBanner ? 'top-13' : 'top-0'}`}>
-      <GroverBrand className="text-sand" />
+      <ProductBrand className="text-sand" />
       <p className="mt-5 text-[0.68rem] font-black uppercase tracking-[0.16em] text-emerald-200">
         {personaLabel}
       </p>

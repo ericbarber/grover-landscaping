@@ -1,6 +1,7 @@
 pub mod access_audit;
 pub mod access_control;
 pub mod accounts;
+pub mod application_identity;
 pub mod auth;
 pub mod completion_reports;
 pub mod customer_portal_access;

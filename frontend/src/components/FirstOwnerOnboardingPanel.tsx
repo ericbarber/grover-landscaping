@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import { isApiErrorCode } from '../api/apiError';
 import {
   bootstrapOrganization,
@@ -276,7 +277,7 @@ export function FirstOwnerOnboardingPanel({
           </h2>
           <p className="mt-1 text-sm leading-6 text-emerald-900">
             {providerEntryMode === 'owner-operator'
-              ? 'Grover still creates a provider organization of one. Combined owner and field responsibilities do not bypass organization-scoped access.'
+              ? `${APP_DISPLAY_NAME} still creates a provider organization of one. Combined owner and field responsibilities do not bypass organization-scoped access.`
               : 'Create or continue one landscaping provider organization, then add crews and team roles through explicit invitations.'}
           </p>
           <p className="mt-2 text-xs font-bold text-emerald-800">This entry choice is guidance only. Signed-in claims and active memberships remain authoritative.</p>
@@ -329,7 +330,7 @@ export function FirstOwnerOnboardingPanel({
               <input
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
                 onChange={(event) => setOrganizationName(event.target.value)}
-                placeholder="Grover Landscaping"
+                placeholder="Desert Bloom Landscaping"
                 value={organizationName}
               />
             </label>
