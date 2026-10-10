@@ -4,6 +4,10 @@ Status: prepared task script; no participant sessions or comparison results.
 This protocol belongs to the independent Yardfolio Study track. Earlier study
 guides are method inputs, not observations or an approved design. Use the
 [session notes template](SESSION_NOTES_TEMPLATE.md) for each anonymous session.
+The first round is now fixed in
+[ROUND_1_PLAN.md](ROUND_1_PLAN.md): Yard Owner task `MG-Y1`, beginning at the
+`open_customer_decision` checkpoint with a separately prepared
+`delivered_outcome` proof follow-up.
 
 ## Questions this round must answer
 
@@ -72,7 +76,7 @@ proposed concepts, but do not score them as comparative task completion.
 | --- | --- | --- | --- |
 | MG-P1 | Yard Owner visitor: “You want to know what happens before and after a yard visit. Show where you would start, and tell me what service you expect to find.” | Owner path; known-provider connection versus open marketplace; what is private before sharing. | Entry comprehension can run now; claim approval remains MG-D1/D2. |
 | MG-P2 | Provider visitor: “Your company already works with a customer. Show where you would start to coordinate the office and field, and tell me what Yardfolio would do with billing.” | Provider path; scheduling/field/proof capabilities; no assumed invoice or payment. | Entry and claim comprehension can run now. |
-| MG-Y1 | Yard Owner: “Find the service that needs your decision. Explain the scope, total, what your choice does, and who acts next. Later, show what proves the work was delivered.” | Current proposal v3 and $420; acceptance requests planning, not scheduling or charging; only manager-reviewed delivered proof is customer-visible. | Open-decision and delivered checkpoints are selectable; instantiate and record the task checkpoint before scoring. |
+| MG-Y1 | Yard Owner: “Find the service that needs your decision. Explain the scope, total, what your choice does, and who acts next. Later, show what proves the work was delivered.” | Current proposal v3 and $420; acceptance requests planning, not scheduling or charging; only manager-reviewed delivered proof is customer-visible. | Selected for Round 1. Use a fresh open-decision manifest first and a separate delivered-outcome manifest for the proof follow-up; participant observation remains open. |
 | MG-PM1 | Property Manager: “One of your properties needs an access answer. Find it, respond with what you know, and explain who can restart the affected work.” | Exact authorized property/request; guidance versus verification; Company Manager owns field instruction; no gate secret or provider-private route. | Two-property delegation/proof is verified; provider question handoff remains prototype-only. |
 | MG-O1 | Company Owner: “A customer commitment is at risk. Find who owns the response and tell me whether you need to edit today's route.” | Business impact; named accountable manager; assignment is not route release. | Linked assigned exceptions are selectable; participant observation remains. |
 | MG-M1 | Company Manager: “Find the accepted service and decide what must happen before work is released. A field access question then arrives; show who verifies it and what can be sent back.” | Accepted scope, draft/released state, crew fit, exact version; field question held for verification; no silent plan change. | Accepted/route/exception checkpoints are selectable; Plan 8/9 and crew-origin handoff are prototype comprehension only. |

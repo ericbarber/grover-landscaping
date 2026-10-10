@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-10-10: Selected Yard Owner task `MG-Y1` for the first participant round.
+  The fixed plan starts with a fresh `open_customer_decision` manifest and uses
+  a separate `delivered_outcome` manifest for the proof follow-up, counterbalances
+  current/prototype and Canyon/Sage order across two Yard Owners, stops before
+  mutation, and requires a zero-proven reset after every current-app condition.
+  No participant observation is claimed. The feature branch was published, but
+  no pull request was opened after a merge simulation against materially
+  diverged `main` reported real conflicts requiring bounded integration.
 - 2026-10-10: Connected the signed-in Yard Owner home to the existing care
   setup journey. Owners without portal access now see care setup as the
   recommended next step and notice action while retaining My yard; active

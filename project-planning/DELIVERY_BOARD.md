@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-outcome/session chain are implemented and live-verified through full cycles, exact checkpoint receipts, isolated frontend entry, seeded owner-to-proposal navigation, and consolidated cleanup | First value, delegation, public-hero, search/share, field commands, and repeatable Canyon/Sage proposal-to-proof fixtures pass repository and local live gates; deployed-origin evidence remains gated | Select and instantiate the participant task checkpoint; keep exact reset green |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-outcome/session chain are implemented and live-verified through full cycles, exact checkpoint receipts, isolated frontend entry, seeded owner-to-proposal navigation, and consolidated cleanup | First value, delegation, public-hero, search/share, field commands, and repeatable Canyon/Sage proposal-to-proof fixtures pass repository and local live gates; MG-Y1/open-decision is selected for Round 1 | Recruit the first two Yard Owners, instantiate each condition immediately before use, and keep exact reset green |
 | Design review | B9 study materials and live provider-to-outcome fixtures are ready; participant evidence is incomplete | Ten persona profiles, responsive public-to-workspace preview, matched comprehension tasks, and repeatable two-owner live records cover supported task moments | Conduct participant sessions and synthesize findings before B2 expansion |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
@@ -142,8 +142,9 @@ Validation:
 
 State: repository preparation, three local live provider-to-outcome seed/reset
 cycles, checkpoint selection, and isolated frontend normal entry delivered;
-ordered matched-checkpoint receipts now fail closed. Task selection, session
-instantiation, and participant sessions remain. A consolidated command now
+ordered matched-checkpoint receipts now fail closed. Round 1 selects Yard Owner
+task `MG-Y1`, with open decision first and delivered proof separately. Session
+instantiation and participant sessions remain. A consolidated command now
 coordinates prepare, runtime re-verification, and exact reset for the selected
 manifest and passed a live 2026-10-10 rehearsal.
 
@@ -214,8 +215,9 @@ Delivered preparation:
 
 Remaining gate:
 
-- Prepare independent copies for task moments that cannot coexist in one
-  forward-only lifecycle, then conduct the counterbalanced sessions. Keep the
+- Recruit two first-wave Yard Owners, prepare independent copies for the
+  selected open-decision and delivered-outcome moments, then conduct the
+  counterbalanced sessions. Keep the
   unsupported Crew Lead-originated access handoff, Plan 8/9 semantics, and
   real-image proof quality non-comparable. No participant observation is claimed.
 

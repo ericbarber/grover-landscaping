@@ -104,8 +104,11 @@ normal-entry gate passed with the fixed Canyon owner selected. Ordered matched
 checkpoint receipts now reject incomplete session state, and a live
 open-decision receipt/reset passed. A consolidated session command now sequences
 prepare, runtime/receipt verification, and zero-proven reset; its first live
-rehearsal passed on 2026-10-10. Next select and instantiate the participant task
-checkpoint and run the comparison.
+rehearsal passed on 2026-10-10. Round 1 now selects Yard Owner task `MG-Y1`,
+using a fresh `open_customer_decision` manifest and a separately prepared
+`delivered_outcome` proof follow-up. Next recruit the two first-wave Yard Owners,
+instantiate a fresh manifest immediately before each current-app condition, and
+run the counterbalanced comparison.
 The [isolated seed contract](fixtures/SEED_CONTRACT.md) now fixes the target
 database boundary, transition order, reset ownership, and acceptance checks.
 The [local study database](fixtures/LOCAL_STUDY_ENV.md) has 127 successful

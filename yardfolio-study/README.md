@@ -26,6 +26,7 @@ is available at `/yardfolio-study/`. It is served separately from `/design/`.
 | [Isolated seed contract](fixtures/SEED_CONTRACT.md) | Transition order, reset ownership, and date/role gates for matched records | Implemented; participant evidence remains |
 | [Local study environment](fixtures/LOCAL_STUDY_ENV.md) | Separate database, API, and migration baseline | Three full-lifecycle cycles reset to zero on this host |
 | [Formative session protocol](research/SESSION_PROTOCOL.md) and [notes template](research/SESSION_NOTES_TEMPLATE.md) | Neutral public and five-role tasks, comparison eligibility, and evidence capture | Prepared; no participant sessions |
+| [Round 1 Yard Owner plan](research/ROUND_1_PLAN.md) | Fixed MG-Y1 decision/proof checkpoints, counterbalancing, and reset procedure | Selected and technically rehearsed; two participant sessions remain |
 | [Service handoff prototype](prototype/README.md) | M2 customer, manager, field, office, proof, outcome, portfolio, and owner task moments | Interactive concept; no real write or participant result |
 | [Critical workflow review](review/application-workflow-critical-review-2026-09-16.md) | Evidence, design risks, and proposed rework | Expert/local-browser review; no participant results |
 | [Experience blueprint](review/application-experience-blueprint.md) | First-pass cross-role service and handoff map | Hypothesis for testing |

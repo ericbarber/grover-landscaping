@@ -10,6 +10,11 @@ This is the short restart document. Execution order lives in
 - Resolve the current commit with `git log -1 --oneline`; do not pin a stale hash
   here.
 - Phase 6B8 is published and the latest main-branch CI gate passes.
+- `codex-review-feature` is published through the current HEAD. It has no pull
+  request: current remote `main` materially diverged from its old merge base,
+  and a merge simulation reported application, infrastructure, and planning
+  conflicts. Build a bounded integration branch; do not open the full branch as
+  a knowingly unmergeable PR or rewrite its published history.
 - Private review is available at `http://100.88.21.105:5173/` through Tailscale.
 - The private-review API reports PostgreSQL readiness and intentionally uses
   `AUTH_MODE=local_review`; it is not production evidence.
@@ -82,10 +87,11 @@ been activated and keeps setup reachable afterward. The checkpoint-gated
 mobile rehearsal resumed Canyon's single ready property directly to proposal
 v3/$420 from normal `/app` entry, made no decision, revalidated the receipt,
 and reset to zero. Multiple-property owners still choose the property.
-Selecting and
-instantiating the participant task plus participant
-observation are the remaining B9 gates; real-image quality and unsupported
-handoffs are not claimed.
+Round 1 now selects Yard Owner task `MG-Y1`: open decision first, then a
+separately prepared delivered-proof follow-up. Recruiting the two first-wave
+Yard Owners, instantiating each current-app condition immediately before use,
+and collecting participant observations are the remaining B9 gates; real-image
+quality and unsupported handoffs are not claimed.
 The repository package, database, and infrastructure scopes pass in this shell.
 Release-preflight tests inject a deterministic Terraform double, and the
 protected-release evidence validator exports its pure contract so tests no
