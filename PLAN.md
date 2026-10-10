@@ -63,7 +63,7 @@ persistence outages, and reports bounded stage telemetry. Customer-controlled
 Property Manager delegation now adds owner invitation/revocation, verified-email
 recipient acceptance, exact-property membership and portal grants, immediate
 fail-closed removal, minimized pre-acceptance reads, and an audit trail. The
-complete gate passes 151 frontend files / 626 tests, TypeScript, the production
+complete gate passes 151 frontend files / 628 tests, TypeScript, the production
 build, strict Clippy, and the 433-test backend command. The Compose-backed run
 also completed live PostgreSQL tests, migrations, and both Terraform environment
 validations. Browser acceptance now passes 86 journeys with 2 intentional skips

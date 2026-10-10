@@ -103,7 +103,7 @@ Validation:
 - The complete 433-test backend command passes, including the live Compose-backed
   PostgreSQL concurrency, recipient binding, exact scope, portal visibility,
   revocation, and audit branches.
-- The complete frontend suite passes 151 files / 626 tests, TypeScript, and the
+- The complete frontend suite passes 151 files / 628 tests, TypeScript, and the
   production build; strict Clippy also passes.
 - Owner and recipient Playwright journeys are implemented; stable execution is
   pending a fresh browser web-server process.

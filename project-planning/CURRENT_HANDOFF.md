@@ -29,7 +29,7 @@ B8, and the repository-owned B9 preparation are published on
 company first-value path, attribution continuity, fail-closed membership selection, and
 bounded setup telemetry. B3 adds customer-issued, verified-email, one-property
 Property Manager invitation, acceptance, revocation, exact portal scope, and
-audit. The combined gate passes 151 frontend files / 626 tests, TypeScript,
+audit. The combined gate passes 151 frontend files / 628 tests, TypeScript,
 production build, strict Clippy, and the 433-test backend command. The latest
 Compose-backed run also completed the live PostgreSQL branches and migrations.
 B7 adds a versioned measured artifact baseline, stable chunk limits, browser
