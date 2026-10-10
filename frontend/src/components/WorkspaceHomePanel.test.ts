@@ -161,6 +161,9 @@ describe('workspace home actions', () => {
     expect(markup).toContain('Status unverified');
     expect(markup).toContain('href="/app/yard-owner"');
     expect(markup).toContain('Continue care setup');
+    expect(markup).toContain('Continue property and provider setup');
+    expect(markup).toContain('Open care setup');
+    expect(markup).not.toContain('Open My yard');
     expect(markup.indexOf('Continue care setup')).toBeLessThan(markup.indexOf('My yard'));
     expect(markup).not.toContain('You’re clear for now');
   });

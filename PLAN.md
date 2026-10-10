@@ -135,8 +135,9 @@ failure.
 
 The signed-in Yard Owner home now keeps property/provider setup reachable. When
 portal access is not active, it recommends continuing care setup instead of
-leading with a protected portal read; owners with active access retain a
-secondary setup path for another property or provider connection. A
+leading with a protected portal read, and its access notice points to the same
+recovery path; owners with active access retain a secondary setup path for
+another property or provider connection. A
 checkpoint-gated mobile browser contract starts at `/app`, selects Canyon,
 follows that handoff through the ready brief and care connection, and verifies
 the one current proposal at version 3 and $420. The live rehearsal made no

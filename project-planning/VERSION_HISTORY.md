@@ -2,8 +2,9 @@
 
 - 2026-10-10: Connected the signed-in Yard Owner home to the existing care
   setup journey. Owners without portal access now see care setup as the
-  recommended next step while retaining My yard; active owners keep setup as a
-  secondary path. A new fail-closed mobile browser contract began at `/app`,
+  recommended next step and notice action while retaining My yard; active
+  owners keep setup as a secondary path. A new fail-closed mobile browser
+  contract began at `/app`,
   selected Canyon, followed the ready brief and care connection, and verified
   the one current proposal at version 3 with a $420 fixed price. The rehearsal
   made no decision, revalidated its checkpoint, and reset to zero records and

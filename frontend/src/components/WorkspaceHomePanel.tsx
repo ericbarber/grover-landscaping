@@ -237,7 +237,14 @@ export function WorkspaceHomePanel({
             ? 'success'
             : 'info'}
       >
-        {alertAction ? (
+        {ownerSetupRecommended ? (
+          <a
+            className="inline-flex min-h-11 items-center rounded-lg border border-current/25 bg-white/70 px-3 py-2 text-xs font-black"
+            href={OWNER_ACQUISITION_PATH}
+          >
+            Open care setup
+          </a>
+        ) : alertAction ? (
           <button
             className="min-h-11 rounded-lg border border-current/25 bg-white/70 px-3 py-2 text-xs font-black"
             onClick={() => onOpen(alertAction.view)}

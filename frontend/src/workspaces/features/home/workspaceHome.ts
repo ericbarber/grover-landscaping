@@ -110,7 +110,7 @@ export function homeContinuityStatus(
   if (personaId === 'yard-owner' && portalReadState !== 'ready') {
     const states = {
       loading: ['Checking your visits', 'Your service summary will appear after account access is checked.'],
-      access_required: ['Customer portal access is not active', 'Review account access before relying on a visit summary.'],
+      access_required: ['Customer portal access is not active', 'Continue property and provider setup before relying on a visit summary.'],
       inconsistent: ['Yard access needs review', 'This property does not match the access on your account. Review account access before continuing.'],
       unavailable: ['Visits could not be loaded', 'Retry My yard when the service is available.'],
     } as const;
