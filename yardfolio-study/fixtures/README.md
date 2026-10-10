@@ -29,6 +29,46 @@ and transactional reset are implemented, repository-tested, and verified
 through three local live provider-to-outcome cycles. Participant sessions remain
 a separate human-evidence gate.
 
+## Preferred session workflow
+
+Use the session command for participant preparation instead of coordinating the
+three low-level tools by hand. It validates the checkpoint before any write,
+creates a new private manifest, seeds both records, and emits the exact
+checkpoint receipt only after they align.
+
+```bash
+PGDATABASE=yardfolio_study \
+YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8081 \
+YARDFOLIO_STUDY_SOURCE_COMMIT='<exact API commit>' \
+YARDFOLIO_STUDY_AS_OF=2026-10-10 \
+node yardfolio-study/fixtures/study-session.mjs prepare \
+  open_customer_decision \
+  .localdev/yardfolio-study/fixture-manifest-session.json
+```
+
+Immediately before observation, recheck the runtime and receipt:
+
+```bash
+YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8081 \
+node yardfolio-study/fixtures/study-session.mjs verify \
+  open_customer_decision \
+  .localdev/yardfolio-study/fixture-manifest-session.json
+```
+
+After the session—or after any partial seed that created records—reset through
+the same manifest. The command completes only after the transactional reset and
+empty-target preflight both pass.
+
+```bash
+PGDATABASE=yardfolio_study \
+YARDFOLIO_STUDY_API_URL=http://127.0.0.1:8081 \
+node yardfolio-study/fixtures/study-session.mjs reset \
+  .localdev/yardfolio-study/fixture-manifest-session.json
+```
+
+The lower-level commands below remain available for recovery and contract
+diagnosis. Never reuse a reset manifest or rewind a later checkpoint.
+
 ## Manifest contract
 
 [`fixture-manifest.example.json`](fixture-manifest.example.json) is a

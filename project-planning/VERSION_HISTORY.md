@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-10: Consolidated B9 session preparation into one tested command. It
+  requires an explicit supported checkpoint and new manifest, sequences target
+  preparation and two-record seeding, rechecks the live isolated runtime before
+  admitting an existing session, and pairs reset with a final empty-target
+  preflight. A live open-decision prepare/verify/reset rehearsal ended with zero
+  manifest records and namespace matches.
 - 2026-10-09: Made B9 session checkpoint admission auditable. Snapshot history
   must now form the exact forward lifecycle prefix, and a manifest becomes
   verified only when Canyon View and Sage Lane are aligned. The new receipt

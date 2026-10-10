@@ -102,8 +102,10 @@ checkpoint, and an open-decision checkpoint/reset passed live. A separate
 port-5174 frontend now validates and proxies the isolated API; its mobile
 normal-entry gate passed with the fixed Canyon owner selected. Ordered matched
 checkpoint receipts now reject incomplete session state, and a live
-open-decision receipt/reset passed. Next select and instantiate the participant
-task checkpoint and run the comparison.
+open-decision receipt/reset passed. A consolidated session command now sequences
+prepare, runtime/receipt verification, and zero-proven reset; its first live
+rehearsal passed on 2026-10-10. Next select and instantiate the participant task
+checkpoint and run the comparison.
 The [isolated seed contract](fixtures/SEED_CONTRACT.md) now fixes the target
 database boundary, transition order, reset ownership, and acceptance checks.
 The [local study database](fixtures/LOCAL_STUDY_ENV.md) has 127 successful

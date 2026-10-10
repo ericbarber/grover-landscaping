@@ -320,7 +320,9 @@ workflows are not product targets.
   selection. Ordered snapshot-prefix validation and an exact matched-checkpoint
   receipt prevent partial or later fixtures from entering a scored session; a
   second live open-decision receipt/reset passed. Participant evidence remains
-  open, and placeholder evidence does not claim image quality
+  open. A consolidated session command now sequences new-manifest preparation,
+  seeding, runtime/receipt re-verification, and zero-proven reset; its first
+  live rehearsal passed. Placeholder evidence does not claim image quality
 - Repository release-contract tests are self-contained in restricted shells:
   Terraform behavior is represented by an injected test double and protected
   release evidence is validated in-process without changing operator-facing

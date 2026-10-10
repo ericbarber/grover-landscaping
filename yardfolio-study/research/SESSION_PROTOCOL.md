@@ -35,6 +35,9 @@ conditions. The
 and reset gate. The frontend gate has passed locally, but a task is still
 **directional comprehension and navigation only** until its exact checkpoint
 is instantiated and recorded. Never count a prototype click as a backend write.
+Use the fixture README's `study-session.mjs prepare`, `verify`, and `reset`
+commands so the checkpoint choice, runtime recheck, and cleanup remain one
+fail-closed workflow.
 
 The Property Manager grant and delegation workflow implements the decided
 [MG-D6](../PRODUCT_DECISIONS.md) rule and two isolated grants/read scopes passed
