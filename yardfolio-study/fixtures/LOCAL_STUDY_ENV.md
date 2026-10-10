@@ -46,7 +46,7 @@ state and is not a durable service definition.
 | Separate API identity | Readiness reported `yardfolio-api`, PostgreSQL, and exact database `yardfolio_study`; fixture-mode startup accepted that binding. |
 | API reachability | `GET /auth/config` returned 200 and `local_review` at `127.0.0.1:8081`. |
 | Study frontend | The fail-closed launcher verified the database, mode, and six required comparison identities before serving port 5174. Mobile Chromium opened `/app`, selected the fixed Canyon owner, read readiness through same-origin `/study-api`, and observed no CORS error. |
-| Seeded owner entry | Mobile Chromium began at `/app`, selected Canyon, followed the workspace's care-setup recommendation, opened the ready brief and care connection, and found the one current proposal at version 3 with a $420 fixed price. The test made no decision; the receipt still matched afterward, and reset ended with zero manifest records and namespace matches. |
+| Seeded owner entry | Mobile Chromium began at `/app`, selected Canyon, followed the workspace's care-setup recommendation, resumed its single ready property directly at the care connection, and found the one current proposal at version 3 with a $420 fixed price. The test made no decision; the receipt still matched afterward, and reset ended with zero manifest records and namespace matches. |
 | Read-only fixture probe | The privacy-minimized probe verified the matched owner, delegated Property Manager, and Crew Lead counts without printing IDs, addresses, messages, or tokens. |
 
 These checks establish the isolated provider-to-outcome fixture path and its

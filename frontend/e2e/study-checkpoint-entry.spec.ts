@@ -22,12 +22,9 @@ test('reaches the current Canyon proposal from the normal owner workspace entry'
   await expect(reviewer).toHaveValue('property-owner-canyon');
 
   const continueSetup = page.getByRole('link', { name: /Continue care setup/ });
-  await expect(continueSetup).toHaveAttribute('href', '/app/yard-owner');
+  await expect(continueSetup).toHaveAttribute('href', '/app/yard-owner?resume=care');
   await continueSetup.click();
-  await expect(page).toHaveURL(/\/app\/yard-owner$/);
-
-  await page.getByRole('button', { name: 'Build or review yard brief' }).click();
-  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
+  await expect(page).toHaveURL(/\/app\/yard-owner\?resume=care$/);
   await expect(page.getByRole('heading', { name: 'Compare the exact offer before deciding' }))
     .toBeVisible();
 

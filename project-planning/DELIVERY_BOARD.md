@@ -40,7 +40,8 @@ Immediate order:
 3. Preserve the complete B9 seed/reset, checkpoint, and isolated frontend gates;
    do not strand one-time invitation tokens in a partial session fixture.
 4. Preserve the normal-entry Yard Owner handoff to care setup and its
-   checkpoint-gated proposal-v3 browser contract.
+   bounded one-property resume behavior and checkpoint-gated proposal-v3
+   browser contract.
 5. Run B9 matched participant sessions before expanding B2 service-thread
    production composition.
 6. Continue B4 protected hosting independently when external inputs arrive.

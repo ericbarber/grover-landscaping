@@ -159,7 +159,7 @@ describe('workspace home actions', () => {
     }));
     expect(markup).toContain('Customer portal access is not active');
     expect(markup).toContain('Status unverified');
-    expect(markup).toContain('href="/app/yard-owner"');
+    expect(markup).toContain('href="/app/yard-owner?resume=care"');
     expect(markup).toContain('Continue care setup');
     expect(markup).toContain('Continue property and provider setup');
     expect(markup).toContain('Open care setup');

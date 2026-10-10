@@ -137,10 +137,12 @@ The signed-in Yard Owner home now keeps property/provider setup reachable. When
 portal access is not active, it recommends continuing care setup instead of
 leading with a protected portal read, and its access notice points to the same
 recovery path; owners with active access retain a secondary setup path for
-another property or provider connection. A
+another property or provider connection. The recommended path resumes a single
+property at its incomplete brief or ready care connection; it still requires
+property selection when more than one home exists. A
 checkpoint-gated mobile browser contract starts at `/app`, selects Canyon,
-follows that handoff through the ready brief and care connection, and verifies
-the one current proposal at version 3 and $420. The live rehearsal made no
+follows that handoff directly to the ready care connection, and verifies the
+one current proposal at version 3 and $420. The live rehearsal made no
 decision, revalidated the checkpoint afterward, and reset to zero. It is
 technical evidence, not participant evidence.
 

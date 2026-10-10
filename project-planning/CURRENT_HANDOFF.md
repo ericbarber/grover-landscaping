@@ -79,8 +79,10 @@ open-decision seed/reset. A consolidated command now prepares, re-verifies, and
 resets one explicit session manifest; its 2026-10-10 live rehearsal also ended
 at zero. Yard Owner home now recommends care setup when portal access has not
 been activated and keeps setup reachable afterward. The checkpoint-gated
-mobile rehearsal reached Canyon proposal v3/$420 from normal `/app` entry,
-made no decision, revalidated the receipt, and reset to zero. Selecting and
+mobile rehearsal resumed Canyon's single ready property directly to proposal
+v3/$420 from normal `/app` entry, made no decision, revalidated the receipt,
+and reset to zero. Multiple-property owners still choose the property.
+Selecting and
 instantiating the participant task plus participant
 observation are the remaining B9 gates; real-image quality and unsupported
 handoffs are not claimed.

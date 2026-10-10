@@ -12,7 +12,10 @@ import {
 } from '../workspaces/features/home/workspaceHome';
 import type { CustomerPortalReadState } from '../workspaces/features/customer/customerWorkspace';
 import type { ManagerTodayQueueItem } from '../domain/managerTodayQueue';
-import { OWNER_ACQUISITION_PATH } from '../domain/ownerAcquisitionRoute';
+import {
+  OWNER_ACQUISITION_PATH,
+  OWNER_CARE_SETUP_RESUME_PATH,
+} from '../domain/ownerAcquisitionRoute';
 import { ProductBrand } from './ProductBrand';
 import { ManagerTodayQueue, type ManagerTodayQueueState } from './ManagerTodayQueue';
 import { WorkspaceIcon } from './WorkspaceIcon';
@@ -142,7 +145,7 @@ export function WorkspaceHomePanel({
       {ownerSetupRecommended ? (
         <a
           className="group flex min-h-24 w-full items-center justify-between gap-4 rounded-2xl bg-emerald-800 p-4 text-left text-white shadow-lg shadow-emerald-950/15 lg:col-span-4"
-          href={OWNER_ACQUISITION_PATH}
+          href={OWNER_CARE_SETUP_RESUME_PATH}
         >
           <span>
             <span className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-200">
@@ -240,7 +243,7 @@ export function WorkspaceHomePanel({
         {ownerSetupRecommended ? (
           <a
             className="inline-flex min-h-11 items-center rounded-lg border border-current/25 bg-white/70 px-3 py-2 text-xs font-black"
-            href={OWNER_ACQUISITION_PATH}
+            href={OWNER_CARE_SETUP_RESUME_PATH}
           >
             Open care setup
           </a>

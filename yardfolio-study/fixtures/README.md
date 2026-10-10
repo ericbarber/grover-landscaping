@@ -56,9 +56,9 @@ node yardfolio-study/fixtures/study-session.mjs verify \
 ```
 
 For the `open_customer_decision` checkpoint, the non-mutating browser contract
-also verifies the normal `/app` owner entry, setup handoff, exact current
-proposal version, and fixed total. Run it only while the isolated port-5174
-frontend is serving the prepared fixture:
+also verifies the normal `/app` owner entry, bounded single-property resume,
+exact current proposal version, and fixed total. Run it only while the isolated
+port-5174 frontend is serving the prepared fixture:
 
 ```bash
 cd frontend

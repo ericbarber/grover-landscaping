@@ -26,6 +26,7 @@ import { OwnerProviderAssessmentPanel } from './OwnerProviderAssessmentPanel';
 import { OwnerProviderDisclosurePanel } from './OwnerProviderDisclosurePanel';
 import { ProductBrand } from './ProductBrand';
 import { APP_DISPLAY_NAME } from '../appIdentity';
+import { ownerCareSetupResumeDestination } from '../domain/ownerAcquisitionRoute';
 
 type PropertyDraft = Omit<CreateOwnerPropertyInput, 'addressConfirmed' | 'authorityAttested'>;
 type YardBriefDraft = Omit<SaveOwnerYardBriefInput, 'status'>;
@@ -297,6 +298,7 @@ export function YardOwnerAcquisitionPage() {
       await progressPromise;
       setMediaFile(null);
       setReplacesMediaId(undefined);
+      return { yardBrief: loaded };
     } catch (loadError) {
       setError(errorMessage(loadError, 'Your private yard brief could not be loaded.'));
     } finally {
@@ -321,7 +323,17 @@ export function YardOwnerAcquisitionPage() {
       setProfileName(loadedWorkspace?.displayName ?? '');
       setShowPropertyForm(Boolean(loadedWorkspace) && loadedProperties.length === 0);
       setActiveStep(loadedWorkspace ? 1 : 0);
-      if (loadedProperties[0]) await loadSelectedProperty(loadedProperties[0].propertyId);
+      if (loadedProperties[0]) {
+        const selected = await loadSelectedProperty(loadedProperties[0].propertyId);
+        if (selected) {
+          const resumeDestination = ownerCareSetupResumeDestination(
+            window.location.search,
+            loadedProperties.length,
+            selected.yardBrief?.status,
+          );
+          if (resumeDestination) setActiveStep(resumeDestination === 'connect_care' ? 3 : 2);
+        }
+      }
     } catch (loadError) {
       setError(errorMessage(loadError, 'Your private yard setup could not be loaded.'));
     } finally {

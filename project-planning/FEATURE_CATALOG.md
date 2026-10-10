@@ -324,8 +324,10 @@ workflows are not product targets.
   seeding, runtime/receipt re-verification, and zero-proven reset; its first
   live rehearsal passed. Yard Owner home now recommends the existing care-setup
   journey when portal access is inactive and retains it as a secondary path
-  afterward. A checkpoint-gated mobile browser rehearsal proved normal entry
-  reaches the current Canyon proposal v3 and $420 fixed total without making a
+  afterward. One-property resume opens an incomplete brief or ready care
+  connection directly, while multiple properties still require a choice. A
+  checkpoint-gated mobile browser rehearsal proved normal entry reaches the
+  current Canyon proposal v3 and $420 fixed total without making a
   decision, then revalidated the receipt and reset to zero. Placeholder evidence
   does not claim image quality
 - Repository release-contract tests are self-contained in restricted shells:
