@@ -1,11 +1,15 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { workspacePersonasForRoles } from '../domain/workspacePersona';
 import {
   homeGreeting,
   homePriorityStatus,
+  ownerPortalContinuityStatus,
   personaHomeHeadline,
   personaHomePromise,
   personaProgressLanguage,
+  WorkspaceHomePanel,
   workspaceHomeActions,
 } from './WorkspaceHomePanel';
 
@@ -107,5 +111,48 @@ describe('workspace home actions', () => {
       itemSingular: 'visit',
       pendingChangeCount: 0,
     }).title).toBe('2 visits remaining');
+  });
+
+  it('withholds owner progress and recommends setup when portal access is inactive', () => {
+    expect(ownerPortalContinuityStatus('access_required')).toMatchObject({
+      title: 'Customer portal access is not active',
+      tone: 'attention',
+    });
+    const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
+      assignedJobCount: 0,
+      completedJobCount: 0,
+      hasSelectedJob: false,
+      hasWorkspaceRole: true,
+      onOpen: () => undefined,
+      pendingChangeCount: 0,
+      persona: workspacePersonasForRoles(['PropertyOwner'])[0],
+      portalReadState: 'access_required',
+      signedInName: 'Yard Owner',
+    }));
+
+    expect(markup).toContain('Customer portal access is not active');
+    expect(markup).toContain('Status unverified');
+    expect(markup).toContain('href="/app/yard-owner?resume=care"');
+    expect(markup).toContain('Continue care setup');
+    expect(markup.indexOf('Continue care setup')).toBeLessThan(markup.indexOf('My yard'));
+    expect(markup).not.toContain('You’re clear for now');
+  });
+
+  it('keeps property and provider setup reachable after portal access is active', () => {
+    const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
+      assignedJobCount: 2,
+      completedJobCount: 1,
+      hasSelectedJob: false,
+      hasWorkspaceRole: true,
+      onOpen: () => undefined,
+      pendingChangeCount: 0,
+      persona: workspacePersonasForRoles(['PropertyOwner'])[0],
+      portalReadState: 'ready',
+      signedInName: 'Yard Owner',
+    }));
+
+    expect(markup).toContain('href="/app/yard-owner"');
+    expect(markup).toContain('Set up or connect care');
+    expect(markup.indexOf('My yard')).toBeLessThan(markup.indexOf('Set up or connect care'));
   });
 });

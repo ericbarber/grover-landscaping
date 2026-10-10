@@ -3271,6 +3271,11 @@ export function App() {
                 + offlineRouteMutationCount
               }
               persona={activePersona}
+              portalReadState={activePersona.id !== 'yard-owner'
+                ? 'ready'
+                : isLoadingCustomerPortalVisits
+                  ? 'loading'
+                  : customerPortalVisitError ?? 'ready'}
               signedInName={auth.displayName || 'Signed-in user'}
             />
           </div>

@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
+| Repository | Repository-owned rollout UX complete; bounded Yard Owner setup continuity implemented on a branch based on current `main` | Owner Home no longer treats an unverified protected read as an empty schedule and can resume one-property care setup safely | Pull-request CI, then R2 hosted cohort evidence or the Dispatcher/Billing role decision |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |

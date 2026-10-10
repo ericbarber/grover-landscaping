@@ -11,7 +11,7 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | R3 production-smoke safety and persistence contract is delivered | Await R2 external access or the P2 product-boundary decision |
+| Repository | R3 production-smoke safety and persistence contract is delivered; the bounded Yard Owner care-setup continuity slice is implemented on a branch based on current `main` | Run pull-request CI for the owner slice, then await R2 external access or the P2 product-boundary decision |
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
@@ -121,7 +121,12 @@ Next design slices:
    device, Synced, Needs attention, and Read only; transport-source language is
    removed. Yard Owner loading, valid-empty, access-ended, inconsistent, and
    unavailable states withhold stale facts and provide retry/access recheck plus
-   Return Home without inventing provider-contact or support behavior.
+   Return Home without inventing provider-contact or support behavior. Yard
+   Owner Home now also withholds progress when the protected visit read is
+   unverified, recommends resumable property/provider setup when access is not
+   active, and keeps setup reachable after portal access succeeds. A one-property
+   setup resumes at its brief or care connection; multiple properties still
+   require an explicit choice.
 6. Typography roles: delivered. Editorial type is reserved for audience,
    place, service, and delivered-care moments. Authenticated task destinations,
    operational headings, loading/failure states, decisions, queues, and monetary

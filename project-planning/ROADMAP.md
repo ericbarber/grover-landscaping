@@ -83,9 +83,13 @@ past, upcoming, and invalid-date routes are read only, current routes retain
 their authorized field actions, and user confidence uses persistence meaning
 instead of API/browser transport names. Yard Owner protected-read recovery now
 adds explicit retry/access recheck and Home exits while withholding stale or
-illustrative facts. The shared typography-role boundary is also adopted across
-the authenticated surfaces: audience/place/service moments retain editorial
-type while tasks, states, queues, decisions, and values use interface type.
+illustrative facts. Home also routes inactive access to resumable
+property/provider setup without presenting an unverified empty schedule;
+active owners retain setup as a secondary path, and automatic resume is
+limited to one unambiguous property. The shared typography-role boundary is
+also adopted across the authenticated surfaces: audience/place/service moments
+retain editorial type while tasks, states, queues, decisions, and values use
+interface type.
 Repository-owned rollout UX is complete; hosted cohort evidence and the explicit
 Dispatcher/Billing backend role decision remain the next gates.
 Its hosted evidence remains external; Dispatcher and Billing Administrator also

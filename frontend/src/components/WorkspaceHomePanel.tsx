@@ -1,4 +1,8 @@
 import type { WorkspacePersona } from '../domain/workspacePersona';
+import {
+  OWNER_ACQUISITION_PATH,
+  OWNER_CARE_SETUP_RESUME_PATH,
+} from '../domain/ownerAcquisitionRoute';
 import type { MobileWorkspaceView } from './MobileWorkspaceShell';
 import { GroverBrand } from './GroverBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
@@ -138,6 +142,39 @@ export function homePriorityStatus({
   };
 }
 
+export type OwnerPortalReadState =
+  | 'loading'
+  | 'ready'
+  | 'access_required'
+  | 'inconsistent'
+  | 'unavailable';
+
+export function ownerPortalContinuityStatus(state: OwnerPortalReadState): {
+  title: string;
+  detail: string;
+  tone: 'attention' | 'ready';
+} | null {
+  if (state === 'ready') return null;
+  const states = {
+    loading: ['Checking your visits', 'Your service summary will appear after account access is checked.'],
+    access_required: [
+      'Customer portal access is not active',
+      'Continue property and provider setup before relying on a visit summary.',
+    ],
+    inconsistent: [
+      'Yard access needs review',
+      'This property does not match the access on your account. Review account access before continuing.',
+    ],
+    unavailable: ['Visits could not be loaded', 'Retry My yard when the service is available.'],
+  } as const;
+  const [title, detail] = states[state];
+  return {
+    title,
+    detail,
+    tone: state === 'loading' ? 'ready' : 'attention',
+  };
+}
+
 export function WorkspaceHomePanel({
   assignedJobCount,
   completedJobCount,
@@ -146,6 +183,7 @@ export function WorkspaceHomePanel({
   onOpen,
   pendingChangeCount,
   persona,
+  portalReadState = 'ready',
   signedInName,
 }: {
   assignedJobCount: number;
@@ -155,6 +193,7 @@ export function WorkspaceHomePanel({
   onOpen: (view: MobileWorkspaceView) => void;
   pendingChangeCount: number;
   persona: WorkspacePersona;
+  portalReadState?: OwnerPortalReadState;
   signedInName: string;
 }) {
   if (!hasWorkspaceRole) {
@@ -182,8 +221,15 @@ export function WorkspaceHomePanel({
   const actions = workspaceHomeActions(persona, hasSelectedJob);
   const primaryAction = actions[0];
   const secondaryActions = actions.slice(1);
+  const ownerSetupRecommended = persona.id === 'yard-owner'
+    && portalReadState === 'access_required';
+  const secondaryWorkspaceActions = ownerSetupRecommended ? actions : secondaryActions;
+  const ownerContinuityStatus = persona.id === 'yard-owner'
+    ? ownerPortalContinuityStatus(portalReadState)
+    : null;
+  const progressAvailable = ownerContinuityStatus === null;
   const now = new Date();
-  const progress = assignedJobCount > 0
+  const progress = progressAvailable && assignedJobCount > 0
     ? Math.min(100, Math.round((completedJobCount / assignedJobCount) * 100))
     : 0;
   const firstName = signedInName.split(/[\s@]/)[0] || signedInName;
@@ -195,6 +241,9 @@ export function WorkspaceHomePanel({
     itemSingular: progressLanguage.itemSingular,
     pendingChangeCount,
   });
+  const visibleStatus = pendingChangeCount > 0
+    ? priorityStatus
+    : ownerContinuityStatus ?? priorityStatus;
   const alertAction = pendingChangeCount > 0
     ? actions.find((action) => action.view === 'jobs') ?? primaryAction
     : primaryAction;
@@ -248,41 +297,60 @@ export function WorkspaceHomePanel({
               {progressLanguage.eyebrow}
             </p>
             <p className="mt-1 text-2xl font-black text-slate-950">
-              {completedJobCount} of {assignedJobCount}
+              {progressAvailable ? `${completedJobCount} of ${assignedJobCount}` : 'Not available'}
             </p>
-            <p className="mt-0.5 text-xs font-semibold text-slate-500">
-              {progressLanguage.completed}
-            </p>
+            {progressAvailable ? (
+              <p className="mt-0.5 text-xs font-semibold text-slate-500">
+                {progressLanguage.completed}
+              </p>
+            ) : null}
           </div>
-          <p className="text-lg font-black text-emerald-800">{progress}%</p>
+          {progressAvailable ? (
+            <p className="text-lg font-black text-emerald-800">{progress}%</p>
+          ) : null}
         </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-[width]"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+        {progressAvailable ? (
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-[width]"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        ) : null}
         <div className="mt-3 flex items-center justify-between text-xs">
           <span className="font-semibold text-slate-600">
-            {assignedJobCount} {progressLanguage.total}
+            {progressAvailable
+              ? `${assignedJobCount} ${progressLanguage.total}`
+              : 'Awaiting a verified read'}
           </span>
-          <WorkspaceStatusBadge tone={pendingChangeCount > 0 ? 'warning' : 'success'}>
-            {pendingChangeCount > 0 ? `${pendingChangeCount} waiting to sync` : 'Everything synced'}
+          <WorkspaceStatusBadge tone={pendingChangeCount > 0 || !progressAvailable ? 'warning' : 'success'}>
+            {pendingChangeCount > 0
+              ? `${pendingChangeCount} waiting to sync`
+              : !progressAvailable
+                ? 'Status unverified'
+                : persona.id === 'yard-owner' ? 'Visits loaded' : 'Everything synced'}
           </WorkspaceStatusBadge>
         </div>
       </article>
 
       <WorkspaceStatusNotice
         className="lg:col-span-4"
-        detail={priorityStatus.detail}
-        title={priorityStatus.title}
-        tone={priorityStatus.tone === 'attention'
+        detail={visibleStatus.detail}
+        title={visibleStatus.title}
+        tone={visibleStatus.tone === 'attention'
           ? 'warning'
-          : priorityStatus.tone === 'complete'
+          : visibleStatus.tone === 'complete'
             ? 'success'
             : 'info'}
       >
-        {alertAction ? (
+        {ownerSetupRecommended ? (
+          <a
+            className="inline-flex min-h-11 items-center rounded-lg border border-current/25 bg-white/70 px-3 py-2 text-xs font-black"
+            href={OWNER_CARE_SETUP_RESUME_PATH}
+          >
+            Open care setup
+          </a>
+        ) : alertAction ? (
           <button
             className="min-h-11 rounded-lg border border-current/25 bg-white/70 px-3 py-2 text-xs font-black"
             onClick={() => onOpen(alertAction.view)}
@@ -293,7 +361,28 @@ export function WorkspaceHomePanel({
         ) : null}
       </WorkspaceStatusNotice>
 
-      {primaryAction ? (
+      {ownerSetupRecommended ? (
+        <a
+          className="group flex min-h-24 w-full items-center justify-between gap-4 rounded-2xl bg-emerald-800 p-4 text-left text-white shadow-lg shadow-emerald-950/15 lg:col-span-4"
+          href={OWNER_CARE_SETUP_RESUME_PATH}
+        >
+          <span>
+            <span className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-200">
+              Recommended next
+            </span>
+            <span className="mt-1 block text-xl font-black">Continue care setup</span>
+            <span className="mt-1 block text-xs leading-5 text-emerald-100">
+              Review your property, provider connection, and any proposal waiting for you.
+            </span>
+          </span>
+          <span
+            aria-hidden="true"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/15 text-2xl transition-transform group-hover:translate-x-1"
+          >
+            <WorkspaceIcon className="size-6" name="forward" />
+          </span>
+        </a>
+      ) : primaryAction ? (
         <button
           className="group flex min-h-24 w-full items-center justify-between gap-4 rounded-2xl bg-emerald-800 p-4 text-left text-white shadow-lg shadow-emerald-950/15 lg:col-span-4"
           onClick={() => onOpen(primaryAction.view)}
@@ -317,13 +406,13 @@ export function WorkspaceHomePanel({
         </button>
       ) : null}
 
-      {secondaryActions.length > 0 ? (
+      {secondaryWorkspaceActions.length > 0 || persona.id === 'yard-owner' ? (
         <section className="grover-card p-4 lg:col-span-12">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
             Your workspace
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {secondaryActions.map((action) => (
+            {secondaryWorkspaceActions.map((action) => (
               <button
                 className="min-h-24 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left"
                 key={action.view}
@@ -337,6 +426,20 @@ export function WorkspaceHomePanel({
                 </span>
               </button>
             ))}
+            {!ownerSetupRecommended && persona.id === 'yard-owner' ? (
+              <a
+                className="min-h-24 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left"
+                href={OWNER_ACQUISITION_PATH}
+              >
+                <WorkspaceIcon className="size-5 text-emerald-800" name="forward" />
+                <span className="mt-2 block text-sm font-black text-slate-900">
+                  Set up or connect care
+                </span>
+                <span className="mt-1 line-clamp-2 block text-xs leading-4 text-slate-500">
+                  Add a property, prepare its care brief, or continue a provider connection.
+                </span>
+              </a>
+            ) : null}
           </div>
         </section>
       ) : null}

@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-10-10: Restored the Yard Owner path from signed-in Home to private care
+  setup on a bounded integration branch based on current `main`. Inactive
+  portal access now withholds unverified progress and recommends resumable
+  property/provider setup; active owners retain a secondary setup path. A
+  single saved property resumes at its draft brief or ready care connection,
+  while multiple properties continue to require an explicit choice. The full
+  frontend test, TypeScript, and production-build gates pass.
 - 2026-09-19: Codified and applied the authenticated typography-role boundary.
   Editorial type remains on audience, place, service, date, and delivered-care
   moments; Yard Owner and Property Manager destinations, field and manager task
