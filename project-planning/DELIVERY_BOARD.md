@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Repository-owned rollout UX, Yard Owner setup continuity, and decoupled application identity are merged to `main`; supported Node 24 Docker action majors are implemented on the active branch | Full hosted CI and the automatic Pi development deployment pass on the combined identity commit; local contracts reject the deprecated Docker action majors | Pull-request image-build validation, then R2 hosted evidence, the P2 product-boundary decision, or the Dispatcher/Billing role decision |
+| Repository | Repository-owned rollout UX, Yard Owner setup continuity, decoupled application identity, and supported Node 24 Docker image actions are delivered | Full hosted CI, production-image construction, and automatic Pi development activation pass; repository contracts reject the deprecated Docker action majors | R2 hosted evidence, the P2 product-boundary decision, or the Dispatcher/Billing role decision |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -72,7 +72,7 @@ Delivery evidence:
 
 ### F3 — Supported CI action runtimes
 
-State: in progress; hosted image-build validation remains.
+State: delivered.
 
 Deliver:
 
@@ -85,8 +85,9 @@ Deliver:
 Exit evidence:
 
 - Repository checks prove both image paths use `setup-buildx-action@v4` and
-  `build-push-action@v7`; pull-request CI builds the production image on the
-  new runtime before merge, and the next `main` run exercises Pi activation.
+  `build-push-action@v7`. Pull-request CI builds the production image on the
+  new runtime before merge, and the resulting `main` run exercises ARM64 image
+  construction and Pi activation.
 
 ### R1 — Release preflight contract
 
