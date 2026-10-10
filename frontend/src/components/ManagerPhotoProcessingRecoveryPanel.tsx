@@ -69,7 +69,7 @@ export function ManagerPhotoProcessingRecoveryPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Photo processing</p>
@@ -116,7 +116,7 @@ export function ManagerPhotoProcessingRecoveryPanel({
             <article key={item.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="break-words text-sm font-semibold text-slate-950">
+                  <p className="wrap-break-word text-sm font-semibold text-slate-950">
                     {taskLabel(item)} · {item.fileName}
                   </p>
                   <p className="mt-1 break-all text-xs text-slate-600">
@@ -133,12 +133,12 @@ export function ManagerPhotoProcessingRecoveryPanel({
                 <p>Next available: {formatDate(item.availableAt)}</p>
               </div>
               {item.lastError ? (
-                <p className="mt-2 break-words rounded-lg bg-white p-2 text-xs text-rose-700">
+                <p className="mt-2 wrap-break-word rounded-lg bg-white p-2 text-xs text-rose-700">
                   {item.lastError}
                 </p>
               ) : null}
               {item.resolutionNote ? (
-                <p className="mt-2 break-words rounded-lg bg-white p-2 text-xs text-emerald-700">
+                <p className="mt-2 wrap-break-word rounded-lg bg-white p-2 text-xs text-emerald-700">
                   {item.resolutionNote}
                 </p>
               ) : null}

@@ -98,7 +98,7 @@ export function MarketingLeadDialog({
     <div
       aria-labelledby="marketing-lead-title"
       aria-modal="true"
-      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 p-3 backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 p-3 backdrop-blur-xs sm:p-6"
       role="dialog"
     >
       <div className="mx-auto flex min-h-full max-w-4xl items-center justify-center">
@@ -130,7 +130,7 @@ export function MarketingLeadDialog({
           </aside>
 
           {status === 'success' || status === 'preview' ? (
-            <div className="flex min-h-[30rem] flex-col justify-center p-7 sm:p-10">
+            <div className="flex min-h-120 flex-col justify-center p-7 sm:p-10">
               <span aria-hidden="true" className="grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-2xl font-black text-emerald-800">✓</span>
               <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-emerald-700">
                 {status === 'success' ? 'Request received' : 'Local preview complete'}
@@ -197,7 +197,7 @@ export function MarketingLeadDialog({
                   <textarea className="mt-2 min-h-28 w-full rounded-xl border border-slate-300 px-3 py-3 font-normal text-slate-950" maxLength={2000} onChange={(event) => setMessage(event.target.value)} value={message} />
                 </label>
               </div>
-              <label className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+              <label className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
                 Website
                 <input autoComplete="off" onChange={(event) => setWebsite(event.target.value)} tabIndex={-1} value={website} />
               </label>

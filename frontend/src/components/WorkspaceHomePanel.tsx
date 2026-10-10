@@ -250,18 +250,18 @@ export function WorkspaceHomePanel({
 
   return (
     <section className="space-y-4 lg:grid lg:grid-cols-12 lg:gap-4 lg:space-y-0">
-      <article className="relative min-h-[19rem] overflow-hidden rounded-2xl bg-emerald-950 p-5 text-white shadow-grover-md lg:hidden">
+      <article className="relative min-h-76 overflow-hidden rounded-2xl bg-emerald-950 p-5 text-white shadow-grover-md lg:hidden">
         <img
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center"
           src="/brand/grover-landscape-home-hero.webp"
         />
-        <span className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-emerald-950/10" />
-        <span className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-slate-950/80 to-transparent" />
-        <div className="relative flex min-h-[16.5rem] flex-col">
+        <span className="absolute inset-0 bg-linear-to-r from-slate-950/95 via-slate-950/70 to-emerald-950/10" />
+        <span className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-slate-950/80 to-transparent" />
+        <div className="relative flex min-h-66 flex-col">
           <div className="flex items-center justify-between gap-3">
             <GroverBrand className="text-sand" />
-            <p className="rounded-lg border border-white/15 bg-slate-950/30 px-2.5 py-1 text-xs font-semibold text-slate-100 backdrop-blur-sm">
+            <p className="rounded-lg border border-white/15 bg-slate-950/30 px-2.5 py-1 text-xs font-semibold text-slate-100 backdrop-blur-xs">
               {now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
             </p>
           </div>
@@ -276,7 +276,7 @@ export function WorkspaceHomePanel({
               {personaHomePromise(persona)}
             </p>
             <div className="mt-4 flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-white">
-              <span className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1.5 backdrop-blur-sm">
+              <span className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1.5 backdrop-blur-xs">
                 {persona.label}
               </span>
               <span className="text-emerald-300" aria-hidden="true">•</span>
@@ -312,7 +312,7 @@ export function WorkspaceHomePanel({
         {progressAvailable ? (
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-[width]"
+              className="h-full rounded-full bg-linear-to-r from-emerald-600 to-emerald-400 transition-[width]"
               style={{ width: `${progress}%` }}
             />
           </div>

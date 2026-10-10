@@ -492,6 +492,12 @@ Current state:
   malformed metadata or audit-process errors; eight deterministic policy tests
   prove clean, moderate-only, high, critical, malformed, and unavailable paths.
   No advisory suppression or automatic major-version upgrade is introduced.
+- The 2026-10-10 audit refresh responds to new high-severity findings without
+  weakening that gate. Because no patched Tailwind 3 dependency chain exists,
+  the official migration moves the compiler to Tailwind CSS 4.3.3, adopts its
+  dedicated PostCSS plugin, updates Vitest to 4.1.11 and `source-map-js` to
+  1.2.2, and restores a zero-finding audit. TypeScript, all 524 tests, and the
+  production build pass locally; hosted cross-browser CI remains required.
 - Phase 6A15 closes the next authenticated mobile-navigation slice. Yard Owner
   Home progress now derives from protected visit data instead of provider field
   jobs, progress and remaining-work nouns follow the active persona, and every

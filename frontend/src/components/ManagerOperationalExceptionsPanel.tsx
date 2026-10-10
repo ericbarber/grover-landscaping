@@ -193,7 +193,7 @@ export function ManagerOperationalExceptionsPanel({
           ['Urgent', summary.urgent, 'High or critical'],
           ['Resolved today', summary.resolvedToday, 'Closed with history'],
         ].map(([label, value, detail]) => (
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" key={label}>
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs" key={label}>
             <p className="text-xs font-black uppercase tracking-wide text-slate-500">{label}</p>
             <p className="mt-2 text-3xl font-black text-forest">{value}</p>
             <p className="mt-1 text-xs font-semibold text-slate-500">{detail}</p>
@@ -201,7 +201,7 @@ export function ManagerOperationalExceptionsPanel({
         ))}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
         <div className="grid gap-2 sm:grid-cols-3">
           <select aria-label="Exception status" className="min-h-11 rounded-lg border border-slate-300 px-3 py-2" value={status} onChange={(event) => setStatus(event.target.value as typeof status)}><option value="all">All statuses</option><option value="open">Open</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option></select>
           <select aria-label="Exception category" className="min-h-11 rounded-lg border border-slate-300 px-3 py-2" value={category} onChange={(event) => setCategory(event.target.value as typeof category)}><option value="all">All categories</option>{categories.map((value) => <option key={value} value={value}>{exceptionLabel(value)}</option>)}</select>
@@ -214,7 +214,7 @@ export function ManagerOperationalExceptionsPanel({
       ) : null}
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <section aria-labelledby="exception-queue-heading" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section aria-labelledby="exception-queue-heading" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Exception queue</p>
@@ -232,7 +232,7 @@ export function ManagerOperationalExceptionsPanel({
             {items.map((item) => (
               <button
                 aria-pressed={selectedItem?.id === item.id}
-                className={`w-full rounded-xl border p-3 text-left ${selectedItem?.id === item.id ? 'border-emerald-700 bg-emerald-50 shadow-sm' : 'border-slate-200 bg-paper hover:border-emerald-400'}`}
+                className={`w-full rounded-xl border p-3 text-left ${selectedItem?.id === item.id ? 'border-emerald-700 bg-emerald-50 shadow-xs' : 'border-slate-200 bg-paper hover:border-emerald-400'}`}
                 key={item.id}
                 onClick={() => setSelectedId(item.id)}
                 type="button"
@@ -249,7 +249,7 @@ export function ManagerOperationalExceptionsPanel({
           <button className="mt-4 min-h-11 rounded-lg border border-slate-300 px-3 text-sm font-bold" disabled={loading} onClick={() => void load()} type="button">Refresh queue</button>
         </section>
 
-        <aside aria-labelledby="exception-detail-heading" className="scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" id="operational-exception-detail" tabIndex={-1}>
+        <aside aria-labelledby="exception-detail-heading" className="scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs" id="operational-exception-detail" tabIndex={-1}>
           <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Exception detail</p>
           <h3 className="mt-1 text-xl font-black text-slate-950" id="exception-detail-heading">
             {selectedItem?.title ?? 'Select recovery work'}
@@ -283,7 +283,7 @@ export function ManagerOperationalExceptionsPanel({
         </aside>
       </div>
 
-      <details className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <details className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
         <summary className="min-h-11 cursor-pointer font-black text-slate-900">Report an exception</summary>
         <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]"><input aria-label="Exception title" className="min-h-11 rounded-lg border border-slate-300 px-3 py-2" maxLength={120} placeholder="What needs attention?" value={title} onChange={(event) => setTitle(event.target.value)} /><select aria-label="New exception category" className="min-h-11 rounded-lg border border-slate-300 px-3 py-2" value={newCategory} onChange={(event) => setNewCategory(event.target.value as OperationalExceptionCategory)}>{categories.map((value) => <option key={value} value={value}>{exceptionLabel(value)}</option>)}</select><select aria-label="New exception priority" className="min-h-11 rounded-lg border border-slate-300 px-3 py-2" value={newPriority} onChange={(event) => setNewPriority(event.target.value as OperationalExceptionPriority)}>{priorities.map((value) => <option key={value} value={value}>{exceptionLabel(value)}</option>)}</select><button className="min-h-11 rounded-lg bg-emerald-700 px-4 font-bold text-white disabled:opacity-50" disabled={loading || !title.trim()} onClick={() => void createItem()} type="button">Create</button></div>
       </details>

@@ -162,7 +162,7 @@ export function MobileDiagnosticsPage() {
           Use these checks when the app will not load, sync, or install correctly on this phone.
         </p>
 
-        <dl className="mt-6 rounded-2xl bg-white px-5 shadow-sm">
+        <dl className="mt-6 rounded-2xl bg-white px-5 shadow-xs">
           <DiagnosticRow
             healthy={online}
             guidance="Reconnect Wi-Fi or cellular data, then confirm Tailscale is connected."

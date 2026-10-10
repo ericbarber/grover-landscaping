@@ -356,7 +356,7 @@ export function ManagerCustomerAccountOnboardingPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
       <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Customer onboarding</p>
       <h2 className="mt-1 text-xl font-bold text-slate-950">Customer accounts</h2>
       {!showCreateForm ? (
@@ -553,7 +553,7 @@ export function ManagerCustomerAccountOnboardingPanel({
                             {attention.reasons.map((reason) => (
                               <li key={reason}>
                                 <button
-                                  className="min-h-9 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900 transition hover:bg-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700"
+                                  className="min-h-9 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900 transition hover:bg-amber-200 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700"
                                   onClick={() => onOpenPropertyWorkspace?.(
                                     property.propertyId,
                                     propertyAttentionWorkspace(reason),
@@ -836,7 +836,7 @@ function AccountProgress({
       </ul>
       {!progress.customerDetailsReady ? (
         <button
-          className="mt-3 min-h-11 w-full rounded-lg bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-950 transition hover:bg-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700"
+          className="mt-3 min-h-11 w-full rounded-lg bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-950 transition hover:bg-amber-200 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700"
           onClick={onOpenCustomerDetails}
           type="button"
         >
@@ -846,7 +846,7 @@ function AccountProgress({
       ) : null}
       {progress.propertyCount === 0 ? (
         <button
-          className="mt-3 min-h-11 w-full rounded-lg bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-950 transition hover:bg-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700"
+          className="mt-3 min-h-11 w-full rounded-lg bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-950 transition hover:bg-amber-200 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700"
           onClick={onAddProperty}
           type="button"
         >

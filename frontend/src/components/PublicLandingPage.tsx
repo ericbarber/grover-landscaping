@@ -358,7 +358,7 @@ export function PublicLandingPage({
   return (
     <main className="min-h-screen overflow-x-hidden bg-bone text-ink">
       <header className="sticky inset-x-0 top-0 z-30 border-b border-slate-200 bg-paper/95 backdrop-blur-xl">
-        <nav className="mx-auto flex min-h-20 max-w-[86rem] items-center justify-between px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
+        <nav className="mx-auto flex min-h-20 max-w-344 items-center justify-between px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
           <a aria-label="Grover home" className="text-emerald-800" href="/">
             <GroverBrand />
           </a>
@@ -373,9 +373,9 @@ export function PublicLandingPage({
         </nav>
       </header>
 
-      <section className="grid bg-bone lg:h-[calc(100svh-5.0625rem)] lg:min-h-[39rem] lg:grid-cols-[1.02fr_0.98fr]">
+      <section className="grid bg-bone lg:h-[calc(100svh-5.0625rem)] lg:min-h-156 lg:grid-cols-[1.02fr_0.98fr]">
         <div className="flex items-center px-4 py-14 sm:px-8 sm:py-20 lg:min-h-0 lg:px-[max(2rem,calc((100vw-86rem)/2+2rem))] lg:py-2 xl:py-[clamp(1rem,3vh,3rem)]">
-          <div className="w-full max-w-[40rem]">
+          <div className="w-full max-w-160">
             <div aria-atomic="true" aria-live="polite" className="grid" data-testid="hero-persona-copy">
               {marketingPersonas.map((persona) => {
                 const isActive = persona.id === activePersona.id;
@@ -400,7 +400,7 @@ export function PublicLandingPage({
               })}
             </div>
             <div className="mt-8 lg:mt-3">
-              <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-slate-600">Show me Grover as a</p>
+              <p className="text-xs font-extrabold uppercase tracking-widest text-slate-600">Show me Grover as a</p>
               <div className="mt-3 flex flex-wrap gap-2 lg:mt-2" role="tablist" aria-label="Choose your perspective">
                 {marketingPersonas.map((persona) => (
                   <button
@@ -433,7 +433,7 @@ export function PublicLandingPage({
               <a className="grover-button-secondary" href="#tour">Explore your workflow</a>
             </div>
             <div aria-label="Direct signup options" className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-extrabold text-slate-600 lg:mt-0.5">
-              <span className="text-xs uppercase tracking-[0.1em] text-slate-500">Ready to start?</span>
+              <span className="text-xs uppercase tracking-widest text-slate-500">Ready to start?</span>
               {activePersona.id !== 'owner' ? (
                 <a className="min-h-11 content-center underline decoration-slate-300 underline-offset-4 hover:text-emerald-800" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
                   Sign up your yard
@@ -452,15 +452,15 @@ export function PublicLandingPage({
             </div>
           </div>
         </div>
-        <div className={`relative overflow-hidden bg-forest lg:min-h-0 lg:rounded-bl-[5rem] ${activePersona.id === 'company' ? 'min-h-[62rem]' : 'min-h-[31rem]'}`}>
+        <div className={`relative overflow-hidden bg-forest lg:min-h-0 lg:rounded-bl-[5rem] ${activePersona.id === 'company' ? 'min-h-248' : 'min-h-124'}`}>
           <img alt="Landscape care team working in a Southwestern garden at sunrise" className="absolute inset-0 h-full w-full object-cover object-center" src="/brand/grover-landscape-home-hero.webp" />
-          <span className="absolute inset-0 bg-gradient-to-t from-forest/35 via-transparent to-transparent" />
-          {activePersona.id === 'company' ? <MarketingOperationsPlanner /> : <article aria-live="polite" className="absolute bottom-5 left-4 right-4 rounded-[1.35rem] border border-white/60 bg-paper/95 p-5 text-ink shadow-grover-lg backdrop-blur sm:bottom-8 sm:left-auto sm:right-8 sm:w-[min(31rem,calc(100%-4rem))] sm:p-7 lg:bottom-14 lg:right-12">
+          <span className="absolute inset-0 bg-linear-to-t from-forest/35 via-transparent to-transparent" />
+          {activePersona.id === 'company' ? <MarketingOperationsPlanner /> : <article aria-live="polite" className="absolute bottom-5 left-4 right-4 rounded-[1.35rem] border border-white/60 bg-paper/95 p-5 text-ink shadow-grover-lg backdrop-blur-sm sm:bottom-8 sm:left-auto sm:right-8 sm:w-[min(31rem,calc(100%-4rem))] sm:p-7 lg:bottom-14 lg:right-12">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-slate-600">Illustrative product preview</p>
               <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-[0.65rem] font-black uppercase tracking-wide text-emerald-800">{activePersona.preview.status}</span>
             </div>
-            <p className="mt-5 text-[0.7rem] font-black uppercase tracking-[0.1em] text-emerald-700">{activePersona.preview.kicker}</p>
+            <p className="mt-5 text-[0.7rem] font-black uppercase tracking-widest text-emerald-700">{activePersona.preview.kicker}</p>
             <h2 className="mt-2 text-2xl font-black leading-tight text-ink sm:text-[1.75rem]">{activePersona.preview.title}</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">{activePersona.preview.description}</p>
             <div aria-label={activePersona.preview.progressLabel} className="mt-5 h-2 overflow-hidden rounded-full bg-emerald-100" role="progressbar" aria-valuemax={100} aria-valuemin={0} aria-valuenow={activePersona.preview.progress}>
@@ -490,7 +490,7 @@ export function PublicLandingPage({
             <h2 className="grover-display mt-4 text-4xl leading-tight sm:text-5xl">{activePersona.perspective.title}</h2>
             <p className="mt-4 text-lg leading-8 text-slate-600">{activePersona.perspective.description}</p>
           </div>
-          <article className="mt-5 grid overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-xl lg:grid-cols-[0.9fr_1.1fr]" role="tabpanel">
+          <article className="mt-5 grid overflow-hidden rounded-4xl bg-slate-950 text-white shadow-xl lg:grid-cols-[0.9fr_1.1fr]" role="tabpanel">
             <div className="p-7 sm:p-10">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">{activePersona.eyebrow}</p>
               <h3 className="mt-4 font-display text-4xl font-bold leading-tight tracking-tight">{activePersona.headline}</h3>
@@ -512,7 +512,7 @@ export function PublicLandingPage({
                 </a>
               ) : null}
             </div>
-            <div className="bg-gradient-to-br from-emerald-950 via-emerald-950 to-slate-950 p-5 sm:p-7">
+            <div className="bg-linear-to-br from-emerald-950 via-emerald-950 to-slate-950 p-5 sm:p-7">
               <div className="flex items-end justify-between gap-4 border-b border-white/10 pb-5">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">What improves</p>
@@ -576,7 +576,7 @@ export function PublicLandingPage({
       </section>
 
       <section className="px-4 py-20 sm:px-6 lg:px-8" id="product">
-        <div className="mx-auto grid max-w-7xl gap-10 rounded-[2rem] bg-emerald-900 p-7 text-white sm:p-10 lg:grid-cols-2 lg:items-center lg:p-14">
+        <div className="mx-auto grid max-w-7xl gap-10 rounded-4xl bg-emerald-900 p-7 text-white sm:p-10 lg:grid-cols-2 lg:items-center lg:p-14">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">{activePersona.product.eyebrow}</p>
             <h2 className="mt-4 font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">{activePersona.product.title}</h2>

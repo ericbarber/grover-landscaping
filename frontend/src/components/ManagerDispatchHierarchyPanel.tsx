@@ -414,7 +414,7 @@ export function ManagerDispatchHierarchyPanel({
 
   return (
     <section
-      className="scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs"
       id="dispatch-hierarchy-administration"
       tabIndex={-1}
     >
