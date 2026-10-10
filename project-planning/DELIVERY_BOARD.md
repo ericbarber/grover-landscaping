@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Repository-owned rollout UX, Yard Owner setup continuity, decoupled application identity, and supported Node 24 Docker image actions are delivered; explicit Ubuntu 24.04 runner selection is implemented on the active branch | Full hosted CI, production-image construction, and automatic Pi development activation pass; repository contracts reject deprecated Docker action majors and unreviewed `ubuntu-latest` migration | Pull-request runner-image validation, then R2 hosted evidence, the P2 product-boundary decision, or the Dispatcher/Billing role decision |
+| Repository | Repository-owned rollout UX, Yard Owner setup continuity, decoupled application identity, supported Node 24 Docker image actions, and explicit Ubuntu 24.04 hosted runners are delivered | Full hosted CI, production-image construction, and automatic Pi development activation pass; repository contracts reject deprecated Docker action majors and unreviewed `ubuntu-latest` migration | R2 hosted evidence, the P2 product-boundary decision, or the Dispatcher/Billing role decision |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -91,7 +91,7 @@ Exit evidence:
 
 ### F4 — Stable hosted runner image
 
-State: in progress; hosted runner-image validation remains.
+State: delivered.
 
 Deliver:
 
