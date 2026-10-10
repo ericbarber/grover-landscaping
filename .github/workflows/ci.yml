@@ -45,6 +45,7 @@ jobs:
           bash scripts/release-preflight.test.sh
           bash scripts/smoke-production.test.sh
           bash scripts/deploy-pi.test.sh
+          node --test scripts/validate-ci-action-runtimes.test.mjs
           node --test scripts/smoke-workspace-rollout.test.mjs
           node --test scripts/validate-product-brand.test.mjs
           node --test scripts/validate-protected-release-evidence.test.mjs
@@ -288,10 +289,10 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build production container
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           load: true
@@ -342,10 +343,10 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build Pi application image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/arm64

@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-10: Prepared both production-image workflows for the supported Node 24
+  Docker action majors: `setup-buildx-action@v4` and
+  `build-push-action@v7`. Their existing generic and ARM64 build, cache, load,
+  tag, and Pi activation contracts remain unchanged, while a repository test
+  prevents the deprecated Node 20 majors from returning unnoticed. Hosted
+  image-build validation remains required before delivery is complete.
 - 2026-10-10: Decoupled the temporary Grover display name from application
   implementation details. Frontend runtime copy, titles, accessible brand
   labels, field/API labels, diagnostics, and backend authentication branding

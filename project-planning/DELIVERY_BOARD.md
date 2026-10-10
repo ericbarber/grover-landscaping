@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Repository-owned rollout UX complete; bounded Yard Owner setup continuity implemented on a branch based on current `main` | Owner Home no longer treats an unverified protected read as an empty schedule; the frontend audit is restored to zero findings through the Tailwind 4/Vitest security refresh | Pull-request frontend and cross-browser CI, then R2 hosted cohort evidence or the Dispatcher/Billing role decision |
+| Repository | Repository-owned rollout UX, Yard Owner setup continuity, and decoupled application identity are merged to `main`; supported Node 24 Docker action majors are implemented on the active branch | Full hosted CI and the automatic Pi development deployment pass on the combined identity commit; local contracts reject the deprecated Docker action majors | Pull-request image-build validation, then R2 hosted evidence, the P2 product-boundary decision, or the Dispatcher/Billing role decision |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -69,6 +69,24 @@ Delivery evidence:
   changing the surviving run's job matrix.
 - Existing CI timing markers remain the comparison source for measured
   bottleneck work.
+
+### F3 — Supported CI action runtimes
+
+State: in progress; hosted image-build validation remains.
+
+Deliver:
+
+- Move both production-image paths from the deprecated Node 20 Docker action
+  majors to the supported Node 24 majors.
+- Preserve the existing generic and ARM64 build inputs, cache scopes, image
+  loading, tags, and downstream Pi activation contract.
+- Reject a regression to the deprecated action majors in repository checks.
+
+Exit evidence:
+
+- Repository checks prove both image paths use `setup-buildx-action@v4` and
+  `build-push-action@v7`; pull-request CI builds the production image on the
+  new runtime before merge, and the next `main` run exercises Pi activation.
 
 ### R1 — Release preflight contract
 

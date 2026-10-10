@@ -11,7 +11,7 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | R3 production-smoke safety and persistence contract is delivered; the bounded Yard Owner care-setup continuity slice is green in PR #34, and its stacked application-identity slice is implemented | Review and merge the bounded integration slices, then await R2 external access or the P2 product-boundary decision |
+| Repository | Yard Owner care-setup continuity and decoupled application identity are merged, the full `main` gate is green, and the Pi development site is activated from the tested commit; the supported Node 24 Docker action upgrade is implemented locally | Close hosted image-build validation, then await R2 external access or the P2 product-boundary decision |
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
