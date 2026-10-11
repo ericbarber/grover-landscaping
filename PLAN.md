@@ -2902,7 +2902,9 @@ Current state:
 - API readiness checks pause while the mobile tab is hidden and refresh immediately when it becomes visible
 - API downtime feedback includes a touch-safe immediate readiness retry action
 - Production shell updates are announced and applied only after a user-controlled reload
-- Android users receive the native install prompt while iPhone users receive Safari home-screen guidance
+- Supported browsers receive a direct install action, while iPhone users receive
+  explicit Safari Add to Home Screen guidance and can confirm the app was saved;
+  either path offers a persistent seven-day Remind me later choice
 - A public mobile diagnostics page checks connectivity, API readiness, secure context, shell control, and installed display mode
 - Mobile diagnostics react to network and shell-control changes and copy a token-safe support summary
 - Supported phones can send the sanitized diagnostics summary through the native share sheet

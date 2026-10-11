@@ -221,6 +221,9 @@ workflows are not product targets.
   the desktop rail or mobile account menu, local-review-only diagnostic chrome,
   duplicate Home identity removed, and measured final-action clearance above
   the fixed phone navigation
+- Install guidance with a native supported-browser action, explicit iPhone
+  Add to Home Screen steps and saved acknowledgement, and a persistent
+  seven-day reminder snooze
 - Prototype-aligned provider invitation and assessment entry shell with shared
   wordmark, type roles, acquisition materials, action/card geometry, and guarded
   privacy-boundary emphasis

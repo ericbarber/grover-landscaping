@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-10: Made the mobile application-install prompt actionable and
+  deferable. Supported browsers retain the native installer; iPhone users now
+  receive explicit Add to Home Screen steps and can acknowledge that the app
+  was saved. “Remind me later” replaces the ambiguous session-only dismissal
+  with a seven-day reminder persisted across browser restarts, and dismissed
+  native installers follow the same reminder policy.
 - 2026-10-10: Simplified the public entry hero into one full-bleed landscape
   composition. Route-specific headlines, descriptions, and conversion actions
   now sit directly over the contrast-treated photograph; the duplicate sample
