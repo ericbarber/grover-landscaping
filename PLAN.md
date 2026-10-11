@@ -466,8 +466,11 @@ Current state:
   owns eligible-persona state, access-change fallback, and rollout resolution
   outside `App`. Multi-role property owners now default to Yard Owner, and the
   signed-in switcher groups Property customers ahead of Service teams while
-  retaining every authorized workspace. Customer policy now separates Yard
-  Owner, Property Manager,
+  retaining every authorized workspace. Desktop and mobile Home progress now
+  share one persona-aware policy, so Yard Owner counts come from protected
+  customer visits rather than internal field jobs and remain withheld until
+  the authorized read is ready. Customer policy now separates Yard Owner,
+  Property Manager,
   and unsupported proposed modes; owns protected-read and manager-preview
   eligibility; and derives Home customer progress. Field recovery policy now
   centralizes job, checklist, and photo queue summaries and conflict-aware replay

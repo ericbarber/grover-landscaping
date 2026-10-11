@@ -204,7 +204,10 @@ panel. Eligible-persona selection, access-change fallback, and rollout
 resolution are also owned by the workspace core rather than `App`. Multi-role
 property owners now start in the Yard Owner workspace, and the signed-in
 selector groups Property customers ahead of Service teams without removing any
-authorized persona. Customer
+authorized persona. Mobile and desktop Home now resolve progress through the
+same persona policy: Yard Owners see protected customer-visit counts, never
+internal job totals, and unresolved customer access withholds the metric.
+Customer
 mode, protected-read eligibility, manager-preview separation, and Home summary
 policy are now extracted and unsupported proposed modes fail closed. Field,
 recovery, and top-level data coordination remain bounded follow-on extractions;

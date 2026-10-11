@@ -45,6 +45,72 @@ export function personaProgressLanguage(persona: WorkspacePersona): WorkspacePro
   return persona.home.progress;
 }
 
+export interface HomeProgressSummary {
+  completed: number;
+  state: 'loading' | 'ready' | 'unavailable';
+  total: number;
+}
+
+export function homeProgressSummary({
+  assignedJobCount,
+  completedJobCount,
+  hasWorkspaceRole,
+  isLoadingWork = false,
+  personaId,
+  portalReadState,
+  routeOverview,
+}: {
+  assignedJobCount: number;
+  completedJobCount: number;
+  hasWorkspaceRole: boolean;
+  isLoadingWork?: boolean;
+  personaId: WorkspacePersonaId;
+  portalReadState: CustomerPortalReadState;
+  routeOverview: CrewRouteOverview;
+}): HomeProgressSummary {
+  if (!hasWorkspaceRole) {
+    return { completed: 0, state: 'unavailable', total: 0 };
+  }
+
+  if (personaId === 'yard-owner' || personaId === 'property-manager') {
+    if (portalReadState === 'loading') {
+      return { completed: 0, state: 'loading', total: 0 };
+    }
+    if (portalReadState !== 'ready') {
+      return { completed: 0, state: 'unavailable', total: 0 };
+    }
+    return {
+      completed: completedJobCount,
+      state: 'ready',
+      total: assignedJobCount,
+    };
+  }
+
+  if (personaId === 'crew-lead' || personaId === 'crew-member') {
+    if (routeOverview.source === 'loading') {
+      return { completed: 0, state: 'loading', total: 0 };
+    }
+    if (routeOverview.source === 'missing' || routeOverview.source === 'unavailable') {
+      return { completed: 0, state: 'unavailable', total: 0 };
+    }
+    return {
+      completed: routeOverview.completedStops,
+      state: 'ready',
+      total: routeOverview.totalStops,
+    };
+  }
+
+  if (isLoadingWork) {
+    return { completed: 0, state: 'loading', total: 0 };
+  }
+
+  return {
+    completed: completedJobCount,
+    state: 'ready',
+    total: assignedJobCount,
+  };
+}
+
 export function homeRouteIsCurrent(
   personaId: WorkspacePersonaId,
   routeOverview: CrewRouteOverview,

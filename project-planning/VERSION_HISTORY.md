@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-10-11: Unified mobile and desktop Home progress behind the persona-aware
+  workspace policy. Yard Owner and Property Manager metrics now come from their
+  protected visit projection instead of the field-job collection, crew metrics
+  come from the published route, and loading or failed authorized reads no
+  longer display a misleading zero or unrelated work count.
 - 2026-10-11: Reframed the public audience hierarchy around the Yard Owner.
   The persona review now separates Property customers from Service teams,
   places Yard Owner first, identifies the owner as the primary audience, and

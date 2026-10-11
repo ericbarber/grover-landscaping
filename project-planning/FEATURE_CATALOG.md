@@ -121,7 +121,8 @@ workflows are not product targets.
   status derivation independently of the React menu presentation
 - Extracted Home workspace feature policy containing shortcut composition,
   persona language access, progress/priority rules, protected-read continuity,
-  and route-date interpretation independently of the React panel presentation
+  and route-date interpretation independently of the React panel presentation,
+  with one owner-safe progress source shared by mobile and desktop Home
 - Plain-language first-use and access recovery across sign-in, company setup,
   manager attention, and Property Manager portfolio surfaces, with internal
   claim, membership, persistence, and rollout terms withheld from users

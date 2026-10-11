@@ -72,6 +72,7 @@ import {
 } from './components/WorkspaceHomePanel';
 import {
   homeGreeting,
+  homeProgressSummary,
   personaHomeHeadline,
   personaHomePromise,
   personaProgressLanguage,
@@ -891,6 +892,15 @@ export function App() {
     customerPortalVisits,
     jobs,
   );
+  const desktopHomeProgress = homeProgressSummary({
+    assignedJobCount: homeWorkSummary.assigned,
+    completedJobCount: homeWorkSummary.completed,
+    hasWorkspaceRole: workspaceRoles.length > 0,
+    isLoadingWork: isLoadingJobs,
+    personaId: activePersona.id,
+    portalReadState: portalHomeReadState,
+    routeOverview: crewRouteOverview,
+  });
   const customerWorkspaceMode = customerWorkspaceModeForPersona(activePersona.id);
   const fieldRecovery = fieldRecoveryState({
     jobMutations: offlineJobMutations,
@@ -2179,16 +2189,20 @@ export function App() {
                 {personaProgressLanguage(activePersona).eyebrow}
               </p>
               <p className="mt-3 text-4xl font-black">
-                {workspaceRoles.length === 0
-                  ? '—'
-                  : isLoadingJobs
-                    ? '…'
-                    : `${jobs.filter((job) => job.status === 'completed').length}/${jobs.length}`}
+                {desktopHomeProgress.state === 'loading'
+                  ? '…'
+                  : desktopHomeProgress.state === 'ready'
+                    ? `${desktopHomeProgress.completed}/${desktopHomeProgress.total}`
+                    : '—'}
               </p>
               <p className="mt-1 text-sm font-semibold text-slate-200">
                 {workspaceRoles.length === 0
                   ? 'Protected work stays hidden'
-                  : personaProgressLanguage(activePersona).completed}
+                  : desktopHomeProgress.state === 'loading'
+                    ? `Checking ${personaProgressLanguage(activePersona).total}`
+                    : desktopHomeProgress.state === 'unavailable'
+                      ? `${personaProgressLanguage(activePersona).eyebrow} unavailable`
+                      : personaProgressLanguage(activePersona).completed}
               </p>
               <div className="my-4 h-px bg-white/15" />
               <p className="text-sm font-bold text-white">{workspaceGuidance.label}</p>

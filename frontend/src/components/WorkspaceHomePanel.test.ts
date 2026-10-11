@@ -6,6 +6,7 @@ import {
   homeGreeting,
   homeContinuityStatus,
   homePriorityStatus,
+  homeProgressSummary,
   personaHomeHeadline,
   personaHomePromise,
   personaProgressLanguage,
@@ -144,6 +145,38 @@ describe('workspace home actions', () => {
       itemSingular: 'visit',
       pendingChangeCount: 0,
     }).title).toBe('2 visits remaining');
+  });
+
+  it('uses protected customer progress and withholds it when access is not ready', () => {
+    const routeOverview = { source: 'loading' as const, totalStops: 0, completedStops: 0 };
+    expect(homeProgressSummary({
+      assignedJobCount: 3,
+      completedJobCount: 2,
+      hasWorkspaceRole: true,
+      isLoadingWork: true,
+      personaId: 'yard-owner',
+      portalReadState: 'ready',
+      routeOverview,
+    })).toEqual({ completed: 2, state: 'ready', total: 3 });
+    expect(homeProgressSummary({
+      assignedJobCount: 3,
+      completedJobCount: 2,
+      hasWorkspaceRole: true,
+      personaId: 'yard-owner',
+      portalReadState: 'unavailable',
+      routeOverview,
+    })).toEqual({ completed: 0, state: 'unavailable', total: 0 });
+  });
+
+  it('uses the published crew route instead of the general job collection', () => {
+    expect(homeProgressSummary({
+      assignedJobCount: 8,
+      completedJobCount: 7,
+      hasWorkspaceRole: true,
+      personaId: 'crew-lead',
+      portalReadState: 'ready',
+      routeOverview: { source: 'api', totalStops: 4, completedStops: 1 },
+    })).toEqual({ completed: 1, state: 'ready', total: 4 });
   });
 
   it('does not turn denied portal access into an empty, clear schedule', () => {

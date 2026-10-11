@@ -3,6 +3,7 @@ import type { WorkspacePersona, WorkspaceView } from '../workspaces/core/types';
 import {
   homeContinuityStatus,
   homeGreeting,
+  homeProgressSummary,
   homePriorityStatus,
   homeRouteIsCurrent,
   personaHomeHeadline,
@@ -78,13 +79,21 @@ export function WorkspaceHomePanel({
   const secondaryActions = actions.slice(1);
   const now = new Date();
   const isCrew = persona.id === 'crew-lead' || persona.id === 'crew-member';
-  const displayedTotal = isCrew ? routeOverview.totalStops : assignedJobCount;
-  const displayedCompleted = isCrew ? routeOverview.completedStops : completedJobCount;
+  const progressSummary = homeProgressSummary({
+    assignedJobCount,
+    completedJobCount,
+    hasWorkspaceRole,
+    personaId: persona.id,
+    portalReadState,
+    routeOverview,
+  });
+  const displayedTotal = progressSummary.total;
+  const displayedCompleted = progressSummary.completed;
   const continuityStatus = homeContinuityStatus(persona.id, portalReadState, routeOverview);
   const ownerSetupRecommended = persona.id === 'yard-owner'
     && portalReadState === 'access_required';
   const secondaryWorkspaceActions = ownerSetupRecommended ? actions : secondaryActions;
-  const progressAvailable = continuityStatus?.progressAvailable ?? true;
+  const progressAvailable = progressSummary.state === 'ready';
   const progress = progressAvailable && displayedTotal > 0
     ? Math.min(100, Math.round((displayedCompleted / displayedTotal) * 100))
     : 0;
