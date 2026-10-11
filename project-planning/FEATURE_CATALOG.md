@@ -43,13 +43,13 @@ workflows are not product targets.
   landscaping-company onboarding, portfolio discussion, and crew demo
 - Complete persona-specific landing narratives for yard owners, property
   managers, landscaping companies, and crew leads, spanning hero actions,
-  previews, trust signals, outcomes, proof, capabilities, and final invitations
-- Compact route-specific public hero with a fixed entry action and preview,
+  trust signals, outcomes, proof, capabilities, and final invitations
+- Full-bleed photographic public hero with a fixed route-specific entry action,
   followed by a dedicated audience-review section with company-first keyboard
   tabs, role-specific narratives, outcomes, and actions
 - Simplified entry-hero conversion hierarchy with one primary action, one
-  product-tour path, improved photography focus, and a tracked three-stage
-  sample spanning upcoming work, active care, and delivered proof
+  product-tour path, improved photography focus, and no duplicate persona
+  workspace overlay
 - Plan-Care-Proof product narrative with the interactive “Today’s operation”
   company dashboard embedded in Plan and representative Care and Prove previews
 - Responsive product capability and trust sections

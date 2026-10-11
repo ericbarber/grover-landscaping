@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-10: Simplified the public entry hero into one full-bleed landscape
+  composition. Route-specific headlines, descriptions, and conversion actions
+  now sit directly over the contrast-treated photograph; the duplicate sample
+  workspace overlay and its unused persona journey data were removed. Persona
+  comparison remains in the immediately following keyboard-accessible section,
+  and responsive browser contracts now protect that division of responsibility.
 - 2026-10-10: Selected Yard Owner task `MG-Y1` for the first participant round.
   The fixed plan starts with a fresh `open_customer_decision` manifest and uses
   a separate `delivered_outcome` manifest for the proof follow-up, counterbalances

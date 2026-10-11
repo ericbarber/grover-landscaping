@@ -169,9 +169,9 @@ test('the production homepage retains the validated prototype foundation', async
 
   expect(theme).toEqual({
     canvas: 'rgb(246, 242, 232)',
-    ink: 'rgb(23, 52, 45)',
+    ink: 'rgb(255, 255, 255)',
     displayFamily: 'Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif',
-    primaryAction: 'rgb(23, 63, 53)',
+    primaryAction: 'rgb(166, 190, 173)',
     brandMark: 'rgb(23, 63, 53)',
     focusToken: '#1685a4',
   });
@@ -292,11 +292,11 @@ test('persona switching in the second section leaves the complete hero unchanged
       level: 1,
       name: 'Plan the day. Guide the crew. Prove the work.',
     });
-    const heroPreview = page.getByTestId('hero-entry-preview');
+    const heroVisual = page.getByTestId('hero-visual');
     const audienceControl = page.getByRole('tablist', { name: 'Choose your perspective' });
     const baseline = await Promise.all([
       heroHeading.evaluate((element) => Math.round(element.getBoundingClientRect().top + window.scrollY)),
-      heroPreview.evaluate((element) => element.textContent),
+      heroVisual.locator('img').getAttribute('src'),
       audienceControl.evaluate((element) => Math.round(element.getBoundingClientRect().top + window.scrollY)),
     ]);
 
@@ -308,7 +308,7 @@ test('persona switching in the second section leaves the complete hero unchanged
 
       const current = await Promise.all([
         heroHeading.evaluate((element) => Math.round(element.getBoundingClientRect().top + window.scrollY)),
-        heroPreview.evaluate((element) => element.textContent),
+        heroVisual.locator('img').getAttribute('src'),
         audienceControl.evaluate((element) => Math.round(element.getBoundingClientRect().top + window.scrollY)),
       ]);
       expect(current).toEqual(baseline);
@@ -347,10 +347,10 @@ test('the complete desktop hero stays within the first viewport', async ({ page 
   test.skip(Boolean(testInfo.project.use.isMobile), 'Desktop hero geometry requires a desktop browser context.');
 
   const personas = [
-    { path: '/for-yard-owners', graphic: 'Tuesday · 8:00–10:00 AM' },
-    { path: '/for-property-managers', graphic: '16 properties available' },
-    { path: '/for-landscaping-companies', graphic: '8 ordered stops' },
-    { path: '/for-crew-leads', graphic: '8 ordered stops' },
+    { path: '/for-yard-owners', heading: 'Know what happened—without chasing an update.' },
+    { path: '/for-property-managers', heading: 'Keep your entire property portfolio in view.' },
+    { path: '/for-landscaping-companies', heading: 'Plan the day. Guide the crew. Prove the work.' },
+    { path: '/for-crew-leads', heading: 'Know the next stop—and what done looks like.' },
   ];
 
   for (const viewport of [{ width: 1024, height: 720 }, { width: 1280, height: 720 }]) {
@@ -360,13 +360,12 @@ test('the complete desktop hero stays within the first viewport', async ({ page 
       await page.evaluate(async () => {
         await document.fonts.ready;
       });
-      await expect(page.getByText(persona.graphic, { exact: true }).first()).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: persona.heading })).toBeVisible();
 
       const bounds = await page.evaluate(() => {
         const header = document.querySelector('header')?.getBoundingClientRect();
         const hero = document.querySelector('[data-testid="marketing-hero"]')?.getBoundingClientRect();
         const graphic = document.querySelector('[data-testid="hero-visual"]')?.getBoundingClientRect();
-        const visual = document.querySelector('[data-testid="hero-visual"] article')?.getBoundingClientRect();
 
         return {
           headerBottom: header?.bottom,
@@ -374,8 +373,6 @@ test('the complete desktop hero stays within the first viewport', async ({ page 
           heroBottom: hero?.bottom,
           graphicTop: graphic?.top,
           graphicBottom: graphic?.bottom,
-          visualTop: visual?.top,
-          visualBottom: visual?.bottom,
           viewportBottom: window.innerHeight,
         };
       });
@@ -384,8 +381,6 @@ test('the complete desktop hero stays within the first viewport', async ({ page 
       expect(bounds.heroBottom).toBeLessThanOrEqual(bounds.viewportBottom + 1);
       expect(bounds.graphicTop).toBeGreaterThanOrEqual(bounds.heroTop! - 1);
       expect(bounds.graphicBottom).toBeLessThanOrEqual(bounds.viewportBottom + 1);
-      expect(bounds.visualTop).toBeGreaterThanOrEqual(bounds.graphicTop! - 1);
-      expect(bounds.visualBottom).toBeLessThanOrEqual(bounds.graphicBottom! + 1);
     }
   }
 });
@@ -395,15 +390,14 @@ test('the compact entry hero stays fixed while the second-section perspective ch
   await page.goto('/for-landscaping-companies');
 
   const visual = page.getByTestId('hero-visual');
-  await expect(visual.getByRole('heading', { name: '8 ordered stops' })).toBeVisible();
-  await expect(visual.getByText('Sample landscaping company workspace', { exact: true })).toBeVisible();
-  await visual.getByRole('button', { name: 'Care' }).click();
-  await expect(visual.getByRole('heading', { name: '6 of 8 properties complete' })).toBeVisible();
+  await expect(visual.locator('img')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Plan the day. Guide the crew. Prove the work.' })).toBeVisible();
+  await expect(page.getByText('Sample landscaping company workspace', { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   await page.getByRole('tab', { name: 'Yard owner' }).click();
-  await expect(visual.getByRole('heading', { name: '6 of 8 properties complete' })).toBeVisible();
-  await expect(visual.getByText('Sample landscaping company workspace', { exact: true })).toBeVisible();
+  await expect(visual.locator('img')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Plan the day. Guide the crew. Prove the work.' })).toBeVisible();
   await expect(page.getByTestId('persona-review-panel').getByRole('heading', {
     name: 'The service story—without the operations clutter.',
   })).toBeVisible();

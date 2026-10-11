@@ -297,14 +297,16 @@ delivered. Yard Owner, property-manager, landscaping-company, and crew-lead
 routes now carry their audience through tailored hero actions, previews, trust
 signals, outcome stories, proof, capabilities, and final invitations instead of
 changing only first-screen copy. Each public route now opens with a compact,
-route-specific hero whose headline, action, and preview stay fixed to the entry
-path. Audience comparison begins in the immediately following section, where
+route-specific hero whose headline and action stay fixed to the entry path.
+The landscape image is now the full-bleed background for that copy, without a
+duplicate sample-workspace overlay. Audience comparison begins in the
+immediately following section, where
 company-first keyboard tabs change the supporting story without changing the
 hero, URL, or canonical metadata. The landscaping-company Plan step makes
 its operations promise tangible by adapting the approved “Today’s operation”
 schedule concept into an interactive, explicitly non-persistent dashboard of
 executive day signals, crew capacity, dispatch focus, and suggested balancing.
-Keeping that detailed interaction in the tour gives every audience a compact,
+Keeping that detailed interaction in the tour gives every audience a focused,
 predictable first screen before the Plan, Care, and Prove detail. The
 source-controlled [`../design/`](../design/)
 workspace mirrors the public, access, field, manager, customer, revenue, and

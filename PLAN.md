@@ -169,15 +169,17 @@ approval evidence gates.
 
 The public hero is now a compact, route-specific introduction with no persona
 controls. The root homepage focuses on one Yard Owner and one yard; dedicated
-audience routes retain their own headline, primary action, and preview. Those
-entry details remain fixed to the page the visitor entered. A dedicated
+audience routes retain their own headline and primary action. A full-bleed
+landscape image now carries the hero copy instead of duplicating persona detail
+in a sample-workspace overlay. Those entry details remain fixed to the page the
+visitor entered. A dedicated
 audience-review section follows immediately, where
 company-first keyboard tabs change the supporting narrative, outcomes, and
 role-specific action without rewriting the hero, URL, canonical metadata, or
 original conversion path. The oversized company planning surface remains in the
-Plan product-tour step. A shorter capped hero visual and prepared phone/desktop
-geometry coverage make the first screen calmer without removing any audience
-route or conversion path.
+Plan product-tour step. Prepared phone/desktop geometry coverage keeps the
+full-height photographic hero within the first screen without removing any
+audience route or conversion path.
 
 The current experience-language pass now keeps the first signed-in journeys in
 plain, role-appropriate terms. Company setup speaks in companies, crews,
@@ -1322,7 +1324,7 @@ Current state:
   prototype into a responsive, non-persistent owner overview with crews active,
   route progress, unassigned and at-risk signals, crew schedule/capacity, and an
   interactive dispatch decision. Keeping this detailed interaction in the tour
-  lets the hero use the same compact preview structure for every audience.
+  lets the hero remain a focused photographic introduction for every audience.
 - Every public product-tour heading, step, explanation, outcome, and preview now
   follows the active audience. Yard Owners see upcoming care, visit progress,
   and controlled review; property managers see portfolio readiness, exceptions,
@@ -1333,9 +1335,10 @@ Current state:
   canonical metadata, campaign query parameters, and fixed hero action.
 - The active review panel is connected to its tab, and arrow, Home, and End keys
   move both focus and selection in company-first order.
-- The two-column entry hero uses intrinsic content height and a capped visual
-  instead of forcing a tall full-viewport planner. Prepared geometry coverage
-  checks the complete hero at 1024 px and wider laptop layouts.
+- The entry hero layers its route-specific copy and actions over the full-bleed
+  landscape image with contrast gradients and no duplicate sample-workspace
+  card. Prepared geometry coverage checks the complete hero at 1024 px and
+  wider laptop layouts.
 - The second-section action follows the reviewed audience through private yard
   setup, company onboarding, a portfolio discussion, or a field-workflow demo;
   the hero action remains tied to the route the visitor entered.
@@ -2081,12 +2084,13 @@ or crew assignment.
 - The audience selector begins in the second section and tailors the supporting
   narrative for yard owners, property managers, landscaping companies, and crew
   leads without changing the entry hero, URL, or canonical metadata
-- Route-specific hero copy shares one responsive intrinsic-height region, so
-  the complete two-column hero fits below the sticky header at supported laptop
-  widths without placing persona controls in the first screen
+- Route-specific hero copy shares one responsive full-bleed photographic
+  region below the sticky header without placing persona controls in the first
+  screen
 - Product preview, Plan-Care-Proof workflow, capability story, trust cues, and repeated workspace calls to action create a complete marketing narrative
-- The entry preview is an interactive, persona-specific three-stage sample, and
-  the first screen presents one primary conversion plus one product-tour action;
+- The first screen presents one primary conversion plus one product-tour action
+  over the landscape image; persona comparison and workflow detail begin in the
+  sections below;
   walkthrough capture remains available later in the company narrative
 - `/app` remains the direct authenticated or auth-disabled workspace entry, while callbacks, invitations, diagnostics, shared bids, and shared reports retain dedicated routing
 - Installed application sessions now start directly at `/app`

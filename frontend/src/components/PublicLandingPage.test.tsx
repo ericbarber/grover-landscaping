@@ -54,29 +54,30 @@ describe('PublicLandingPage', () => {
       companyMarkup.indexOf('data-testid="marketing-hero"'),
       companyMarkup.indexOf('id="who-its-for"'),
     );
-    expect(companyHero).toContain('Sample landscaping company workspace');
+    expect(companyHero).toContain('/brand/yardfolio-landscape-home-hero.webp');
     expect(companyHero).toContain('See how it works');
+    expect(companyHero).not.toContain('Sample landscaping company workspace');
+    expect(companyHero).not.toContain('hero-entry-preview');
     expect(companyHero).not.toContain('Request a walkthrough');
     expect(companyMarkup).toContain('Plan the day. Guide the crew. Prove the work.');
     expect(companyMarkup).toContain(`See ${APP_DISPLAY_NAME} from every side of the work.`);
-    expect(ownerMarkup).toContain('Sample yard owner workspace');
+    expect(ownerMarkup).not.toContain('Sample yard owner workspace');
     expect(ownerMarkup).toContain('Know what happened—without chasing an update.');
     expect(ownerMarkup).toContain('Create my private yard');
     expect(ownerMarkup).not.toContain('Join early access');
   });
 
-  it('offers a tangible three-stage sample in every entry hero', () => {
+  it('uses the landscape image as the focused hero background', () => {
     const ownerMarkup = renderToStaticMarkup(<PublicLandingPage initialPersonaId="owner" />);
     const companyMarkup = renderToStaticMarkup(
       <PublicLandingPage initialPersonaId="company" />,
     );
 
-    expect(ownerMarkup).toContain('Sample service journey');
-    expect(ownerMarkup).toContain('Upcoming');
-    expect(ownerMarkup).toContain('In progress');
-    expect(ownerMarkup).toContain('Review');
-    expect(companyMarkup).toContain('Plan');
-    expect(companyMarkup).toContain('Care');
-    expect(companyMarkup).toContain('Prove');
+    for (const markup of [ownerMarkup, companyMarkup]) {
+      expect(markup).toContain('data-testid="hero-visual"');
+      expect(markup).toContain('/brand/yardfolio-landscape-home-hero.webp');
+      expect(markup).not.toContain('Sample service journey');
+      expect(markup).not.toContain('data-testid="hero-entry-preview"');
+    }
   });
 });
