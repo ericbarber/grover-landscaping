@@ -28,6 +28,52 @@ export interface MobileWorkspaceContext {
   detail: string;
 }
 
+const workspacePersonaGroups: Array<{
+  label: string;
+  personaIds: WorkspacePersonaId[];
+}> = [
+  {
+    label: 'Property customers',
+    personaIds: ['yard-owner', 'property-manager'],
+  },
+  {
+    label: 'Service teams',
+    personaIds: [
+      'company-owner',
+      'company-manager',
+      'crew-lead',
+      'crew-member',
+      'dispatcher',
+      'billing-admin',
+    ],
+  },
+  {
+    label: 'Platform support',
+    personaIds: ['support'],
+  },
+  {
+    label: 'Other',
+    personaIds: ['general'],
+  },
+];
+
+function WorkspacePersonaOptions({ personas }: { personas: WorkspacePersona[] }) {
+  return workspacePersonaGroups.map((group) => {
+    const groupedPersonas = group.personaIds
+      .map((personaId) => personas.find(({ id }) => id === personaId))
+      .filter((persona): persona is WorkspacePersona => Boolean(persona));
+    if (groupedPersonas.length === 0) return null;
+
+    return (
+      <optgroup key={group.label} label={group.label}>
+        {groupedPersonas.map((persona) => (
+          <option key={persona.id} value={persona.id}>{persona.label}</option>
+        ))}
+      </optgroup>
+    );
+  });
+}
+
 export function mobileWorkspaceScrollTop(
   savedPositions: Partial<Record<MobileWorkspaceView, number>>,
   destination: MobileWorkspaceView,
@@ -149,9 +195,7 @@ export function MobileWorkspaceHeader({
                     onChange={(event) => onPersonaChange(event.target.value as WorkspacePersonaId)}
                     value={activePersonaId}
                   >
-                    {availablePersonas.map((persona) => (
-                      <option key={persona.id} value={persona.id}>{persona.label}</option>
-                    ))}
+                    <WorkspacePersonaOptions personas={availablePersonas} />
                   </select>
                 </label>
               ) : null}
@@ -175,9 +219,7 @@ export function MobileWorkspaceHeader({
               onChange={(event) => onPersonaChange(event.target.value as WorkspacePersonaId)}
               value={activePersonaId}
             >
-              {availablePersonas.map((persona) => (
-                <option key={persona.id} value={persona.id}>{persona.label}</option>
-              ))}
+              <WorkspacePersonaOptions personas={availablePersonas} />
             </select>
           </label>
         ) : (
@@ -199,18 +241,24 @@ interface MobileWorkspaceNavigationProps {
 }
 
 interface DesktopWorkspaceNavigationProps extends MobileWorkspaceNavigationProps {
+  activePersonaId: WorkspacePersonaId;
+  availablePersonas: WorkspacePersona[];
   hasEnvironmentBanner?: boolean;
+  onPersonaChange: (personaId: WorkspacePersonaId) => void;
   onSignOut?: () => void;
   personaLabel: string;
   signedInName: string;
 }
 
 export function DesktopWorkspaceNavigation({
+  activePersonaId,
   activeView,
+  availablePersonas,
   hasEnvironmentBanner = false,
   hasSelectedJob,
   navigationItems,
   onChange,
+  onPersonaChange,
   onSignOut,
   personaLabel,
   signedInName,
@@ -248,6 +296,19 @@ export function DesktopWorkspaceNavigation({
       <div className="mt-auto rounded-xl border border-white/10 bg-slate-950/20 p-3">
         <p className="truncate text-sm font-black text-white">{signedInName}</p>
         <p className="mt-1 truncate text-xs text-emerald-100">{personaLabel}</p>
+        {availablePersonas.length > 1 ? (
+          <label className="mt-3 block text-[0.65rem] font-bold uppercase tracking-wide text-emerald-200">
+            Workspace
+            <select
+              aria-label="Active desktop workspace persona"
+              className="mt-1 block min-h-11 w-full rounded-lg border border-white/20 bg-emerald-950 px-2 text-sm font-semibold normal-case tracking-normal text-white"
+              onChange={(event) => onPersonaChange(event.target.value as WorkspacePersonaId)}
+              value={activePersonaId}
+            >
+              <WorkspacePersonaOptions personas={availablePersonas} />
+            </select>
+          </label>
+        ) : null}
         {onSignOut ? (
           <button
             className="mt-3 min-h-11 w-full rounded-lg border border-white/20 px-3 text-left text-sm font-bold text-white hover:bg-white/10"

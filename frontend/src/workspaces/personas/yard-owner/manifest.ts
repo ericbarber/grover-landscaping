@@ -5,7 +5,7 @@ export const yardOwnerManifest = {
   id: 'yard-owner',
   status: 'authoritative',
   eligibleRoles: ['PropertyOwner'],
-  priority: 60,
+  priority: 5,
   label: 'Yard owner',
   description: 'Properties, upcoming service, reports, photos, and bids',
   defaultView: 'home',

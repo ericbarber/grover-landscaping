@@ -201,7 +201,10 @@ filtering, active selection, and status derivation are independent of the React
 menu. Home is also extracted: actions, persona language, progress/priority,
 protected-read continuity, and route-date policy are independent of its React
 panel. Eligible-persona selection, access-change fallback, and rollout
-resolution are also owned by the workspace core rather than `App`. Customer
+resolution are also owned by the workspace core rather than `App`. Multi-role
+property owners now start in the Yard Owner workspace, and the signed-in
+selector groups Property customers ahead of Service teams without removing any
+authorized persona. Customer
 mode, protected-read eligibility, manager-preview separation, and Home summary
 policy are now extracted and unsupported proposed modes fail closed. Field,
 recovery, and top-level data coordination remain bounded follow-on extractions;

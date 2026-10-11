@@ -6,6 +6,9 @@
   preserves dedicated Property Manager, Landscaping Company, and Crew Lead
   perspectives. Keyboard navigation follows the same owner-first order while
   direct campaign routes keep their original entry headline and action.
+  Signed-in multi-role property owners now default to Yard Owner, and their
+  workspace selector groups Property customers before Service teams and
+  platform support while retaining every authorized option.
 - 2026-10-10: Made the mobile application-install prompt actionable and
   deferable. Supported browsers retain the native installer; iPhone users now
   receive explicit Add to Home Screen steps and can acknowledge that the app

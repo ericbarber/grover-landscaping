@@ -15,6 +15,12 @@ describe('workspace persona selection', () => {
     expect(selectAvailableWorkspacePersona(personas, 'support').id).toBe('company-manager');
   });
 
+  it('defaults multi-role property owners to their yard workspace', () => {
+    const personas = workspacePersonasForRoles(['Manager', 'PropertyOwner', 'CrewLead']);
+
+    expect(selectAvailableWorkspacePersona(personas, 'support').id).toBe('yard-owner');
+  });
+
   it('keeps accounts without an active persona on the safe general workspace', () => {
     const personas = workspacePersonasForRoles([]);
 

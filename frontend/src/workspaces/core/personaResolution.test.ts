@@ -53,6 +53,13 @@ describe('persona workspaces', () => {
     ).toEqual(['company-manager', 'property-manager', 'crew-lead']);
   });
 
+  it('puts the yard owner workspace first for a multi-role property owner', () => {
+    expect(
+      workspacePersonasForRoles(['Manager', 'CrewLead', 'PropertyOwner', 'PropertyManager'])
+        .map((persona) => persona.id),
+    ).toEqual(['yard-owner', 'company-manager', 'property-manager', 'crew-lead']);
+  });
+
   it('limits customer and crew navigation to relevant work', () => {
     expect(workspacePersonasForRoles(['PropertyOwner'])[0].navigation.map(({ view }) => view))
       .toEqual(['home', 'customer']);

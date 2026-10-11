@@ -464,7 +464,10 @@ Current state:
   continuity, and route-date interpretation into `workspaces/features/home`;
   the Home panel retains layout and interaction. Core workspace selection now
   owns eligible-persona state, access-change fallback, and rollout resolution
-  outside `App`. Customer policy now separates Yard Owner, Property Manager,
+  outside `App`. Multi-role property owners now default to Yard Owner, and the
+  signed-in switcher groups Property customers ahead of Service teams while
+  retaining every authorized workspace. Customer policy now separates Yard
+  Owner, Property Manager,
   and unsupported proposed modes; owns protected-read and manager-preview
   eligibility; and derives Home customer progress. Field recovery policy now
   centralizes job, checklist, and photo queue summaries and conflict-aware replay
@@ -2145,7 +2148,9 @@ or crew assignment.
 - Selecting a job opens its dedicated mobile view with a clear return to assigned jobs
 - Returning between mobile workspaces restores each view's prior scroll position while newly selected jobs open at the top
 - Signed-in roles map to yard owner, property manager, crew lead/member, yard-care company owner/manager, dispatcher, billing, and support personas
-- Persona-specific navigation hides irrelevant workspaces, and multi-role users can switch their active view without signing out
+- Persona-specific navigation hides irrelevant workspaces; multi-role property
+  owners start in Yard Owner, and the grouped Property customers, Service teams,
+  and support options remain switchable without signing out
 - Yard owners receive a customer property workspace while property managers receive portfolio and management navigation
 - Desktop applies the same persona boundaries: customer roles see property and portfolio care, crews see field execution, company roles see operations, and support sees diagnostics and recovery
 - Install and application-update notifications stack above the mobile navbar and iPhone safe area instead of covering navigation

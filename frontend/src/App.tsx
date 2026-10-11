@@ -2108,7 +2108,9 @@ export function App() {
   return (
     <main className="authenticated-workspace-shell min-h-screen overflow-x-hidden bg-bone text-ink md:pl-24 lg:pl-60">
       <DesktopWorkspaceNavigation
+        activePersonaId={activePersona.id}
         activeView={mobileView}
+        availablePersonas={availablePersonas}
         hasEnvironmentBanner={auth.authMode !== 'cognito'}
         hasSelectedJob={Boolean(selectedJobId)}
         navigationItems={activePersona.navigation}
@@ -2118,6 +2120,15 @@ export function App() {
             setManagerWorkspaceTool(null);
           }
           changeMobileView(view, true);
+        }}
+        onPersonaChange={(personaId) => {
+          const persona = selectWorkspacePersona(personaId);
+          if (!persona) return;
+          if (persona.defaultView === 'manager') {
+            setManagerWorkspaceSection(null);
+            setManagerWorkspaceTool(null);
+          }
+          changeMobileView(persona.defaultView, true);
         }}
         onSignOut={hostedSignOut}
         personaLabel={activePersona.label}

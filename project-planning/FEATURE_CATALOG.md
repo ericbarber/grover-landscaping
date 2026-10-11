@@ -129,8 +129,10 @@ workflows are not product targets.
   completion-report state to one prioritized handoff per service, with direct
   Job/Report navigation and explicit loading, unavailable, empty, and bounded
   list states
-- Core workspace-selection hook owning eligible-persona state, safe fallback
-  after access changes, and rollout resolution outside the application shell
+- Core workspace-selection hook owning eligible-persona state, Yard Owner-first
+  fallback for multi-role property owners, safe fallback after access changes,
+  grouped customer/service/support switching, and rollout resolution outside
+  the application shell
 - Extracted customer workspace policy distinguishing Yard Owner and Property
   Manager experiences, protected reads, manager previews, and Home summaries;
   unsupported proposed customer modes fail closed without exposing customer data
