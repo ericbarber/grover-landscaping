@@ -125,7 +125,9 @@ workflows are not product targets.
   with one owner-safe progress source shared by mobile and desktop Home
 - Plain-language first-use and access recovery across sign-in, company setup,
   manager attention, and Property Manager portfolio surfaces, with internal
-  claim, membership, persistence, and rollout terms withheld from users
+  claim, membership, persistence, and rollout terms withheld from users;
+  Yard Owners without connected care can resume setup directly from Home or
+  My yard
 - Company Owner and Company Manager Today queue reducing authorized job and
   completion-report state to one prioritized handoff per service, with direct
   Job/Report navigation and explicit loading, unavailable, empty, and bounded

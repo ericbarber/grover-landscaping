@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-10-11: Replaced the new Yard Owner's inactive-portal dead end with a
+  direct care-setup recovery path. Home and My yard now explain that setup must
+  be completed before visits appear, link to the resumable property/provider
+  journey, and reserve retry behavior for genuine inconsistency or outages.
 - 2026-10-11: Unified mobile and desktop Home progress behind the persona-aware
   workspace policy. Yard Owner and Property Manager metrics now come from their
   protected visit projection instead of the field-job collection, crew metrics

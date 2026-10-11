@@ -207,7 +207,8 @@ selector groups Property customers ahead of Service teams without removing any
 authorized persona. Mobile and desktop Home now resolve progress through the
 same persona policy: Yard Owners see protected customer-visit counts, never
 internal job totals, and unresolved customer access withholds the metric.
-Customer
+The missing-access path now uses plain setup language and links directly back
+to the resumable care journey from both Home and My yard. Customer
 mode, protected-read eligibility, manager-preview separation, and Home summary
 policy are now extracted and unsupported proposed modes fail closed. Field,
 recovery, and top-level data coordination remain bounded follow-on extractions;

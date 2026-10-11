@@ -469,8 +469,10 @@ Current state:
   retaining every authorized workspace. Desktop and mobile Home progress now
   share one persona-aware policy, so Yard Owner counts come from protected
   customer visits rather than internal field jobs and remain withheld until
-  the authorized read is ready. Customer policy now separates Yard Owner,
-  Property Manager,
+  the authorized read is ready. Owners without active visit access receive a
+  direct resumable care-setup action in Home and My yard instead of internal
+  portal terminology or a refresh-only dead end. Customer policy now separates
+  Yard Owner, Property Manager,
   and unsupported proposed modes; owns protected-read and manager-preview
   eligibility; and derives Home customer progress. Field recovery policy now
   centralizes job, checklist, and photo queue summaries and conflict-aware replay

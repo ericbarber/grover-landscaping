@@ -16,6 +16,7 @@ import {
   type CustomerPortalVisitSummary,
   type CustomerVisitStatus,
 } from '../domain/customerPortalVisits';
+import { OWNER_CARE_SETUP_RESUME_PATH } from '../domain/ownerAcquisitionRoute';
 import { WorkspaceIcon } from './WorkspaceIcon';
 import { WorkspaceStatusNotice } from './WorkspaceStatus';
 import { CustomerVisitRecommendationsPanel } from './CustomerVisitRecommendationsPanel';
@@ -398,10 +399,10 @@ export function YardOwnerPortalPanel({
   if (visitReadError) {
     const copy = visitReadError === 'access_required'
       ? {
-        heading: 'My yard is protected',
-        title: 'Customer portal access is not active.',
-        detail: 'Property and service details remain hidden. Review the current access connected to this sign-in.',
-        retryLabel: 'Review account access',
+        heading: 'Connect care to your yard',
+        title: 'Finish setup to see visits here.',
+        detail: 'Your property details stay private until you finish setup and connect a provider.',
+        retryLabel: 'Continue care setup',
       }
       : visitReadError === 'inconsistent'
         ? {
@@ -428,7 +429,11 @@ export function YardOwnerPortalPanel({
           tone="warning"
         />
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-          <button className="yardfolio-button-primary" onClick={onRetryVisits} type="button">{copy.retryLabel}</button>
+          {visitReadError === 'access_required' ? (
+            <a className="yardfolio-button-primary" href={OWNER_CARE_SETUP_RESUME_PATH}>{copy.retryLabel}</a>
+          ) : (
+            <button className="yardfolio-button-primary" onClick={onRetryVisits} type="button">{copy.retryLabel}</button>
+          )}
           <button className="yardfolio-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
         </div>
       </section>

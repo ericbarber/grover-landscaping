@@ -73,12 +73,13 @@ describe('Yard Owner persisted visit states', () => {
       <YardOwnerPortalPanel {...commonProps} visitReadError="unavailable" />,
     );
 
-    expect(accessMarkup).toContain('Customer portal access is not active');
-    expect(accessMarkup).toContain('Review account access');
+    expect(accessMarkup).toContain('Finish setup to see visits here');
+    expect(accessMarkup).toContain('Continue care setup');
+    expect(accessMarkup).toContain('href="/app/yard-owner?resume=care"');
     expect(accessMarkup).toContain('Return Home');
     expect(accessMarkup).not.toContain('temporarily unavailable');
     expect(unavailableMarkup).toContain('temporarily unavailable');
-    expect(unavailableMarkup).not.toContain('Customer portal access is not active');
+    expect(unavailableMarkup).not.toContain('Finish setup to see visits here');
   });
 
   it('distinguishes a valid empty property collection from an outage', () => {

@@ -182,7 +182,7 @@ describe('workspace home actions', () => {
   it('does not turn denied portal access into an empty, clear schedule', () => {
     const routeOverview = { source: 'loading' as const, totalStops: 0, completedStops: 0 };
     expect(homeContinuityStatus('yard-owner', 'access_required', routeOverview)).toMatchObject({
-      title: 'Customer portal access is not active', progressAvailable: false,
+      title: 'Finish connecting your yard', progressAvailable: false,
     });
     const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
       assignedJobCount: 0, completedJobCount: 0, hasSelectedJob: false,
@@ -190,11 +190,11 @@ describe('workspace home actions', () => {
       persona: workspacePersonasForRoles(['PropertyOwner'])[0],
       portalReadState: 'access_required', signedInName: 'Yard Owner',
     }));
-    expect(markup).toContain('Customer portal access is not active');
+    expect(markup).toContain('Finish connecting your yard');
     expect(markup).toContain('Status unverified');
     expect(markup).toContain('href="/app/yard-owner?resume=care"');
     expect(markup).toContain('Continue care setup');
-    expect(markup).toContain('Continue property and provider setup');
+    expect(markup).toContain('Complete your property and provider setup');
     expect(markup).toContain('Open care setup');
     expect(markup).not.toContain('Open My yard');
     expect(markup.indexOf('Continue care setup')).toBeLessThan(markup.indexOf('My yard'));
