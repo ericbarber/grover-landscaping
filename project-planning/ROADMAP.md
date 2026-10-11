@@ -300,9 +300,10 @@ changing only first-screen copy. Each public route now opens with a compact,
 route-specific hero whose headline and action stay fixed to the entry path.
 The landscape image is now the full-bleed background for that copy, without a
 duplicate sample-workspace overlay. Audience comparison begins in the
-immediately following section, where
-company-first keyboard tabs change the supporting story without changing the
-hero, URL, or canonical metadata. The landscaping-company Plan step makes
+immediately following section, where owner-first keyboard tabs group Yard Owner
+and Property Manager as Property customers ahead of the Landscaping Company and
+Crew Lead Service team. Those tabs change the supporting story without changing
+the hero, URL, or canonical metadata. The landscaping-company Plan step makes
 its operations promise tangible by adapting the approved “Today’s operation”
 schedule concept into an interactive, explicitly non-persistent dashboard of
 executive day signals, crew capacity, dispatch focus, and suggested balancing.

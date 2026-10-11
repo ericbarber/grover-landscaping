@@ -243,18 +243,40 @@ const marketingPersonas: Array<{
   },
 ];
 
-const marketingPersonaNavigationOrder: MarketingPersonaId[] = [
-  'company',
-  'crew',
-  'owner',
-  'property-manager',
-];
+const marketingPersonaGroups = [
+  {
+    id: 'property-customers',
+    label: 'Property customers',
+    description: 'Own or oversee the property and decide what happens next.',
+    personaIds: ['owner', 'property-manager'],
+    priorityLabel: 'Yard owner first',
+  },
+  {
+    id: 'service-teams',
+    label: 'Service teams',
+    description: 'Plan, complete, and document the care.',
+    personaIds: ['company', 'crew'],
+    priorityLabel: null,
+  },
+] satisfies Array<{
+  id: string;
+  label: string;
+  description: string;
+  personaIds: MarketingPersonaId[];
+  priorityLabel: string | null;
+}>;
 
-const marketingPersonasForNavigation = marketingPersonaNavigationOrder.map((id) => {
-  const persona = marketingPersonas.find((candidate) => candidate.id === id);
-  if (!persona) throw new Error(`Missing marketing persona: ${id}`);
-  return persona;
-});
+const marketingPersonaGroupsForNavigation = marketingPersonaGroups.map((group) => ({
+  ...group,
+  personas: group.personaIds.map((id) => {
+    const persona = marketingPersonas.find((candidate) => candidate.id === id);
+    if (!persona) throw new Error(`Missing marketing persona: ${id}`);
+    return persona;
+  }),
+}));
+
+const marketingPersonasForNavigation = marketingPersonaGroupsForNavigation
+  .flatMap(({ personas }) => personas);
 
 function marketingPersonaFor(id: MarketingPersonaId): MarketingPersona {
   if (id === 'owner') return 'yard_owner';
@@ -350,7 +372,7 @@ export function PublicLandingPage({
     event.preventDefault();
     const nextPersona = marketingPersonasForNavigation[nextIndex];
     selectPersona(nextPersona.id, 'audience_review_tabs_keyboard');
-    const tabs = event.currentTarget.parentElement
+    const tabs = event.currentTarget.closest('[role="tablist"]')
       ?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
     tabs?.[nextIndex]?.focus();
   }
@@ -420,33 +442,52 @@ export function PublicLandingPage({
 
       <section className="bg-paper px-4 py-16 sm:px-6 sm:py-20 lg:px-8" id="who-its-for">
         <div className="mx-auto max-w-7xl">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(28rem,0.9fr)] lg:items-end">
-            <div className="max-w-3xl">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">One service story · four focused views</p>
-              <h2 className="yardfolio-display mt-4 text-4xl leading-tight sm:text-5xl">See {APP_DISPLAY_NAME} from every side of the work.</h2>
-              <p className="mt-4 text-lg leading-8 text-slate-600">Choose a perspective to review the information, outcomes, and next step designed for that role. Your original page and primary invitation stay unchanged.</p>
-            </div>
-            <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-slate-600">Choose a perspective</p>
-              <div aria-label="Choose your perspective" aria-orientation="horizontal" className="mt-3 flex flex-wrap gap-2" role="tablist">
-                {marketingPersonasForNavigation.map((persona, index) => (
-                  <button
-                    aria-controls="persona-review-panel"
-                    aria-selected={persona.id === activePersona.id}
-                    className={`min-h-11 rounded-full border px-3.5 py-2 text-xs font-extrabold transition ${persona.id === activePersona.id ? 'border-emerald-800 bg-emerald-800 text-white shadow-yardfolio-sm' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-700 hover:text-emerald-800'}`}
-                    id={`persona-review-tab-${persona.id}`}
-                    key={persona.id}
-                    onClick={() => selectPersona(persona.id, 'audience_review_tabs')}
-                    onKeyDown={(event) => movePersonaTab(event, index)}
-                    role="tab"
-                    tabIndex={persona.id === activePersona.id ? 0 : -1}
-                    type="button"
-                  >
-                    {persona.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+          <div className="max-w-4xl">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">Property care starts with the owner</p>
+            <h2 className="yardfolio-display mt-4 text-4xl leading-tight sm:text-5xl">Built first for yard owners, connected to everyone who helps.</h2>
+            <p className="mt-4 text-lg leading-8 text-slate-600">Yard owners are our first priority. Their view keeps decisions, visits, proof, and next steps simple; property managers and service teams receive focused views around that same care story.</p>
+          </div>
+          <div aria-label="Choose your perspective" aria-orientation="horizontal" className="mt-8 grid gap-4 lg:grid-cols-2" role="tablist">
+            {marketingPersonaGroupsForNavigation.map((group) => (
+              <section
+                className={`rounded-2xl border p-4 sm:p-5 ${group.id === 'property-customers' ? 'border-emerald-200 bg-emerald-50/70' : 'border-slate-200 bg-slate-50'}`}
+                key={group.id}
+                role="presentation"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-800">{group.label}</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">{group.description}</p>
+                  </div>
+                  {group.priorityLabel ? (
+                    <span className="shrink-0 rounded-full bg-emerald-800 px-3 py-1 text-[0.65rem] font-black uppercase tracking-wide text-white">
+                      {group.priorityLabel}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2" role="presentation">
+                  {group.personas.map((persona) => {
+                    const index = marketingPersonasForNavigation.findIndex(({ id }) => id === persona.id);
+                    return (
+                      <button
+                        aria-controls="persona-review-panel"
+                        aria-selected={persona.id === activePersona.id}
+                        className={`min-h-11 rounded-full border px-3.5 py-2 text-xs font-extrabold transition ${persona.id === activePersona.id ? 'border-emerald-800 bg-emerald-800 text-white shadow-yardfolio-sm' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-700 hover:text-emerald-800'}`}
+                        id={`persona-review-tab-${persona.id}`}
+                        key={persona.id}
+                        onClick={() => selectPersona(persona.id, 'audience_review_tabs')}
+                        onKeyDown={(event) => movePersonaTab(event, index)}
+                        role="tab"
+                        tabIndex={persona.id === activePersona.id ? 0 : -1}
+                        type="button"
+                      >
+                        {persona.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
           <p aria-live="polite" className="sr-only">Showing {APP_DISPLAY_NAME} for {activePersona.label}</p>
           <article aria-labelledby={`persona-review-tab-${activePersona.id}`} className="mt-8 grid overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-xl lg:grid-cols-[0.9fr_1.1fr]" data-testid="persona-review-panel" id="persona-review-panel" role="tabpanel">

@@ -173,10 +173,10 @@ audience routes retain their own headline and primary action. A full-bleed
 landscape image now carries the hero copy instead of duplicating persona detail
 in a sample-workspace overlay. Those entry details remain fixed to the page the
 visitor entered. A dedicated
-audience-review section follows immediately, where
-company-first keyboard tabs change the supporting narrative, outcomes, and
-role-specific action without rewriting the hero, URL, canonical metadata, or
-original conversion path. The oversized company planning surface remains in the
+audience-review section follows immediately, where owner-first keyboard tabs
+are organized into Property customers and Service teams. They change the
+supporting narrative, outcomes, and role-specific action without rewriting the
+hero, URL, canonical metadata, or original conversion path. The oversized company planning surface remains in the
 Plan product-tour step. Prepared phone/desktop geometry coverage keeps the
 full-height photographic hero within the first screen without removing any
 audience route or conversion path.
@@ -377,13 +377,14 @@ Current state:
   Professional trademark clearance, domain/app-store confirmation, final
   visual identity, and public rollout approval remain required.
 
-- The public website now has an approved company-first positioning boundary:
-  landscaping company owners/managers are the primary buyer, company setup is
-  the primary conversion, and planning, field progress, customer-ready proof,
-  and accountable follow-through form the supported promise. Billing/payment,
-  open provider discovery, and generalized vendor-governance claims remain
-  explicitly outside the launch promise. Audience-specific secondary paths are
-  retained, and social metadata uses the production hero asset.
+- The public website now has an approved Yard Owner-first positioning boundary:
+  homeowners are the primary audience, private property setup is the root
+  conversion, and understandable visits, proof, recommendations, privacy, and
+  next decisions form the supported promise. Property Managers remain on the
+  customer side; landscaping companies and Crew Leads form the service-team
+  group and retain dedicated routes and actions. Billing/payment, open provider
+  discovery, and generalized vendor-governance claims remain explicitly outside
+  the launch promise. Social metadata uses the production hero asset.
 - Company Owner and Company Manager Home now begins with a short, service-
   centered Today queue derived from already-authorized job and completion-report
   reads. It prioritizes requested proof corrections, report review, evidence
@@ -1333,8 +1334,9 @@ Current state:
 - A dedicated audience-review section immediately after the hero changes the
   supporting page story without a reload while retaining the entry URL,
   canonical metadata, campaign query parameters, and fixed hero action.
-- The active review panel is connected to its tab, and arrow, Home, and End keys
-  move both focus and selection in company-first order.
+- The active review panel is connected to its tab. Property customers appear
+  before service teams, Yard Owner is first, and arrow, Home, and End keys move
+  both focus and selection through that explicit order.
 - The entry hero layers its route-specific copy and actions over the full-bleed
   landscape image with contrast gradients and no duplicate sample-workspace
   card. Prepared geometry coverage checks the complete hero at 1024 px and

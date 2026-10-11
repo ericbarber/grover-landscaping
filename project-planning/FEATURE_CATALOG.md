@@ -45,8 +45,9 @@ workflows are not product targets.
   managers, landscaping companies, and crew leads, spanning hero actions,
   trust signals, outcomes, proof, capabilities, and final invitations
 - Full-bleed photographic public hero with a fixed route-specific entry action,
-  followed by a dedicated audience-review section with company-first keyboard
-  tabs, role-specific narratives, outcomes, and actions
+  followed by a dedicated audience-review section with owner-first keyboard
+  tabs grouped into Property customers and Service teams, plus role-specific
+  narratives, outcomes, and actions
 - Simplified entry-hero conversion hierarchy with one primary action, one
   product-tour path, improved photography focus, and no duplicate persona
   workspace overlay

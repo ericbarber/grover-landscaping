@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { APP_DISPLAY_NAME } from '../appIdentity';
 import { PublicLandingPage } from './PublicLandingPage';
 
 describe('PublicLandingPage', () => {
@@ -32,7 +31,7 @@ describe('PublicLandingPage', () => {
     expect(managerMarkup).toContain('Discuss my portfolio');
     expect(managerMarkup).toContain('properties you are authorized to access');
     expect(managerMarkup).not.toContain('Vendor accountability');
-    expect(managerMarkup).toContain('Choose a perspective');
+    expect(managerMarkup).toContain('aria-label="Choose your perspective"');
   });
 
   it('keeps the entry hero focused and moves persona review into the second section', () => {
@@ -60,7 +59,7 @@ describe('PublicLandingPage', () => {
     expect(companyHero).not.toContain('hero-entry-preview');
     expect(companyHero).not.toContain('Request a walkthrough');
     expect(companyMarkup).toContain('Plan the day. Guide the crew. Prove the work.');
-    expect(companyMarkup).toContain(`See ${APP_DISPLAY_NAME} from every side of the work.`);
+    expect(companyMarkup).toContain('Built first for yard owners, connected to everyone who helps.');
     expect(ownerMarkup).not.toContain('Sample yard owner workspace');
     expect(ownerMarkup).toContain('Know what happened—without chasing an update.');
     expect(ownerMarkup).toContain('Create my private yard');
@@ -79,5 +78,23 @@ describe('PublicLandingPage', () => {
       expect(markup).not.toContain('Sample service journey');
       expect(markup).not.toContain('data-testid="hero-entry-preview"');
     }
+  });
+
+  it('organizes audiences into owner-first customer and service groups', () => {
+    const markup = renderToStaticMarkup(<PublicLandingPage initialPersonaId="owner" />);
+
+    expect(markup).toContain('Property customers');
+    expect(markup).toContain('Service teams');
+    expect(markup).toContain('Yard owner first');
+    expect(markup).toContain('Yard owners are our first priority.');
+    expect(markup.indexOf('id="persona-review-tab-owner"')).toBeLessThan(
+      markup.indexOf('id="persona-review-tab-property-manager"'),
+    );
+    expect(markup.indexOf('id="persona-review-tab-property-manager"')).toBeLessThan(
+      markup.indexOf('id="persona-review-tab-company"'),
+    );
+    expect(markup.indexOf('id="persona-review-tab-company"')).toBeLessThan(
+      markup.indexOf('id="persona-review-tab-crew"'),
+    );
   });
 });

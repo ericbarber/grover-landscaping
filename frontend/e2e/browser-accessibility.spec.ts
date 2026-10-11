@@ -333,14 +333,14 @@ test('the audience tabs support arrow, Home, and End keyboard navigation', async
   await expect(crewTab).toHaveAttribute('aria-selected', 'true');
   await expect(page).toHaveURL(/\/for-landscaping-companies$/);
 
-  await crewTab.press('End');
-  const managerTab = page.getByRole('tab', { name: 'Property manager' });
-  await expect(managerTab).toBeFocused();
-  await expect(managerTab).toHaveAttribute('aria-selected', 'true');
+  await crewTab.press('Home');
+  const ownerTab = page.getByRole('tab', { name: 'Yard owner' });
+  await expect(ownerTab).toBeFocused();
+  await expect(ownerTab).toHaveAttribute('aria-selected', 'true');
 
-  await managerTab.press('Home');
-  await expect(companyTab).toBeFocused();
-  await expect(companyTab).toHaveAttribute('aria-selected', 'true');
+  await ownerTab.press('End');
+  await expect(crewTab).toBeFocused();
+  await expect(crewTab).toHaveAttribute('aria-selected', 'true');
 });
 
 test('the complete desktop hero stays within the first viewport', async ({ page }, testInfo) => {

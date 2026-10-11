@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-11: Reframed the public audience hierarchy around the Yard Owner.
+  The persona review now separates Property customers from Service teams,
+  places Yard Owner first, identifies the owner as the primary audience, and
+  preserves dedicated Property Manager, Landscaping Company, and Crew Lead
+  perspectives. Keyboard navigation follows the same owner-first order while
+  direct campaign routes keep their original entry headline and action.
 - 2026-10-10: Made the mobile application-install prompt actionable and
   deferable. Supported browsers retain the native installer; iPhone users now
   receive explicit Add to Home Screen steps and can acknowledge that the app
