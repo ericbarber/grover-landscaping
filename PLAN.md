@@ -508,9 +508,11 @@ A second companion owns completion-report notification queueing, busy state,
 and best-effort notification-history refresh without turning a refresh outage
 into a false write failure. Notification delivery history now has its own
 management coordinator for authorized initial reads, filtered refresh, retry,
-resolve, shared loading/unavailable state, and externally refreshed history;
-the shell retains only outcome copy and activity recording. Photo-processing,
-erasure, privacy, and operational-activity coordinators remain later slices.
+resolve, shared loading/unavailable state, and externally refreshed history.
+Photo-processing recovery now has a matching coordinator for failed-item
+initial loading, bounded thumbnail filters, retry, resolve, and shared busy
+state. The shell retains only outcome copy and activity recording for both.
+Erasure, privacy, and operational-activity coordinators remain later slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

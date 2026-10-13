@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-10-13: Extracted manager photo-processing recovery coordination from
+  the application shell. The management feature boundary now owns failed-item
+  initial loading, bounded thumbnail filters, retry and resolve refresh
+  sequencing, and shared busy state. The full frontend gate passes 154 files /
+  644 tests, TypeScript, and the production build.
 - 2026-10-13: Extracted manager notification-history coordination from the
   application shell. The management feature boundary now owns authorized
   initial loading, bounded filters, retry and resolve refresh sequencing,

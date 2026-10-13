@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { PhotoProcessingHistoryItem, PhotoProcessingStatus } from '../api/client';
 import { APP_DISPLAY_NAME } from '../appIdentity';
+import type { ManagerPhotoProcessingFilters } from '../workspaces/features/management/useManagerPhotoProcessingRecovery';
 
 type ManagerPhotoProcessingRecoveryPanelProps = {
   items: PhotoProcessingHistoryItem[];
@@ -12,9 +13,7 @@ type ManagerPhotoProcessingRecoveryPanelProps = {
 
 export type PhotoProcessingStatusFilter = PhotoProcessingStatus | 'all';
 
-export type PhotoProcessingRecoveryFilters = {
-  status: PhotoProcessingStatusFilter;
-};
+export type PhotoProcessingRecoveryFilters = ManagerPhotoProcessingFilters;
 
 const statusFilters: PhotoProcessingStatusFilter[] = ['all', 'failed', 'dead_letter', 'queued', 'processing', 'completed', 'resolved'];
 
