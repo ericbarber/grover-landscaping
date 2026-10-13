@@ -4,6 +4,7 @@ import type {
   NotificationHistoryItem,
   NotificationHistoryStatus,
 } from '../api/client';
+import type { ManagerNotificationHistoryFilters } from '../workspaces/features/management/useManagerNotificationHistory';
 import { WorkspaceStatusNotice } from './WorkspaceStatus';
 
 type ManagerNotificationHistoryPanelProps = {
@@ -18,10 +19,7 @@ type ManagerNotificationHistoryPanelProps = {
 export type NotificationHistoryEntityFilter = NotificationHistoryEntityType | 'all';
 export type NotificationHistoryStatusFilter = NotificationHistoryStatus | 'all';
 
-export type NotificationHistoryFilters = {
-  entityType: NotificationHistoryEntityFilter;
-  status: NotificationHistoryStatusFilter;
-};
+export type NotificationHistoryFilters = ManagerNotificationHistoryFilters;
 
 export const notificationHistoryEntityFilters: NotificationHistoryEntityFilter[] = [
   'all',

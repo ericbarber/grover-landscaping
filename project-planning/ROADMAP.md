@@ -233,7 +233,10 @@ quality rejection and upload finalization, durable fallback, local evidence,
 unresolved-tenant handling, and recovery copy outside `App`. Add-on mutation and
 completion-report refresh now share that boundary and keep a successful write
 distinct from a failed follow-up read. The bounded field command extraction is
-complete; broader top-level manager/data coordination remains a separate slice.
+complete. Manager notification-history reads, filtered refresh, retry, resolve,
+and shared availability state now also reside in the management feature
+boundary while the shell retains user-facing outcomes. Photo-processing,
+erasure, privacy, and operational-activity coordination remain separate slices.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-10-13: Extracted manager notification-history coordination from the
+  application shell. The management feature boundary now owns authorized
+  initial loading, bounded filters, retry and resolve refresh sequencing,
+  shared loading/unavailable state, and completion-report notification history
+  handoff. The full frontend gate passes 153 files / 641 tests, TypeScript, and
+  the production build.
+
 - 2026-10-11: Replaced the new Yard Owner's inactive-portal dead end with a
   direct care-setup recovery path. Home and My yard now explain that setup must
   be completed before visits appear, link to the resumable property/provider

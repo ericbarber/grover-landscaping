@@ -7,15 +7,12 @@ import {
   fetchCompletionReport,
   updateJobDispatchAssignment,
   fetchCustomerPrivacyExport,
-  fetchNotificationHistory,
   fetchOperationalActivity,
   fetchPhotoErasureDeletionHistory,
   fetchPhotoProcessingHistory,
   fetchPropertyCompletionReports,
-  resolveNotificationDelivery,
   resolvePhotoErasureDeletionJob,
   resolvePhotoProcessingJob,
-  retryNotificationDelivery,
   retryPhotoErasureDeletionJob,
   retryPhotoProcessingJob,
   startJob,
@@ -24,7 +21,6 @@ import {
   type CustomerPhotoErasureSummary,
   type CustomerPrivacyExport,
   type JobAddOn,
-  type NotificationHistoryItem,
   type OperationalActivity,
   type PhotoErasureDeletionHistoryItem,
   type PhotoProcessingHistoryItem,
@@ -125,6 +121,10 @@ import {
 import { useManagerCompletionReportQueue } from './workspaces/features/management/useManagerCompletionReportQueue';
 import { useManagerCompletionReportActions } from './workspaces/features/management/useManagerCompletionReportActions';
 import { useManagerCompletionReportNotifications } from './workspaces/features/management/useManagerCompletionReportNotifications';
+import {
+  useManagerNotificationHistory,
+  type ManagerNotificationHistoryFilters,
+} from './workspaces/features/management/useManagerNotificationHistory';
 import { buildManagerTodayQueue } from './domain/managerTodayQueue';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
@@ -137,7 +137,6 @@ import { ManagerTeamActivityPanel } from './components/ManagerTeamActivityPanel'
 import { TeamOrganizationOverviewPanel } from './components/TeamOrganizationOverviewPanel';
 import {
   ManagerNotificationHistoryPanel,
-  type NotificationHistoryFilters,
 } from './components/ManagerNotificationHistoryPanel';
 import {
   ManagerPhotoProcessingRecoveryPanel,
@@ -743,15 +742,12 @@ export function App() {
     photoEvidenceUnavailable,
   } = useFieldPhotoEvidence(selectedJobId);
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
-  const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
   const [operationalActivity, setOperationalActivity] = useState<OperationalActivity[]>([]);
   const [operationalActivityUnavailable, setOperationalActivityUnavailable] = useState(false);
   const [isLoadingOlderOperationalActivity, setIsLoadingOlderOperationalActivity] = useState(false);
   const [canLoadOlderOperationalActivity, setCanLoadOlderOperationalActivity] = useState(true);
   const [requestedOperationalExceptionId, setRequestedOperationalExceptionId] = useState<string>();
   const [requestedOperationalExceptionSignal, setRequestedOperationalExceptionSignal] = useState(0);
-  const [isLoadingNotificationHistory, setIsLoadingNotificationHistory] = useState(false);
-  const [notificationHistoryUnavailable, setNotificationHistoryUnavailable] = useState(false);
   const [photoProcessingHistory, setPhotoProcessingHistory] = useState<PhotoProcessingHistoryItem[]>([]);
   const [isLoadingPhotoProcessingHistory, setIsLoadingPhotoProcessingHistory] = useState(false);
   const [photoErasureDeletionHistory, setPhotoErasureDeletionHistory] = useState<PhotoErasureDeletionHistoryItem[]>([]);
@@ -937,6 +933,26 @@ export function App() {
   const canLoadOperationalActivity = enabledManagerTools.has('operations-activity');
   const canLoadPhotoProcessingHistory = enabledManagerTools.has('photo-processing');
   const canUsePhotoErasureRecovery = enabledManagerTools.has('photo-erasure');
+  const handleInitialNotificationHistoryUnavailable = useCallback(() => {
+    recordManagerActivity({
+      title: 'Notification history unavailable',
+      message: 'Delivery notification history could not be loaded from the API.',
+      tone: 'warning',
+      source: 'sync',
+    });
+  }, [recordManagerActivity]);
+  const {
+    items: notificationHistory,
+    isLoading: isLoadingNotificationHistory,
+    isUnavailable: notificationHistoryUnavailable,
+    applyExternalRefresh: applyNotificationHistoryRefresh,
+    refresh: refreshManagerNotificationHistory,
+    retry: retryManagerNotificationDelivery,
+    resolve: resolveManagerNotificationDelivery,
+  } = useManagerNotificationHistory({
+    enabled: canLoadNotificationHistory,
+    onInitialUnavailable: handleInitialNotificationHistoryUnavailable,
+  });
   const handlePartialManagerReportQueue = useCallback(() => {
     recordManagerActivity({
       title: 'Report queue partially loaded',
@@ -1442,44 +1458,6 @@ export function App() {
   ]);
 
   useEffect(() => {
-    if (!canLoadNotificationHistory) {
-      setNotificationHistory([]);
-      setNotificationHistoryUnavailable(false);
-      setIsLoadingNotificationHistory(false);
-      return;
-    }
-
-    let isMounted = true;
-    setIsLoadingNotificationHistory(true);
-
-    fetchNotificationHistory({ limit: 25 })
-      .then((items) => {
-        if (isMounted) {
-          setNotificationHistory(items);
-          setNotificationHistoryUnavailable(false);
-        }
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setNotificationHistory([]);
-        setNotificationHistoryUnavailable(true);
-        recordManagerActivity({
-          title: 'Notification history unavailable',
-          message: 'Delivery notification history could not be loaded from the API.',
-          tone: 'warning',
-          source: 'sync',
-        });
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingNotificationHistory(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [canLoadNotificationHistory]);
-
-  useEffect(() => {
     void refreshOperationalActivity();
   }, [canLoadOperationalActivity, dayPlanRefreshSignal]);
 
@@ -1720,19 +1698,12 @@ export function App() {
     }
   }
 
-  async function refreshNotificationHistory(filters: NotificationHistoryFilters) {
-    setIsLoadingNotificationHistory(true);
-    try {
-      const items = await fetchNotificationHistory({
-        entityType: filters.entityType === 'all' ? undefined : filters.entityType,
-        status: filters.status === 'all' ? undefined : filters.status,
-        limit: 25,
-      });
-      setNotificationHistory(items);
-      setNotificationHistoryUnavailable(false);
+  async function refreshNotificationHistory(
+    filters: ManagerNotificationHistoryFilters,
+  ) {
+    if (await refreshManagerNotificationHistory(filters)) {
       setStatusMessage('Notification delivery history refreshed.');
-    } catch {
-      setNotificationHistoryUnavailable(true);
+    } else {
       setStatusMessage('Could not refresh notification delivery history. Check the API connection and try again.');
       recordManagerActivity({
         title: 'Notification history refresh failed',
@@ -1740,32 +1711,23 @@ export function App() {
         tone: 'warning',
         source: 'sync',
       });
-    } finally {
-      setIsLoadingNotificationHistory(false);
     }
   }
 
   async function handleRetryNotificationDelivery(
     notificationId: string,
-    filters: NotificationHistoryFilters,
+    filters: ManagerNotificationHistoryFilters,
   ) {
-    setIsLoadingNotificationHistory(true);
-    try {
-      const retried = await retryNotificationDelivery(notificationId);
-      setNotificationHistory(await fetchNotificationHistory({
-        entityType: filters.entityType === 'all' ? undefined : filters.entityType,
-        status: filters.status === 'all' ? undefined : filters.status,
-        limit: 25,
-      }));
-      setNotificationHistoryUnavailable(false);
-      setStatusMessage(`${retried.id} queued for retry.`);
+    const result = await retryManagerNotificationDelivery(notificationId, filters);
+    if (result.ok) {
+      setStatusMessage(`${result.item.id} queued for retry.`);
       recordManagerActivity({
         title: 'Notification retry queued',
-        message: `${retried.channel} delivery for ${retried.entityId} was returned to the queue.`,
+        message: `${result.item.channel} delivery for ${result.item.entityId} was returned to the queue.`,
         tone: 'success',
         source: 'sync',
       });
-    } catch {
+    } else {
       setStatusMessage('Could not retry the notification. Confirm it is failed or needs attention.');
       recordManagerActivity({
         title: 'Notification retry failed',
@@ -1773,32 +1735,23 @@ export function App() {
         tone: 'warning',
         source: 'sync',
       });
-    } finally {
-      setIsLoadingNotificationHistory(false);
     }
   }
 
   async function handleResolveNotificationDelivery(
     notificationId: string,
-    filters: NotificationHistoryFilters,
+    filters: ManagerNotificationHistoryFilters,
   ) {
-    setIsLoadingNotificationHistory(true);
-    try {
-      const resolved = await resolveNotificationDelivery(notificationId);
-      setNotificationHistory(await fetchNotificationHistory({
-        entityType: filters.entityType === 'all' ? undefined : filters.entityType,
-        status: filters.status === 'all' ? undefined : filters.status,
-        limit: 25,
-      }));
-      setNotificationHistoryUnavailable(false);
-      setStatusMessage(`${resolved.id} marked resolved.`);
+    const result = await resolveManagerNotificationDelivery(notificationId, filters);
+    if (result.ok) {
+      setStatusMessage(`${result.item.id} marked resolved.`);
       recordManagerActivity({
         title: 'Notification resolved',
-        message: `${resolved.channel} delivery for ${resolved.entityId} was marked resolved.`,
+        message: `${result.item.channel} delivery for ${result.item.entityId} was marked resolved.`,
         tone: 'success',
         source: 'sync',
       });
-    } catch {
+    } else {
       setStatusMessage('Could not resolve the notification. Confirm it is failed or needs attention.');
       recordManagerActivity({
         title: 'Notification resolution failed',
@@ -1806,8 +1759,6 @@ export function App() {
         tone: 'warning',
         source: 'sync',
       });
-    } finally {
-      setIsLoadingNotificationHistory(false);
     }
   }
 
@@ -2054,10 +2005,9 @@ export function App() {
     }
 
     if (result.history) {
-      setNotificationHistory(result.history);
-      setNotificationHistoryUnavailable(false);
+      applyNotificationHistoryRefresh(result.history);
     } else {
-      setNotificationHistoryUnavailable(true);
+      applyNotificationHistoryRefresh(null);
       recordManagerActivity({
         title: 'Notification history refresh failed',
         message: 'The customer notification was queued, but the history panel did not refresh.',

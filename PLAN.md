@@ -503,11 +503,14 @@ Current state:
   per-job fallback, strict filtered refresh, loading state, snapshot indexing,
   and report upserts shared with the selected field report. A companion
   management hook now owns the review, change-request, resubmit, and delivery
-  commands plus their shared busy state and required report/activity refresh.
-  A second companion owns completion-report notification queueing, busy state,
-  and best-effort notification-history refresh without turning a refresh outage
-  into a false write failure. Remaining cross-workspace coordinators stay as
-  later slices.
+commands plus their shared busy state and required report/activity refresh.
+A second companion owns completion-report notification queueing, busy state,
+and best-effort notification-history refresh without turning a refresh outage
+into a false write failure. Notification delivery history now has its own
+management coordinator for authorized initial reads, filtered refresh, retry,
+resolve, shared loading/unavailable state, and externally refreshed history;
+the shell retains only outcome copy and activity recording. Photo-processing,
+erasure, privacy, and operational-activity coordinators remain later slices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,
