@@ -524,7 +524,11 @@ duplicate suppression, stale-request cancellation, availability, and access
 removal. A recorded customer-notification follow-up remains successful if only
 that activity refresh fails. The bounded manager recovery/data extraction is
 complete; customer portal/history coordination is the next safe internal
-feature-state slice while participant evidence remains external.
+feature-state slice while participant evidence remains external. The first
+customer slice now owns authorized property/visit collection loading, exact
+access-required/inconsistent/unavailable classification, retry, identity and
+persona cancellation, and access removal outside `App`. Manager preview report
+and bid history remain the bounded customer follow-on.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

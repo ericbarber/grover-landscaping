@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ApiRequestError, isApiErrorCode } from './api/apiError';
+import { isApiErrorCode } from './api/apiError';
 import {
   completeJob,
   completeDispatchCustomerNotification,
@@ -14,7 +14,6 @@ import {
   type PropertyCompletionReportSummary,
 } from './api/client';
 import { fetchAccountProjectBids } from './api/projectBidsClient';
-import { fetchCustomerPortalVisits } from './api/customerPortalClient';
 import { useAuth } from './auth/AuthProvider';
 import type { CrewRouteOverview } from './domain/dayPlans';
 import type {
@@ -64,8 +63,8 @@ import {
   customerWorkspaceModeForPersona,
   personaUsesAuthorizedCustomerRead,
   personaUsesManagerCustomerPreview,
-  type CustomerPortalReadState,
 } from './workspaces/features/customer/customerWorkspace';
+import { useCustomerPortalCollection } from './workspaces/features/customer/useCustomerPortalCollection';
 import {
   fieldRecoveryState,
   mergePhotoEvidence,
@@ -163,10 +162,6 @@ import {
 } from './domain/managerActivityLocalStore';
 import { notificationsToManagerActivity } from './domain/notificationManagerActivity';
 import { operationsToManagerActivity } from './domain/operationalManagerActivity';
-import type {
-  CustomerPortalPropertySummary,
-  CustomerPortalVisitSummary,
-} from './domain/customerPortalVisits';
 import type { PortfolioPropertyLink, PropertyPortfolio } from './domain/propertyPortfolios';
 import { projectBidTotalCents, type ProjectBid } from './domain/stopProgress';
 
@@ -744,17 +739,17 @@ export function App() {
   const [propertyCompletionReports, setPropertyCompletionReports] = useState<
     Record<string, PropertyCompletionReportSummary[]>
   >({});
-  const [customerPortalProperties, setCustomerPortalProperties] = useState<
-    CustomerPortalPropertySummary[]
-  >([]);
-  const [customerPortalVisits, setCustomerPortalVisits] = useState<CustomerPortalVisitSummary[]>([]);
-  const [isLoadingCustomerPortalVisits, setIsLoadingCustomerPortalVisits] = useState(false);
-  const [customerPortalVisitError, setCustomerPortalVisitError] = useState<
-    'access_required' | 'inconsistent' | 'unavailable' | null
-  >(null);
-  const [customerPortalVisitRefreshSignal, setCustomerPortalVisitRefreshSignal] = useState(0);
-  const [portalHomeReadState, setPortalHomeReadState] =
-    useState<CustomerPortalReadState>('loading');
+  const {
+    properties: customerPortalProperties,
+    visits: customerPortalVisits,
+    isLoading: isLoadingCustomerPortalVisits,
+    readError: customerPortalVisitError,
+    readState: portalHomeReadState,
+    refresh: refreshCustomerPortalVisits,
+  } = useCustomerPortalCollection({
+    enabled: personaUsesAuthorizedCustomerRead(activePersona.id) && Boolean(auth.userId),
+    subjectKey: `${activePersona.id}:${auth.userId ?? ''}`,
+  });
   const [crewRouteOverview, setCrewRouteOverview] = useState<CrewRouteOverview>({
     source: 'loading', totalStops: 0, completedStops: 0,
   });
@@ -1295,50 +1290,6 @@ export function App() {
   useEffect(() => {
     setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));
   }, [managerActivity]);
-
-  useEffect(() => {
-    if (!personaUsesAuthorizedCustomerRead(activePersona.id) || !auth.userId) {
-      setCustomerPortalProperties([]);
-      setCustomerPortalVisits([]);
-      setCustomerPortalVisitError(null);
-      setIsLoadingCustomerPortalVisits(false);
-      setPortalHomeReadState('loading');
-      return;
-    }
-
-    let isMounted = true;
-    setIsLoadingCustomerPortalVisits(true);
-    setCustomerPortalVisitError(null);
-    setPortalHomeReadState('loading');
-    void fetchCustomerPortalVisits()
-      .then((collection) => {
-        if (!isMounted) return;
-        setCustomerPortalProperties(collection.properties);
-        setCustomerPortalVisits(collection.visits);
-        setPortalHomeReadState('ready');
-      })
-      .catch((error: unknown) => {
-        if (!isMounted) return;
-        setCustomerPortalProperties([]);
-        setCustomerPortalVisits([]);
-        const readError =
-          error instanceof ApiRequestError && error.code === 'customer_portal_access_required'
-            ? 'access_required'
-            : error instanceof ApiRequestError
-                && error.code === 'customer_portal_access_inconsistent'
-              ? 'inconsistent'
-              : 'unavailable';
-        setCustomerPortalVisitError(readError);
-        setPortalHomeReadState(readError);
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingCustomerPortalVisits(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activePersona.id, auth.userId, customerPortalVisitRefreshSignal]);
 
   useEffect(() => {
     let isMounted = true;
@@ -2185,14 +2136,14 @@ export function App() {
             {customerWorkspaceMode === 'portfolio' ? (
               <div className="space-y-6">
                 <PropertyManagerInvitationInbox
-                  onAccepted={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
+                  onAccepted={() => void refreshCustomerPortalVisits()}
                 />
                 <PropertyManagerAuthorizedPortfolioPanel
                   rolloutUnit={managedPersonaUnit}
                   properties={customerPortalProperties}
                   visits={customerPortalVisits}
                   readState={portalHomeReadState}
-                  onRetry={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
+                  onRetry={() => void refreshCustomerPortalVisits()}
                   onReturnHome={() => changeMobileView('home', true)}
                 />
               </div>
@@ -2204,7 +2155,7 @@ export function App() {
                 visits={customerPortalVisits}
                 isLoadingVisits={isLoadingCustomerPortalVisits}
                 visitReadError={customerPortalVisitError}
-                onRetryVisits={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
+                onRetryVisits={() => void refreshCustomerPortalVisits()}
                 onReturnHome={() => changeMobileView('home', true)}
               />
             ) : (

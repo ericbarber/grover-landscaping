@@ -245,7 +245,10 @@ the follow-up export read fails and withholds stale export data. Operational
 activity now owns bounded refresh and pagination, duplicate suppression,
 stale-request cancellation, availability, and access removal in the same
 feature boundary. Customer portal/history coordination remains a separate
-internal slice.
+internal slice; its first step now moves the authorized property/visit
+collection, exact access failure classification, retry, identity/persona
+cancellation, and access removal into the customer feature boundary. Manager
+preview report and bid history remain the bounded follow-on.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

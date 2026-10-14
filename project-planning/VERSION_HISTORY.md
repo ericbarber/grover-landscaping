@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-14: Extracted the authorized customer property/visit collection from
+  the application shell. The customer feature boundary now owns loading,
+  retries, exact access-required/inconsistent/unavailable classification,
+  stale-request cancellation across identity and persona changes, and access
+  removal. The full frontend gate passes 158 files / 657 tests, TypeScript, and
+  the production build.
 - 2026-10-14: Extracted operational-activity refresh and pagination from the
   application shell. The management feature boundary now owns authorization,
   cursor paging, duplicate suppression, stale-request cancellation,
