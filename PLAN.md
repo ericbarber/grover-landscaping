@@ -514,8 +514,12 @@ initial loading, bounded thumbnail filters, retry, resolve, and shared busy
 state. Photo-erasure deletion recovery now also owns its authorized refresh,
 retry, resolve, post-write history synchronization, and shared busy state in
 the management boundary. The shell retains only outcome copy and activity
-recording for these recovery tools. Privacy and operational-activity
-coordinators remain later slices.
+recording for these recovery tools. Customer privacy export and photo erasure
+now have an authorization-aware coordinator with mutually exclusive results
+and shared busy state. A successful erasure remains confirmed when only its
+follow-up export refresh fails, while stale export data is withheld and the
+read outage is reported separately. Operational-activity coordination remains
+a later slice.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

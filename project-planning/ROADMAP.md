@@ -239,8 +239,10 @@ boundary. Photo-processing recovery now owns its failed-item initial read,
 bounded thumbnail filters, retry, resolve, and shared busy state there as well,
 and photo-erasure deletion recovery owns its authorized refresh, retry,
 resolve, post-write history synchronization, and busy state. The shell retains
-user-facing outcomes. Privacy and operational-activity coordination remain
-separate slices.
+user-facing outcomes. Customer privacy export and photo erasure now share an
+authorization-aware coordinator that preserves a successful erasure when only
+the follow-up export read fails and withholds stale export data. Operational-
+activity coordination remains a separate slice.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

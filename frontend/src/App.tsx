@@ -3,17 +3,13 @@ import { ApiRequestError, isApiErrorCode } from './api/apiError';
 import {
   completeJob,
   completeDispatchCustomerNotification,
-  eraseCustomerPhotoEvidence,
   fetchCompletionReport,
   updateJobDispatchAssignment,
-  fetchCustomerPrivacyExport,
   fetchOperationalActivity,
   fetchPropertyCompletionReports,
   startJob,
   updateChecklistItem,
   type CustomerPropertyRecord,
-  type CustomerPhotoErasureSummary,
-  type CustomerPrivacyExport,
   type JobAddOn,
   type OperationalActivity,
   type PhotoUploadTicket,
@@ -122,6 +118,7 @@ import {
   type ManagerPhotoProcessingFilters,
 } from './workspaces/features/management/useManagerPhotoProcessingRecovery';
 import { useManagerPhotoErasureRecovery } from './workspaces/features/management/useManagerPhotoErasureRecovery';
+import { useManagerCustomerPrivacy } from './workspaces/features/management/useManagerCustomerPrivacy';
 import { buildManagerTodayQueue } from './domain/managerTodayQueue';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
@@ -742,9 +739,6 @@ export function App() {
   const [canLoadOlderOperationalActivity, setCanLoadOlderOperationalActivity] = useState(true);
   const [requestedOperationalExceptionId, setRequestedOperationalExceptionId] = useState<string>();
   const [requestedOperationalExceptionSignal, setRequestedOperationalExceptionSignal] = useState(0);
-  const [customerPrivacyExport, setCustomerPrivacyExport] = useState<CustomerPrivacyExport | null>(null);
-  const [customerPhotoErasureSummary, setCustomerPhotoErasureSummary] = useState<CustomerPhotoErasureSummary | null>(null);
-  const [isLoadingCustomerPrivacy, setIsLoadingCustomerPrivacy] = useState(false);
   const [activeManagerOrganizationId, setActiveManagerOrganizationId] = useState('org_demo_landscaping');
   const [managerPropertyOnboardingOptions, setManagerPropertyOnboardingOptions] = useState(
     initialManagerPropertyOnboardingOptions,
@@ -922,6 +916,7 @@ export function App() {
   const canLoadNotificationHistory = enabledManagerTools.has('notifications');
   const canLoadOperationalActivity = enabledManagerTools.has('operations-activity');
   const canLoadPhotoProcessingHistory = enabledManagerTools.has('photo-processing');
+  const canUseCustomerPrivacy = enabledManagerTools.has('customer-privacy');
   const canUsePhotoErasureRecovery = enabledManagerTools.has('photo-erasure');
   const handleInitialNotificationHistoryUnavailable = useCallback(() => {
     recordManagerActivity({
@@ -969,6 +964,15 @@ export function App() {
     resolve: resolveManagerPhotoErasureDeletion,
   } = useManagerPhotoErasureRecovery({
     enabled: canUsePhotoErasureRecovery,
+  });
+  const {
+    privacyExport: customerPrivacyExport,
+    erasure: customerPhotoErasureSummary,
+    isLoading: isLoadingCustomerPrivacy,
+    exportAccount: exportManagerCustomerPrivacy,
+    erasePhotos: eraseManagerCustomerPhotos,
+  } = useManagerCustomerPrivacy({
+    enabled: canUseCustomerPrivacy,
   });
   const handlePartialManagerReportQueue = useCallback(() => {
     recordManagerActivity({
@@ -1847,19 +1851,16 @@ export function App() {
   }
 
   async function handleCustomerPrivacyExport(accountId: string) {
-    setIsLoadingCustomerPrivacy(true);
-    try {
-      const privacyExport = await fetchCustomerPrivacyExport(accountId);
-      setCustomerPrivacyExport(privacyExport);
-      setCustomerPhotoErasureSummary(null);
-      setStatusMessage(`Exported privacy data for ${privacyExport.account.customerName}.`);
+    const result = await exportManagerCustomerPrivacy(accountId);
+    if (result.ok) {
+      setStatusMessage(`Exported privacy data for ${result.privacyExport.account.customerName}.`);
       recordManagerActivity({
         title: 'Customer privacy export created',
-        message: `${privacyExport.account.customerName} export includes ${privacyExport.photoEvidence.length} photo evidence metadata item${privacyExport.photoEvidence.length === 1 ? '' : 's'}.`,
+        message: `${result.privacyExport.account.customerName} export includes ${result.privacyExport.photoEvidence.length} photo evidence metadata item${result.privacyExport.photoEvidence.length === 1 ? '' : 's'}.`,
         tone: 'success',
         source: 'sync',
       });
-    } catch {
+    } else {
       setStatusMessage('Could not export customer privacy data. Confirm the account is in scope.');
       recordManagerActivity({
         title: 'Customer privacy export failed',
@@ -1867,26 +1868,30 @@ export function App() {
         tone: 'warning',
         source: 'sync',
       });
-    } finally {
-      setIsLoadingCustomerPrivacy(false);
     }
   }
 
   async function handleCustomerPhotoErasure(accountId: string, reason: string) {
-    setIsLoadingCustomerPrivacy(true);
-    try {
-      const erasure = await eraseCustomerPhotoEvidence(accountId, reason);
-      setCustomerPhotoErasureSummary(erasure);
-      const privacyExport = await fetchCustomerPrivacyExport(accountId);
-      setCustomerPrivacyExport(privacyExport);
-      setStatusMessage(`Erased retained photo evidence for ${accountId}.`);
+    const result = await eraseManagerCustomerPhotos(accountId, reason);
+    if (result.ok) {
+      setStatusMessage(result.privacyExport
+        ? `Erased retained photo evidence for ${accountId}.`
+        : `Erased retained photo evidence for ${accountId}. The latest export could not be refreshed.`);
       recordManagerActivity({
         title: 'Customer photo evidence erased',
-        message: `${erasure.erasedPhotoCount} photo evidence item${erasure.erasedPhotoCount === 1 ? '' : 's'} erased for ${accountId}.`,
+        message: `${result.erasure.erasedPhotoCount} photo evidence item${result.erasure.erasedPhotoCount === 1 ? '' : 's'} erased for ${accountId}.`,
         tone: 'success',
         source: 'photo',
       });
-    } catch {
+      if (!result.privacyExport) {
+        recordManagerActivity({
+          title: 'Customer privacy export refresh failed',
+          message: `Photo evidence was erased for ${accountId}, but the updated privacy export could not be loaded.`,
+          tone: 'warning',
+          source: 'sync',
+        });
+      }
+    } else {
       setStatusMessage('Could not erase customer photo evidence. Confirm the reason and account scope.');
       recordManagerActivity({
         title: 'Customer photo erasure failed',
@@ -1894,8 +1899,6 @@ export function App() {
         tone: 'warning',
         source: 'photo',
       });
-    } finally {
-      setIsLoadingCustomerPrivacy(false);
     }
   }
 

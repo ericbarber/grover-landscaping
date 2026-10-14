@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-10-14: Extracted customer privacy export and photo-erasure coordination
+  from the application shell. The authorization-aware management boundary owns
+  mutually exclusive results and shared busy state. It now distinguishes a
+  failed erasure write from a successful erasure whose follow-up export is
+  unavailable, withholding stale export data while preserving the confirmed
+  destructive outcome. The full frontend gate passes 156 files / 651 tests,
+  TypeScript, and the production build.
 - 2026-10-14: Extracted manager photo-erasure deletion recovery coordination
   from the application shell. The management feature boundary now owns
   authorization-aware refresh, retry and resolve sequencing, required
