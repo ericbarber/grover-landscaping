@@ -5,13 +5,11 @@ import {
   completeDispatchCustomerNotification,
   fetchCompletionReport,
   updateJobDispatchAssignment,
-  fetchOperationalActivity,
   fetchPropertyCompletionReports,
   startJob,
   updateChecklistItem,
   type CustomerPropertyRecord,
   type JobAddOn,
-  type OperationalActivity,
   type PhotoUploadTicket,
   type PropertyCompletionReportSummary,
 } from './api/client';
@@ -119,6 +117,7 @@ import {
 } from './workspaces/features/management/useManagerPhotoProcessingRecovery';
 import { useManagerPhotoErasureRecovery } from './workspaces/features/management/useManagerPhotoErasureRecovery';
 import { useManagerCustomerPrivacy } from './workspaces/features/management/useManagerCustomerPrivacy';
+import { useManagerOperationalActivity } from './workspaces/features/management/useManagerOperationalActivity';
 import { buildManagerTodayQueue } from './domain/managerTodayQueue';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
@@ -733,10 +732,6 @@ export function App() {
     photoEvidenceUnavailable,
   } = useFieldPhotoEvidence(selectedJobId);
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
-  const [operationalActivity, setOperationalActivity] = useState<OperationalActivity[]>([]);
-  const [operationalActivityUnavailable, setOperationalActivityUnavailable] = useState(false);
-  const [isLoadingOlderOperationalActivity, setIsLoadingOlderOperationalActivity] = useState(false);
-  const [canLoadOlderOperationalActivity, setCanLoadOlderOperationalActivity] = useState(true);
   const [requestedOperationalExceptionId, setRequestedOperationalExceptionId] = useState<string>();
   const [requestedOperationalExceptionSignal, setRequestedOperationalExceptionSignal] = useState(0);
   const [activeManagerOrganizationId, setActiveManagerOrganizationId] = useState('org_demo_landscaping');
@@ -973,6 +968,17 @@ export function App() {
     erasePhotos: eraseManagerCustomerPhotos,
   } = useManagerCustomerPrivacy({
     enabled: canUseCustomerPrivacy,
+  });
+  const {
+    items: operationalActivity,
+    isUnavailable: operationalActivityUnavailable,
+    canLoadOlder: canLoadOlderOperationalActivity,
+    isLoadingOlder: isLoadingOlderOperationalActivity,
+    refresh: refreshOperationalActivity,
+    loadOlder: loadOlderOperationalActivity,
+  } = useManagerOperationalActivity({
+    enabled: canLoadOperationalActivity,
+    refreshSignal: dayPlanRefreshSignal,
   });
   const handlePartialManagerReportQueue = useCallback(() => {
     recordManagerActivity({
@@ -1445,47 +1451,6 @@ export function App() {
     canLoadCustomerPortalPreview,
   ]);
 
-  useEffect(() => {
-    void refreshOperationalActivity();
-  }, [canLoadOperationalActivity, dayPlanRefreshSignal]);
-
-  async function refreshOperationalActivity() {
-    if (!canLoadOperationalActivity) {
-      setOperationalActivity([]);
-      setCanLoadOlderOperationalActivity(false);
-      setOperationalActivityUnavailable(false);
-      return;
-    }
-    setOperationalActivityUnavailable(false);
-    try {
-      const items = await fetchOperationalActivity({ limit: 25 });
-      setOperationalActivity(items);
-      setCanLoadOlderOperationalActivity(items.length === 25);
-    } catch {
-      setOperationalActivity([]);
-      setCanLoadOlderOperationalActivity(false);
-      setOperationalActivityUnavailable(true);
-    }
-  }
-
-  async function loadOlderOperationalActivity() {
-    const before = operationalActivity[operationalActivity.length - 1]?.occurredAt;
-    if (!before || isLoadingOlderOperationalActivity) return;
-    setIsLoadingOlderOperationalActivity(true);
-    try {
-      const items = await fetchOperationalActivity({ before, limit: 25 });
-      setOperationalActivity((current) => {
-        const existingIds = new Set(current.map((item) => item.id));
-        return [...current, ...items.filter((item) => !existingIds.has(item.id))];
-      });
-      setCanLoadOlderOperationalActivity(items.length === 25);
-    } catch {
-      setCanLoadOlderOperationalActivity(false);
-    } finally {
-      setIsLoadingOlderOperationalActivity(false);
-    }
-  }
-
   async function discardReviewedJobConflict(mutation: JobLifecycleOfflineMutation) {
     const outcome = await discardJobConflict(mutation);
     setStatusMessage(reviewedFieldConflictMessage('job', outcome, mutation.action));
@@ -1679,8 +1644,10 @@ export function App() {
   ) {
     try {
       await completeDispatchCustomerNotification(jobId, channel);
-      await refreshOperationalActivity();
-      setStatusMessage(`Customer notification follow-up recorded by ${channel}.`);
+      const activityRefreshed = await refreshOperationalActivity();
+      setStatusMessage(activityRefreshed
+        ? `Customer notification follow-up recorded by ${channel}.`
+        : `Customer notification follow-up recorded by ${channel}. Activity could not be refreshed.`);
     } catch {
       setStatusMessage('Customer notification follow-up could not be recorded.');
     }

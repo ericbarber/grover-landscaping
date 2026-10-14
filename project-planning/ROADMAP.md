@@ -241,8 +241,11 @@ and photo-erasure deletion recovery owns its authorized refresh, retry,
 resolve, post-write history synchronization, and busy state. The shell retains
 user-facing outcomes. Customer privacy export and photo erasure now share an
 authorization-aware coordinator that preserves a successful erasure when only
-the follow-up export read fails and withholds stale export data. Operational-
-activity coordination remains a separate slice.
+the follow-up export read fails and withholds stale export data. Operational
+activity now owns bounded refresh and pagination, duplicate suppression,
+stale-request cancellation, availability, and access removal in the same
+feature boundary. Customer portal/history coordination remains a separate
+internal slice.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-10-14: Extracted operational-activity refresh and pagination from the
+  application shell. The management feature boundary now owns authorization,
+  cursor paging, duplicate suppression, stale-request cancellation,
+  availability, and access removal. A recorded customer-notification follow-up
+  remains confirmed if only its subsequent activity refresh fails. The full
+  frontend gate passes 157 files / 654 tests, TypeScript, and the production
+  build.
 - 2026-10-14: Extracted customer privacy export and photo-erasure coordination
   from the application shell. The authorization-aware management boundary owns
   mutually exclusive results and shared busy state. It now distinguishes a
