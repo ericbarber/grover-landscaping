@@ -12,7 +12,6 @@ import {
   type PhotoUploadTicket,
   type PropertyCompletionReportSummary,
 } from './api/client';
-import { fetchAccountProjectBids } from './api/projectBidsClient';
 import { useAuth } from './auth/AuthProvider';
 import type { CrewRouteOverview } from './domain/dayPlans';
 import type {
@@ -65,6 +64,7 @@ import {
 } from './workspaces/features/customer/customerWorkspace';
 import { useCustomerPortalCollection } from './workspaces/features/customer/useCustomerPortalCollection';
 import { useCustomerPropertyReportHistory } from './workspaces/features/customer/useCustomerPropertyReportHistory';
+import { useCustomerProjectBidHistory } from './workspaces/features/customer/useCustomerProjectBidHistory';
 import {
   fieldRecoveryState,
   mergePhotoEvidence,
@@ -753,9 +753,6 @@ export function App() {
   const handleCrewRouteOverviewChange = useCallback((overview: CrewRouteOverview) => {
     setCrewRouteOverview(overview);
   }, []);
-  const [customerProjectBids, setCustomerProjectBids] = useState<ProjectBid[]>([]);
-  const [isLoadingCustomerProjectBids, setIsLoadingCustomerProjectBids] = useState(false);
-  const [hasCustomerProjectBidHistoryError, setHasCustomerProjectBidHistoryError] = useState(false);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
   const [propertyOnboardingRefreshSignal, setPropertyOnboardingRefreshSignal] = useState(0);
   const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
@@ -996,6 +993,26 @@ export function App() {
     ),
     propertyIds: managerPreviewPropertyIds,
     onPartialUnavailable: handlePartialCustomerReportHistory,
+  });
+  const handleCustomerBidHistoryUnavailable = useCallback(() => {
+    recordManagerActivity({
+      title: 'Customer bid history unavailable',
+      message: 'Customer account bid history could not be loaded for the portal preview.',
+      tone: 'warning',
+      source: 'sync',
+    });
+  }, [recordManagerActivity]);
+  const {
+    bids: customerProjectBids,
+    isLoading: isLoadingCustomerProjectBids,
+    hasError: hasCustomerProjectBidHistoryError,
+  } = useCustomerProjectBidHistory({
+    enabled: personaUsesManagerCustomerPreview(
+      activePersona.id,
+      canLoadCustomerPortalPreview,
+    ),
+    accountId: customerPortalPreviewCustomer.id,
+    onUnavailable: handleCustomerBidHistoryUnavailable,
   });
   const handlePartialManagerReportQueue = useCallback(() => {
     recordManagerActivity({
@@ -1312,53 +1329,6 @@ export function App() {
   useEffect(() => {
     setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));
   }, [managerActivity]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const canLoadBids = personaUsesManagerCustomerPreview(
-      activePersona.id,
-      canLoadCustomerPortalPreview,
-    );
-    if (!canLoadBids) {
-      setCustomerProjectBids([]);
-      setIsLoadingCustomerProjectBids(false);
-      setHasCustomerProjectBidHistoryError(false);
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    setIsLoadingCustomerProjectBids(true);
-
-    fetchAccountProjectBids(customerPortalPreviewCustomer.id)
-      .then((bids) => {
-        if (!isMounted) return;
-        setCustomerProjectBids(bids);
-        setHasCustomerProjectBidHistoryError(false);
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setCustomerProjectBids([]);
-        setHasCustomerProjectBidHistoryError(true);
-        recordManagerActivity({
-          title: 'Customer bid history unavailable',
-          message: 'Customer account bid history could not be loaded for the portal preview.',
-          tone: 'warning',
-          source: 'sync',
-        });
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingCustomerProjectBids(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [
-    activePersona.id,
-    canLoadCustomerPortalPreview,
-  ]);
 
   async function discardReviewedJobConflict(mutation: JobLifecycleOfflineMutation) {
     const outcome = await discardJobConflict(mutation);

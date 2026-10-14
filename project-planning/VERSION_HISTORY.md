@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-10-14: Extracted manager preview project-bid history from the
+  application shell. The customer feature boundary now owns exact account
+  scope, loading, unavailable state, stale-request cancellation, and capability
+  removal. The full frontend gate passes 160 files / 662 tests, TypeScript, and
+  the production build.
 - 2026-10-14: Extracted manager preview property-report history from the
   application shell. The customer feature boundary now owns per-property reads,
   partial-result preservation, stale-request cancellation, loading/error state,

@@ -530,8 +530,10 @@ access-required/inconsistent/unavailable classification, retry, identity and
 persona cancellation, and access removal outside `App`. Manager preview report
 history now has a matching coordinator that preserves successful property
 results during partial outages, cancels stale reads, and clears data when the
-preview capability is removed. Manager preview bid history remains the bounded
-customer follow-on.
+preview capability is removed. Manager preview bid history now has the same
+loading, unavailable, stale-request, account-scope, and capability-removal
+boundary. The bounded customer portal/history coordinator extraction is
+complete.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,
