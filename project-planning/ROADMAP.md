@@ -237,8 +237,10 @@ complete. Manager notification-history reads, filtered refresh, retry, resolve,
 and shared availability state now also reside in the management feature
 boundary. Photo-processing recovery now owns its failed-item initial read,
 bounded thumbnail filters, retry, resolve, and shared busy state there as well,
-while the shell retains user-facing outcomes. Erasure, privacy, and
-operational-activity coordination remain separate slices.
+and photo-erasure deletion recovery owns its authorized refresh, retry,
+resolve, post-write history synchronization, and busy state. The shell retains
+user-facing outcomes. Privacy and operational-activity coordination remain
+separate slices.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-10-14: Extracted manager photo-erasure deletion recovery coordination
+  from the application shell. The management feature boundary now owns
+  authorization-aware refresh, retry and resolve sequencing, required
+  post-write history reads, and shared busy state. The full frontend gate
+  passes 155 files / 647 tests, TypeScript, and the production build.
 - 2026-10-13: Extracted manager photo-processing recovery coordination from
   the application shell. The management feature boundary now owns failed-item
   initial loading, bounded thumbnail filters, retry and resolve refresh
