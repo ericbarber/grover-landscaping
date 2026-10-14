@@ -5,7 +5,6 @@ import {
   completeDispatchCustomerNotification,
   fetchCompletionReport,
   updateJobDispatchAssignment,
-  fetchPropertyCompletionReports,
   startJob,
   updateChecklistItem,
   type CustomerPropertyRecord,
@@ -65,6 +64,7 @@ import {
   personaUsesManagerCustomerPreview,
 } from './workspaces/features/customer/customerWorkspace';
 import { useCustomerPortalCollection } from './workspaces/features/customer/useCustomerPortalCollection';
+import { useCustomerPropertyReportHistory } from './workspaces/features/customer/useCustomerPropertyReportHistory';
 import {
   fieldRecoveryState,
   mergePhotoEvidence,
@@ -736,9 +736,6 @@ export function App() {
   const [managerCustomerProperties, setManagerCustomerProperties] = useState(
     initialManagerCustomerProperties,
   );
-  const [propertyCompletionReports, setPropertyCompletionReports] = useState<
-    Record<string, PropertyCompletionReportSummary[]>
-  >({});
   const {
     properties: customerPortalProperties,
     visits: customerPortalVisits,
@@ -756,8 +753,6 @@ export function App() {
   const handleCrewRouteOverviewChange = useCallback((overview: CrewRouteOverview) => {
     setCrewRouteOverview(overview);
   }, []);
-  const [isLoadingPropertyCompletionReports, setIsLoadingPropertyCompletionReports] = useState(false);
-  const [hasPropertyCompletionReportHistoryError, setHasPropertyCompletionReportHistoryError] = useState(false);
   const [customerProjectBids, setCustomerProjectBids] = useState<ProjectBid[]>([]);
   const [isLoadingCustomerProjectBids, setIsLoadingCustomerProjectBids] = useState(false);
   const [hasCustomerProjectBidHistoryError, setHasCustomerProjectBidHistoryError] = useState(false);
@@ -974,6 +969,33 @@ export function App() {
   } = useManagerOperationalActivity({
     enabled: canLoadOperationalActivity,
     refreshSignal: dayPlanRefreshSignal,
+  });
+  const managerPreviewPropertyIds = useMemo(
+    () => filterPropertiesForCustomerPortal(
+      customerPortalPreviewProperties,
+      customerPortalPreviewCustomer,
+    ).map((property) => property.id),
+    [],
+  );
+  const handlePartialCustomerReportHistory = useCallback(() => {
+    recordManagerActivity({
+      title: 'Customer report history unavailable',
+      message: 'Delivered property report history could not be loaded for every customer portal property.',
+      tone: 'warning',
+      source: 'sync',
+    });
+  }, [recordManagerActivity]);
+  const {
+    reportsByProperty: propertyCompletionReports,
+    isLoading: isLoadingPropertyCompletionReports,
+    hasError: hasPropertyCompletionReportHistoryError,
+  } = useCustomerPropertyReportHistory({
+    enabled: personaUsesManagerCustomerPreview(
+      activePersona.id,
+      canLoadCustomerPortalPreview,
+    ),
+    propertyIds: managerPreviewPropertyIds,
+    onPartialUnavailable: handlePartialCustomerReportHistory,
   });
   const handlePartialManagerReportQueue = useCallback(() => {
     recordManagerActivity({
@@ -1290,70 +1312,6 @@ export function App() {
   useEffect(() => {
     setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));
   }, [managerActivity]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const canLoadHistory = personaUsesManagerCustomerPreview(
-      activePersona.id,
-      canLoadCustomerPortalPreview,
-    );
-    if (!canLoadHistory) {
-      setPropertyCompletionReports({});
-      setIsLoadingPropertyCompletionReports(false);
-      setHasPropertyCompletionReportHistoryError(false);
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    const visibleProperties = filterPropertiesForCustomerPortal(
-      customerPortalPreviewProperties,
-      customerPortalPreviewCustomer,
-    );
-    setPropertyCompletionReports({});
-    setIsLoadingPropertyCompletionReports(true);
-
-    Promise.allSettled(
-      visibleProperties.map(async (property) => ({
-        propertyId: property.id,
-        reports: await fetchPropertyCompletionReports(property.id),
-      })),
-    )
-      .then((results) => {
-        if (!isMounted) return;
-
-        const hasRejectedHistory = results.some((result) => result.status === 'rejected');
-        setPropertyCompletionReports(
-          results.reduce<Record<string, PropertyCompletionReportSummary[]>>((next, result) => {
-            if (result.status === 'fulfilled') {
-              next[result.value.propertyId] = result.value.reports;
-            }
-            return next;
-          }, {}),
-        );
-        setHasPropertyCompletionReportHistoryError(hasRejectedHistory);
-
-        if (hasRejectedHistory) {
-          recordManagerActivity({
-            title: 'Customer report history unavailable',
-            message: 'Delivered property report history could not be loaded for every customer portal property.',
-            tone: 'warning',
-            source: 'sync',
-          });
-        }
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingPropertyCompletionReports(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [
-    activePersona.id,
-    canLoadCustomerPortalPreview,
-  ]);
 
   useEffect(() => {
     let isMounted = true;

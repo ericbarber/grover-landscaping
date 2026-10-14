@@ -528,7 +528,10 @@ feature-state slice while participant evidence remains external. The first
 customer slice now owns authorized property/visit collection loading, exact
 access-required/inconsistent/unavailable classification, retry, identity and
 persona cancellation, and access removal outside `App`. Manager preview report
-and bid history remain the bounded customer follow-on.
+history now has a matching coordinator that preserves successful property
+results during partial outages, cancels stale reads, and clears data when the
+preview capability is removed. Manager preview bid history remains the bounded
+customer follow-on.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

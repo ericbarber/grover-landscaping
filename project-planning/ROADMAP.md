@@ -248,7 +248,9 @@ feature boundary. Customer portal/history coordination remains a separate
 internal slice; its first step now moves the authorized property/visit
 collection, exact access failure classification, retry, identity/persona
 cancellation, and access removal into the customer feature boundary. Manager
-preview report and bid history remain the bounded follow-on.
+preview report history now also preserves successful property reads during a
+partial outage and clears data when capability is removed. Bid history remains
+the bounded follow-on.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

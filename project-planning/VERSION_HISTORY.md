@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-10-14: Extracted manager preview property-report history from the
+  application shell. The customer feature boundary now owns per-property reads,
+  partial-result preservation, stale-request cancellation, loading/error state,
+  and capability removal. The full frontend gate passes 159 files / 660 tests,
+  TypeScript, and the production build.
 - 2026-10-14: Extracted the authorized customer property/visit collection from
   the application shell. The customer feature boundary now owns loading,
   retries, exact access-required/inconsistent/unavailable classification,
