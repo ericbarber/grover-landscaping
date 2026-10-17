@@ -6,7 +6,7 @@ import {
 
 const managerActivityStorageKey = `${APP_STORAGE_NAMESPACE}.managerActivity.items`;
 const maxStoredManagerActivityItems = 20;
-const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'sync'];
+const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'recovery', 'sync'];
 const activityTones: ManagerActivityTone[] = ['info', 'warning', 'success'];
 
 function isManagerActivityItem(value: unknown): value is ManagerActivityItem {

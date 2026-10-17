@@ -152,20 +152,11 @@ import {
   type CustomerPortalWorkSummary,
   type CustomerPropertyProfile,
 } from './domain/jobs';
-import {
-  prependManagerActivity,
-  type ManagerActivityItem,
-} from './domain/managerActivity';
-import {
-  readStoredManagerActivityItems,
-  writeStoredManagerActivityItems,
-} from './domain/managerActivityLocalStore';
 import { notificationsToManagerActivity } from './domain/notificationManagerActivity';
 import { operationsToManagerActivity } from './domain/operationalManagerActivity';
 import type { PortfolioPropertyLink, PropertyPortfolio } from './domain/propertyPortfolios';
 import { projectBidTotalCents, type ProjectBid } from './domain/stopProgress';
-
-type NewManagerActivity = Pick<ManagerActivityItem, 'title' | 'message' | 'tone' | 'source'>;
+import { useManagerLocalActivity } from './workspaces/features/management/useManagerLocalActivity';
 
 const managementCompanyPreview: CompanyProfile = {
   id: 'company_demo_property_manager',
@@ -295,10 +286,6 @@ const customerPortalPreviewWorkSummaries: CustomerPortalWorkSummary[] = [
     bidReviewRequired: false,
   },
 ];
-
-function managerActivityTimestamp() {
-  return `Today ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
-}
 
 function ManagerToolSurface({
   activeTool,
@@ -818,19 +805,12 @@ export function App() {
     useState<ManagerWorkspaceSection | null>(null);
   const [managerWorkspaceTool, setManagerWorkspaceTool] =
     useState<ManagerWorkspaceTool | null>(null);
-  const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
-    readStoredManagerActivityItems(),
-  );
-  const [isManagerActivityPersisted, setIsManagerActivityPersisted] = useState(true);
-  const recordManagerActivity = useCallback((item: NewManagerActivity) => {
-    setManagerActivity((current) =>
-      prependManagerActivity(current, {
-        ...item,
-        id: `${item.source}_${item.tone}_${Date.now()}`,
-        occurredAt: managerActivityTimestamp(),
-      }),
-    );
-  }, []);
+  const {
+    items: managerActivity,
+    isPersisted: isManagerActivityPersisted,
+    record: recordManagerActivity,
+    reset: resetManagerActivityHistory,
+  } = useManagerLocalActivity();
   useEffect(() => {
     if (fieldJobsReadState === 'ready') {
       setStatusMessage('Connected to the local API.');
@@ -1320,15 +1300,6 @@ export function App() {
       .filter((accountId): accountId is string => Boolean(accountId));
     return Array.from(new Set([...reportAccountIds, 'acct_1001', 'acct_1002'])).sort();
   }, [managerReportQueueReports]);
-
-  function resetManagerActivityHistory() {
-    setManagerActivity([]);
-    setIsManagerActivityPersisted(writeStoredManagerActivityItems([]));
-  }
-
-  useEffect(() => {
-    setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));
-  }, [managerActivity]);
 
   async function discardReviewedJobConflict(mutation: JobLifecycleOfflineMutation) {
     const outcome = await discardJobConflict(mutation);

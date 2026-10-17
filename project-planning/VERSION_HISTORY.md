@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-14: Extracted manager-authored runtime activity from the application
+  shell. The management feature boundary now owns browser hydration, bounded
+  record creation, reset, and persistence status. Recovery-source events now
+  survive reload instead of being rejected by stored-item validation. The full
+  frontend gate passes 161 files / 664 tests, TypeScript, and the production
+  build.
 - 2026-10-14: Extracted manager preview project-bid history from the
   application shell. The customer feature boundary now owns exact account
   scope, loading, unavailable state, stale-request cancellation, and capability

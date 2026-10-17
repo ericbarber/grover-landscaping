@@ -252,7 +252,9 @@ preview report history now also preserves successful property reads during a
 partial outage and clears data when capability is removed. Bid history remains
 in the same customer feature boundary with account-scoped loading, unavailable,
 stale-request, and capability-removal handling. The bounded customer portal and
-preview-history extraction is complete.
+preview-history extraction is complete. Manager-authored runtime activity now
+owns hydration, bounded recording, reset, and persistence status in the
+management feature boundary, including durable recovery-source events.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

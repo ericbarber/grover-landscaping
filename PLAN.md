@@ -533,7 +533,10 @@ results during partial outages, cancels stale reads, and clears data when the
 preview capability is removed. Manager preview bid history now has the same
 loading, unavailable, stale-request, account-scope, and capability-removal
 boundary. The bounded customer portal/history coordinator extraction is
-complete.
+complete. Manager-authored runtime activity now has a dedicated local-state
+coordinator for hydration, bounded recording, reset, and persistence status.
+Recovery-source events also survive browser reload instead of being discarded
+by the stored-item validator.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,
