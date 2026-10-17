@@ -44,7 +44,6 @@ import {
 import type { JobWorkflowSection } from './components/JobWorkflowMenu';
 import {
   CustomerHistoryMenu,
-  type CustomerHistoryView,
 } from './components/CustomerHistoryMenu';
 import {
   WorkspaceHomePanel,
@@ -65,6 +64,7 @@ import {
 import { useCustomerPortalCollection } from './workspaces/features/customer/useCustomerPortalCollection';
 import { useCustomerPropertyReportHistory } from './workspaces/features/customer/useCustomerPropertyReportHistory';
 import { useCustomerProjectBidHistory } from './workspaces/features/customer/useCustomerProjectBidHistory';
+import { useCustomerHistoryNavigation } from './workspaces/features/customer/useCustomerHistoryNavigation';
 import {
   fieldRecoveryState,
   mergePhotoEvidence,
@@ -424,10 +424,7 @@ function CustomerPortalPreviewPanel({
   isLoadingProjectBids: boolean;
   hasProjectBidHistoryError: boolean;
 }) {
-  const [selectedPortalPropertyId, setSelectedPortalPropertyId] = useState<string | null>(null);
-  const [activeCustomerHistory, setActiveCustomerHistory] =
-    useState<CustomerHistoryView>('properties');
-  const [expandedReportPropertyId, setExpandedReportPropertyId] = useState<string | null>(null);
+  const historyNavigation = useCustomerHistoryNavigation();
   const visibleProperties = filterPropertiesForCustomerPortal(properties, customer);
   const visibleWorkSummaries = filterWorkSummariesForCustomerPortal(workSummaries, customer);
   const deliveredReportCount = Object.values(completionReportsByProperty).reduce(
@@ -480,18 +477,14 @@ function CustomerPortalPreviewPanel({
       </div>
 
       <CustomerHistoryMenu
-        activeView={activeCustomerHistory}
+        activeView={historyNavigation.activeView}
         bidCount={projectBids.length}
-        onChange={(view) => {
-          setActiveCustomerHistory(view);
-          setSelectedPortalPropertyId(null);
-          setExpandedReportPropertyId(null);
-        }}
+        onChange={historyNavigation.changeView}
         propertyCount={visibleProperties.length}
       />
 
-      <div className={`${activeCustomerHistory === 'properties' ? 'block' : 'hidden'} mt-5 space-y-3 lg:block`}>
-        <div className={`${selectedPortalPropertyId ? 'hidden' : 'grid'} gap-2 lg:hidden`}>
+      <div className={`${historyNavigation.activeView === 'properties' ? 'block' : 'hidden'} mt-5 space-y-3 lg:block`}>
+        <div className={`${historyNavigation.selectedPropertyId ? 'hidden' : 'grid'} gap-2 lg:hidden`}>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Choose a property
           </p>
@@ -504,10 +497,7 @@ function CustomerPortalPreviewPanel({
               <button
                 className="flex min-h-16 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left"
                 key={property.id}
-                onClick={() => {
-                  setSelectedPortalPropertyId(property.id);
-                  setExpandedReportPropertyId(null);
-                }}
+                onClick={() => historyNavigation.selectProperty(property.id)}
                 type="button"
               >
                 <span className="min-w-0">
@@ -527,21 +517,18 @@ function CustomerPortalPreviewPanel({
         {visibleProperties.map((property) => {
           const propertyWork = visibleWorkSummaries.filter((workSummary) => workSummary.propertyId === property.id);
           const propertyReports = completionReportsByProperty[property.id] ?? [];
-          const mobilePropertyReports = expandedReportPropertyId === property.id
+          const mobilePropertyReports = historyNavigation.expandedReportPropertyId === property.id
             ? propertyReports
             : propertyReports.slice(0, 2);
 
           return (
             <article
               key={property.id}
-              className={`${selectedPortalPropertyId === property.id ? 'block' : 'hidden'} rounded-xl border border-slate-200 p-4 lg:block`}
+              className={`${historyNavigation.selectedPropertyId === property.id ? 'block' : 'hidden'} rounded-xl border border-slate-200 p-4 lg:block`}
             >
               <button
                 className="mb-3 min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 lg:hidden"
-                onClick={() => {
-                  setSelectedPortalPropertyId(null);
-                  setExpandedReportPropertyId(null);
-                }}
+                onClick={historyNavigation.showAllProperties}
                 type="button"
               >
                 ← All properties
@@ -584,18 +571,16 @@ function CustomerPortalPreviewPanel({
                   {propertyReports.length > 2 ? (
                     <button
                       className="min-h-11 w-full rounded-lg border border-emerald-200 bg-white px-3 text-sm font-bold text-emerald-900 lg:hidden"
-                      onClick={() => setExpandedReportPropertyId((current) =>
-                        current === property.id ? null : property.id
-                      )}
+                      onClick={() => historyNavigation.toggleOlderReports(property.id)}
                       type="button"
                     >
-                      {expandedReportPropertyId === property.id
+                      {historyNavigation.expandedReportPropertyId === property.id
                         ? 'Show recent reports'
                         : `Show ${propertyReports.length - 2} older reports`}
                     </button>
                   ) : null}
                   <div className="hidden space-y-2 lg:block">
-                    {(expandedReportPropertyId === property.id
+                    {(historyNavigation.expandedReportPropertyId === property.id
                       ? []
                       : propertyReports.slice(2)
                     ).map((report) => (
@@ -630,7 +615,7 @@ function CustomerPortalPreviewPanel({
         })}
       </div>
       {projectBids.length > 0 ? (
-        <div className={`${activeCustomerHistory === 'bids' ? 'block' : 'hidden'} mt-5 space-y-2 lg:block`}>
+        <div className={`${historyNavigation.activeView === 'bids' ? 'block' : 'hidden'} mt-5 space-y-2 lg:block`}>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Bid history</p>
           {projectBids.map((bid) => {
             const bidTotal = currencyLabel(projectBidTotalCents(bid));
@@ -658,7 +643,7 @@ function CustomerPortalPreviewPanel({
             );
           })}
         </div>
-      ) : activeCustomerHistory === 'bids' ? (
+      ) : historyNavigation.activeView === 'bids' ? (
         <p className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 lg:hidden">
           No bids are currently available for this customer.
         </p>

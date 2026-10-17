@@ -257,7 +257,9 @@ owns hydration, bounded recording, reset, and persistence status in the
 management feature boundary, including durable recovery-source events. The
 same boundary now owns crew-administration cross-tool navigation, exact
 hierarchy scope, audit inspection context, and return focus without leaking a
-prior inspection into ordinary crew administration.
+prior inspection into ordinary crew administration. Customer portal preview
+navigation now owns history-view changes, mobile property detail, list return,
+and report expansion in the customer feature boundary.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

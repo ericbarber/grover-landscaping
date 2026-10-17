@@ -540,7 +540,10 @@ by the stored-item validator. Crew-administration navigation now has a typed
 management coordinator for exact crew/branch/territory requests, audited-move
 inspection, return-to-activity focus, and latest-move lookup. Opening ordinary
 crew administration clears stale audit context before presenting the requested
-crew or full list.
+crew or full list. Customer portal preview navigation now also has a typed
+customer coordinator for history-view changes, mobile property selection,
+return-to-list behavior, and older-report expansion, with each context change
+clearing detail state that no longer belongs to the visible view.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

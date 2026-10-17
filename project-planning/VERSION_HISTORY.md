@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-10-17: Extracted customer portal preview navigation from the React
+  surface. The customer feature boundary now owns history-view changes, mobile
+  property selection and return, and older-report expansion while clearing
+  detail state when its context changes. The full frontend gate passes 163
+  files / 673 tests, TypeScript, and the production build.
 - 2026-10-17: Extracted manager crew-administration navigation from the
   application shell. One typed coordinator now owns exact crew hierarchy
   requests, audited-move inspection, return-to-activity focus, and latest-move
