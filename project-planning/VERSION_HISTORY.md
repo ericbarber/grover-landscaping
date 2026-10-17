@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-17: Extracted manager crew-administration navigation from the
+  application shell. One typed coordinator now owns exact crew hierarchy
+  requests, audited-move inspection, return-to-activity focus, and latest-move
+  lookup. General crew navigation clears stale inspection context. The full
+  frontend gate passes 162 files / 669 tests, TypeScript, and the production
+  build.
 - 2026-10-14: Extracted manager-authored runtime activity from the application
   shell. The management feature boundary now owns browser hydration, bounded
   record creation, reset, and persistence status. Recovery-source events now

@@ -117,6 +117,7 @@ import {
 import { useManagerPhotoErasureRecovery } from './workspaces/features/management/useManagerPhotoErasureRecovery';
 import { useManagerCustomerPrivacy } from './workspaces/features/management/useManagerCustomerPrivacy';
 import { useManagerOperationalActivity } from './workspaces/features/management/useManagerOperationalActivity';
+import { useManagerCrewNavigation } from './workspaces/features/management/useManagerCrewNavigation';
 import { buildManagerTodayQueue } from './domain/managerTodayQueue';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
@@ -744,38 +745,10 @@ export function App() {
   const [propertyOnboardingRefreshSignal, setPropertyOnboardingRefreshSignal] = useState(0);
   const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
   const [teamActivityRefreshSignal, setTeamActivityRefreshSignal] = useState(0);
-  const [teamActivityRequestedCrewId, setTeamActivityRequestedCrewId] = useState<string>();
-  const [teamActivityRequestedCrewBranchId, setTeamActivityRequestedCrewBranchId] =
-    useState<string>();
-  const [teamActivityRequestedCrewTerritoryId, setTeamActivityRequestedCrewTerritoryId] =
-    useState<string>();
-  const [teamActivityRequestedCrewSignal, setTeamActivityRequestedCrewSignal] = useState(0);
-  const [teamActivityReturnedAuditId, setTeamActivityReturnedAuditId] = useState<string>();
-  const [teamActivityReturnedAuditSignal, setTeamActivityReturnedAuditSignal] = useState(0);
   const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
   const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
   const [dispatchHierarchyRefreshSignal, setDispatchHierarchyRefreshSignal] = useState(0);
-  const [crewAdministrationSelection, setCrewAdministrationSelection] = useState<string>();
-  const [crewAdministrationBranch, setCrewAdministrationBranch] = useState<string>();
-  const [crewAdministrationTerritory, setCrewAdministrationTerritory] = useState<string>();
-  const [crewAdministrationReturnTarget, setCrewAdministrationReturnTarget] = useState<
-    'team-activity' | undefined
-  >();
-  const [crewAdministrationInspectionSummary, setCrewAdministrationInspectionSummary] =
-    useState<string>();
-  const [crewAdministrationInspectionAuditLabel, setCrewAdministrationInspectionAuditLabel] =
-    useState<string>();
-  const [crewAdministrationInspectionAuditId, setCrewAdministrationInspectionAuditId] =
-    useState<string>();
-  const [
-    crewAdministrationInspectedDestinationBranchId,
-    setCrewAdministrationInspectedDestinationBranchId,
-  ] = useState<string>();
-  const [
-    crewAdministrationInspectedDestinationTerritoryId,
-    setCrewAdministrationInspectedDestinationTerritoryId,
-  ] = useState<string>();
-  const [crewAdministrationSelectionSignal, setCrewAdministrationSelectionSignal] = useState(0);
+  const crewNavigation = useManagerCrewNavigation();
   const {
     jobMutations: offlineJobMutations,
     checklistMutations: offlineChecklistMutations,
@@ -2112,23 +2085,23 @@ export function App() {
           <ManagerToolSurface activeTool={activeAuthorizedManagerTool} tool="owner-setup">
           <FirstOwnerOnboardingPanel
             providerEntryMode={providerEntryMode}
-            crewBranchRequest={crewAdministrationBranch}
-            crewSelectionRequest={crewAdministrationSelection}
-            crewSelectionSignal={crewAdministrationSelectionSignal}
-            crewTerritoryRequest={crewAdministrationTerritory}
+            crewBranchRequest={crewNavigation.crewRequest.branchId}
+            crewSelectionRequest={crewNavigation.crewRequest.crewId}
+            crewSelectionSignal={crewNavigation.crewSelectionSignal}
+            crewTerritoryRequest={crewNavigation.crewRequest.territoryId}
             crewInspectionReturnLabel={
-              crewAdministrationReturnTarget === 'team-activity'
+              crewNavigation.inspection
                 ? 'Return to owner activity'
                 : undefined
             }
-            crewInspectionSummary={crewAdministrationInspectionSummary}
-            crewInspectionAuditLabel={crewAdministrationInspectionAuditLabel}
-            crewInspectionAuditId={crewAdministrationInspectionAuditId}
+            crewInspectionSummary={crewNavigation.inspection?.summary}
+            crewInspectionAuditLabel={crewNavigation.inspection?.auditLabel}
+            crewInspectionAuditId={crewNavigation.inspection?.auditId}
             crewInspectedDestinationBranchId={
-              crewAdministrationInspectedDestinationBranchId
+              crewNavigation.inspection?.destinationBranchId
             }
             crewInspectedDestinationTerritoryId={
-              crewAdministrationInspectedDestinationTerritoryId
+              crewNavigation.inspection?.destinationTerritoryId
             }
             hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
             onOpenSetupStep={openFirstOwnerSetupStep}
@@ -2154,15 +2127,7 @@ export function App() {
             onReturnFromCrewInspection={() => {
               setManagerWorkspaceSection('team');
               setManagerWorkspaceTool('team-activity');
-              const inspectedAuditId = crewAdministrationInspectionAuditId;
-              setCrewAdministrationReturnTarget(undefined);
-              setCrewAdministrationInspectionSummary(undefined);
-              setCrewAdministrationInspectionAuditLabel(undefined);
-              setCrewAdministrationInspectionAuditId(undefined);
-              setCrewAdministrationInspectedDestinationBranchId(undefined);
-              setCrewAdministrationInspectedDestinationTerritoryId(undefined);
-              setTeamActivityReturnedAuditId(inspectedAuditId);
-              setTeamActivityReturnedAuditSignal((current) => current + 1);
+              const inspectedAuditId = crewNavigation.returnFromInspection();
               window.setTimeout(() => {
                 const target = inspectedAuditId
                   ? document.getElementById(`team-activity-${inspectedAuditId}`)
@@ -2174,16 +2139,7 @@ export function App() {
             onFindLatestCrewHierarchyMove={(crew) => {
               setManagerWorkspaceSection('team');
               setManagerWorkspaceTool('team-activity');
-              setCrewAdministrationReturnTarget(undefined);
-              setCrewAdministrationInspectionSummary(undefined);
-              setCrewAdministrationInspectionAuditLabel(undefined);
-              setCrewAdministrationInspectionAuditId(undefined);
-              setCrewAdministrationInspectedDestinationBranchId(undefined);
-              setCrewAdministrationInspectedDestinationTerritoryId(undefined);
-              setTeamActivityRequestedCrewId(crew.id);
-              setTeamActivityRequestedCrewBranchId(crew.branchId ?? undefined);
-              setTeamActivityRequestedCrewTerritoryId(crew.territoryId ?? undefined);
-              setTeamActivityRequestedCrewSignal((current) => current + 1);
+              crewNavigation.requestLatestMove(crew);
               window.setTimeout(() => {
                 const target = document.getElementById('team-activity-review');
                 target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2333,7 +2289,7 @@ export function App() {
               onOpenCrews={() => {
                 setManagerWorkspaceSection('overview');
                 setManagerWorkspaceTool('owner-setup');
-                setCrewAdministrationReturnTarget(undefined);
+                crewNavigation.openCrewList();
                 window.setTimeout(() => {
                   const target = document.getElementById('crew-administration');
                   target?.scrollIntoView({
@@ -2368,45 +2324,18 @@ export function App() {
               onOpenCrew={(activity) => {
                 setManagerWorkspaceSection('overview');
                 setManagerWorkspaceTool('owner-setup');
-                setCrewAdministrationSelection(activity.targetId);
-                setCrewAdministrationBranch(undefined);
-                setCrewAdministrationTerritory(undefined);
-                setCrewAdministrationReturnTarget('team-activity');
-                setCrewAdministrationInspectionSummary(
-                  `${
-                    activity.crossBranchMove ? 'Cross-branch' : 'Within-branch'
-                  } audited move: ${
-                    activity.sourceBranchLabel ?? 'unknown branch'
-                  } · ${
-                    activity.sourceTerritoryLabel ?? 'unknown territory'
-                  } → ${
-                    activity.destinationBranchLabel ?? 'unknown branch'
-                  } · ${
-                    activity.destinationTerritoryLabel ?? 'unknown territory'
-                  }`,
-                );
-                setCrewAdministrationInspectionAuditLabel(
-                  `Audit ${activity.id} · ${new Date(activity.occurredAt).toLocaleString()}`,
-                );
-                setCrewAdministrationInspectionAuditId(activity.id);
-                setCrewAdministrationInspectedDestinationBranchId(
-                  activity.destinationBranchId,
-                );
-                setCrewAdministrationInspectedDestinationTerritoryId(
-                  activity.destinationTerritoryId,
-                );
-                setCrewAdministrationSelectionSignal((current) => current + 1);
+                crewNavigation.inspectCrewMove(activity);
                 const target = document.getElementById('crew-administration');
                 target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 target?.focus({ preventScroll: true });
               }}
               organizationId={activeManagerOrganizationId}
-              requestedCrewId={teamActivityRequestedCrewId}
-              requestedCrewBranchId={teamActivityRequestedCrewBranchId}
-              requestedCrewSignal={teamActivityRequestedCrewSignal}
-              requestedCrewTerritoryId={teamActivityRequestedCrewTerritoryId}
-              returnedAuditId={teamActivityReturnedAuditId}
-              returnedAuditSignal={teamActivityReturnedAuditSignal}
+              requestedCrewId={crewNavigation.teamActivityRequest.crewId}
+              requestedCrewBranchId={crewNavigation.teamActivityRequest.branchId}
+              requestedCrewSignal={crewNavigation.teamActivityRequestSignal}
+              requestedCrewTerritoryId={crewNavigation.teamActivityRequest.territoryId}
+              returnedAuditId={crewNavigation.returnedAuditId}
+              returnedAuditSignal={crewNavigation.returnedAuditSignal}
               refreshSignal={teamActivityRefreshSignal}
             />
           </ManagerToolSurface>
@@ -2575,16 +2504,7 @@ export function App() {
                 onOpenCrewAdministration={(request) => {
                   setManagerWorkspaceSection('overview');
                   setManagerWorkspaceTool('owner-setup');
-                  setCrewAdministrationReturnTarget(undefined);
-                  setCrewAdministrationInspectionSummary(undefined);
-                  setCrewAdministrationInspectionAuditLabel(undefined);
-                  setCrewAdministrationInspectionAuditId(undefined);
-                  setCrewAdministrationInspectedDestinationBranchId(undefined);
-                  setCrewAdministrationInspectedDestinationTerritoryId(undefined);
-                  setCrewAdministrationSelection(request?.crewId);
-                  setCrewAdministrationBranch(request?.branchId);
-                  setCrewAdministrationTerritory(request?.territoryId);
-                  setCrewAdministrationSelectionSignal((current) => current + 1);
+                  crewNavigation.openCrewAdministration(request);
                   const target = document.getElementById('crew-administration');
                   target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   target?.focus({ preventScroll: true });

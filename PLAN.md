@@ -536,7 +536,11 @@ boundary. The bounded customer portal/history coordinator extraction is
 complete. Manager-authored runtime activity now has a dedicated local-state
 coordinator for hydration, bounded recording, reset, and persistence status.
 Recovery-source events also survive browser reload instead of being discarded
-by the stored-item validator.
+by the stored-item validator. Crew-administration navigation now has a typed
+management coordinator for exact crew/branch/territory requests, audited-move
+inspection, return-to-activity focus, and latest-move lookup. Opening ordinary
+crew administration clears stale audit context before presenting the requested
+crew or full list.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,
