@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-17: Extracted manager workspace section/tool navigation from the
+  application shell. Atomic transitions now reject unavailable sections,
+  clear mismatched tools before presentation, capability-check the company-owner
+  Team default, and reset safely when persona or rollout access changes. The
+  full frontend gate passes 164 files / 678 tests, TypeScript, and the
+  production build.
 - 2026-10-17: Extracted customer portal preview navigation from the React
   surface. The customer feature boundary now owns history-view changes, mobile
   property selection and return, and older-report expansion while clearing

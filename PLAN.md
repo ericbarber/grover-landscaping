@@ -543,7 +543,11 @@ crew administration clears stale audit context before presenting the requested
 crew or full list. Customer portal preview navigation now also has a typed
 customer coordinator for history-view changes, mobile property selection,
 return-to-list behavior, and older-report expansion, with each context change
-clearing detail state that no longer belongs to the visible view.
+clearing detail state that no longer belongs to the visible view. Manager
+workspace section/tool navigation now has one authorization-aware coordinator:
+transitions are atomic, mismatched tools clear before presentation, Team opens
+on its overview only when authorized, and persona or rollout access changes
+return unavailable navigation to a safe root.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

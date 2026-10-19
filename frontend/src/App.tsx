@@ -34,13 +34,12 @@ import {
   ManagerWorkspaceToolMenu,
 } from './components/ManagerWorkspaceMenu';
 import {
-  managerWorkspaceActiveToolForPersona,
   managerWorkspaceSectionSignalsForPersona,
   managerWorkspaceSectionsForPersona,
   managerWorkspaceToolsForPersona,
-  type ManagerWorkspaceSection,
   type ManagerWorkspaceTool,
 } from './workspaces/features/management/managerWorkspace';
+import { useManagerWorkspaceNavigation } from './workspaces/features/management/useManagerWorkspaceNavigation';
 import type { JobWorkflowSection } from './components/JobWorkflowMenu';
 import {
   CustomerHistoryMenu,
@@ -759,10 +758,11 @@ export function App() {
   });
   const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
   const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
-  const [managerWorkspaceSection, setManagerWorkspaceSection] =
-    useState<ManagerWorkspaceSection | null>(null);
-  const [managerWorkspaceTool, setManagerWorkspaceTool] =
-    useState<ManagerWorkspaceTool | null>(null);
+  const managerNavigation = useManagerWorkspaceNavigation({
+    personaId: activePersona.id,
+    rolloutUnit: managedPersonaUnit,
+    capabilities: activeWorkspace.capabilities,
+  });
   const {
     items: managerActivity,
     isPersisted: isManagerActivityPersisted,
@@ -825,12 +825,7 @@ export function App() {
       ).map(({ id }) => id),
     ),
   ), [activePersona.id, activeWorkspace.capabilities, managedPersonaUnit]);
-  const activeAuthorizedManagerTool = managerWorkspaceActiveToolForPersona(
-    activePersona.id,
-    managedPersonaUnit,
-    managerWorkspaceTool,
-    activeWorkspace.capabilities,
-  );
+  const activeAuthorizedManagerTool = managerNavigation.tool;
   const canLoadCustomerPortalPreview = enabledManagerTools.has('customer-portal');
   const canLoadCompletionReportQueue = enabledManagerTools.has('completion-reports');
   const canLoadNotificationHistory = enabledManagerTools.has('notifications');
@@ -1084,44 +1079,8 @@ export function App() {
     if (!providerEntryMode || providerEntryOpened.current || activePersona.id !== 'company-owner') return;
     providerEntryOpened.current = true;
     setMobileView('manager');
-    setManagerWorkspaceSection('overview');
-    setManagerWorkspaceTool('owner-setup');
-  }, [activePersona.id, providerEntryMode]);
-
-  useEffect(() => {
-    const sections = managerWorkspaceSectionsForPersona(
-      activePersona.id,
-      managedPersonaUnit,
-      activeWorkspace.capabilities,
-    );
-    if (
-      managerWorkspaceSection
-      && !sections.some((section) => section.id === managerWorkspaceSection)
-    ) {
-      setManagerWorkspaceSection(null);
-      setManagerWorkspaceTool(null);
-      return;
-    }
-    if (
-      managerWorkspaceSection
-      && managerWorkspaceTool
-      && !managerWorkspaceToolsForPersona(
-        activePersona.id,
-        managerWorkspaceSection,
-        managedPersonaUnit,
-        activeWorkspace.capabilities,
-      )
-        .some((tool) => tool.id === managerWorkspaceTool)
-    ) {
-      setManagerWorkspaceTool(null);
-    }
-  }, [
-    activePersona.id,
-    activeWorkspace.capabilities,
-    managedPersonaUnit,
-    managerWorkspaceSection,
-    managerWorkspaceTool,
-  ]);
+    managerNavigation.openTool('overview', 'owner-setup');
+  }, [activePersona.id, managerNavigation.openTool, providerEntryMode]);
 
   function changeMobileView(
     destination: MobileWorkspaceView,
@@ -1183,8 +1142,8 @@ export function App() {
     propertyId: string,
     workspace: 'operational-profile' | 'service-setup',
   ) {
-    setManagerWorkspaceSection('customers');
-    setManagerWorkspaceTool(
+    managerNavigation.openTool(
+      'customers',
       workspace === 'operational-profile' ? 'property-profile' : 'property-service',
     );
     const managerTools = document.getElementById('manager-tools') as HTMLDetailsElement | null;
@@ -1205,16 +1164,14 @@ export function App() {
   function openFirstOwnerSetupStep(
     target: 'operational-profile' | 'service-setup' | 'customer-accounts' | 'day-plan' | 'completion-reports' | 'team-invitations',
   ) {
-    setManagerWorkspaceSection(
+    managerNavigation.openTool(
       target === 'day-plan'
         ? 'schedule'
         : target === 'completion-reports'
           ? 'reports'
-        : target === 'team-invitations'
-          ? 'team'
-          : 'customers',
-    );
-    setManagerWorkspaceTool(
+          : target === 'team-invitations'
+            ? 'team'
+            : 'customers',
       target === 'day-plan'
         ? 'day-plan'
         : target === 'completion-reports'
@@ -1801,8 +1758,7 @@ export function App() {
         navigationItems={activePersona.navigation}
         onChange={(view) => {
           if (view === 'manager') {
-            setManagerWorkspaceSection(null);
-            setManagerWorkspaceTool(null);
+            managerNavigation.openRoot();
           }
           changeMobileView(view, true);
         }}
@@ -1810,8 +1766,7 @@ export function App() {
           const persona = selectWorkspacePersona(personaId);
           if (!persona) return;
           if (persona.defaultView === 'manager') {
-            setManagerWorkspaceSection(null);
-            setManagerWorkspaceTool(null);
+            managerNavigation.openRoot();
           }
           changeMobileView(persona.defaultView, true);
         }}
@@ -1896,8 +1851,7 @@ export function App() {
           const persona = selectWorkspacePersona(personaId);
           if (!persona) return;
           if (persona.defaultView === 'manager') {
-            setManagerWorkspaceSection(null);
-            setManagerWorkspaceTool(null);
+            managerNavigation.openRoot();
           }
           changeMobileView(persona.defaultView, true);
         }}
@@ -1935,8 +1889,7 @@ export function App() {
               } : undefined}
               onOpen={(view) => {
                 if (view === 'manager') {
-                  setManagerWorkspaceSection(null);
-                  setManagerWorkspaceTool(null);
+                  managerNavigation.openRoot();
                 }
                 changeMobileView(view, true);
               }}
@@ -2031,17 +1984,12 @@ export function App() {
               <span className="ml-2 text-xs font-normal text-slate-300">{managerWorkspaceDescription}</span>
             </summary>
             <div className="mt-5 space-y-6">
-          {managerWorkspaceSection === null ? (
+          {managerNavigation.section === null ? (
             <ManagerWorkspaceMenu
-              activeSection={managerWorkspaceSection}
+              activeSection={managerNavigation.section}
               capabilities={activeWorkspace.capabilities}
               onChange={(section) => {
-                setManagerWorkspaceSection(section);
-                setManagerWorkspaceTool(
-                  section === 'team' && activePersona.id === 'company-owner'
-                    ? 'team-overview'
-                    : null,
-                );
+                managerNavigation.openSection(section);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               personaId={activePersona.id}
@@ -2049,22 +1997,19 @@ export function App() {
               signals={managerWorkspaceSignals}
             />
           ) : null}
-          {managerWorkspaceSection ? (
+          {managerNavigation.section ? (
             <ManagerWorkspaceToolMenu
-              activeTool={managerWorkspaceTool}
+              activeTool={managerNavigation.tool}
               capabilities={activeWorkspace.capabilities}
-              onBack={() => {
-                setManagerWorkspaceSection(null);
-                setManagerWorkspaceTool(null);
-              }}
-              onClear={() => setManagerWorkspaceTool(null)}
+              onBack={managerNavigation.openRoot}
+              onClear={() => managerNavigation.selectTool(null)}
               onChange={(tool) => {
-                setManagerWorkspaceTool(tool);
+                managerNavigation.selectTool(tool);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               personaId={activePersona.id}
               rolloutUnit={managedPersonaUnit}
-              section={managerWorkspaceSection}
+              section={managerNavigation.section}
             />
           ) : null}
           <ManagerToolSurface activeTool={activeAuthorizedManagerTool} tool="owner-setup">
@@ -2101,8 +2046,7 @@ export function App() {
               setTeamActivityRefreshSignal((current) => current + 1);
             }}
             onReturnToDispatchHierarchy={() => {
-              setManagerWorkspaceSection('schedule');
-              setManagerWorkspaceTool('dispatch-hierarchy');
+              managerNavigation.openTool('schedule', 'dispatch-hierarchy');
               window.setTimeout(() => {
                 const target = document.getElementById('dispatch-hierarchy-administration');
                 target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2110,8 +2054,7 @@ export function App() {
               }, 0);
             }}
             onReturnFromCrewInspection={() => {
-              setManagerWorkspaceSection('team');
-              setManagerWorkspaceTool('team-activity');
+              managerNavigation.openTool('team', 'team-activity');
               const inspectedAuditId = crewNavigation.returnFromInspection();
               window.setTimeout(() => {
                 const target = inspectedAuditId
@@ -2122,8 +2065,7 @@ export function App() {
               }, 0);
             }}
             onFindLatestCrewHierarchyMove={(crew) => {
-              setManagerWorkspaceSection('team');
-              setManagerWorkspaceTool('team-activity');
+              managerNavigation.openTool('team', 'team-activity');
               crewNavigation.requestLatestMove(crew);
               window.setTimeout(() => {
                 const target = document.getElementById('team-activity-review');
@@ -2256,12 +2198,11 @@ export function App() {
                 + crewRefreshSignal
                 + dispatchHierarchyRefreshSignal
               }
-              onOpenMembers={() => setManagerWorkspaceTool('team-members')}
-              onOpenInvitations={() => setManagerWorkspaceTool('team-invitations')}
-              onOpenActivity={() => setManagerWorkspaceTool('team-activity')}
+              onOpenMembers={() => managerNavigation.selectTool('team-members')}
+              onOpenInvitations={() => managerNavigation.selectTool('team-invitations')}
+              onOpenActivity={() => managerNavigation.selectTool('team-activity')}
               onOpenHierarchy={() => {
-                setManagerWorkspaceSection('schedule');
-                setManagerWorkspaceTool('dispatch-hierarchy');
+                managerNavigation.openTool('schedule', 'dispatch-hierarchy');
                 window.setTimeout(() => {
                   const target = document.getElementById('dispatch-hierarchy-administration');
                   target?.scrollIntoView({
@@ -2272,8 +2213,7 @@ export function App() {
                 }, 0);
               }}
               onOpenCrews={() => {
-                setManagerWorkspaceSection('overview');
-                setManagerWorkspaceTool('owner-setup');
+                managerNavigation.openTool('overview', 'owner-setup');
                 crewNavigation.openCrewList();
                 window.setTimeout(() => {
                   const target = document.getElementById('crew-administration');
@@ -2307,8 +2247,7 @@ export function App() {
           >
             <ManagerTeamActivityPanel
               onOpenCrew={(activity) => {
-                setManagerWorkspaceSection('overview');
-                setManagerWorkspaceTool('owner-setup');
+                managerNavigation.openTool('overview', 'owner-setup');
                 crewNavigation.inspectCrewMove(activity);
                 const target = document.getElementById('crew-administration');
                 target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2370,8 +2309,7 @@ export function App() {
               onOpenOperationalException={(exceptionId) => {
                 setRequestedOperationalExceptionId(exceptionId);
                 setRequestedOperationalExceptionSignal((current) => current + 1);
-                setManagerWorkspaceSection('recovery');
-                setManagerWorkspaceTool('operational-exceptions');
+                managerNavigation.openTool('recovery', 'operational-exceptions');
               }}
             />
           </ManagerToolSurface>
@@ -2440,8 +2378,7 @@ export function App() {
                   openPropertyWorkspace(resourceId, 'operational-profile');
                   return;
                 }
-                setManagerWorkspaceSection('schedule');
-                setManagerWorkspaceTool('day-plan');
+                managerNavigation.openTool('schedule', 'day-plan');
                 window.setTimeout(() => {
                   document.getElementById('first-owner-day-plan')?.scrollIntoView({
                     behavior: 'smooth',
@@ -2487,8 +2424,7 @@ export function App() {
               <ManagerDispatchHierarchyPanel
                 organizationId={activeManagerOrganizationId}
                 onOpenCrewAdministration={(request) => {
-                  setManagerWorkspaceSection('overview');
-                  setManagerWorkspaceTool('owner-setup');
+                  managerNavigation.openTool('overview', 'owner-setup');
                   crewNavigation.openCrewAdministration(request);
                   const target = document.getElementById('crew-administration');
                   target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2601,8 +2537,7 @@ export function App() {
         navigationItems={activePersona.navigation}
         onChange={(view) => {
           if (view === 'manager') {
-            setManagerWorkspaceSection(null);
-            setManagerWorkspaceTool(null);
+            managerNavigation.openRoot();
           }
           changeMobileView(view);
         }}
