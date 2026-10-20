@@ -119,6 +119,7 @@ import { useManagerOperationalActivity } from './workspaces/features/management/
 import { useManagerCrewNavigation } from './workspaces/features/management/useManagerCrewNavigation';
 import { useManagerRefreshSignals } from './workspaces/features/management/useManagerRefreshSignals';
 import { useManagerPropertyWorkspace } from './workspaces/features/management/useManagerPropertyWorkspace';
+import { useManagerOperationalExceptionNavigation } from './workspaces/features/management/useManagerOperationalExceptionNavigation';
 import { buildManagerTodayQueue } from './domain/managerTodayQueue';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
@@ -701,8 +702,7 @@ export function App() {
     photoEvidenceUnavailable,
   } = useFieldPhotoEvidence(selectedJobId);
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
-  const [requestedOperationalExceptionId, setRequestedOperationalExceptionId] = useState<string>();
-  const [requestedOperationalExceptionSignal, setRequestedOperationalExceptionSignal] = useState(0);
+  const operationalExceptionNavigation = useManagerOperationalExceptionNavigation();
   const managerProperties = useManagerPropertyWorkspace(
     'org_demo_landscaping',
     initialManagerCustomerProperties,
@@ -2254,8 +2254,7 @@ export function App() {
               onResetHistory={resetManagerActivityHistory}
               onCompleteDispatchNotification={handleCompleteDispatchCustomerNotification}
               onOpenOperationalException={(exceptionId) => {
-                setRequestedOperationalExceptionId(exceptionId);
-                setRequestedOperationalExceptionSignal((current) => current + 1);
+                operationalExceptionNavigation.openException(exceptionId);
                 managerNavigation.openTool('recovery', 'operational-exceptions');
               }}
             />
@@ -2313,8 +2312,8 @@ export function App() {
             <ManagerOperationalExceptionsPanel
               organizationId={managerProperties.organizationId}
               onActivityChanged={() => void refreshOperationalActivity()}
-              requestedExceptionId={requestedOperationalExceptionId}
-              requestedExceptionSignal={requestedOperationalExceptionSignal}
+              requestedExceptionId={operationalExceptionNavigation.requestedExceptionId}
+              requestedExceptionSignal={operationalExceptionNavigation.requestedExceptionSignal}
               onOpenAffectedResource={(resourceType, resourceId) => {
                 if (resourceType === 'job') {
                   setSelectedJobId(resourceId);

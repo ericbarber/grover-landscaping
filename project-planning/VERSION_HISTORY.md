@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-10-20: Extracted operational activity-to-Recovery targeting from the
+  application shell. A typed coordinator now preserves repeat requests for the
+  same exception through a monotonic presentation signal and ignores empty
+  identifiers without discarding valid context. The full frontend gate passes
+  167 files / 696 tests, TypeScript, and the production build.
 - 2026-10-20: Extracted manager property-workspace state from the application
   shell. Organization activation now clears prior tenant property data and
   requests, property registration rejects mismatched organizations and updates
