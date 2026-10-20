@@ -551,6 +551,11 @@ return unavailable navigation to a safe root. Manager refresh coordination now
 maps each completed workflow to its exact dependent views in one tested feature
 boundary, so shared Schedule, Team, Properties, customer-account, crew, and
 owner-progress data cannot drift because a callback omitted a related refresh.
+The manager property-workspace coordinator now owns the active organization,
+customer and onboarding collections, and exact profile/setup requests. A new
+organization atomically clears prior tenant data and requests, mismatched
+property records are rejected, and archived records remain visible to account
+administration without appearing as operational-onboarding choices.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

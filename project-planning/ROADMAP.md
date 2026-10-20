@@ -266,6 +266,10 @@ Manager cross-panel refresh events now use the same management boundary. Each
 workflow event advances only its tested dependency set, preserving coordinated
 Schedule, Team, Properties, customer-account, crew, and owner-progress reads
 without scattering coupled counters through the application shell.
+Manager property-workspace state is now tenant-safe in the same boundary:
+organization activation clears prior property collections and requests,
+mismatched records are rejected, registration updates both account and
+onboarding views atomically, and archived properties leave onboarding choices.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

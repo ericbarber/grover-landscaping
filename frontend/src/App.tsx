@@ -118,6 +118,7 @@ import { useManagerCustomerPrivacy } from './workspaces/features/management/useM
 import { useManagerOperationalActivity } from './workspaces/features/management/useManagerOperationalActivity';
 import { useManagerCrewNavigation } from './workspaces/features/management/useManagerCrewNavigation';
 import { useManagerRefreshSignals } from './workspaces/features/management/useManagerRefreshSignals';
+import { useManagerPropertyWorkspace } from './workspaces/features/management/useManagerPropertyWorkspace';
 import { buildManagerTodayQueue } from './domain/managerTodayQueue';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
@@ -702,11 +703,8 @@ export function App() {
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
   const [requestedOperationalExceptionId, setRequestedOperationalExceptionId] = useState<string>();
   const [requestedOperationalExceptionSignal, setRequestedOperationalExceptionSignal] = useState(0);
-  const [activeManagerOrganizationId, setActiveManagerOrganizationId] = useState('org_demo_landscaping');
-  const [managerPropertyOnboardingOptions, setManagerPropertyOnboardingOptions] = useState(
-    initialManagerPropertyOnboardingOptions,
-  );
-  const [managerCustomerProperties, setManagerCustomerProperties] = useState(
+  const managerProperties = useManagerPropertyWorkspace(
+    'org_demo_landscaping',
     initialManagerCustomerProperties,
   );
   const {
@@ -751,8 +749,6 @@ export function App() {
     setSelectedJob,
     setUploadTickets,
   });
-  const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
-  const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
   const managerNavigation = useManagerWorkspaceNavigation({
     personaId: activePersona.id,
     rolloutUnit: managedPersonaUnit,
@@ -1100,31 +1096,6 @@ export function App() {
     });
   }
 
-  function registerManagerProperties(properties: CustomerPropertyRecord[]) {
-    setManagerCustomerProperties((current) => {
-      const next = new Map(current.map((property) => [property.propertyId, property]));
-      properties.forEach((property) => next.set(property.propertyId, property));
-      return Array.from(next.values()).sort((a, b) => a.displayName.localeCompare(b.displayName));
-    });
-    setManagerPropertyOnboardingOptions((current) => {
-      const next = new Map(current.map((property) => [property.propertyId, property]));
-      properties.forEach((property) => {
-        if (property.status === 'archived') {
-          next.delete(property.propertyId);
-          return;
-        }
-        next.set(property.propertyId, {
-          propertyId: property.propertyId,
-          accountId: property.accountId,
-          organizationId: property.organizationId,
-          displayName: property.displayName,
-          serviceAddress: property.serviceAddress,
-        });
-      });
-      return Array.from(next.values()).sort((a, b) => a.displayName.localeCompare(b.displayName));
-    });
-  }
-
   function selectJobForReview(jobId: string) {
     setSelectedJobId(jobId);
     setRequestedJobWorkflow('overview');
@@ -1143,11 +1114,7 @@ export function App() {
     );
     const managerTools = document.getElementById('manager-tools') as HTMLDetailsElement | null;
     if (managerTools) managerTools.open = true;
-    if (workspace === 'operational-profile') {
-      setRequestedOperationalProfilePropertyId(propertyId);
-    } else {
-      setRequestedServiceSetupPropertyId(propertyId);
-    }
+    managerProperties.requestPropertyWorkspace(propertyId, workspace);
     window.setTimeout(() => {
       document.getElementById(`property-${workspace}`)?.scrollIntoView({
         behavior: 'smooth',
@@ -2062,7 +2029,7 @@ export function App() {
               }, 0);
             }}
             onOrganizationReady={(organizationName, organizationId) => {
-              setActiveManagerOrganizationId(organizationId);
+              managerProperties.activateOrganization(organizationId);
               managerRefresh.markFirstOwnerProgressChanged();
               setStatusMessage(`${organizationName} owner setup completed.`);
               recordManagerActivity({
@@ -2111,8 +2078,8 @@ export function App() {
             tool="property-profile"
           >
             <ManagerPropertyOnboardingPanel
-              properties={managerPropertyOnboardingOptions}
-              requestedPropertyId={requestedOperationalProfilePropertyId}
+              properties={managerProperties.onboardingOptions}
+              requestedPropertyId={managerProperties.requestedOperationalProfilePropertyId}
               onSaved={(profile) => {
                 managerRefresh.markPropertyOnboardingSaved();
                 setStatusMessage(`Saved onboarding profile for ${profile.propertyId}.`);
@@ -2132,11 +2099,11 @@ export function App() {
             tool="property-service"
           >
             <ManagerPropertySetupPanel
-              properties={managerCustomerProperties}
+              properties={managerProperties.customerProperties}
               onboardingRefreshSignal={managerRefresh.signals.propertyOnboarding}
-              requestedPropertyId={requestedServiceSetupPropertyId}
+              requestedPropertyId={managerProperties.requestedServiceSetupPropertyId}
               onSetupChanged={managerRefresh.markPropertySetupChanged}
-              onPropertyUpdated={(property) => registerManagerProperties([property])}
+              onPropertyUpdated={(property) => managerProperties.registerProperties([property])}
             />
           </ManagerToolSurface>
           <ManagerToolSurface
@@ -2146,12 +2113,12 @@ export function App() {
             tool="customer-accounts"
           >
             <ManagerCustomerAccountOnboardingPanel
-              organizationId={activeManagerOrganizationId}
+              organizationId={managerProperties.organizationId}
               onOpenPropertyWorkspace={openPropertyWorkspace}
               refreshSignal={managerRefresh.signals.customerAccount}
-              onPropertiesLoaded={registerManagerProperties}
+              onPropertiesLoaded={managerProperties.registerProperties}
               onPropertyCreated={(property) => {
-                registerManagerProperties([property]);
+                managerProperties.registerProperties([property]);
                 managerRefresh.markFirstOwnerProgressChanged();
                 setStatusMessage(`${property.displayName} is ready for operational onboarding.`);
               }}
@@ -2165,7 +2132,7 @@ export function App() {
             <ManagerTeamMembershipsPanel
               actorUserId={auth.userId}
               onTeamChanged={managerRefresh.markTeamChanged}
-              organizationId={activeManagerOrganizationId}
+              organizationId={managerProperties.organizationId}
             />
           </ManagerToolSurface>
           <ManagerToolSurface
@@ -2174,7 +2141,7 @@ export function App() {
             tool="team-overview"
           >
             <TeamOrganizationOverviewPanel
-              organizationId={activeManagerOrganizationId}
+              organizationId={managerProperties.organizationId}
               refreshSignal={
                 managerRefresh.signals.teamActivity
                 + managerRefresh.signals.firstOwnerProgress
@@ -2217,7 +2184,7 @@ export function App() {
           >
             <ManagerTeamInvitationsPanel
               onTeamChanged={managerRefresh.markTeamChanged}
-              organizationId={activeManagerOrganizationId}
+              organizationId={managerProperties.organizationId}
             />
           </ManagerToolSurface>
           <ManagerToolSurface
@@ -2233,7 +2200,7 @@ export function App() {
                 target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 target?.focus({ preventScroll: true });
               }}
-              organizationId={activeManagerOrganizationId}
+              organizationId={managerProperties.organizationId}
               requestedCrewId={crewNavigation.teamActivityRequest.crewId}
               requestedCrewBranchId={crewNavigation.teamActivityRequest.branchId}
               requestedCrewSignal={crewNavigation.teamActivityRequestSignal}
@@ -2344,7 +2311,7 @@ export function App() {
             tool="operational-exceptions"
           >
             <ManagerOperationalExceptionsPanel
-              organizationId={activeManagerOrganizationId}
+              organizationId={managerProperties.organizationId}
               onActivityChanged={() => void refreshOperationalActivity()}
               requestedExceptionId={requestedOperationalExceptionId}
               requestedExceptionSignal={requestedOperationalExceptionSignal}
@@ -2402,7 +2369,7 @@ export function App() {
           >
             {canManageDispatchHierarchy ? (
               <ManagerDispatchHierarchyPanel
-                organizationId={activeManagerOrganizationId}
+                organizationId={managerProperties.organizationId}
                 onOpenCrewAdministration={(request) => {
                   managerNavigation.openTool('overview', 'owner-setup');
                   crewNavigation.openCrewAdministration(request);

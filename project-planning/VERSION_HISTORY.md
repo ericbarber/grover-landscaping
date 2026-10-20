@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-20: Extracted manager property-workspace state from the application
+  shell. Organization activation now clears prior tenant property data and
+  requests, property registration rejects mismatched organizations and updates
+  account/onboarding views atomically, and archived properties are excluded
+  from operational onboarding. The full frontend gate passes 166 files / 693
+  tests, TypeScript, and the production build.
 - 2026-10-20: Extracted manager cross-panel refresh coordination from the
   application shell. Typed workflow events now advance the exact dependent
   Schedule, Team, Properties, customer-account, crew, hierarchy, and owner-
