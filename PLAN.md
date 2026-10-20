@@ -547,7 +547,10 @@ clearing detail state that no longer belongs to the visible view. Manager
 workspace section/tool navigation now has one authorization-aware coordinator:
 transitions are atomic, mismatched tools clear before presentation, Team opens
 on its overview only when authorized, and persona or rollout access changes
-return unavailable navigation to a safe root.
+return unavailable navigation to a safe root. Manager refresh coordination now
+maps each completed workflow to its exact dependent views in one tested feature
+boundary, so shared Schedule, Team, Properties, customer-account, crew, and
+owner-progress data cannot drift because a callback omitted a related refresh.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

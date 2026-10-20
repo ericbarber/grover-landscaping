@@ -117,6 +117,7 @@ import { useManagerPhotoErasureRecovery } from './workspaces/features/management
 import { useManagerCustomerPrivacy } from './workspaces/features/management/useManagerCustomerPrivacy';
 import { useManagerOperationalActivity } from './workspaces/features/management/useManagerOperationalActivity';
 import { useManagerCrewNavigation } from './workspaces/features/management/useManagerCrewNavigation';
+import { useManagerRefreshSignals } from './workspaces/features/management/useManagerRefreshSignals';
 import { buildManagerTodayQueue } from './domain/managerTodayQueue';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
@@ -725,13 +726,7 @@ export function App() {
   const handleCrewRouteOverviewChange = useCallback((overview: CrewRouteOverview) => {
     setCrewRouteOverview(overview);
   }, []);
-  const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
-  const [propertyOnboardingRefreshSignal, setPropertyOnboardingRefreshSignal] = useState(0);
-  const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
-  const [teamActivityRefreshSignal, setTeamActivityRefreshSignal] = useState(0);
-  const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
-  const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
-  const [dispatchHierarchyRefreshSignal, setDispatchHierarchyRefreshSignal] = useState(0);
+  const managerRefresh = useManagerRefreshSignals();
   const crewNavigation = useManagerCrewNavigation();
   const {
     jobMutations: offlineJobMutations,
@@ -898,7 +893,7 @@ export function App() {
     loadOlder: loadOlderOperationalActivity,
   } = useManagerOperationalActivity({
     enabled: canLoadOperationalActivity,
-    refreshSignal: dayPlanRefreshSignal,
+    refreshSignal: managerRefresh.signals.dayPlan,
   });
   const managerPreviewPropertyIds = useMemo(
     () => filterPropertiesForCustomerPortal(
@@ -1342,7 +1337,7 @@ export function App() {
         : current
     ));
     if (result.outcome === 'persisted') {
-      setFirstOwnerProgressRefreshSignal((current) => current + 1);
+      managerRefresh.markFirstOwnerProgressChanged();
     }
   }
 
@@ -1400,7 +1395,7 @@ export function App() {
     });
     setJobs((current) => current.map((job) => job.id === updated.id ? updated : job));
     setStatusMessage(`${updated.customerName} moved to ${crewId} on ${scheduledDate}.`);
-    setFirstOwnerProgressRefreshSignal((current) => current + 1);
+    managerRefresh.markFirstOwnerProgressChanged();
   }
 
   async function handleCompleteDispatchCustomerNotification(
@@ -1668,7 +1663,7 @@ export function App() {
       return;
     }
     setStatusMessage(`${result.action.reportId} delivered to the customer portal.`);
-    setFirstOwnerProgressRefreshSignal((current) => current + 1);
+    managerRefresh.markFirstOwnerProgressChanged();
   }
 
   async function handleQueueReportDeliveryNotification(
@@ -1908,7 +1903,7 @@ export function App() {
               jobDetailsEnabled={fieldControls.jobDetails}
               onSelectJob={selectJobForReview}
               onOverviewChange={handleCrewRouteOverviewChange}
-              refreshSignal={dayPlanRefreshSignal}
+              refreshSignal={managerRefresh.signals.dayPlan}
               routeChangesEnabled={fieldControls.routeChanges}
               stopProgressEnabled={fieldControls.stopProgress}
             />
@@ -2033,18 +2028,11 @@ export function App() {
             crewInspectedDestinationTerritoryId={
               crewNavigation.inspection?.destinationTerritoryId
             }
-            hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
+            hierarchyRefreshSignal={managerRefresh.signals.dispatchHierarchy}
             onOpenSetupStep={openFirstOwnerSetupStep}
-            refreshSignal={firstOwnerProgressRefreshSignal}
-            onCrewCreated={() => {
-              setCrewRefreshSignal((current) => current + 1);
-              setDispatchHierarchyRefreshSignal((current) => current + 1);
-            }}
-            onCrewChanged={() => {
-              setCrewRefreshSignal((current) => current + 1);
-              setDispatchHierarchyRefreshSignal((current) => current + 1);
-              setTeamActivityRefreshSignal((current) => current + 1);
-            }}
+            refreshSignal={managerRefresh.signals.firstOwnerProgress}
+            onCrewCreated={managerRefresh.markCrewCreated}
+            onCrewChanged={managerRefresh.markCrewChanged}
             onReturnToDispatchHierarchy={() => {
               managerNavigation.openTool('schedule', 'dispatch-hierarchy');
               window.setTimeout(() => {
@@ -2075,7 +2063,7 @@ export function App() {
             }}
             onOrganizationReady={(organizationName, organizationId) => {
               setActiveManagerOrganizationId(organizationId);
-              setFirstOwnerProgressRefreshSignal((current) => current + 1);
+              managerRefresh.markFirstOwnerProgressChanged();
               setStatusMessage(`${organizationName} owner setup completed.`);
               recordManagerActivity({
                 title: 'Organization owner setup completed',
@@ -2093,11 +2081,10 @@ export function App() {
             tool="day-plan"
           >
             <ManagerDayPlanPanel
-              crewRefreshSignal={crewRefreshSignal}
+              crewRefreshSignal={managerRefresh.signals.crew}
               jobs={jobs}
               onDayPlanPublished={(dayPlan) => {
-                setDayPlanRefreshSignal((current) => current + 1);
-                setFirstOwnerProgressRefreshSignal((current) => current + 1);
+                managerRefresh.markDayPlanPublished();
                 recordManagerActivity({
                   title: 'Day plan published',
                   message: `${dayPlan.crewId} route for ${dayPlan.serviceDate} was published and crew route refreshed.`,
@@ -2127,8 +2114,7 @@ export function App() {
               properties={managerPropertyOnboardingOptions}
               requestedPropertyId={requestedOperationalProfilePropertyId}
               onSaved={(profile) => {
-                setPropertyOnboardingRefreshSignal((current) => current + 1);
-                setCustomerAccountRefreshSignal((current) => current + 1);
+                managerRefresh.markPropertyOnboardingSaved();
                 setStatusMessage(`Saved onboarding profile for ${profile.propertyId}.`);
                 recordManagerActivity({
                   title: 'Property onboarding saved',
@@ -2147,9 +2133,9 @@ export function App() {
           >
             <ManagerPropertySetupPanel
               properties={managerCustomerProperties}
-              onboardingRefreshSignal={propertyOnboardingRefreshSignal}
+              onboardingRefreshSignal={managerRefresh.signals.propertyOnboarding}
               requestedPropertyId={requestedServiceSetupPropertyId}
-              onSetupChanged={() => setCustomerAccountRefreshSignal((current) => current + 1)}
+              onSetupChanged={managerRefresh.markPropertySetupChanged}
               onPropertyUpdated={(property) => registerManagerProperties([property])}
             />
           </ManagerToolSurface>
@@ -2162,11 +2148,11 @@ export function App() {
             <ManagerCustomerAccountOnboardingPanel
               organizationId={activeManagerOrganizationId}
               onOpenPropertyWorkspace={openPropertyWorkspace}
-              refreshSignal={customerAccountRefreshSignal}
+              refreshSignal={managerRefresh.signals.customerAccount}
               onPropertiesLoaded={registerManagerProperties}
               onPropertyCreated={(property) => {
                 registerManagerProperties([property]);
-                setFirstOwnerProgressRefreshSignal((current) => current + 1);
+                managerRefresh.markFirstOwnerProgressChanged();
                 setStatusMessage(`${property.displayName} is ready for operational onboarding.`);
               }}
             />
@@ -2178,10 +2164,7 @@ export function App() {
           >
             <ManagerTeamMembershipsPanel
               actorUserId={auth.userId}
-              onTeamChanged={() => {
-                setTeamActivityRefreshSignal((current) => current + 1);
-                setFirstOwnerProgressRefreshSignal((current) => current + 1);
-              }}
+              onTeamChanged={managerRefresh.markTeamChanged}
               organizationId={activeManagerOrganizationId}
             />
           </ManagerToolSurface>
@@ -2193,10 +2176,10 @@ export function App() {
             <TeamOrganizationOverviewPanel
               organizationId={activeManagerOrganizationId}
               refreshSignal={
-                teamActivityRefreshSignal
-                + firstOwnerProgressRefreshSignal
-                + crewRefreshSignal
-                + dispatchHierarchyRefreshSignal
+                managerRefresh.signals.teamActivity
+                + managerRefresh.signals.firstOwnerProgress
+                + managerRefresh.signals.crew
+                + managerRefresh.signals.dispatchHierarchy
               }
               onOpenMembers={() => managerNavigation.selectTool('team-members')}
               onOpenInvitations={() => managerNavigation.selectTool('team-invitations')}
@@ -2233,10 +2216,7 @@ export function App() {
             tool="team-invitations"
           >
             <ManagerTeamInvitationsPanel
-              onTeamChanged={() => {
-                setTeamActivityRefreshSignal((current) => current + 1);
-                setFirstOwnerProgressRefreshSignal((current) => current + 1);
-              }}
+              onTeamChanged={managerRefresh.markTeamChanged}
               organizationId={activeManagerOrganizationId}
             />
           </ManagerToolSurface>
@@ -2260,7 +2240,7 @@ export function App() {
               requestedCrewTerritoryId={crewNavigation.teamActivityRequest.territoryId}
               returnedAuditId={crewNavigation.returnedAuditId}
               returnedAuditSignal={crewNavigation.returnedAuditSignal}
-              refreshSignal={teamActivityRefreshSignal}
+              refreshSignal={managerRefresh.signals.teamActivity}
             />
           </ManagerToolSurface>
           <ManagerToolSurface
@@ -2430,11 +2410,8 @@ export function App() {
                   target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   target?.focus({ preventScroll: true });
                 }}
-                refreshSignal={dispatchHierarchyRefreshSignal}
-                onChanged={() => {
-                  setDispatchHierarchyRefreshSignal((current) => current + 1);
-                  setTeamActivityRefreshSignal((current) => current + 1);
-                }}
+                refreshSignal={managerRefresh.signals.dispatchHierarchy}
+                onChanged={managerRefresh.markDispatchHierarchyChanged}
               />
             ) : null}
           </ManagerToolSurface>
@@ -2444,7 +2421,7 @@ export function App() {
             tool="dispatch-workload"
           >
             <ManagerDispatchWorkloadPanel
-              hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
+              hierarchyRefreshSignal={managerRefresh.signals.dispatchHierarchy}
               jobs={jobs}
               onReassign={handleJobDispatchAssignment}
               onSelectJob={selectJobForReview}

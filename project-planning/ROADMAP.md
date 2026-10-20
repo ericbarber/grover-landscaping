@@ -262,6 +262,10 @@ navigation now owns history-view changes, mobile property detail, list return,
 and report expansion in the customer feature boundary. Manager section/tool
 navigation is now atomic and authorization-aware in the management boundary,
 including safe reset after persona, rollout, or capability changes.
+Manager cross-panel refresh events now use the same management boundary. Each
+workflow event advances only its tested dependency set, preserving coordinated
+Schedule, Team, Properties, customer-account, crew, and owner-progress reads
+without scattering coupled counters through the application shell.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

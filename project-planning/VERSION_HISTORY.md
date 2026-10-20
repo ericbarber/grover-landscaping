@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-20: Extracted manager cross-panel refresh coordination from the
+  application shell. Typed workflow events now advance the exact dependent
+  Schedule, Team, Properties, customer-account, crew, hierarchy, and owner-
+  progress reads together, with reducer coverage preventing omitted or excess
+  refreshes. The full frontend gate passes 165 files / 687 tests, TypeScript,
+  and the production build.
 - 2026-10-17: Extracted manager workspace section/tool navigation from the
   application shell. Atomic transitions now reject unavailable sections,
   clear mismatched tools before presentation, capability-check the company-owner
