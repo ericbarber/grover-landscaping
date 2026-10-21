@@ -558,7 +558,11 @@ property records are rejected, and archived records remain visible to account
 administration without appearing as operational-onboarding choices. Recovery
 handoff now uses a typed operational-exception request coordinator; repeated
 requests for the same exception remain observable, while empty identifiers do
-not discard or replace valid context.
+not discard or replace valid context. Core workspace-view navigation now owns
+authorization fallback, desktop transitions, and mobile scroll save/restore.
+Persona or capability changes fail closed to the active default destination,
+and all customer, field, manager, and persona-switch handoffs share the same
+tested navigation policy.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

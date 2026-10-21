@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-20: Extracted core workspace-view navigation from the application
+  shell. One coordinator now owns fail-closed persona/capability fallback,
+  desktop destination changes, and mobile scroll save, restoration, and reset
+  across customer, field, manager, and persona-switch handoffs. The full
+  frontend gate passes 168 files / 700 tests, TypeScript, and the production
+  build.
 - 2026-10-20: Extracted operational activity-to-Recovery targeting from the
   application shell. A typed coordinator now preserves repeat requests for the
   same exception through a monotonic presentation signal and ignores empty

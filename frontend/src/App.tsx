@@ -22,12 +22,11 @@ import type {
 import { requiredPhotoEvidence } from './domain/photoQuality';
 import { workspaceGuidanceForRoles, workspaceRolesForAccess } from './domain/workspaceAccess';
 import { useWorkspaceSelection } from './workspaces/core/useWorkspaceSelection';
+import { useWorkspaceViewNavigation } from './workspaces/core/useWorkspaceViewNavigation';
 import {
   DesktopWorkspaceNavigation,
   MobileWorkspaceHeader,
   MobileWorkspaceNavigation,
-  mobileWorkspaceScrollTop,
-  type MobileWorkspaceView,
 } from './components/MobileWorkspaceShell';
 import {
   ManagerWorkspaceMenu,
@@ -684,9 +683,15 @@ export function App() {
     jobsUnavailable,
   } = useFieldJobs();
   const [requestedJobWorkflow, setRequestedJobWorkflow] = useState<JobWorkflowSection>('overview');
-  const [mobileView, setMobileView] = useState<MobileWorkspaceView>(
-    activePersona.defaultView,
+  const availableWorkspaceViews = useMemo(
+    () => activePersona.navigation.map(({ view }) => view),
+    [activePersona.navigation],
   );
+  const workspaceViewNavigation = useWorkspaceViewNavigation(
+    activePersona.defaultView,
+    availableWorkspaceViews,
+  );
+  const mobileView = workspaceViewNavigation.view;
   const {
     selectedJob,
     setSelectedJob,
@@ -777,7 +782,6 @@ export function App() {
   }, [fieldJobsReadState, recordManagerActivity]);
   const jobDetailRef = useRef<HTMLDivElement>(null);
   const providerEntryOpened = useRef(false);
-  const mobileScrollPositions = useRef<Partial<Record<MobileWorkspaceView, number>>>({});
   const homeWorkSummary = customerHomeWorkSummary(
     activePersona.id,
     customerPortalVisits,
@@ -1062,45 +1066,22 @@ export function App() {
       : 'Scheduling, customers, and recovery';
 
   useEffect(() => {
-    if (activePersona.navigation.some(({ view }) => view === mobileView)) return;
-    setMobileView(activePersona.defaultView);
-  }, [activePersona, mobileView]);
-
-  useEffect(() => {
     if (!providerEntryMode || providerEntryOpened.current || activePersona.id !== 'company-owner') return;
     providerEntryOpened.current = true;
-    setMobileView('manager');
+    workspaceViewNavigation.openView('manager', true);
     managerNavigation.openTool('overview', 'owner-setup');
-  }, [activePersona.id, managerNavigation.openTool, providerEntryMode]);
-
-  function changeMobileView(
-    destination: MobileWorkspaceView,
-    resetDestination = false,
-  ) {
-    if (window.innerWidth >= 1024) {
-      setMobileView(destination);
-      return;
-    }
-
-    mobileScrollPositions.current[mobileView] = window.scrollY;
-    setMobileView(destination);
-    window.requestAnimationFrame(() => {
-      window.scrollTo({
-        top: mobileWorkspaceScrollTop(
-          mobileScrollPositions.current,
-          destination,
-          resetDestination,
-        ),
-        behavior: 'auto',
-      });
-    });
-  }
+  }, [
+    activePersona.id,
+    managerNavigation.openTool,
+    providerEntryMode,
+    workspaceViewNavigation.openView,
+  ]);
 
   function selectJobForReview(jobId: string) {
     setSelectedJobId(jobId);
     setRequestedJobWorkflow('overview');
     if (window.innerWidth < 1024) {
-      changeMobileView('job', jobId !== selectedJobId);
+      workspaceViewNavigation.openView('job', jobId !== selectedJobId);
     }
   }
 
@@ -1722,7 +1703,7 @@ export function App() {
           if (view === 'manager') {
             managerNavigation.openRoot();
           }
-          changeMobileView(view, true);
+          workspaceViewNavigation.openView(view, true);
         }}
         onPersonaChange={(personaId) => {
           const persona = selectWorkspacePersona(personaId);
@@ -1730,7 +1711,7 @@ export function App() {
           if (persona.defaultView === 'manager') {
             managerNavigation.openRoot();
           }
-          changeMobileView(persona.defaultView, true);
+          workspaceViewNavigation.openView(persona.defaultView, true);
         }}
         onSignOut={hostedSignOut}
         personaLabel={activePersona.label}
@@ -1808,14 +1789,14 @@ export function App() {
         activePersonaId={activePersona.id}
         assignedJobCount={jobs.length}
         availablePersonas={availablePersonas}
-        onBackToJobs={() => changeMobileView('jobs')}
+        onBackToJobs={() => workspaceViewNavigation.openView('jobs')}
         onPersonaChange={(personaId) => {
           const persona = selectWorkspacePersona(personaId);
           if (!persona) return;
           if (persona.defaultView === 'manager') {
             managerNavigation.openRoot();
           }
-          changeMobileView(persona.defaultView, true);
+          workspaceViewNavigation.openView(persona.defaultView, true);
         }}
         onSignOut={hostedSignOut}
         pendingChangeCount={
@@ -1842,18 +1823,18 @@ export function App() {
               managerTodayQueue={showManagerTodayQueue ? {
                 items: managerTodayItems,
                 state: managerTodayState,
-                onOpenAll: () => changeMobileView('jobs', true),
+                onOpenAll: () => workspaceViewNavigation.openView('jobs', true),
                 onOpenItem: (item) => {
                   setSelectedJobId(item.jobId);
                   setRequestedJobWorkflow(item.workflow);
-                  changeMobileView('job', true);
+                  workspaceViewNavigation.openView('job', true);
                 },
               } : undefined}
               onOpen={(view) => {
                 if (view === 'manager') {
                   managerNavigation.openRoot();
                 }
-                changeMobileView(view, true);
+                workspaceViewNavigation.openView(view, true);
               }}
               pendingChangeCount={
                 fieldRecovery.pendingChangeCount
@@ -1916,7 +1897,7 @@ export function App() {
                   visits={customerPortalVisits}
                   readState={portalHomeReadState}
                   onRetry={() => void refreshCustomerPortalVisits()}
-                  onReturnHome={() => changeMobileView('home', true)}
+                  onReturnHome={() => workspaceViewNavigation.openView('home', true)}
                 />
               </div>
             ) : customerWorkspaceMode === 'yard' ? (
@@ -1928,7 +1909,7 @@ export function App() {
                 isLoadingVisits={isLoadingCustomerPortalVisits}
                 visitReadError={customerPortalVisitError}
                 onRetryVisits={() => void refreshCustomerPortalVisits()}
-                onReturnHome={() => changeMobileView('home', true)}
+                onReturnHome={() => workspaceViewNavigation.openView('home', true)}
               />
             ) : (
               <WorkspaceStatusNotice
@@ -2317,7 +2298,7 @@ export function App() {
               onOpenAffectedResource={(resourceType, resourceId) => {
                 if (resourceType === 'job') {
                   setSelectedJobId(resourceId);
-                  changeMobileView('job', true);
+                  workspaceViewNavigation.openView('job', true);
                   return;
                 }
                 if (resourceType === 'property') {
@@ -2406,7 +2387,7 @@ export function App() {
               onSelectJob={(jobId) => {
                 setSelectedJobId(jobId);
                 setRequestedJobWorkflow('report');
-                changeMobileView('job', true);
+                workspaceViewNavigation.openView('job', true);
               }}
             />
           </ManagerToolSurface>
@@ -2482,7 +2463,7 @@ export function App() {
           if (view === 'manager') {
             managerNavigation.openRoot();
           }
-          changeMobileView(view);
+          workspaceViewNavigation.openView(view);
         }}
       />
     </main>

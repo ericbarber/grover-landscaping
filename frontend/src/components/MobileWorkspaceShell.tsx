@@ -5,6 +5,7 @@ import type {
   WorkspaceView,
 } from '../workspaces/core/types';
 import { classifyRouteDate, type CrewRouteOverview } from '../domain/dayPlans';
+import { workspaceViewScrollTop } from '../workspaces/core/useWorkspaceViewNavigation';
 import { ProductBrand } from './ProductBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
 
@@ -74,14 +75,7 @@ function WorkspacePersonaOptions({ personas }: { personas: WorkspacePersona[] })
   });
 }
 
-export function mobileWorkspaceScrollTop(
-  savedPositions: Partial<Record<MobileWorkspaceView, number>>,
-  destination: MobileWorkspaceView,
-  resetDestination = false,
-): number {
-  if (resetDestination) return 0;
-  return Math.max(0, savedPositions[destination] ?? 0);
-}
+export const mobileWorkspaceScrollTop = workspaceViewScrollTop;
 
 export function mobileWorkspaceContext(
   input: MobileWorkspaceContextInput,

@@ -272,6 +272,9 @@ mismatched records are rejected, registration updates both account and
 onboarding views atomically, and archived properties leave onboarding choices.
 Operational activity-to-Recovery targeting now also has a typed request
 boundary that preserves repeated same-exception opens and ignores empty IDs.
+Core workspace-view navigation now centralizes persona/capability fallback and
+mobile scroll restoration, so every cross-workspace handoff uses one fail-closed
+destination policy instead of shell-local view state.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.
