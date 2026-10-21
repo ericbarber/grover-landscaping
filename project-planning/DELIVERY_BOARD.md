@@ -20,7 +20,7 @@ for account access or live-service evidence.
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | B10 decision packet prepared | Core workflows plus exact activity-to-Recovery exception handoff are delivered; the bounded concern proposal remains unapproved | Approve or revise concern ownership, response, retention, privacy, categories, urgent handling, and notification scope before implementation |
-| Internal convergence | I1A management/customer state extraction and I1B core view navigation are delivered | Authorization-aware feature coordinators and one fail-closed workspace destination policy keep the top-level React shell focused on composition | Deliver I1C field job/workflow handoff, then I1D route-summary ownership and final shell audit |
+| Internal convergence | I1A management/customer state extraction, I1B core view navigation, and I1C field job/workflow handoff are delivered | Authorization-aware feature coordinators plus exact workspace and selected-job destination policies keep the top-level React shell focused on composition | Deliver I1D route-summary ownership and final shell audit |
 
 ## Execution queue
 
@@ -441,9 +441,10 @@ Delivery evidence:
 
 ### I1 — Application shell state convergence
 
-State: I1A management/customer coordination and I1B core view navigation are
-delivered; I1C is next. This is the safe repository-maintenance lane while B9,
-R2, and P2 wait on participant, infrastructure, or product evidence.
+State: I1A management/customer coordination, I1B core view navigation, and I1C
+field job/workflow handoff are delivered; I1D is next. This is the safe
+repository-maintenance lane while B9, R2, and P2 wait on participant,
+infrastructure, or product evidence.
 
 Deliver:
 

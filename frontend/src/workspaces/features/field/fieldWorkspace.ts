@@ -13,6 +13,7 @@ import type {
 import type { YardCareJob } from '../../../domain/jobs';
 
 export type FieldPhotoType = 'before' | 'after' | 'issue' | 'extra';
+export type JobWorkflowSection = 'overview' | 'checklist' | 'photos' | 'addons' | 'report';
 
 export interface FieldRecoveryState {
   jobs: OfflineMutationSummary;

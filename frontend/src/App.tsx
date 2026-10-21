@@ -39,7 +39,6 @@ import {
   type ManagerWorkspaceTool,
 } from './workspaces/features/management/managerWorkspace';
 import { useManagerWorkspaceNavigation } from './workspaces/features/management/useManagerWorkspaceNavigation';
-import type { JobWorkflowSection } from './components/JobWorkflowMenu';
 import {
   CustomerHistoryMenu,
 } from './components/CustomerHistoryMenu';
@@ -73,6 +72,7 @@ import { useFieldPhotoEvidence } from './workspaces/features/field/useFieldPhoto
 import { useFieldCompletionReport } from './workspaces/features/field/useFieldCompletionReport';
 import { useFieldJobs } from './workspaces/features/field/useFieldJobs';
 import { useFieldOfflineRecovery } from './workspaces/features/field/useFieldOfflineRecovery';
+import { useFieldJobNavigation } from './workspaces/features/field/useFieldJobNavigation';
 import {
   reviewedFieldConflictMessage,
   runChecklistMutationCommand,
@@ -682,7 +682,6 @@ export function App() {
     isLoadingJobs,
     jobsUnavailable,
   } = useFieldJobs();
-  const [requestedJobWorkflow, setRequestedJobWorkflow] = useState<JobWorkflowSection>('overview');
   const availableWorkspaceViews = useMemo(
     () => activePersona.navigation.map(({ view }) => view),
     [activePersona.navigation],
@@ -692,6 +691,14 @@ export function App() {
     availableWorkspaceViews,
   );
   const mobileView = workspaceViewNavigation.view;
+  const openFieldJobView = useCallback((resetDestination: boolean) => {
+    workspaceViewNavigation.openView('job', resetDestination);
+  }, [workspaceViewNavigation.openView]);
+  const fieldJobNavigation = useFieldJobNavigation({
+    selectedJobId,
+    selectJob: setSelectedJobId,
+    openJobView: openFieldJobView,
+  });
   const {
     selectedJob,
     setSelectedJob,
@@ -1076,14 +1083,6 @@ export function App() {
     providerEntryMode,
     workspaceViewNavigation.openView,
   ]);
-
-  function selectJobForReview(jobId: string) {
-    setSelectedJobId(jobId);
-    setRequestedJobWorkflow('overview');
-    if (window.innerWidth < 1024) {
-      workspaceViewNavigation.openView('job', jobId !== selectedJobId);
-    }
-  }
 
   function openPropertyWorkspace(
     propertyId: string,
@@ -1825,9 +1824,7 @@ export function App() {
                 state: managerTodayState,
                 onOpenAll: () => workspaceViewNavigation.openView('jobs', true),
                 onOpenItem: (item) => {
-                  setSelectedJobId(item.jobId);
-                  setRequestedJobWorkflow(item.workflow);
-                  workspaceViewNavigation.openView('job', true);
+                  fieldJobNavigation.openJob(item.jobId, item.workflow, true);
                 },
               } : undefined}
               onOpen={(view) => {
@@ -1849,7 +1846,7 @@ export function App() {
             <DayPlanPanel
               actorId={auth.userId}
               jobDetailsEnabled={fieldControls.jobDetails}
-              onSelectJob={selectJobForReview}
+              onSelectJob={fieldJobNavigation.openJob}
               onOverviewChange={handleCrewRouteOverviewChange}
               refreshSignal={managerRefresh.signals.dayPlan}
               routeChangesEnabled={fieldControls.routeChanges}
@@ -1860,7 +1857,7 @@ export function App() {
             className={workspaceSurfaces.fieldOperations && mobileView === 'jobs' ? 'block' : 'hidden'}
             jobs={jobs}
             jobsUnavailable={jobsUnavailable}
-            onSelectJob={selectJobForReview}
+            onSelectJob={fieldJobNavigation.openJob}
             recovery={(
               <FieldOfflineRecoveryPanel
                 checklistMutations={offlineChecklistMutations}
@@ -2297,8 +2294,7 @@ export function App() {
               requestedExceptionSignal={operationalExceptionNavigation.requestedExceptionSignal}
               onOpenAffectedResource={(resourceType, resourceId) => {
                 if (resourceType === 'job') {
-                  setSelectedJobId(resourceId);
-                  workspaceViewNavigation.openView('job', true);
+                  fieldJobNavigation.openJob(resourceId, 'overview', true);
                   return;
                 }
                 if (resourceType === 'property') {
@@ -2371,7 +2367,7 @@ export function App() {
               hierarchyRefreshSignal={managerRefresh.signals.dispatchHierarchy}
               jobs={jobs}
               onReassign={handleJobDispatchAssignment}
-              onSelectJob={selectJobForReview}
+              onSelectJob={fieldJobNavigation.openJob}
             />
           </ManagerToolSurface>
           <ManagerToolSurface
@@ -2385,9 +2381,7 @@ export function App() {
               isLoading={isLoadingReportQueue}
               onRefresh={(filters) => void refreshManagerReportQueue(filters)}
               onSelectJob={(jobId) => {
-                setSelectedJobId(jobId);
-                setRequestedJobWorkflow('report');
-                workspaceViewNavigation.openView('job', true);
+                fieldJobNavigation.openJob(jobId, 'report', true);
               }}
             />
           </ManagerToolSurface>
@@ -2451,7 +2445,8 @@ export function App() {
             onQueueReportDeliveryNotification={handleQueueReportDeliveryNotification}
             reportActionStatus={managerReportActionStatus ?? reportNotificationActionStatus}
             reportEnabled={fieldControls.report}
-            requestedWorkflow={requestedJobWorkflow}
+            requestedWorkflow={fieldJobNavigation.requestedWorkflow}
+            requestedWorkflowSignal={fieldJobNavigation.requestedWorkflowSignal}
           />
         </div>
       </section>

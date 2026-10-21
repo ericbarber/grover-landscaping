@@ -42,6 +42,7 @@ export function JobDetailPanel({
   reportActionStatus,
   reportEnabled,
   requestedWorkflow,
+  requestedWorkflowSignal = 0,
 }: {
   job: JobDetail | null;
   executionEnabled: boolean;
@@ -67,6 +68,7 @@ export function JobDetailPanel({
   reportActionStatus: string | null;
   reportEnabled: boolean;
   requestedWorkflow: JobWorkflowSection;
+  requestedWorkflowSignal?: number;
 }) {
   const [photoType, setPhotoType] = useState<FieldPhotoType>('before');
   const [activeWorkflow, setActiveWorkflow] = useState<JobWorkflowSection>(requestedWorkflow);
@@ -81,7 +83,14 @@ export function JobDetailPanel({
     setActiveWorkflow(
       allowedWorkflowSections.includes(requestedWorkflow) ? requestedWorkflow : 'overview',
     );
-  }, [executionEnabled, fieldEvidenceEnabled, job?.id, reportEnabled, requestedWorkflow]);
+  }, [
+    executionEnabled,
+    fieldEvidenceEnabled,
+    job?.id,
+    reportEnabled,
+    requestedWorkflow,
+    requestedWorkflowSignal,
+  ]);
 
   if (isLoading) {
     return (

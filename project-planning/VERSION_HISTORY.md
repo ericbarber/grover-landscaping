@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-20: Extracted selected-job/workflow navigation into the field feature
+  boundary. Route, Jobs, Home, Dispatch, report, and Recovery handoffs now open
+  the exact Job destination on desktop and mobile; repeat requests reactivate
+  the requested workflow, Recovery clears stale tabs to Overview, and report
+  review opens Report. The full frontend gate passes 169 files / 703 tests,
+  TypeScript, and the production build.
 - 2026-10-20: Extracted core workspace-view navigation from the application
   shell. One coordinator now owns fail-closed persona/capability fallback,
   desktop destination changes, and mobile scroll save, restoration, and reset

@@ -275,6 +275,10 @@ boundary that preserves repeated same-exception opens and ignores empty IDs.
 Core workspace-view navigation now centralizes persona/capability fallback and
 mobile scroll restoration, so every cross-workspace handoff uses one fail-closed
 destination policy instead of shell-local view state.
+Field job/workflow navigation now uses a typed field coordinator. Every source
+opens the selected Job on desktop and mobile, exact workflow intent is retained,
+and repeated same-job requests remain observable instead of inheriting stale
+local tab state.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.
