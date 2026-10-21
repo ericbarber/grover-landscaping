@@ -20,7 +20,7 @@ for account access or live-service evidence.
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | B10 decision packet prepared | Core workflows plus exact activity-to-Recovery exception handoff are delivered; the bounded concern proposal remains unapproved | Approve or revise concern ownership, response, retention, privacy, categories, urgent handling, and notification scope before implementation |
-| Internal convergence | I1A management/customer state extraction, I1B core view navigation, and I1C field job/workflow handoff are delivered | Authorization-aware feature coordinators plus exact workspace and selected-job destination policies keep the top-level React shell focused on composition | Deliver I1D route-summary ownership and final shell audit |
+| Internal convergence | I1 is delivered | Authorization-aware feature coordinators, exact workspace/job destinations, and scope-safe route summaries leave the top-level React shell focused on composition and global outcome copy | Preserve the boundary during regression maintenance while B9, R2, and P2 remain the next evidence gates |
 
 ## Execution queue
 
@@ -441,10 +441,10 @@ Delivery evidence:
 
 ### I1 — Application shell state convergence
 
-State: I1A management/customer coordination, I1B core view navigation, and I1C
-field job/workflow handoff are delivered; I1D is next. This is the safe
-repository-maintenance lane while B9, R2, and P2 wait on participant,
-infrastructure, or product evidence.
+State: delivered. I1A management/customer coordination, I1B core view
+navigation, I1C field job/workflow handoff, and I1D route-summary ownership and
+shell audit are complete. B9, R2, and P2 remain separate participant,
+infrastructure, or product-evidence gates.
 
 Deliver:
 
@@ -467,6 +467,16 @@ Exit evidence:
   than feature collection or navigation policy.
 - Every slice passes focused coverage, the complete frontend suite, TypeScript,
   and the production build before its local commit.
+
+Delivery evidence:
+
+- Route summaries fail closed synchronously when identity, persona, or field
+  capability scope changes.
+- The final `App.tsx` state audit retains only global user-facing command/status
+  copy; feature collections, navigation, requests, refreshes, and summaries are
+  owned by their typed boundaries.
+- The complete frontend gate passes 170 files / 706 tests, TypeScript, and the
+  production build.
 
 ### P2 — Yard Owner concern and preference boundary
 

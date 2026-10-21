@@ -278,7 +278,9 @@ destination policy instead of shell-local view state.
 Field job/workflow navigation now uses a typed field coordinator. Every source
 opens the selected Job on desktop and mobile, exact workflow intent is retained,
 and repeated same-job requests remain observable instead of inheriting stale
-local tab state.
+local tab state. Field route summaries now fail closed synchronously across
+identity, persona, and capability changes. The application-shell convergence
+phase is complete with only global command/status copy retained locally.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

@@ -13,7 +13,6 @@ import {
   type PropertyCompletionReportSummary,
 } from './api/client';
 import { useAuth } from './auth/AuthProvider';
-import type { CrewRouteOverview } from './domain/dayPlans';
 import type {
   ChecklistOfflineMutation,
   JobLifecycleOfflineMutation,
@@ -73,6 +72,7 @@ import { useFieldCompletionReport } from './workspaces/features/field/useFieldCo
 import { useFieldJobs } from './workspaces/features/field/useFieldJobs';
 import { useFieldOfflineRecovery } from './workspaces/features/field/useFieldOfflineRecovery';
 import { useFieldJobNavigation } from './workspaces/features/field/useFieldJobNavigation';
+import { useFieldRouteOverview } from './workspaces/features/field/useFieldRouteOverview';
 import {
   reviewedFieldConflictMessage,
   runChecklistMutationCommand,
@@ -730,12 +730,10 @@ export function App() {
     enabled: personaUsesAuthorizedCustomerRead(activePersona.id) && Boolean(auth.userId),
     subjectKey: `${activePersona.id}:${auth.userId ?? ''}`,
   });
-  const [crewRouteOverview, setCrewRouteOverview] = useState<CrewRouteOverview>({
-    source: 'loading', totalStops: 0, completedStops: 0,
+  const fieldRouteOverview = useFieldRouteOverview({
+    enabled: workspaceSurfaces.fieldOperations,
+    scopeKey: `${activePersona.id}:${auth.userId ?? ''}`,
   });
-  const handleCrewRouteOverviewChange = useCallback((overview: CrewRouteOverview) => {
-    setCrewRouteOverview(overview);
-  }, []);
   const managerRefresh = useManagerRefreshSignals();
   const crewNavigation = useManagerCrewNavigation();
   const {
@@ -801,7 +799,7 @@ export function App() {
     isLoadingWork: isLoadingJobs,
     personaId: activePersona.id,
     portalReadState: portalHomeReadState,
-    routeOverview: crewRouteOverview,
+    routeOverview: fieldRouteOverview.overview,
   });
   const customerWorkspaceMode = customerWorkspaceModeForPersona(activePersona.id);
   const fieldRecovery = fieldRecoveryState({
@@ -1801,7 +1799,7 @@ export function App() {
         pendingChangeCount={
           fieldRecovery.pendingChangeCount
         }
-        routeOverview={crewRouteOverview}
+        routeOverview={fieldRouteOverview.overview}
         personaDescription={activePersona.description}
         personaLabel={activePersona.label}
         signedInName={auth.displayName || 'Signed-in user'}
@@ -1838,7 +1836,7 @@ export function App() {
               }
               persona={activePersona}
               portalReadState={portalHomeReadState}
-              routeOverview={crewRouteOverview}
+              routeOverview={fieldRouteOverview.overview}
               signedInName={auth.displayName || 'Signed-in user'}
             />
           </div>
@@ -1847,7 +1845,7 @@ export function App() {
               actorId={auth.userId}
               jobDetailsEnabled={fieldControls.jobDetails}
               onSelectJob={fieldJobNavigation.openJob}
-              onOverviewChange={handleCrewRouteOverviewChange}
+              onOverviewChange={fieldRouteOverview.updateOverview}
               refreshSignal={managerRefresh.signals.dayPlan}
               routeChangesEnabled={fieldControls.routeChanges}
               stopProgressEnabled={fieldControls.stopProgress}

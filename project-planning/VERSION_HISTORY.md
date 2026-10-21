@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-20: Completed application-shell state convergence by moving route-
+  summary ownership into the field boundary. Route context now fails closed
+  synchronously across identity, persona, and capability changes before Home or
+  mobile consumers render it. The final audit leaves only global user-facing
+  command/status copy in local shell state. The full frontend gate passes 170
+  files / 706 tests, TypeScript, and the production build.
 - 2026-10-20: Extracted selected-job/workflow navigation into the field feature
   boundary. Route, Jobs, Home, Dispatch, report, and Recovery handoffs now open
   the exact Job destination on desktop and mobile; repeat requests reactivate

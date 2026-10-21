@@ -566,7 +566,11 @@ tested navigation policy. Field job navigation now owns exact job/workflow
 requests and repeat-presentation signals. Route, Jobs, Home, Dispatch,
 completion-report, and Recovery selections open the Job destination on desktop
 and mobile; Recovery resets to Overview, report review opens Report, and
-repeating the same request reactivates its intended workflow.
+repeating the same request reactivates its intended workflow. Field route
+overview state now resets synchronously across identity, persona, or capability
+changes before Home or mobile context can consume it. The final shell audit
+leaves only global user-facing command/status copy in local `App` state; I1
+application-shell convergence is complete.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,
