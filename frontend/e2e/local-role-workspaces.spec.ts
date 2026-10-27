@@ -1050,6 +1050,71 @@ test('field Job keeps context and primary actions while opening one workflow pan
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('desktop job selection opens Job and repeated selection restores Overview', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'crew-lead');
+  });
+  const job = {
+    id: 'job_desktop',
+    organization_id: 'org_demo_landscaping',
+    assigned_crew_id: 'crew_1001',
+    customer_name: 'Desert Willow Home',
+    property_address: '88 Willow Lane',
+    status: 'in_progress',
+    scheduled_date: '2026-10-22',
+    before_photos: 1,
+    after_photos: 0,
+    checklist_items: 3,
+    completed_checklist_items: 1,
+  };
+  await page.route('http://localhost:8080/jobs', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([job]),
+  }));
+  await page.route('http://localhost:8080/jobs/job_desktop', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ...job,
+      checklist: [
+        { id: 'arrival', label: 'Confirm arrival', completed: true },
+        { id: 'service', label: 'Complete service', completed: false },
+        { id: 'notes', label: 'Record notes', completed: false },
+      ],
+    }),
+  }));
+  await page.route('http://localhost:8080/jobs/job_desktop/add-ons', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+  await page.route('http://localhost:8080/jobs/job_desktop/photos', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+
+  await page.goto('/app');
+  const navigation = page.getByRole('navigation', { name: 'Desktop workspace' });
+  const assignedJobs = page.locator('#assigned-jobs').locator('..');
+  await navigation.getByRole('button', { name: 'Jobs', exact: true }).click();
+  await assignedJobs.getByRole('button', { name: 'Open job', exact: true }).click();
+
+  const jobDestination = navigation.getByRole('button', { name: 'Job', exact: true });
+  const detail = page.locator('#job-detail');
+  await expect(jobDestination).toHaveAttribute('aria-current', 'page');
+  await expect(detail).toBeVisible();
+  await expect(detail.getByRole('heading', { name: 'Desert Willow Home' })).toBeVisible();
+  await expect(detail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
+
+  await detail.getByRole('tab', { name: /Photos/ }).click();
+  await expect(detail.getByRole('tabpanel', { name: /Photos/ })).toBeVisible();
+  await navigation.getByRole('button', { name: 'Jobs', exact: true }).click();
+  await assignedJobs.getByRole('button', { name: 'Job open', exact: true }).click();
+
+  await expect(jobDestination).toHaveAttribute('aria-current', 'page');
+  await expect(detail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
+  await expect(detail.getByRole('tabpanel', { name: /Photos/ })).toBeHidden();
+});
+
 test('manager Schedule opens a responsive route board and planning inspector', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.addInitScript(() => {

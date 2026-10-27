@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-10-27: Added desktop browser assurance for the converged Crew Lead job
+  handoff. Selecting a job from Assigned jobs opens the exact Job destination;
+  returning from Photos and reopening the already-selected job restores
+  Overview. The focused Chromium journey, full 170-file / 706-test frontend
+  suite, TypeScript, and production build pass.
 - 2026-10-20: Completed application-shell state convergence by moving route-
   summary ownership into the field boundary. Route context now fails closed
   synchronously across identity, persona, and capability changes before Home or

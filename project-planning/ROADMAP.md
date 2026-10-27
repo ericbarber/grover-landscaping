@@ -280,7 +280,10 @@ opens the selected Job on desktop and mobile, exact workflow intent is retained,
 and repeated same-job requests remain observable instead of inheriting stale
 local tab state. Field route summaries now fail closed synchronously across
 identity, persona, and capability changes. The application-shell convergence
-phase is complete with only global command/status copy retained locally.
+phase is complete with only global command/status copy retained locally. A
+focused desktop Chromium journey now protects its selected-job contract: job
+selection opens the exact Job destination, and reopening an already-selected
+job after viewing Photos restores Overview.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

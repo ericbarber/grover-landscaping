@@ -475,6 +475,9 @@ Delivery evidence:
 - The final `App.tsx` state audit retains only global user-facing command/status
   copy; feature collections, navigation, requests, refreshes, and summaries are
   owned by their typed boundaries.
+- Desktop Chromium assurance selects a Crew Lead job from Assigned jobs, opens
+  the exact Job destination, changes its workflow to Photos, and verifies that
+  reopening the already-selected job restores Overview.
 - The complete frontend gate passes 170 files / 706 tests, TypeScript, and the
   production build.
 
