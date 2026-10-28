@@ -578,6 +578,9 @@ selected job with Overview restored. The focused Chromium journey, complete
 Manager handoff assurance now also proves that completion review opens the
 selected Job at Report while job-originated Recovery opens that same Job at
 Overview, clearing the stale report workflow. Its focused Chromium journey and
+the complete frontend gate pass. Phone-width Route assurance now also opens the
+current stop's exact Job at Overview, returns to the same Route, and continues
+stop progress without losing route context. Its focused Chromium journey and
 the complete frontend gate pass.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing

@@ -851,6 +851,38 @@ test('field Route prioritizes progress, current stop, and up-next work', async (
       }),
     })
   ));
+  const currentJob = {
+    id: 'job_oak',
+    organization_id: 'org_demo_landscaping',
+    assigned_crew_id: 'crew_1001',
+    customer_name: 'Oak Street Residence',
+    property_address: '123 Oak Street',
+    status: 'in_progress',
+    scheduled_date: serviceDate,
+    before_photos: 1,
+    after_photos: 0,
+    checklist_items: 3,
+    completed_checklist_items: 1,
+  };
+  await page.route('http://localhost:8080/jobs/job_oak', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ...currentJob,
+      checklist: [
+        { id: 'arrival', label: 'Confirm arrival', completed: true },
+        { id: 'service', label: 'Complete service', completed: false },
+        { id: 'notes', label: 'Record notes', completed: false },
+      ],
+    }),
+  }));
+  await page.route('http://localhost:8080/jobs/job_oak/add-ons', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+  await page.route('http://localhost:8080/jobs/job_oak/photos', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
 
   await page.goto('/app');
   await page.getByRole('navigation', { name: 'Mobile workspace' })
@@ -878,6 +910,16 @@ test('field Route prioritizes progress, current stop, and up-next work', async (
     };
   });
   expect(hierarchy.currentTop).toBeLessThan(hierarchy.changesTop);
+
+  await route.getByRole('button', { name: 'Open job details for Oak Street Residence' }).click();
+  const mobileNavigation = page.getByRole('navigation', { name: 'Mobile workspace' });
+  await expect(mobileNavigation.getByRole('button', { name: 'Job', exact: true }))
+    .toHaveAttribute('aria-current', 'page');
+  const jobDetail = page.locator('#job-detail');
+  await expect(jobDetail.getByRole('heading', { name: 'Oak Street Residence' })).toBeVisible();
+  await expect(jobDetail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
+  await mobileNavigation.getByRole('button', { name: 'Route', exact: true }).click();
+  await expect(route).toBeVisible();
 
   await route.getByRole('button', { name: 'Finish stop' }).click();
   await expect(route.getByText('1 of 3', { exact: false })).toBeVisible();

@@ -481,6 +481,9 @@ Delivery evidence:
 - Manager browser assurance verifies that completion review opens the selected
   Job at Report and job-originated Recovery reopens it at Overview rather than
   inheriting the stale report workflow.
+- Phone-width Route assurance opens the current stop's exact Job at Overview,
+  returns to the same Route, and continues stop progress without losing route
+  context.
 - The complete frontend gate passes 170 files / 706 tests, TypeScript, and the
   production build.
 

@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-10-28: Added phone-width browser assurance for the Route-to-Job handoff.
+  The current stop opens its exact Job at Overview, returning to Route preserves
+  the active route, and stop progress continues afterward. The focused Chromium
+  journey, full 170-file / 706-test frontend suite, TypeScript, and production
+  build pass.
 - 2026-10-28: Added manager browser assurance for exact cross-feature Job
   workflow intent. Completion review opens the selected Job at Report, while a
   job-originated Recovery item reopens the same Job at Overview instead of
