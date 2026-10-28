@@ -484,6 +484,9 @@ Delivery evidence:
 - Phone-width Route assurance opens the current stop's exact Job at Overview,
   returns to the same Route, and continues stop progress without losing route
   context.
+- Manager Dispatch workload assurance opens the selected scheduled Job at
+  Overview after traversing Schedule tools. Home, Route, Jobs, Dispatch,
+  completion-review, and Recovery entry points now have browser protection.
 - The complete frontend gate passes 170 files / 706 tests, TypeScript, and the
   production build.
 

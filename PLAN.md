@@ -583,7 +583,11 @@ moves through completion review and Recovery. Its focused Chromium journey and
 the complete frontend gate pass. Phone-width Route assurance now also opens the
 current stop's exact Job at Overview, returns to the same Route, and continues
 stop progress without losing route context. Its focused Chromium journey and
-the complete frontend gate pass.
+the complete frontend gate pass. Manager Dispatch workload assurance now opens
+the selected scheduled Job at Overview after traversing Schedule tools, closing
+browser coverage for the I1 Home, Route, Jobs, Dispatch, completion-review, and
+Recovery entry points. Its focused Chromium journey and the complete frontend
+gate pass.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

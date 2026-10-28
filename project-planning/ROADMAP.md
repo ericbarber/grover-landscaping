@@ -288,7 +288,10 @@ cross-feature workflow intent: Home's prioritized queue and completion review
 open Report, while job-originated Recovery reopens the same Job at Overview
 without stale report state. Phone-width Route assurance now opens the current
 stop's exact Job at Overview, returns to the same Route, and continues stop
-progress without losing route context.
+progress without losing route context. Manager Dispatch workload assurance now
+opens its selected scheduled Job at Overview after traversing Schedule tools,
+closing browser protection across the I1 Home, Route, Jobs, Dispatch,
+completion-review, and Recovery entry points.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.

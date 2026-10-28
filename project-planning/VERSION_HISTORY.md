@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-28: Completed browser assurance across the I1 Job entry points by
+  protecting the Manager Dispatch workload handoff. Selecting scheduled work
+  from Workload opens the exact Job at Overview after navigating Schedule
+  tools. Home, Route, Jobs, Dispatch, completion-review, and Recovery entry
+  points are now covered. The focused Chromium journey, full 170-file /
+  706-test frontend suite, TypeScript, and production build pass.
 - 2026-10-28: Extended manager browser assurance to the prioritized Home work
   queue. Its report item opens the exact Job at Report before the same record is
   exercised through completion review and Recovery-to-Overview. The focused

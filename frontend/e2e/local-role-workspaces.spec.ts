@@ -1216,6 +1216,36 @@ test('manager Schedule opens a responsive route board and planning inspector', a
       },
     ]),
   }));
+  await page.route('http://localhost:8080/jobs/job_oak', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      id: 'job_oak',
+      organization_id: 'org_demo_landscaping',
+      assigned_crew_id: 'crew_north',
+      customer_name: 'Oak Street Residence',
+      property_address: '123 Oak Street',
+      status: 'scheduled',
+      scheduled_date: '2026-08-22',
+      before_photos: 0,
+      after_photos: 0,
+      checklist_items: 4,
+      completed_checklist_items: 0,
+      checklist: [
+        { id: 'arrival', label: 'Confirm arrival', completed: false },
+        { id: 'before', label: 'Capture before photos', completed: false },
+        { id: 'service', label: 'Complete contracted service', completed: false },
+        { id: 'notes', label: 'Record completion notes', completed: false },
+      ],
+    }),
+  }));
+  await page.route('http://localhost:8080/jobs/job_oak/add-ons', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+  await page.route('http://localhost:8080/jobs/job_oak/photos', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
   await page.route('http://localhost:8080/day-plans', async (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
     const input = route.request().postDataJSON() as { crew_id: string; service_date: string };
@@ -1271,6 +1301,19 @@ test('manager Schedule opens a responsive route board and planning inspector', a
   ]);
   expect(mobilePositions[0]?.y).toBeLessThan(mobilePositions[1]?.y ?? 0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByRole('button', { name: 'Tools', exact: true }).click();
+  await page.getByRole('button', { name: /Workload/ }).click();
+  const workload = page.getByRole('heading', { name: 'Day workload' }).locator('xpath=ancestor::section[1]');
+  await workload.getByRole('button', { name: 'Oak Street Residence', exact: true }).click();
+
+  const navigation = page.getByRole('navigation', { name: 'Desktop workspace' });
+  await expect(navigation.getByRole('button', { name: 'Job', exact: true }))
+    .toHaveAttribute('aria-current', 'page');
+  const jobDetail = page.locator('#job-detail');
+  await expect(jobDetail.getByRole('heading', { name: 'Oak Street Residence' })).toBeVisible();
+  await expect(jobDetail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
 });
 
 test('manager Recovery inspects an exception and returns to affected work', async ({ page }) => {
