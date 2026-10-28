@@ -577,7 +577,9 @@ selected job with Overview restored. The focused Chromium journey, complete
 170-file / 706-test frontend suite, TypeScript, and production build pass.
 Manager handoff assurance now also proves that completion review opens the
 selected Job at Report while job-originated Recovery opens that same Job at
-Overview, clearing the stale report workflow. Its focused Chromium journey and
+Overview, clearing the stale report workflow. Manager Home's prioritized work
+queue also opens its report item at that exact workflow before the same record
+moves through completion review and Recovery. Its focused Chromium journey and
 the complete frontend gate pass. Phone-width Route assurance now also opens the
 current stop's exact Job at Overview, returns to the same Route, and continues
 stop progress without losing route context. Its focused Chromium journey and

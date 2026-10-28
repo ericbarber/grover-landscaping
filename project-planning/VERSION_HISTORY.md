@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-10-28: Extended manager browser assurance to the prioritized Home work
+  queue. Its report item opens the exact Job at Report before the same record is
+  exercised through completion review and Recovery-to-Overview. The focused
+  Chromium journey, full 170-file / 706-test frontend suite, TypeScript, and
+  production build pass.
 - 2026-10-28: Added phone-width browser assurance for the Route-to-Job handoff.
   The current stop opens its exact Job at Overview, returning to Route preserves
   the active route, and stop progress continues afterward. The focused Chromium

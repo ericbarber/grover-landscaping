@@ -1499,8 +1499,21 @@ test('manager completion review and Recovery open the selected Job workflow', as
   }));
 
   await page.goto('/app');
-  await page.getByRole('navigation', { name: 'Desktop workspace' })
-    .getByRole('button', { name: 'Manage', exact: true }).click();
+  const navigation = page.getByRole('navigation', { name: 'Desktop workspace' });
+  await expect(navigation).toBeVisible({ timeout: 15_000 });
+  const todayQueue = page.getByRole('heading', { name: 'Work that needs your attention' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(todayQueue.getByRole('heading', { name: 'Completion report is ready for review' }))
+    .toBeVisible({ timeout: 15_000 });
+  await todayQueue.getByRole('button', { name: 'Open report' }).click();
+
+  const jobDetail = page.locator('#job-detail');
+  await expect(navigation.getByRole('button', { name: 'Job', exact: true }))
+    .toHaveAttribute('aria-current', 'page');
+  await expect(jobDetail.getByRole('tabpanel', { name: /Report/ })).toBeVisible();
+  await expect(jobDetail.getByRole('tabpanel', { name: /Overview/ })).toBeHidden();
+
+  await navigation.getByRole('button', { name: 'Manage', exact: true }).click();
   await page.getByRole('button', { name: /Reports/ }).click();
   await page.getByRole('button', { name: /Completion reports/ }).click();
 
@@ -1509,13 +1522,11 @@ test('manager completion review and Recovery open the selected Job workflow', as
   await expect(review.getByText('Oak Street Residence', { exact: true })).toBeVisible();
   await review.getByRole('button', { name: 'Review report' }).click();
 
-  const jobDetail = page.locator('#job-detail');
   await expect(jobDetail).toBeVisible();
   await expect(jobDetail.getByRole('tabpanel', { name: /Report/ })).toBeVisible();
   await expect(jobDetail.getByRole('tabpanel', { name: /Overview/ })).toBeHidden();
   await expect(jobDetail.getByText('Completion report', { exact: true })).toBeVisible();
 
-  const navigation = page.getByRole('navigation', { name: 'Desktop workspace' });
   await navigation.getByRole('button', { name: 'Manage', exact: true }).click();
   await page.getByRole('button', { name: /Reports/ }).click();
   await page.getByRole('button', { name: /Operations activity/ }).click();

@@ -284,11 +284,11 @@ phase is complete with only global command/status copy retained locally. A
 focused desktop Chromium journey now protects its selected-job contract: job
 selection opens the exact Job destination, and reopening an already-selected
 job after viewing Photos restores Overview. A paired manager journey protects
-cross-feature workflow intent: completion review opens Report, while job-
-originated Recovery reopens the same Job at Overview without stale report
-state. Phone-width Route assurance now opens the current stop's exact Job at
-Overview, returns to the same Route, and continues stop progress without losing
-route context.
+cross-feature workflow intent: Home's prioritized queue and completion review
+open Report, while job-originated Recovery reopens the same Job at Overview
+without stale report state. Phone-width Route assurance now opens the current
+stop's exact Job at Overview, returns to the same Route, and continues stop
+progress without losing route context.
 The local browser acceptance gate also passes 86 journeys with 2 intentional
 skips across Chromium, Firefox, and WebKit after restoring 320px/200%-zoom
 reflow and reconciling the marketing-tour assertions with the delivered UI.
