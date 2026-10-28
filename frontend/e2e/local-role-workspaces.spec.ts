@@ -1332,7 +1332,7 @@ test('manager Recovery inspects an exception and returns to affected work', asyn
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test('manager completion review opens the selected Job report workflow', async ({ page }) => {
+test('manager completion review and Recovery open the selected Job workflow', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.addInitScript(() => {
     window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'manager');
@@ -1411,6 +1411,50 @@ test('manager completion review opens the selected Job report workflow', async (
     contentType: 'application/json',
     body: JSON.stringify(report),
   }));
+  await page.route(/http:\/\/localhost:8080\/operational-exceptions(?:\?.*)?$/, (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([
+      {
+        id: 'exception_job_report',
+        organization_id: 'org_demo_landscaping',
+        category: 'access',
+        priority: 'high',
+        status: 'open',
+        title: 'Gate access needs confirmation',
+        description: 'The office needs to confirm access before follow-up work.',
+        affected_resource_type: 'job',
+        affected_resource_id: 'job_report',
+        assigned_user_id: 'local-review-manager',
+        reported_by_user_id: 'crew_lead_1',
+        resolved_by_user_id: null,
+        resolution_note: null,
+        resolved_at: null,
+        created_at: '2026-08-22T15:00:00Z',
+        updated_at: '2026-08-22T15:05:00Z',
+      },
+    ]),
+  }));
+  await page.route(/http:\/\/localhost:8080\/operational-activity(?:\?.*)?$/, (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([
+      {
+        id: 'audit_exception_job_report_created',
+        organization_id: 'org_demo_landscaping',
+        event_kind: 'operational_exception_created',
+        target_id: 'exception_job_report',
+        actor_user_id: 'local-review-manager',
+        actor_label: 'Morgan Manager',
+        occurred_at: '2026-08-22T15:05:00Z',
+        metadata: {
+          title: 'Gate access needs confirmation',
+          category: 'access',
+          priority: 'high',
+          status: 'open',
+          assigned_user_id: 'local-review-manager',
+        },
+      },
+    ]),
+  }));
 
   await page.goto('/app');
   await page.getByRole('navigation', { name: 'Desktop workspace' })
@@ -1428,6 +1472,20 @@ test('manager completion review opens the selected Job report workflow', async (
   await expect(jobDetail.getByRole('tabpanel', { name: /Report/ })).toBeVisible();
   await expect(jobDetail.getByRole('tabpanel', { name: /Overview/ })).toBeHidden();
   await expect(jobDetail.getByText('Completion report', { exact: true })).toBeVisible();
+
+  const navigation = page.getByRole('navigation', { name: 'Desktop workspace' });
+  await navigation.getByRole('button', { name: 'Manage', exact: true }).click();
+  await page.getByRole('button', { name: /Reports/ }).click();
+  await page.getByRole('button', { name: /Operations activity/ }).click();
+  await page.getByRole('button', { name: 'Open Recovery item' }).click();
+  const recovery = page.getByRole('heading', { name: 'Recovery and exceptions' }).locator('xpath=ancestor::div[1]');
+  await expect(recovery.getByRole('heading', { name: 'Gate access needs confirmation' })).toBeVisible();
+  await recovery.getByRole('button', { name: 'Open affected work' }).click();
+
+  await expect(navigation.getByRole('button', { name: 'Job', exact: true }))
+    .toHaveAttribute('aria-current', 'page');
+  await expect(jobDetail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
+  await expect(jobDetail.getByRole('tabpanel', { name: /Report/ })).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 

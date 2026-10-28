@@ -478,6 +478,9 @@ Delivery evidence:
 - Desktop Chromium assurance selects a Crew Lead job from Assigned jobs, opens
   the exact Job destination, changes its workflow to Photos, and verifies that
   reopening the already-selected job restores Overview.
+- Manager browser assurance verifies that completion review opens the selected
+  Job at Report and job-originated Recovery reopens it at Overview rather than
+  inheriting the stale report workflow.
 - The complete frontend gate passes 170 files / 706 tests, TypeScript, and the
   production build.
 

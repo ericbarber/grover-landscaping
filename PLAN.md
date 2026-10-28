@@ -575,6 +575,10 @@ selects a Crew Lead job from Assigned jobs, verifies the exact Job destination,
 changes the open workflow to Photos, returns to Jobs, and reopens the already-
 selected job with Overview restored. The focused Chromium journey, complete
 170-file / 706-test frontend suite, TypeScript, and production build pass.
+Manager handoff assurance now also proves that completion review opens the
+selected Job at Report while job-originated Recovery opens that same Job at
+Overview, clearing the stale report workflow. Its focused Chromium journey and
+the complete frontend gate pass.
 - The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
   now gives all ten personas a task-first design direction rather than reusing
   the rollout prototype as a UX target. Customer, field, operations,

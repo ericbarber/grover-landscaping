@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-10-28: Added manager browser assurance for exact cross-feature Job
+  workflow intent. Completion review opens the selected Job at Report, while a
+  job-originated Recovery item reopens the same Job at Overview instead of
+  inheriting stale report state. The focused Chromium journey, full 170-file /
+  706-test frontend suite, TypeScript, and production build pass.
 - 2026-10-27: Added desktop browser assurance for the converged Crew Lead job
   handoff. Selecting a job from Assigned jobs opens the exact Job destination;
   returning from Photos and reopening the already-selected job restores
