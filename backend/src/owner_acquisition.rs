@@ -12549,7 +12549,12 @@ const OWNER_PROVIDER_RELATIONSHIP_ACTIVATION_SELECT: &str =
             activation.owner_confirmed, activation.idempotency_key
      FROM owner_provider_relationship_activations activation
      JOIN customer_portal_access_grants portal_access
-       ON portal_access.activation_id = activation.id";
+       ON portal_access.activation_id = activation.id
+      AND portal_access.access_role = 'property_owner'
+      AND portal_access.user_id = activation.owner_user_id
+      AND portal_access.organization_id = activation.organization_id
+      AND portal_access.account_id = activation.customer_account_id
+      AND portal_access.property_id = activation.customer_property_id";
 
 fn formatted_owner_service_address(row: &sqlx::postgres::PgRow) -> String {
     let mut lines = vec![row.get::<String, _>("address_line_1")];

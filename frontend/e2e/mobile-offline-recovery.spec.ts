@@ -351,7 +351,7 @@ test('creates a service-ready customer account in one mobile workflow', async ({
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('customer-relationship-filter-initialized')) {
       localStorage.setItem(
-        'grover.customer-account-relationship-filter.v1.org_demo_landscaping',
+        'yardfolio.customer-account-relationship-filter.v1.org_demo_landscaping',
         'all',
       );
       sessionStorage.setItem('customer-relationship-filter-initialized', 'true');
@@ -599,7 +599,7 @@ test('explains that an unavailable persisted account create saved nothing', asyn
 
 test('restores the saved customer relationship filter on mobile', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem(
-    'grover.customer-account-relationship-filter.v1.org_demo_landscaping',
+    'yardfolio.customer-account-relationship-filter.v1.org_demo_landscaping',
     'property_manager',
   ));
   await page.route('**/customer-accounts', (route) =>
@@ -1282,7 +1282,7 @@ test('queues route progress during interruption and replays after recovery', asy
   await page.evaluate(async () => {
     localStorage.clear();
     await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.deleteDatabase('grover-field-offline');
+      const request = indexedDB.deleteDatabase('yardfolio-field-offline');
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
       request.onblocked = () => reject(new Error('offline database reset was blocked'));
@@ -1323,7 +1323,7 @@ test('queues route progress during interruption and replays after recovery', asy
 
   await expect.poll(async () => page.evaluate(async () =>
     new Promise<number>((resolve, reject) => {
-      const openRequest = indexedDB.open('grover-field-offline', 3);
+      const openRequest = indexedDB.open('yardfolio-field-offline', 3);
       openRequest.onerror = () => reject(openRequest.error);
       openRequest.onsuccess = () => {
         const database = openRequest.result;
@@ -1363,7 +1363,7 @@ test('queues route progress during interruption and replays after recovery', asy
 
 test('restores persisted manager report filters after a mobile reload', async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => localStorage.removeItem('grover.manager-completion-report-filters.v1'));
+  await page.evaluate(() => localStorage.removeItem('yardfolio.manager-completion-report-filters.v1'));
   await page.reload();
 
   await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
@@ -1400,7 +1400,7 @@ test('guards mobile dispatch hierarchy and exposes crew scope assignment', async
   const apiOrigin = `${frontendUrl.protocol}//${frontendUrl.hostname}:8080`;
   await page.evaluate(() => {
     localStorage.removeItem(
-      'grover.dispatch-hierarchy-filters.v1.org_demo_landscaping',
+      'yardfolio.dispatch-hierarchy-filters.v1.org_demo_landscaping',
     );
   });
   await page.reload();
@@ -1853,7 +1853,7 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByLabel('Sort')).toHaveValue('newest');
   await expect.poll(() => page.evaluate(() => (
     window.localStorage.getItem(
-      'grover.team-activity-review-filters.v1.org_demo_landscaping',
+      'yardfolio.team-activity-review-filters.v1.org_demo_landscaping',
     )
   ))).toContain('"sourceQuery":"Main Branch"');
   await page.reload();
@@ -1893,7 +1893,7 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(savedReview.getByLabel('Sort')).toHaveValue('newest');
   await expect.poll(() => page.evaluate(() => (
     window.localStorage.getItem(
-      'grover.team-activity-review-filters.v1.org_demo_landscaping',
+      'yardfolio.team-activity-review-filters.v1.org_demo_landscaping',
     )
   ))).toContain('"sourceQuery":"Main Branch"');
   await page.reload();
@@ -1913,7 +1913,7 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(undoneReview.getByLabel('Crew move scope')).toHaveValue('all');
   await expect.poll(() => page.evaluate(() => (
     window.localStorage.getItem(
-      'grover.team-activity-review-filters.v1.org_demo_landscaping',
+      'yardfolio.team-activity-review-filters.v1.org_demo_landscaping',
     )
   ))).toContain('"sourceQuery":""');
   await page.reload();

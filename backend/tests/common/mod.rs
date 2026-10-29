@@ -1,4 +1,4 @@
-use grover_landscaping_api::db::DatabaseConfig;
+use yardfolio_api::db::DatabaseConfig;
 
 pub fn database_config() -> Option<DatabaseConfig> {
     let config = DatabaseConfig::from_env();

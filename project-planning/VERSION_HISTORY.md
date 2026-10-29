@@ -1,121 +1,1010 @@
 # Version History
 
-- 2026-10-10: Pinned the seven general GitHub Actions jobs to the explicit
-  Ubuntu 24.04 runner image before the announced `ubuntu-latest` migration to
-  Ubuntu 26. The Pi deployment retains its Ubuntu 24.04 ARM64 runner, and the
-  CI foundation test rejects a return to the moving label. The full hosted
-  gate passes on the fixed image before merge, followed by ARM64 Pi activation
-  from `main`.
-- 2026-10-10: Moved both production-image workflows to the supported Node 24
-  Docker action majors: `setup-buildx-action@v4` and
-  `build-push-action@v7`. Their existing generic and ARM64 build, cache, load,
-  tag, and Pi activation contracts remain unchanged, while a repository test
-  prevents the deprecated Node 20 majors from returning unnoticed. Hosted
-  validation builds the production image before merge and activates the tested
-  ARM64 image from `main`.
-- 2026-10-10: Decoupled the temporary Grover display name from application
-  implementation details. Frontend runtime copy, titles, accessible brand
-  labels, field/API labels, diagnostics, and backend authentication branding
-  now compose through explicit application-identity modules; stable technical
-  identifiers remain unchanged. The product is no longer presented as the
-  landscaping provider in shared proof or demo portfolio UI, and a tested CI
-  guard keeps runtime, document metadata, PWA metadata, icon text, and backend
-  identity aligned.
-- 2026-10-10: Restored the frontend dependency audit to zero findings after new
-  high-severity build-chain advisories. The official migration moves Tailwind
-  CSS to 4.3.3 with `@tailwindcss/postcss`, Vitest to 4.1.11, and
-  `source-map-js` to 1.2.2 without adding an exception or weakening the audit
-  gate. TypeScript, all 524 tests, and the production build pass locally;
-  hosted Chromium/Firefox/WebKit validation remains required before merge.
-- 2026-10-10: Restored the Yard Owner path from signed-in Home to private care
-  setup on a bounded integration branch based on current `main`. Inactive
-  portal access now withholds unverified progress and recommends resumable
-  property/provider setup; active owners retain a secondary setup path. A
-  single saved property resumes at its draft brief or ready care connection,
-  while multiple properties continue to require an explicit choice. The full
-  frontend test, TypeScript, and production-build gates pass.
-- 2026-09-19: Codified and applied the authenticated typography-role boundary.
+- 2026-10-29: Published the reconciled current-`main` integration as PR #38.
+  The first hosted run exposed an undeclared `rg` dependency in the release
+  preflight on GitHub's current Ubuntu 24.04 image. Release contract searches
+  now retain the fast `rg` path when available and fall back to portable
+  `grep`; contract coverage executes both paths. The next hosted run exposed
+  two additional integration assumptions: backend router tests inherited a
+  built `frontend/dist`, and the desktop hero exceeded its 720px viewport
+  contract. Tests now embed the versioned frontend source documents, and the
+  responsive hero keeps its message and actions in the first viewport. Strict
+  Clippy, the full backend suite, both frontend TypeScript gates, 170 files /
+  706 tests, production build, artifact and brand gates, and the focused
+  Chromium journey pass. A passing hosted rerun and deployment remain separate
+  gates.
+- 2026-10-29: Added strict static type-checking for every Playwright spec and
+  its configuration, enforced by frontend CI and the change-aware validator.
+  The first run caught and repaired missing rollout-fixture imports and the
+  Yard Owner Connect-care helper left by integration. A clean npm 10 install
+  and live audit report zero findings; both TypeScript gates, 170 files / 706
+  unit tests, the production build, artifact/brand gates, validation-contract
+  tests, and all four affected Yard Owner acquisition Chromium journeys pass.
+- 2026-10-29: Reconciled the complete review line with current `main` on a
+  bounded local integration branch. The merge retains the newer workspace and
+  exact Job-navigation architecture while adopting Tailwind 4, supported
+  Docker action runtimes, current backend authorization coverage, and patched
+  Vite 6.4.4 / Vitest 4.1.12 tooling. A clean Node 22 install and live audit
+  report zero vulnerabilities; 170 frontend files / 706 tests, TypeScript, the
+  production build, product-brand and artifact-budget gates, repository
+  contracts, Rust formatting, strict Clippy, backend tests, and the five-journey
+  focused Chromium handoff gate pass. Hosted CI, publication, and deployment
+  remain separate gates.
+- 2026-10-28: Completed browser assurance across the I1 Job entry points by
+  protecting the Manager Dispatch workload handoff. Selecting scheduled work
+  from Workload opens the exact Job at Overview after navigating Schedule
+  tools. Home, Route, Jobs, Dispatch, completion-review, and Recovery entry
+  points are now covered. The focused Chromium journey, full 170-file /
+  706-test frontend suite, TypeScript, and production build pass.
+- 2026-10-28: Extended manager browser assurance to the prioritized Home work
+  queue. Its report item opens the exact Job at Report before the same record is
+  exercised through completion review and Recovery-to-Overview. The focused
+  Chromium journey, full 170-file / 706-test frontend suite, TypeScript, and
+  production build pass.
+- 2026-10-28: Added phone-width browser assurance for the Route-to-Job handoff.
+  The current stop opens its exact Job at Overview, returning to Route preserves
+  the active route, and stop progress continues afterward. The focused Chromium
+  journey, full 170-file / 706-test frontend suite, TypeScript, and production
+  build pass.
+- 2026-10-28: Added manager browser assurance for exact cross-feature Job
+  workflow intent. Completion review opens the selected Job at Report, while a
+  job-originated Recovery item reopens the same Job at Overview instead of
+  inheriting stale report state. The focused Chromium journey, full 170-file /
+  706-test frontend suite, TypeScript, and production build pass.
+- 2026-10-27: Added desktop browser assurance for the converged Crew Lead job
+  handoff. Selecting a job from Assigned jobs opens the exact Job destination;
+  returning from Photos and reopening the already-selected job restores
+  Overview. The focused Chromium journey, full 170-file / 706-test frontend
+  suite, TypeScript, and production build pass.
+- 2026-10-20: Completed application-shell state convergence by moving route-
+  summary ownership into the field boundary. Route context now fails closed
+  synchronously across identity, persona, and capability changes before Home or
+  mobile consumers render it. The final audit leaves only global user-facing
+  command/status copy in local shell state. The full frontend gate passes 170
+  files / 706 tests, TypeScript, and the production build.
+- 2026-10-20: Extracted selected-job/workflow navigation into the field feature
+  boundary. Route, Jobs, Home, Dispatch, report, and Recovery handoffs now open
+  the exact Job destination on desktop and mobile; repeat requests reactivate
+  the requested workflow, Recovery clears stale tabs to Overview, and report
+  review opens Report. The full frontend gate passes 169 files / 703 tests,
+  TypeScript, and the production build.
+- 2026-10-20: Extracted core workspace-view navigation from the application
+  shell. One coordinator now owns fail-closed persona/capability fallback,
+  desktop destination changes, and mobile scroll save, restoration, and reset
+  across customer, field, manager, and persona-switch handoffs. The full
+  frontend gate passes 168 files / 700 tests, TypeScript, and the production
+  build.
+- 2026-10-20: Extracted operational activity-to-Recovery targeting from the
+  application shell. A typed coordinator now preserves repeat requests for the
+  same exception through a monotonic presentation signal and ignores empty
+  identifiers without discarding valid context. The full frontend gate passes
+  167 files / 696 tests, TypeScript, and the production build.
+- 2026-10-20: Extracted manager property-workspace state from the application
+  shell. Organization activation now clears prior tenant property data and
+  requests, property registration rejects mismatched organizations and updates
+  account/onboarding views atomically, and archived properties are excluded
+  from operational onboarding. The full frontend gate passes 166 files / 693
+  tests, TypeScript, and the production build.
+- 2026-10-20: Extracted manager cross-panel refresh coordination from the
+  application shell. Typed workflow events now advance the exact dependent
+  Schedule, Team, Properties, customer-account, crew, hierarchy, and owner-
+  progress reads together, with reducer coverage preventing omitted or excess
+  refreshes. The full frontend gate passes 165 files / 687 tests, TypeScript,
+  and the production build.
+- 2026-10-17: Extracted manager workspace section/tool navigation from the
+  application shell. Atomic transitions now reject unavailable sections,
+  clear mismatched tools before presentation, capability-check the company-owner
+  Team default, and reset safely when persona or rollout access changes. The
+  full frontend gate passes 164 files / 678 tests, TypeScript, and the
+  production build.
+- 2026-10-17: Extracted customer portal preview navigation from the React
+  surface. The customer feature boundary now owns history-view changes, mobile
+  property selection and return, and older-report expansion while clearing
+  detail state when its context changes. The full frontend gate passes 163
+  files / 673 tests, TypeScript, and the production build.
+- 2026-10-17: Extracted manager crew-administration navigation from the
+  application shell. One typed coordinator now owns exact crew hierarchy
+  requests, audited-move inspection, return-to-activity focus, and latest-move
+  lookup. General crew navigation clears stale inspection context. The full
+  frontend gate passes 162 files / 669 tests, TypeScript, and the production
+  build.
+- 2026-10-14: Extracted manager-authored runtime activity from the application
+  shell. The management feature boundary now owns browser hydration, bounded
+  record creation, reset, and persistence status. Recovery-source events now
+  survive reload instead of being rejected by stored-item validation. The full
+  frontend gate passes 161 files / 664 tests, TypeScript, and the production
+  build.
+- 2026-10-14: Extracted manager preview project-bid history from the
+  application shell. The customer feature boundary now owns exact account
+  scope, loading, unavailable state, stale-request cancellation, and capability
+  removal. The full frontend gate passes 160 files / 662 tests, TypeScript, and
+  the production build.
+- 2026-10-14: Extracted manager preview property-report history from the
+  application shell. The customer feature boundary now owns per-property reads,
+  partial-result preservation, stale-request cancellation, loading/error state,
+  and capability removal. The full frontend gate passes 159 files / 660 tests,
+  TypeScript, and the production build.
+- 2026-10-14: Extracted the authorized customer property/visit collection from
+  the application shell. The customer feature boundary now owns loading,
+  retries, exact access-required/inconsistent/unavailable classification,
+  stale-request cancellation across identity and persona changes, and access
+  removal. The full frontend gate passes 158 files / 657 tests, TypeScript, and
+  the production build.
+- 2026-10-14: Extracted operational-activity refresh and pagination from the
+  application shell. The management feature boundary now owns authorization,
+  cursor paging, duplicate suppression, stale-request cancellation,
+  availability, and access removal. A recorded customer-notification follow-up
+  remains confirmed if only its subsequent activity refresh fails. The full
+  frontend gate passes 157 files / 654 tests, TypeScript, and the production
+  build.
+- 2026-10-14: Extracted customer privacy export and photo-erasure coordination
+  from the application shell. The authorization-aware management boundary owns
+  mutually exclusive results and shared busy state. It now distinguishes a
+  failed erasure write from a successful erasure whose follow-up export is
+  unavailable, withholding stale export data while preserving the confirmed
+  destructive outcome. The full frontend gate passes 156 files / 651 tests,
+  TypeScript, and the production build.
+- 2026-10-14: Extracted manager photo-erasure deletion recovery coordination
+  from the application shell. The management feature boundary now owns
+  authorization-aware refresh, retry and resolve sequencing, required
+  post-write history reads, and shared busy state. The full frontend gate
+  passes 155 files / 647 tests, TypeScript, and the production build.
+- 2026-10-13: Extracted manager photo-processing recovery coordination from
+  the application shell. The management feature boundary now owns failed-item
+  initial loading, bounded thumbnail filters, retry and resolve refresh
+  sequencing, and shared busy state. The full frontend gate passes 154 files /
+  644 tests, TypeScript, and the production build.
+- 2026-10-13: Extracted manager notification-history coordination from the
+  application shell. The management feature boundary now owns authorized
+  initial loading, bounded filters, retry and resolve refresh sequencing,
+  shared loading/unavailable state, and completion-report notification history
+  handoff. The full frontend gate passes 153 files / 641 tests, TypeScript, and
+  the production build.
+
+- 2026-10-11: Replaced the new Yard Owner's inactive-portal dead end with a
+  direct care-setup recovery path. Home and My yard now explain that setup must
+  be completed before visits appear, link to the resumable property/provider
+  journey, and reserve retry behavior for genuine inconsistency or outages.
+- 2026-10-11: Unified mobile and desktop Home progress behind the persona-aware
+  workspace policy. Yard Owner and Property Manager metrics now come from their
+  protected visit projection instead of the field-job collection, crew metrics
+  come from the published route, and loading or failed authorized reads no
+  longer display a misleading zero or unrelated work count.
+- 2026-10-11: Reframed the public audience hierarchy around the Yard Owner.
+  The persona review now separates Property customers from Service teams,
+  places Yard Owner first, identifies the owner as the primary audience, and
+  preserves dedicated Property Manager, Landscaping Company, and Crew Lead
+  perspectives. Keyboard navigation follows the same owner-first order while
+  direct campaign routes keep their original entry headline and action.
+  Signed-in multi-role property owners now default to Yard Owner, and their
+  workspace selector groups Property customers before Service teams and
+  platform support while retaining every authorized option.
+- 2026-10-10: Made the mobile application-install prompt actionable and
+  deferable. Supported browsers retain the native installer; iPhone users now
+  receive explicit Add to Home Screen steps and can acknowledge that the app
+  was saved. “Remind me later” replaces the ambiguous session-only dismissal
+  with a seven-day reminder persisted across browser restarts, and dismissed
+  native installers follow the same reminder policy.
+- 2026-10-10: Simplified the public entry hero into one full-bleed landscape
+  composition. Route-specific headlines, descriptions, and conversion actions
+  now sit directly over the contrast-treated photograph; the duplicate sample
+  workspace overlay and its unused persona journey data were removed. Persona
+  comparison remains in the immediately following keyboard-accessible section,
+  and responsive browser contracts now protect that division of responsibility.
+- 2026-10-10: Selected Yard Owner task `MG-Y1` for the first participant round.
+  The fixed plan starts with a fresh `open_customer_decision` manifest and uses
+  a separate `delivered_outcome` manifest for the proof follow-up, counterbalances
+  current/prototype and Canyon/Sage order across two Yard Owners, stops before
+  mutation, and requires a zero-proven reset after every current-app condition.
+  No participant observation is claimed. The feature branch was published, but
+  no pull request was opened after a merge simulation against materially
+  diverged `main` reported real conflicts requiring bounded integration.
+- 2026-10-10: Connected the signed-in Yard Owner home to the existing care
+  setup journey. Owners without portal access now see care setup as the
+  recommended next step and notice action while retaining My yard; active
+  owners keep setup as a secondary path. A bounded resume intent sends a
+  single property to its incomplete brief or ready care connection while
+  multiple properties still require an explicit choice. A new fail-closed
+  mobile browser contract began at `/app`, selected Canyon, resumed its ready
+  care connection, and verified
+  the one current proposal at version 3 with a $420 fixed price. The rehearsal
+  made no decision, revalidated its checkpoint, and reset to zero records and
+  namespace matches. This is technical evidence, not participant evidence.
+- 2026-10-10: Consolidated B9 session preparation into one tested command. It
+  requires an explicit supported checkpoint and new manifest, sequences target
+  preparation and two-record seeding, rechecks the live isolated runtime before
+  admitting an existing session, and pairs reset with a final empty-target
+  preflight. A live open-decision prepare/verify/reset rehearsal ended with zero
+  manifest records and namespace matches.
+- 2026-10-09: Made B9 session checkpoint admission auditable. Snapshot history
+  must now form the exact forward lifecycle prefix, and a manifest becomes
+  verified only when Canyon View and Sage Lane are aligned. The new receipt
+  validator rejects partial, mismatched, skipped, reset, unsupported, and
+  later-than-requested state while returning only non-secret provenance. A
+  fresh open-decision seed produced the exact receipt and reset back to zero
+  records and namespace matches.
+- 2026-10-09: Added the separate Yardfolio Study frontend gate. The launcher
+  refuses any runtime other than the port-8081 `local_review` API bound to
+  `yardfolio_study`, verifies the required study identities, and serves the app
+  on port 5174 without disturbing shared review. A same-origin `/study-api`
+  proxy avoids cross-origin error-response failures and lets remote browsers
+  follow the frontend host. The mobile Chromium gate opened `/app`, selected
+  the fixed Canyon owner, read isolated readiness through the proxy, and
+  observed no CORS failure. Participant observation remains open.
+- 2026-10-09: Extended the isolated Yardfolio Study executor from published
+  routes through supported outcome delivery. Each record now creates and starts
+  an assigned job-linked access exception, progresses its stop and job, records
+  local placeholder before/after evidence, exercises manager change request and
+  crew resubmission, re-enters review, and atomically delivers an immutable
+  completion snapshot. Direct checks prove proof is pending before delivery,
+  cross-owner access fails closed, exact owners and the delegated Property
+  Manager receive only minimized delivered proof, and visit projections expose
+  availability afterward. The privacy-minimized probe now reports per-owner and
+  manager proof availability plus exception lifecycle counts. Three complete
+  live full-lifecycle seed/read/reset cycles passed on the 127-migration
+  isolated database and ended with zero manifest records and namespace matches.
+  Reset now captures and removes exact route/report/exception audit targets and
+  fails if any remain; a final fresh cycle ended with zero study-actor audits.
+  Sixty-two orphaned synthetic audit events from earlier development runs were
+  removed transactionally by those exact roots. A fail-closed checkpoint
+  selector can now stop both records at any verified forward-only task moment;
+  a live open-decision checkpoint/reset passed without creating activation or
+  route state. The
+  placeholder evidence verifies workflow/privacy, not real-image quality;
+  participant observation remains open.
+- 2026-10-09: Completed and live-verified the isolated Yardfolio Study
+  provider-to-field fixture lifecycle. The API executor now recovers exact
+  owner foundations, keeps one-time invitation tokens in memory, journals every
+  generated ownership ID atomically, verifies proposal v3 plus stale and
+  cross-owner denials, exercises customer-controlled Property Manager
+  delegation, and publishes the released job to a crew route. The paired reset
+  snapshots exact owner/activation/release/job/route roots, removes derived and
+  direct records in one rollback-safe transaction, and advances the manifest
+  only after every journaled ID is absent. Two complete live seed/read/reset
+  cycles passed against the isolated 127-migration database, with a current-day
+  route, one current proposal per study owner, two delegated manager visits,
+  zero remaining manifest records, and zero reserved namespace matches. Partial
+  attempts also proved recovery of an invitation committed before journaling.
+  Proof/delivered-outcome fixtures and participant observation remain open.
+- 2026-10-07: Decoupled the customer-facing display name from technical
+  identity and restored Grover as the temporary display value. React runtime
+  copy now composes through `APP_DISPLAY_NAME`; Rust public titles and
+  authentication challenges use a matching backend identity constant; and the
+  consistency gate verifies both constants plus static HTML, PWA, icon, and
+  server-rendered surfaces. Existing `yardfolio` CSS, storage, IndexedDB,
+  service, database, package, and infrastructure identifiers remain a stable
+  compatibility namespace, so this display-name change does not migrate or
+  invalidate persisted work.
+- 2026-10-07: Narrowed the long-term market to residential property care while
+  allowing the service model to expand beyond yards and landscaping. In-scope
+  properties now include owner-occupied and rental homes, residential
+  communities and HOAs, and residential portfolios; commercial facilities,
+  construction-project management, and generic field-service operations are
+  explicitly out of scope. At that point, Yardfolio remained the temporary
+  working name pending
+  selection and screening of a broader residential-property brand.
+- 2026-10-07: Adopted Yardfolio as the customer-facing working name after a
+  preliminary exact-name collision screen. Runtime copy, browser/social
+  metadata, Field PWA labels, icon accessibility, server-rendered public
+  titles, authentication challenges, local-review demo identity, and operator
+  messages now use the new name. Current repository overviews, operational
+  guides, trust language, and active planning records use Yardfolio. The former
+  internal study name, `/yardfolio-study` review route, isolated fixture
+  database contract, request namespaces, environment variables, response
+  header, CI commands, and linked prototype paths now use Yardfolio Study.
+  Test-only public origins, temporary paths, synthetic people and companies,
+  photo-bucket examples, operational-indicator contracts, frontend/backend
+  readmes, and the Cognito role description also use Yardfolio-neutral names.
+  The design archive now uses Yardfolio throughout prototype copy,
+  accessibility labels, generated SVGs, review documents, shared-foundation
+  links, and source asset names while retaining its historical design status.
+  Historical delivery notes now describe the product as Yardfolio, and the
+  offline-photo contract documents the active IndexedDB namespace and its
+  compatibility migration.
+  Ephemeral CI PostgreSQL and unreachable persistence-test URLs also use a
+  Yardfolio namespace; local and deployed database defaults remain behind the
+  compatibility boundary until their data-preserving migration is delivered.
+  Local Compose container names, production/local image tags, and the
+  unprivileged production-image account now use Yardfolio without changing the
+  persisted PostgreSQL volume or credentials.
+  Unprovisioned Render and AWS definitions, example origins, resource names,
+  state-key guidance, tags, and operator profiles now use Yardfolio; existing
+  external resources remain subject to provider-specific migration. The next
+  Pi release uses a Yardfolio image tag, release-environment key, and deployment
+  directory; its database, private hostname, CI ACL tag, and repository identity
+  still require coordinated migration. A forward-only data migration renames
+  the seeded demo organization while preserving applied migration history. The
+  local Compose database, login, and volume now use Yardfolio after a logical
+  backup and no-owner restore that retains application data without carrying
+  the bootstrap role into the new cluster. The next gated Pi stack also uses a
+  Yardfolio database and login; existing Pi data must be backed up and restored
+  into that new stack before deployment is enabled. The
+  production shell
+  cache version advances so existing installations receive the renamed shell
+  through the established update prompt without clearing offline work. The
+  active CSS variables, reusable component classes, Tailwind shadow utilities,
+  public hero asset, frontend package, service-worker event/current cache,
+  diagnostic downloads, temporary browser-test output, and current browser
+  assertions use a Yardfolio namespace. Prior shell caches remain removable
+  through a brand-neutral matcher. The Rust crate/binary, health-service label,
+  local-review request header/session key, log targets, image build, and runtime
+  commands also use Yardfolio. Persistent browser keys and field IndexedDB now
+  use Yardfolio; suffix-based migration moves saved filters, route state,
+  queued mutations, and offline photo blobs without overwriting current records
+  or deleting an earlier database before a successful copy. The brand gate now
+  rejects former customer-visible runtime copy. Professional trademark
+  clearance, domain/app-store confirmation, and public rollout approval remain
+  open.
+- 2026-10-06: Enforced the product-renaming boundary with a tested local and CI
+  consistency gate. It rejects new hard-coded customer-visible runtime brand
+  copy and detects stale HTML metadata, installed-app manifest/icon labels, or
+  server-rendered public titles before a rename can ship partially.
+- 2026-10-06: Centralized customer-visible runtime product naming so the
+  family-name-based working title can be replaced without editing workflow copy
+  throughout the application. Public, onboarding, field, diagnostics, access,
+  and recovery language now composes from one product-brand module; a
+  misleading hard-coded landscaping-provider name was removed from customer
+  reports and example company copy is neutral. The rename boundary documents
+  the remaining metadata/PWA/server surfaces and deliberately retains legacy
+  storage, IndexedDB, event, header, and infrastructure identifiers to protect
+  existing sessions and offline work.
+- 2026-10-06: Aligned manager photo-preview recovery with notification
+  recovery. The panel now describes preview outcomes instead of queue/worker
+  states, hides raw processing failures, expands phone actions, and confirms
+  before closing an issue without creating a replacement preview. Focused
+  component coverage, TypeScript, the production build, and all artifact
+  budgets pass.
+- 2026-10-06: Improved manager notification recovery after report delivery.
+  Delivery history now translates queue/provider states into waiting, delivered,
+  attention, and closed language; replaces raw template keys, provider message
+  IDs, and provider errors with safe work labels and actionable guidance; and
+  requires confirmation before closing a failed message without sending it.
+  Focused component tests, TypeScript, the production build, and all artifact
+  budgets pass.
+- 2026-10-06: Made the manager report queue task-first. Report cards now name
+  the next action for their current state, translate readiness blockers into
+  missing tasks/photos/extras, distinguish work saved on a device, use
+  scannable state colors, and provide full-width phone actions. Filter and
+  summary language now describes company work without persistence terminology.
+  The complete frontend gate passes 148 files / 617 tests, TypeScript, and the
+  production build; all artifact budgets and the focused mobile/desktop
+  Chromium report-review journey also pass.
+- 2026-10-06: Simplified the public entry hero to one persona-specific
+  conversion and one product-tour action, added a tracked three-stage sample for
+  every campaign, strengthened the Yard Owner promise, and improved the hero
+  photography focus. The authenticated phone Home now uses a compact greeting
+  and places its recommended task before progress and continuity summaries.
+  Company setup, sign-in/access recovery, the manager attention queue, and
+  Property Manager portfolio access now use direct role-appropriate language.
+  Crew workflows consistently call checklist work "tasks," explain offline
+  work as saved on the phone, distinguish sync retry from manager review, and
+  describe photo requirements without internal evidence terminology. Customer
+  report previews no longer display backend report IDs, object keys, upload
+  modes, or lifecycle labels. Focused unit and browser assertions cover the new
+  hierarchy and language; execution was unavailable in the current shell
+  because neither Node/npm nor Docker access was available.
+- 2026-10-04: Added the B9 derived reset selector catalog. It maps acquisition
+  events; invitation delivery, recipient, claim, and capability children;
+  disclosure, assessment, proposal, activation, first-visit, and delegation
+  records; customer visit/recommendation state; and route/job/checklist/photo/
+  report/add-on/mutation/exception artifacts to exact manifest-owned roots using
+  declarative relation paths. Tests cover two-record foundation selection,
+  workspace-only partial state, and exact job/stop/plan operational roots. The
+  plan still emits no SQL and remains non-executable pending transaction and
+  zero-remaining verification; no deletion ran.
+- 2026-10-04: Added the B9 direct reset ownership inventory. It validates
+  seeded/verified manifests, automatically fails if the manifest table
+  allowlist and reset order diverge, emits only exact primary-key records,
+  orders direct records child before parent, and supports a workspace-only
+  partial run. The inventory and its mirrored verification list contain no SQL
+  or broad owner predicate and are explicitly marked non-executable until
+  manifest-rooted derived-child cleanup and transaction verification land.
+  Three focused tests and local/CI enforcement are included; no deletion ran.
+- 2026-10-04: Closed the earliest B9 owner-foundation crash windows. The
+  manifest now recognizes each record's exact fixed workspace identity as owned
+  state, moving a workspace-only partial run out of `prepared`; mismatched or
+  cross-record workspace IDs fail validation. The owner plan discovers and
+  exactly recovers persisted workspaces, requires that journal before property
+  recovery, and discovers an exact linked ready brief before deciding whether
+  to save or recover it. Focused tests cover absent, unjournaled, journaled,
+  mismatched, cross-scope, broken-link, and stale-journal states. No API write
+  or study record is claimed.
+- 2026-10-03: Added the non-executable B9 owner-foundation orchestration plan.
+  It derives separate supported workspace, synthetic-property, ready-brief, and
+  delivered-invitation requests for Canyon View and Sage Lane from the validated
+  manifest, marks the one-time invitation header as same-process memory only,
+  and maps generated property/brief/invitation IDs back to the journal. Exact
+  property discovery now safely recovers the non-idempotent create crash window
+  while rejecting cross-owner results, field collisions, duplicates, multiple
+  owned IDs, and stale journals. Four focused tests and local/CI enforcement are
+  included; there is no write entry point and no live record is claimed.
+- 2026-10-03: Added the recoverable B9 fixture-state journal required by the
+  future seed/reset orchestrator. It exclusively locks the private manifest,
+  atomically retains mode-0600 permissions while recording API-generated IDs
+  and verified snapshots, enforces forward-only manager delegation, accepts
+  reset completion only with a zero-record receipt, and treats repeated state
+  observations idempotently. Focused tests cover invalid ID ownership,
+  incomplete two-record verification, lifecycle regression, incomplete reset,
+  private atomic replacement, and concurrent-writer refusal. No live API write,
+  database deletion, matched fixture, or participant evidence is claimed.
+- 2026-10-03: Closed the local cross-browser acceptance gate with 86 passing
+  journeys and 2 intentional skips across mobile/desktop Chromium, desktop
+  Firefox, and mobile WebKit. Removed the global 320px document floor that
+  became 640px under the 200% reflow check, measured initial layout stability
+  before deliberate interaction and zoom changes, updated stale marketing-tour
+  copy/geometry assertions, and retained the hero image priority hint without a
+  React DOM warning. The frontend gate remains green at 147 files / 613 tests,
+  TypeScript, production build, and all artifact budgets.
+- 2026-10-03: Published the accumulated B0/B1/B3/B7/B8/B9 repository delivery
+  on `codex-review-feature` as `c3f7301`, preserving the explicitly unrelated
+  local changes. The full package gate passed 146 frontend files / 603 tests,
+  production build and artifact budgets, strict Clippy, 433 backend tests, live
+  PostgreSQL migrations, and both Terraform environment validations. The
+  cross-browser run reached Playwright but the long-lived frontend service
+  became unhealthy during its first navigation and its watchdog terminated the
+  in-container runner, so that runtime evidence remains open. Continued field
+  extraction now centralizes job lifecycle and checklist server confirmation,
+  durable queue fallback, unresolved-tenant outcomes, and reviewed-conflict
+  recovery language in the field feature boundary. The follow-on photo command
+  also owns quality rejection, upload-ticket execution, upload finalization,
+  local evidence preservation, durable queue fallback, and activity messaging.
+  Add-on mutation and completion-report refresh now share the same boundary,
+  preventing a failed post-write report read from being presented as a failed
+  add-on update. The widened frontend gate passes 147 files / 613 tests,
+  TypeScript, production build, and every artifact budget.
+- 2026-10-03: Added a fail-closed B9 target-boundary preflight for matched
+  fixture work. It permits only the dedicated port-8081 loopback or Tailscale
+  study origin, requires local-review PostgreSQL readiness, verifies the
+  operator-selected `yardfolio_study` database and successful migration
+  ledger, and rejects occupied Canyon View or Sage Lane namespaces without
+  exposing connection details or record values. Contract tests and local/CI
+  repository gates cover safe and rejected boundaries. The API now reports its
+  database name only with ready PostgreSQL persistence in local-review mode,
+  allowing the preflight to require API/operator linkage. Live execution,
+  seeding, reset proof, and participant evidence remain open. Manifest schema 2
+  also replaces the impossible caller-defined-primary-key assumption with
+  per-record API ID ownership and allowlisted table prefixes. A separate
+  disabled-by-default fixture mode is startup-rejected outside non-production
+  local review on `yardfolio_study`; on that exact target it records a new
+  namespaced invitation's normal delivered transition and returns the bearer
+  once in a response header, never JSON or the manifest. Separate fixed Canyon
+  View and Sage Lane Property Owner reviewers now preserve user-level isolation
+  between the two matched records while retaining the same role contract. A
+  tested create-once manifest preparer reruns target checks, verifies those
+  exact profiles, requires the running source commit and study date, writes with
+  private permissions, and refuses replacement before any application write.
+- 2026-10-02: Separated the public entry hero from audience comparison. Each
+  direct route now opens with its own compact headline, fixed primary action,
+  and capped preview; persona tabs and their supporting narrative, outcomes,
+  and role-specific action begin in the second section. Reviewing another
+  audience no longer mutates the hero, URL, canonical metadata, or original
+  conversion path. The root homepage now leads with one Yard Owner and one yard,
+  while dedicated company, property-manager, crew, and Yard Owner routes retain
+  their focused entry stories. The detailed company planner remains in the Plan tour,
+  keyboard tabs retain arrow/Home/End navigation, and initial server HTML emits
+  the correct route-specific H1. TypeScript, 146 frontend files / 603 tests,
+  production build, artifact budgets, and focused public-site server tests pass;
+  browser execution remains environment-blocked.
+- 2026-10-01: Delivered the B8 search/share repository implementation. Robots
+  guidance excludes authenticated, callback, diagnostics, invitation,
+  shared-token, and design/review routes while preserving the five public
+  audience paths. A dependency-free validator with four contract tests runs
+  locally and in CI. The production server now allowlists real SPA entries,
+  returns durable 404s outside them, emits audience-specific copy and metadata
+  in initial HTML, and generates absolute canonical/share, sitemap, and robots
+  URLs from a required exact HTTPS `PUBLIC_APP_URL`. Final-origin deployment,
+  preview/crawler, browser, captures, and approved-content evidence remain open.
+- 2026-10-01: Drafted the B6 public trust-center content contract without
+  publishing unverified security claims. It maps plain-language access,
+  customer/provider separation, offline, photo, notification, availability,
+  recovery, retention, privacy-action, incident, and provider statements to
+  repository sources, protected evidence, functional owners, correction
+  triggers, prohibited claims, and a publication approval record. Protected
+  runtime facts, named owners, exercises, and approvals remain external gates.
+- 2026-10-01: Prepared the B10 Yard Owner concern/preference decision packet.
+  It recommends an exact delivered-service entry point, three bounded
+  categories, text-only first release, accountable provider assignment,
+  customer-safe lifecycle, separate provider-private work, truthful response
+  and notification semantics, reopen/escalation boundaries, and explicit
+  urgent, billing, privacy, appreciation, and review exclusions. Retention and
+  legal/privacy/operations approvals remain required; no concern feature is
+  authorized or implemented.
+- 2026-10-01: Made repository release-quality validation deterministic in the
+  restricted development environment. Release-preflight contract tests now
+  inject a local Terraform double rather than requiring installed or cached
+  infrastructure tooling, while the protected-release evidence validator
+  exports its pure validation contract so tests do not require child-process
+  permission. The complete repository scope now passes without weakening the
+  real operator preflight or CLI behavior.
+- 2026-10-01: Added the B9 matched-fixture manifest safety contract. The
+  non-secret template reserves separate Canyon View and Sage Lane namespaces,
+  and the dependency-free validator requires the isolated study database,
+  local-review mode, real runtime provenance, fixed reviewer identities,
+  namespace-owned generated IDs, lifecycle evidence, and complete reset proof.
+  Six contract tests plus local/CI repository gates reject shared targets,
+  placeholder runtime metadata, unknown fields, ID leakage, and incomplete
+  seeded/reset state. No matched record or participant result is claimed.
+- 2026-10-01: Added the B7 repository quality contract. A versioned budget file
+  records measured production artifact limits, browser experience thresholds,
+  and privacy-minimized operational indicators. A tested validator reports exact
+  byte regressions and stable-chunk loss, runs after local and CI builds, and the
+  current build passes every limit. The existing cross-browser suite now reads
+  the same readiness, interaction, layout-shift, phone, zoom, and overflow
+  targets. Protected dashboards, alerts, and real-user measurement remain
+  explicitly external/unapproved gates.
+- 2026-10-01: Implemented B3 customer-controlled Property Manager access in
+  the working tree. Yard Owners can issue and revoke exact-property invitations
+  after provider activation; verified recipients accept through a minimized
+  inbox before property details appear. Acceptance atomically creates the
+  property-scoped membership and portal grant, revocation removes both access
+  paths, and immutable events record the lifecycle. PostgreSQL concurrency and
+  isolation coverage compiles, while the 430-test backend command, 146 frontend
+  files / 602 tests, TypeScript, strict Clippy, and the production build pass.
+  The live PostgreSQL branch needs an unavailable `DATABASE_URL`; prepared
+  browser journeys and commit/push remain sandbox-blocked.
+- 2026-10-01: Implemented B1 company first-value onboarding in the working tree.
+  Approved campaign attribution now survives the provider-entry handoff, and
+  one server-derived six-stage path resumes from company profile through active
+  crew, customer/property, published route, completed service, and delivered
+  proof. Multiple memberships and persistence outages fail closed. Bounded
+  transition telemetry feeds a support-only setup-stage dashboard. Package
+  validation passes; browser execution and commit/push remain sandbox-blocked.
+- 2026-10-01: Planned the B0–B10 best-in-class delivery program. The ordered
+  phases cover company first-value onboarding, customer-controlled Property
+  Manager access, measured quality budgets, participant-gated service-thread
+  expansion, protected hosting, verified product captures, a public trust
+  center, search/sharing readiness, and the Yard Owner concern decision gate.
+  The plan records dependencies, non-goals, acceptance evidence, measures, and
+  rollout boundaries without claiming the planned behavior is delivered.
+- 2026-10-01: Added a service-centered Manager Today queue to Company Owner and
+  Company Manager Home. Authorized job and completion-report state is reduced to
+  one prioritized item per service, with direct Job/Report handoff and explicit
+  loading, unavailable, empty, and bounded-list states.
+- 2026-10-01: Established the company-first public website contract. Company
+  setup is now the consistent primary conversion, guided review is secondary,
+  and marketing copy describes delivered planning, field execution, reviewed
+  proof, and follow-through without implying invoicing or payment capability.
+  The landing page also publishes complete hero-image share metadata and image
+  dimensions.
+- 2026-09-30: Extracted completion-report notification delivery from the
+  application shell. The management feature boundary now owns queue writes,
+  shared busy state, and best-effort history refresh while preserving successful
+  delivery outcomes when only the follow-up history read is unavailable.
+- 2026-09-30: Extracted manager completion-report lifecycle commands from the
+  application shell. One management hook now owns review start, change request,
+  resubmission, delivery, shared busy state, and the required report/activity
+  refresh sequence; the shell maps typed success or failure to existing status
+  language.
+- 2026-09-30: Extracted the manager completion-report queue coordinator from
+  the application shell. A management hook now owns collection reads, partial
+  per-job initial fallback, strict filtered refresh, loading state, snapshot
+  indexing, and selected-report upserts while the shell retains navigation,
+  status copy, and manager activity recording.
+- 2026-09-30: Completed the field offline-command boundary. The field recovery
+  hook now owns durable job, checklist, and photo enqueue, storage-persistence
+  requests, reviewed-conflict deletion, server-state refresh, and post-review
+  replay. The application shell retains user-facing outcome copy but no longer
+  mutates the three queue collections directly.
+- 2026-09-30: Hardened the local publication gate after adding the migration
+  binary. Backend launchers now select the API binary explicitly, the
+  change-aware validator can reuse a cached pinned Terraform executable, and
+  repository contracts cover both behaviors. Cross-browser release review also
+  constrained the public desktop hero grid to the viewport, tightened the
+  1024px typography for Firefox, scoped desktop-only geometry to desktop
+  contexts, and made the invitation journey resilient to cold module loading.
+- 2026-09-30: Extracted durable field offline recovery from the application
+  shell. One actor-scoped hook now hydrates job/checklist/photo queues, serializes
+  replay per queue, retries on reconnect, classifies conflicts, and refreshes
+  job or photo state after successful replay.
+- 2026-09-30: Extracted initial assigned-job collection loading and selection
+  from the application shell. The field jobs hook preserves the explicit
+  persisted-unavailable response without substituting seed data and limits seed
+  fallback to transport failure.
+- 2026-09-30: Extracted selected completion-report loading from the application
+  shell. The field report hook owns request cancellation and explicitly routes
+  authoritative snapshots/evidence or the existing browser-local fallback
+  signal back to shell operations.
+- 2026-09-30: Extracted selected-job photo-evidence reads from the application
+  shell. The field evidence hook now owns stale-result cancellation,
+  authoritative unavailability, and local-preserving server evidence merges
+  while upload and replay operations remain injected shell actions.
+- 2026-09-30: Extracted selected-job detail and add-on read coordination from
+  the application shell. The field selection hook now owns loading state,
+  stale-result cancellation, authoritative unavailability, and transport-only
+  detail fallback while continuing to expose controlled updates to field
+  actions.
+- 2026-09-30: Centralized pure field-data continuity policy. Job summaries now
+  produce explicit detail fallbacks, failed uploads produce typed local photo
+  tickets, and authoritative photo reloads preserve unsaved and other-job
+  evidence without relying on application-shell helpers.
+- 2026-09-30: Extracted selected-job presentation from the application shell.
+  Overview, field actions, workflow navigation, checklist, photo evidence,
+  approved add-ons, and completion-report rendering now live in a dedicated
+  component driven by resolved field controls and injected operations.
+- 2026-09-30: Extracted assigned-job and offline-recovery presentation from the
+  application shell. Dedicated field components now own job search/filter state,
+  cards, queue status, and conflict confirmation, while `App` retains the API
+  and durable-mutation execution callbacks pending a field coordinator slice.
+- 2026-09-30: Extracted the first field workspace recovery policy. Job,
+  checklist, and photo offline queues now produce one shared recovery summary,
+  and replay availability consistently requires an online, idle, conflict-free
+  queue.
+- 2026-09-30: Extracted customer workspace policy from the application shell.
+  Yard Owner and Property Manager modes, protected-read eligibility, manager
+  preview separation, and Home work summaries now share one feature boundary;
+  unsupported proposed customer modes show no customer data rather than falling
+  through to the Yard Owner portal.
+- 2026-09-30: Moved authenticated persona selection into the workspace core.
+  The application shell now consumes eligible personas and a resolved active
+  workspace from one hook, while the core owns safe fallback after access
+  changes and rejects requests for personas the account cannot use.
+- 2026-09-30: Extracted authenticated Home policy from its React panel into a
+  shared feature module. Persona shortcuts and language, progress and priority
+  status, Yard Owner/Property Manager protected-read continuity, and crew route
+  date interpretation are independently testable; the panel now owns layout
+  and interaction while related portfolio consumers import the shared read-state
+  contract directly.
+- 2026-09-30: Extracted management workspace policy from its React menu into a
+  shared feature module. Section/tool catalogs, persona-manifest capability
+  filtering, active-tool validation, and status/urgency derivation now remain
+  independently testable while the menu component owns presentation and
+  interaction only. Workspace status tone is also a core contract rather than
+  a component-owned type.
+- 2026-09-30: Completed the workspace compatibility migration by moving the
+  authenticated app, shell, Home, manager menu, and their tests onto workspace
+  core imports and removing the temporary legacy-domain facade. The next
+  internal boundary is feature/state extraction from the top-level React app.
+- 2026-09-30: Introduced capability-driven authenticated workspace composition.
+  Each persona now owns a typed manifest for presentation, navigation, surfaces,
+  rollout capabilities, status, and manager-tool requirements. A central
+  resolver combines the selected manifest with the server `/me/access`
+  projection and supplies Home copy, destinations, field controls, manager
+  tools, rollout state, and scope metadata. Explicit all-false managed
+  projections fail closed, Dispatcher/Billing remain visibly proposed, and the
+  former domain module is retained only as a compatibility facade while
+  top-level feature/state extraction continues.
+- 2026-09-18: Replaced the tailnet's default allow-all grant with member access
+  and a CI-only TCP/22 grant to the Pi. Confirmed that workstation ping, SSH,
+  and HTTPS access still work after the policy change; tagged runner access
+  awaits the first published GitHub Actions run.
+- 2026-09-18: Added the Tailscale federated Client ID and Audience to the
+  GitHub Pi deployment environment and configured Serve on the Pi. The private
+  HTTPS route passes TLS validation; it returns HTTP 502 until an application
+  image is deployed. The credential and tailnet grants still need validation
+  from a published workflow run.
+- 2026-09-18: Joined the development Pi to Tailscale, pinned its verified
+  tailnet SSH key in the GitHub environment, and created its private runtime
+  settings and healthy PostgreSQL volume. Tailscale Serve enablement, CI
+  federation, and first application deployment remain pending.
+- 2026-09-18: Reimaged the development Pi to 64-bit Debian Trixie and added a
+  guarded host-dependency installer using the official Docker and Tailscale
+  apt repositories. Docker Engine, Compose, and Tailscale services are active;
+  Docker works from a fresh unprivileged SSH login. Tailscale login, app
+  deployment, and HTTPS review remain pending.
+- 2026-09-18: Added an opt-in ARM64 Raspberry Pi development deployment job
+  that waits for all GitHub Actions checks, connects through an ephemeral
+  Tailscale CI node, transfers the image over pinned SSH, and verifies a
+  private Compose app with PostgreSQL. The Pi deploy script restores the prior
+  app image if readiness fails. The external Pi, tailnet Serve, and GitHub
+  credentials are not yet provisioned or verified.
+- 2026-09-17: Added the Property Manager delegation persistence foundation.
+  A customer invitation and audit schema permits a property-scoped manager
+  grant beside the owner's activation grant. The activation read still returns
+  the owner grant; portal, message/proof, and recommendation reads require the
+  exact accepted customer invitation and fail closed after its revocation.
+  The isolated database migration and lifecycle test passed. No customer
+  issuance, recipient acceptance, or
+  revocation endpoint/UI is delivered yet.
+- 2026-09-17: Bound customer portal property and visit reads to the active
+  provider relationship behind each grant. Ending a relationship now withholds
+  the property collection even if its old grant and membership remain active.
+  Formatting, backend type check, and the isolated database lifecycle test
+  passed. This is a prerequisite for customer-controlled manager delegation;
+  grant issuance remains unimplemented.
+- 2026-09-17: Decided Yardfolio Study MG-D6: the customer controls Property
+  Manager access after accepting the company as the service team. The first
+  access contract maps that moment to completed provider relationship
+  activation, scopes each grant to one property, and requires recipient
+  acceptance and customer revocation. Existing code still issues only an
+  owner grant, so no manager access or matched task is claimed yet.
+- 2026-09-16: Started and enabled a separate `yardfolio-study-api` user
+  service against the isolated study database on port 8081. Its process
+  identity and `local_review` mode were verified without exposing credentials;
+  the endpoint returns 200 through Tailscale. The read-only probe confirms no
+  customer fixture yet and the historical migration route. The phone review
+  app remains on the shared port-8080 API; no study frontend or seeder exists.
+- 2026-09-16: Created a separate local `yardfolio_study` PostgreSQL
+  database for Yardfolio Study fixture work. The current migrator completed
+  twice; all 124 migrations succeeded. Owner properties, portal grants, and
+  operational exceptions are empty. A June 15 sample day plan comes from an
+  existing migration and is explicitly outside the future fixture namespace.
+  The shared review API/database was not used for fixture writes. A separate
+  study API, seeder, and manifest reset remained open at this point.
+- 2026-09-16: Added independent Yardfolio Study personas for Yard Owner,
+  Property Manager, Company Owner, Company Manager, and Crew Lead, with
+  secondary/recovery perspectives for five more roles. Each first-wave
+  profile ties a task to source-backed access limits, prototype gaps, and a
+  research question. They remain hypotheses, not interview findings or new
+  backend permissions.
+- 2026-09-16: Prepared an independent Yardfolio Study formative session protocol
+  and anonymous notes template. The script separates public claim/path
+  comprehension from authenticated work, records normal entry and recovery,
+  and marks role tasks directional until matched snapshots exist. Property
+  Manager delegation, Plan 8/9 revision, and Crew Lead access transfer cannot
+  be scored as equivalent current-app completion. No participant result is
+  claimed.
+- 2026-09-16: Added Yardfolio Study decision MG-D6 for Property Manager portal
+  delegation authority, scope, and revocation after confirming the current
+  activation issues only an owner grant. A manager fixture and equivalent
+  completion task remain gated on this decision and a supported API contract.
+- 2026-09-16: Specified the isolated Yardfolio Study seed contract after tracing
+  the backend owner acquisition persistence fixture. It requires a dedicated
+  study database, manifest-owned reset, immutable proposal v1→v3 progression,
+  exact acceptance/activation/visit/service-release checks, a current route
+  date, and delivered-only proof. It marks Property Manager grant issuance,
+  Crew Lead access handoff, and Plan 8/9 revision as unsupported comparisons.
+  No seeder or matched data was created.
+- 2026-09-16: Added a read-only Yardfolio Study fixture probe. It verifies
+  local-review mode, then reports protected portal status, owner acquisition
+  counts, Crew Lead route date/stops, and open manager exceptions without
+  printing customer records. On the September 16 as-of date the private review
+  API has no owner properties, both customer portal reads return 403, the crew
+  route is June 15 with two stops, and the manager has no open exceptions.
+  No matched records were seeded or reset.
+- 2026-09-16: Replaced Property Manager Home and Portfolio preview visits with
+  the protected customer visit collection. The workspace now lists only
+  granted property names and customer-safe visits, and withholds property
+  details and progress on denial, inconsistent access, or failed reads. The
+  local reviewer shows inactive access rather than two false sample services.
+  Unit, build, and mocked phone/desktop access-ended browser checks passed;
+  no matched grant or participant result exists yet. Preview-only Proof and
+  Approvals are no longer presented as live Portfolio tabs. Source inspection
+  also found no supported Property Manager grant-issuance write: activation
+  creates an owner grant and allows one portal grant per activation.
+- 2026-09-16: Added independent Property Manager and Company Owner task pages
+  to the Yardfolio Study prototype. The portfolio concept finds one access
+  question among two scoped properties, checks the exact request, and hands
+  guidance to the manager for verification. The company view names an
+  accountable operator for the service risk. Changed state, unavailable read,
+  and ended-access branches keep protected information and actions hidden.
+  All actions remain simulated; no shared state or current-app fixture exists.
+- 2026-09-16: Mapped Yardfolio Study's current-app proposal, portal grant,
+  release/job/route, exception, proof, and portfolio paths to the matched task
+  moments. The source review identifies the prerequisite record chain and
+  authorization checks, plus three noncomparable transitions: Plan 8/9 is not
+  a persisted route version, Crew Lead access questions do not enter the
+  manager exception API, and Property Manager Portfolio still receives preview
+  properties and visits. No matched records or participant results are claimed.
+- 2026-09-16: Completed the six core simulated Yardfolio Study task moments with
+  manager proof correction and Yard Owner outcome pages. Rejected package 1
+  remains private; corrected package 2 requires exact-version review before
+  simulated delivery. A newer package blocks stale delivery. The customer
+  result shows reviewed metadata, keeps a seasonal care idea separate, and
+  hides protected detail during failed reads. Browser tasks pass at 320, 390,
+  and 1440px. No real photo, cross-page persistence, API write, or participant
+  result is claimed.
+- 2026-09-16: Added the simulated manager return path for Canyon View's field
+  access question. The office queue opens the exact Plan 8 request, sends a
+  hold instruction, keeps access verification with Company Manager, and
+  reviews a revised Plan 9 with unchanged proposal v3 scope before release.
+  Failed reads hide the protected request. The field page links to this
+  matching synthetic moment; typed field notes are not transferred. Browser
+  tasks pass at 320, 390, and 1440px; no real office action occurred.
+- 2026-09-16: Added a simulated Crew Lead task to the independent Modern
+  Yardfolio service flow. Released Plan 8 shows the assigned Canyon View stop,
+  access question, and safe checklist work without customer price. Offline
+  actions remain in the prototype tab until a simulated reconnect; a Plan 9
+  conflict stops replay and retains the local changes for manager review.
+  Failed-read retry and 320/390/1440px browser checks passed. Durable offline
+  storage, manager exception review, and real writes are not claimed.
+- 2026-09-16: Connected a simulated Yard Owner proposal decision to the new
+  Yardfolio Study manager study. Proposal v3 shows exact scope, $420 total,
+  planning consequence, and next owner without provider-private plan detail.
+  Revision, stale version, failed read, and recovery branches were checked at
+  320, 390, and 1440px. The cross-page link is a study control, not a real
+  authorization or persisted acceptance.
+- 2026-09-16: Started Yardfolio Study M2 in its independent directory with an
+  interactive Company Manager service decision concept. The synthetic Canyon
+  View flow connects accepted proposal v3, draft Plan 8, crew fit, correction,
+  exact-version simulated release, accountable next owner, stale Plan 9
+  recovery, and failed-read retry. Browser validation passed at 320, 390, and
+  1440px. No API action or participant result is claimed; customer, field, and
+  proof handoffs remain to build.
+- 2026-09-16: Reconciled current Home summaries with protected Yard Owner portal
+  reads and loaded Crew Lead route dates/stops. Access errors no longer appear
+  as an empty, clear schedule; historical routes are labeled read only across
+  Home and Route, with stop/time copy tied to the route date. Component tests,
+  production frontend build, and 390px/320px local-review browser checks
+  passed. The diagnostic reviewer selector also fits at 320px. No new Modern
+  Yardfolio composition was adopted.
+- 2026-09-16: Specified two equivalent synthetic cross-role service records for
+  Yardfolio Study comparison. The fixtures preserve exact proposal/plan versions,
+  customer/field privacy, current service day, offline state, proof review, and
+  reset/replay requirements; they are not seeded or participant evidence.
+- 2026-09-16: Traced the current local-review Home-to-work paths for five Modern
+  Yardfolio perspectives at phone width. The record distinguishes sample-fixture
+  limits from design findings and identifies Yard Owner access and Crew Lead
+  route-date contradictions between Home and destination. Matched service
+  fixtures are still needed before a comparative task study.
+- 2026-09-16: Began Yardfolio Study M1 with a source-based public claim inventory.
+  It separates locally implemented private-yard, portfolio, offline, and proof
+  capability from gated marketplace, billing, invoice, and payment promises;
+  proposed wording awaits product and participant review. No live marketing
+  copy changed.
+- 2026-09-16: Isolated the new Yardfolio Study planning and review in its own
+  top-level track. The prior website, persona, and service-thread artifacts are
+  now explicit inputs rather than an approved target. A track workplan and open
+  product-decision register identify capability truth, entry, role context,
+  matched fixtures, a new cross-role prototype, participant study, and bounded
+  adoption as the next sequence; production UI is unchanged.
+- 2026-09-16: Reviewed the current local-review workflow and Yardfolio study
+  concept against the service-thread direction. The critical review prioritizes
+  manager task discovery, public capability claims, prototype task depth,
+  audience entry, and next-owner clarity; it defines a cross-role service
+  blueprint and evidence sequence. Findings are expert/browser observations and
+  hypotheses, not participant results or production adoption approval.
+- 2026-09-16: Added a first-pass application experience blueprint connecting
+  private entry, exact scope, manager release, field/offline work, reviewed proof,
+  and customer outcome across five core roles. It names the source of truth and
+  failure branch at each handoff without claiming participant validation or
+  production implementation of every transition.
+- 2026-09-16: Added a responsive HTML plan page to the Yardfolio study prototype
+  and routed its review link there. The Markdown plan remains canonical;
+  desktop, phone, and narrow-phone browser checks verify the styled page and
+  return path.
+- 2026-09-16: Started the modern website and application design track with ten
+  separate persona profiles and a responsive public concept. Customer and
+  provider paths connect to five role-filtered workspace previews with
+  attention, on-track, and unavailable states. Browser validation covers direct
+  routes, privacy boundaries, focus return, and 1440/390/320px layouts. The
+  concept is illustrative. A matched public-path and role-comprehension guide
+  prepares participant comparison before React adoption; no user findings are
+  claimed.
+- 2026-09-09: Extracted the existing Yard Owner service progress rail into a
+  typed shared React lifecycle component. Four dedicated tests protect ordered
+  labels, exactly one current step, completed markers, accessible naming, and
+  out-of-range safety while existing portal tests retain current behavior. No
+  new service-thread UI, API, capability, or authorization was enabled.
+- 2026-09-09: Published the complete yard-care event timeline with 54 ordered
+  events spanning first-service relationship setup, recurring need, exact scope
+  and decision, plan release, field/offline recovery, provider proof review,
+  customer outcome, Support and access exceptions, gated readiness,
+  appreciation, and external review destinations. Relative bands are explicitly
+  assumptions, and 12 invariants define completion without inventing SLAs.
+- 2026-09-09: Prepared the SX4 current-product versus service-thread study.
+  Five core and four exception tasks now have matched outcome prompts,
+  counterbalanced sequence, observable completion/context/authority fields,
+  critical stop rules, bounded adoption gates, an anonymous session template,
+  and an explicit prohibition on treating the package as participant evidence.
+- 2026-09-09: Added seven contextual paths to the simplified service-thread
+  design: plan conflict, field connectivity loss, proof correction, minimized
+  owned Support, product-gated completion readiness, ended access, and
+  authorization mismatch. Operational exceptions retain the affected record;
+  Support and readiness return to the exact manager moment; access failures
+  keep protected records out of the document. All paths pass three responsive
+  viewports with new Support, offline, and access-recovery captures.
+- 2026-09-08: Extended the simplified service thread to Property Manager and
+  Company Owner without duplicating the service lifecycle. Portfolio context
+  exposes only the authorized property, decision, customer-safe exception, and
+  reviewed result; business context exposes readiness, consequence, and the
+  accountable operator without route editing or field detail. Twenty
+  perspective/moment combinations pass three responsive viewports, and two new
+  review captures document the additions.
+- 2026-09-08: Delivered the first clean-slate simplified service-thread
+  prototype across Yard Owner, Company Manager, and Crew Lead. One exact Mesa
+  Court service retains customer decision, Plan 8 release, field request and
+  manager review, proof publication, and customer outcome while filtering role
+  detail and authority. Twelve perspective/moment combinations pass desktop,
+  mobile, and narrow-phone validation with required decisions, focus return,
+  stable URLs, overflow, action clearance, and shared-foundation checks.
+- 2026-09-08: Corrected the design reset from MVP scoping to a post-MVP product
+  simplification. The active direction preserves mature capability but replaces
+  feature-silo journeys with one role-filtered service thread containing the
+  exact decision, plan, field work, reviewed proof, handoff, and recovery. The
+  prior workflow and session kit remain research input; SX1 now targets a new
+  Yard Owner, Company Manager, and Crew Lead prototype.
+- 2026-09-08: Prepared the WF1 professional workflow-research kit without
+  claiming participant evidence. The FigJam board specification, persona
+  interview prompts, neutral follow-ups, privacy protocol, anonymous evidence
+  IDs, workflow task scenarios, synthesis confidence scale, and completion
+  checklist are ready for Yard Owner/Property Manager, Company Owner/Manager,
+  and Crew Lead sessions.
+- 2026-09-08: Established a separate minimal-product workflow design rather
+  than treating the completed ten-persona prototype as the MVP requirement.
+  Dispatcher and Crew Member are deferred while Company Manager owns planning
+  coordination and Crew Lead owns field delivery. The new workflow maps the
+  primary service lifecycle, responsibility lanes, critical handoffs, state
+  coverage, persona hypotheses, professional session format, and five phased
+  discovery-to-adoption gates.
+- 2026-09-08: Completed minimalist journey depth across all ten personas by
+  connecting Billing readiness to exact Account gaps and traceable Handoffs,
+  requiring owned incident context before minimized Support Activity and
+  purpose-bound temporary Access, and keeping the no-role fallback within one
+  protected-data-free recovery destination. Billing financial-product gates,
+  Support scope checks, required choices, and responsive clearance are
+  browser-validated.
+- 2026-09-08: Connected the minimalist provider-operations prototype while
+  preserving distinct decision horizons. Company Owner business readiness now
+  continues into Team, Operations, and Customers; Company Manager service risk
+  continues through exact Schedule versions, customer impact, and Recovery;
+  Dispatcher publishability continues through crew fit and a new-plan response
+  without gaining field execution authority or an implemented backend role.
+- 2026-09-08: Connected the minimalist field prototype without collapsing Crew
+  Lead and Crew Member authority. Crew Lead route readiness continues through
+  ordered Jobs to office-reviewed route recovery; Crew Member assigned work
+  continues through read-only route context to personal device-held recovery.
+  Readiness-gated start, route-request choices, queued-evidence preservation,
+  responsive action clearance, and exact destination content are validated.
+- 2026-09-08: Deepened the minimalist customer prototype into connected
+  destination journeys. Yard Owner preparation now continues through Visits to
+  delivered Proof; Property Manager portfolio attention continues through the
+  exact property and delivered evidence to version-bound Approvals. Required
+  prototype choices, disabled incomplete confirmation, focus return, stable
+  URLs, and the next useful destination are browser-validated without implying
+  a production write or wider customer authority.
+- 2026-09-07: Created a separate minimalist persona working design for all ten
+  signed-in roles. Each customer, field, operations, administrative, and
+  no-role experience now has a distinct first answer, one primary action, no
+  more than four destinations, a short queue, progressive task detail, explicit
+  omitted scope, and attention/on-track/no-work scenarios. Browser validation
+  covers every persona, scenario, and destination at 1440px, 390px, and 320px;
+  the artifact remains design direction rather than production adoption.
+- 2026-09-05: Codified and applied the authenticated typography-role boundary.
   Editorial type remains on audience, place, service, date, and delivered-care
   moments; Yard Owner and Property Manager destinations, field and manager task
   headings, recovery/loading states, decisions, queues, recommendation totals,
   and proposal values now explicitly use interface type. Focused semantic
   assertions, the frontend suite, and the production build validate the change.
-- 2026-09-19: Completed Yard Owner protected-read recovery. Loading, valid
+- 2026-09-05: Completed Yard Owner protected-read recovery. Loading, valid
   empty, ended access, inconsistent authorization, and unavailable reads keep
   property/service facts withheld as required; error states now expose one page
-  heading, an `h2` state message, retry or account-access recheck, and Return
+  heading, an `h2` state message, retry or account-access review, and Return
   Home. A phone journey proves outage-to-authoritative-empty recovery and the
   Home exit without adding provider-contact or support promises.
-- 2026-09-19: Adopted truthful Crew Route date and persistence context. Routes
+- 2026-09-05: Adopted truthful Crew Route date and persistence context. Routes
   now compare their service date with the active local day, render a complete
   human-readable date, label past/today/upcoming explicitly, and block both stop
   and route-amendment writes outside the service day. Confidence now says
   Syncing, Saved on device, Synced, Needs attention, or Read only without
   exposing API/browser source language; domain and phone browser coverage prove
   classification, current-day mutation, and historical read-only behavior.
-- 2026-09-19: Reconciled the design workspace around one artifact-family status
+- 2026-09-05: Reconciled the design workspace around one artifact-family status
   inventory. The gallery, design README, adoption tracker, rollout/high-fidelity
   guidance, and dated mirror now distinguish current mirrors, adopted behavior,
   design direction, historical input, and product-gated boundaries without
   treating illustrative prototype state as production or hosted evidence.
-- 2026-09-19: Compressed the authenticated application shell. Hosted account
+- 2026-09-05: Compressed the authenticated application shell. Hosted account
   identity and sign-out now live in the desktop rail or a compact mobile menu,
   local-review identity chrome remains explicitly diagnostic, and the duplicate
   Home identity card is removed. A ResizeObserver-backed clearance tracks the
-  real fixed-navigation height; hosted Chromium and WebKit checks cover 320,
-  390, and 430px and simulated 200% zoom. Frontend tests, TypeScript, and the
-  production build pass.
-- 2026-09-19: Delivered rollout-aware manager continuity. Authorized Manage
+  real fixed-navigation height; reusable Chromium and WebKit checks pass at
+  320, 390, and 430px and at simulated 200% zoom. All 509 frontend tests,
+  TypeScript, and the production build pass.
+- 2026-09-05: Delivered rollout-aware manager continuity. Authorized Manage
   categories now show concise schedule, report, delivery, activity, and
   recovery urgency or exact enabled-tool counts; later-unit feeds do not load
   in the background; and only the selected authorized tool panel mounts.
   Pre-rollout access responses retain legacy composition for rolling-deploy
-  compatibility. Frontend tests, TypeScript, the production build, and focused
-  manager Schedule, Recovery, and report handoffs pass.
-- 2026-09-19: Added the protected workspace-rollout smoke contract. Operators
+  compatibility. All 507 frontend tests, TypeScript, the production build, and
+  focused Chromium manager Schedule, Recovery, and report handoffs pass.
+- 2026-09-05: Added the protected workspace-rollout smoke contract. Operators
   can validate one exact hosted persona/unit/scope, its required cumulative and
   forbidden later capabilities, an authorized resource read, and a controlled
   cross-resource denial. Input validation, bounded requests, redacted failures,
   six failure-policy tests, release preflight, and CI integration are delivered;
   no hosted cohort pass is claimed.
-- 2026-09-19: Synchronized the Yard Owner lost-response browser journey to
-  completions controlled by its mock route handlers for the intentional
-  approval and revocation failures and the subsequent revocation conflict. The
-  test retains its exact idempotency-key checks, default assertion timeout, and
-  zero-retry policy while removing browser event-order sensitivity from those
-  network boundaries.
-- 2026-09-19: Isolated checklist persistence integration tests that share the
-  seeded `job_1001_yard_service` row. The state/read and offline-idempotency
-  cases now hold one async test lock across their mutations, preventing a
-  protected-main race that could recheck the item between update and read.
-- 2026-09-19: Synchronized hosted Yard Owner navigation into Connect care after
-  four WebKit failures stopped at asynchronous transitions, including one that
-  proved a completed click could leave the step unchanged. The journeys now
-  wait for a hydrated ready brief, require an enabled step control, and repeat
-  that idempotent selection until Connect care becomes current before checking
-  assessment or proposal panels. The assertion default, 60-second test ceiling,
-  and zero-retry policy remain intact.
-- 2026-09-18: Delivered and validated the Raspberry Pi development deployment
-  foundation. Pull request checks passed before merge; a manual baseline run
-  then exercised the ARM64 build, Tailscale OIDC and restricted SSH path,
-  private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
-  commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
-  pushes deploy automatically while pull requests remain validation-only.
 - 2026-09-05: Bounded the Property Manager portfolio by rollout unit. P1 shows
   readiness, coverage, next service, and customer-safe exceptions; P2 adds
   property search, service history, and delivered proof; P3 adds exact-visit
   questions and versioned recommendations; and P4 retains its scoped Manage
   tools. Unknown managed units withhold portfolio data, and P1 does not request
-  later proof or decision history. Hidden destinations now fail closed during
-  unit changes, and recommendation routes admit only supported methods before
-  exact-visit repository authorization.
+  later proof or decision history.
 - 2026-09-05: Bounded field controls by rollout unit. C1/CM1 routes are
   read-only, C2/CM2 add assigned-job progress, C3/CM3 add checklist, photo, and
   report evidence, and only Crew Lead C4 can request route changes. Company and
   dispatcher field surfaces expose job oversight without execution controls;
   suspended and unknown managed units fail closed while legacy behavior and
-  queued offline work are preserved. Automatic and manual replay now wait for
-  the corresponding execution, evidence, or route-change unit to be active.
+  queued offline work are preserved.
 - 2026-09-05: Shaped manager-style workspace internals by rollout unit. Company
   Owner and Manager categories progress from readiness through schedule,
   customers/team, and reports/recovery; Property Manager stays bounded to its
@@ -385,7 +1274,7 @@
 - 2026-08-22: Adopted the Team and access command center for Organization Owners with live active-member, pending-invitation, active-crew, and unstaffed-territory summaries; explicit unavailable recovery; staffing attention; direct member, invitation, crew, and audit paths; focused unit coverage; and phone/desktop Chromium validation.
 - 2026-08-22: Adopted the first Yard Owner portal production slice with stable Home/Visits/Proof/Account navigation, portal-wide property selection, an explicit customer-safe local-review visit model, next-visit confidence hierarchy, delivered-proof archive, recommendation history, and responsive property-context coverage; persisted customer visit reads remain planned.
 - 2026-08-22: Adopted secure customer proposal decisions with the shared public visual hierarchy, responsive scope and pricing, explicit approval/decline confirmation, recorded outcomes, closed-link recovery, and a narrowed public API projection that omits internal bid/line-item/service IDs, manager notes, and delivery metadata.
-- 2026-08-22: Adopted the customer-safe shared completion-proof hierarchy with Grover service identity, immutable snapshot context, responsive photo/checklist/add-on evidence, explicit retry recovery, and a trust boundary that omits internal billing notes and operating identifiers.
+- 2026-08-22: Adopted the customer-safe shared completion-proof hierarchy with Yardfolio service identity, immutable snapshot context, responsive photo/checklist/add-on evidence, explicit retry recovery, and a trust boundary that omits internal billing notes and operating identifiers.
 - 2026-08-22: Connected manager completion review to the exact selected Job Report workflow across desktop and mobile, and adopted the branded Reports and communication command-center hierarchy plus a denser responsive review board without changing report lifecycle or delivery contracts.
 - 2026-08-22: Adopted the manager Recovery queue/detail hierarchy with open/assigned/urgent/resolved-today summaries, responsive filtered queue and selected inspector, shared status feedback, preserved optimistic lifecycle actions, and direct routing back to affected Job, property, or Schedule work.
 - 2026-08-22: Adopted the first authenticated manager Schedule command-center slice with Today’s operation, service-date crew/work/risk summaries, compact route-target controls, a desktop route board plus selected-route planning inspector, responsive stacking, shared status feedback, and preserved draft/capacity/publish/amendment behavior.
@@ -506,7 +1395,7 @@
 - 2026-07-20: Added an interactive persona-aware product tour and capability-backed credibility section without unverified customer claims.
 - 2026-07-20: Added persona campaign landing paths with first-screen personalization, canonical search/social metadata, and crawler controls.
 - 2026-07-20: Added persona-specific marketing conversion flows with consent, attribution, spam filtering, and durable production lead capture.
-- 2026-07-20: Added an API-independent public persona-selectable Grover homepage with product narrative, preview, outcomes, and direct workspace routing.
+- 2026-07-20: Added an API-independent public persona-selectable Yardfolio homepage with product narrative, preview, outcomes, and direct workspace routing.
 - 2026-07-20: Added auditable photo-erasure recovery events and isolated durable photo recovery integration coverage.
 - 2026-07-20: Aligned day-plan, amendment, and bid readiness tests with explicit persistence result contracts.
 - 2026-07-20: Restored the full 160-test Rust library readiness suite after persistence contract hardening.
@@ -847,7 +1736,7 @@ Current continuation work:
 - A sticky phone navigation bar links the core workflow sections, and opening a
   job moves directly to its detail and field actions on narrow viewports.
 - Mobile application metadata now supports standalone home-screen presentation,
-  portrait orientation, safe-area viewports, and Grover Field branding.
+  portrait orientation, safe-area viewports, and Yardfolio Field branding.
 - Mobile route cards now keep stop progress prominent while route changes,
   request history, and extra-service controls remain available on demand.
 - Mobile job detail now presents lifecycle actions first and condenses the

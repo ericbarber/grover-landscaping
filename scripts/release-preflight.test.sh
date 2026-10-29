@@ -3,27 +3,27 @@ set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 preflight="${repository_root}/scripts/release-preflight.sh"
+test_bin="$(mktemp -d /tmp/yardfolio-release-preflight-test.XXXXXX)"
 
-set +e
-repository_output="$(bash "${preflight}" --repository-only 2>&1)"
-repository_status=$?
-set -e
+cleanup() {
+  rm -rf -- "${test_bin}"
+}
+trap cleanup EXIT
 
-case "${repository_status}" in
-  0)
-    [[ "${repository_output}" == *'PREFLIGHT RESULT: READY'* ]]
-    ;;
-  2)
-    [[ "${repository_output}" == *'PREFLIGHT RESULT: EXTERNAL PREREQUISITE'* ]]
-    [[ "${repository_output}" == *'Terraform 1.13.5+'* ]]
-    ;;
-  *)
-    echo "Unexpected repository preflight status: ${repository_status}" >&2
-    echo "${repository_output}" >&2
-    exit 1
-    ;;
-esac
+printf '%s\n' '#!/usr/bin/env bash' 'exit 0' >"${test_bin}/terraform"
+chmod +x "${test_bin}/terraform"
+
+repository_output="$(PATH="${test_bin}:${PATH}" bash "${preflight}" --repository-only)"
+[[ "${repository_output}" == *'PREFLIGHT RESULT: READY'* ]]
 [[ "${repository_output}" == *'Failed checks: 0'* ]]
+
+portable_search_output="$(
+  PREFLIGHT_FORCE_PORTABLE_SEARCH=1 \
+  PATH="${test_bin}:${PATH}" \
+  bash "${preflight}" --repository-only
+)"
+[[ "${portable_search_output}" == *'PREFLIGHT RESULT: READY'* ]]
+[[ "${portable_search_output}" == *'Failed checks: 0'* ]]
 
 set +e
 external_output="$(

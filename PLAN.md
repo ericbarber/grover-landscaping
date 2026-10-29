@@ -11,11 +11,11 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | Yard Owner care-setup continuity, decoupled application identity, supported Node 24 Docker image actions, and explicit Ubuntu 24.04 hosted runners are delivered with full hosted validation and automatic Pi activation | Await R2 external access or the P2 product-boundary decision; keep repository maintenance evidence-driven |
-| Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
+| Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-delivered-outcome toolchain are implemented; full lifecycles, exact checkpoint receipts, isolated frontend entry, consolidated session control, and the seeded owner proposal path are live-verified; MG-Y1/open-decision is selected for Round 1 | Recruit two Yard Owners, instantiate each current-app condition immediately before use, then synthesize the matched findings |
+| Private review | The reconciled integration branch is published in PR #38 with clean local gates. Hosted CI exposed three integration assumptions: release preflight depended on `rg`, backend tests inherited built frontend assets, and the desktop hero exceeded its 720px viewport contract. All three are repaired and locally validated; the next hosted rerun remains pending | Complete hosted PR CI, then deploy and smoke the exact passing commit |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
-| Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Repository adoption is complete for rollout composition and audited frontend continuity | Await hosted cohort evidence or the Dispatcher/Billing role decision |
+| Product | Core workflows plus activity-to-Recovery exception handoff are delivered; B1/B3 and repository-owned B7/B8 work are implemented, B6/B9 preparations are ready, and a bounded B10 decision packet awaits approval | Approve or revise B10 boundaries while B4/B5/B6/B8/B9 evidence proceeds in an authorized environment |
+| Design | Prior concepts remain review inputs; Yardfolio Study M1 remains open, eight M2 task moments are simulated, and live provider-to-outcome fixtures are repeatable | Run B9 participant sessions and synthesize evidence before B2 expansion |
 
 ## Status Legend
 
@@ -26,7 +26,334 @@ infer execution order from section position.
 | Planned | Prioritized upcoming work |
 | Backlog | Valuable but not part of the next delivery slice |
 
+## Product Market Boundary
+
+The product is now intentionally bounded to residential properties rather than
+yards alone or generic field-service operations. In-scope customers include
+homeowners, residential property managers, residential HOAs and communities,
+and residential portfolio operators. The service model may expand from the
+delivered landscape-care foundation into pools, cleaning, inspections, repairs,
+and other residential property services.
+
+Commercial facilities and general-purpose trade or construction operations are
+out of scope. Grover is restored as the temporary display name while a broader
+residential-property brand is selected and screened. Display naming now lives
+behind an application-identity boundary; the stable `yardfolio` technical
+namespace remains in place for storage, database, service, and infrastructure
+compatibility. This decision changes the future category and messaging
+direction; it does not claim that the additional service workflows are already
+delivered.
+
 ## In Progress
+
+### Best-in-class product delivery program
+
+The approved [B0–B10 delivery plan](project-planning/BEST_IN_CLASS_DELIVERY_PLAN.md)
+orders company first-value onboarding, customer-controlled Property Manager
+access, measurable quality budgets, participant evidence, service-thread
+expansion, protected hosting, verified product captures, a public trust center,
+search/sharing readiness, and the gated Yard Owner concern boundary. The plan
+keeps repository implementation moving whenever its evidence and product gates
+are available while protected hosting waits in a parallel external lane.
+
+B0, B1, and B3 implementation are published on `codex-review-feature`. Company setup now
+preserves allowlisted campaign attribution, resumes from six server-confirmed
+milestones through delivered proof, fails closed on multiple memberships and
+persistence outages, and reports bounded stage telemetry. Customer-controlled
+Property Manager delegation now adds owner invitation/revocation, verified-email
+recipient acceptance, exact-property membership and portal grants, immediate
+fail-closed removal, minimized pre-acceptance reads, and an audit trail. The
+complete gate passes 151 frontend files / 628 tests, TypeScript, the production
+build, strict Clippy, and the 433-test backend command. The Compose-backed run
+also completed live PostgreSQL tests, migrations, and both Terraform environment
+validations. Browser acceptance now passes 86 journeys with 2 intentional skips
+across mobile/desktop Chromium, desktop Firefox, and mobile WebKit. The recovery
+slice removed the 320px document floor that doubled under 200% CSS zoom,
+separated initial layout-shift measurement from intentional tab/zoom reflow,
+and aligned marketing-tour assertions with the shipped copy and document
+geometry. The accumulated delivery was committed as `c3f7301` and pushed to
+`origin/codex-review-feature`.
+
+A bounded integration branch now merges that complete review line with current
+`origin/main` and is published for hosted review in PR #38. It preserves the
+newer workspace and job-navigation
+architecture while incorporating Tailwind 4, supported Docker action runtimes,
+current backend authorization coverage, and the latest dependency-security
+baseline. The merge-artifact repair, clean Node 22 install, zero-finding live
+audit, 170-file / 706-test frontend suite, production build, artifact budgets,
+repository contracts, Rust formatting, strict Clippy, backend tests, and the
+five-journey focused Chromium handoff gate pass.
+The first hosted run exposed that GitHub's current Ubuntu 24.04 image does not
+provide `rg`; release preflight now falls back to portable `grep`, with both
+search paths contract-tested. The next hosted run reached the full backend and
+cross-browser gates, revealing that backend router tests inherited a local
+`frontend/dist` build and that the desktop hero exceeded its 720px viewport
+contract after integration. Router tests now embed the versioned frontend source
+documents, while the responsive hero preserves its complete message and actions
+inside the first desktop viewport. Strict Clippy, the full backend suite, both
+frontend TypeScript gates, 170 files / 706 tests, production build, artifact and
+brand gates, and the focused desktop browser journey pass. A passing hosted
+rerun and deployment remain unclaimed.
+
+B7 now adds a versioned production-artifact and browser-experience budget,
+privacy-bounded operational indicator contracts, an actionable validator with
+failure tests, and local/CI enforcement after production builds. The measured
+B0/B1/B3 build passes every artifact limit. Protected dashboards, alert routing,
+runtime browser measurements, and real-user measurement approval remain external
+gates and are not claimed. B9 matched study fixtures are now live-verified
+through the supported delivered outcome. B9 delivery includes
+a strict, versioned, privacy-minimized fixture-manifest template and validator
+in local and CI repository gates. It rejects the shared database, non-review
+API mode, placeholder runtime provenance, records outside the Canyon/Sage
+namespaces, unknown fields, duplicate identifiers, and incomplete reset proof.
+A second tested preflight restricts the API origin, requires the local-review
+API to report its exact database identity, and independently checks that same
+database's migration ledger and empty reserved namespaces without printing
+connection details. Manifest schema 2 attributes normal API-generated IDs to
+their Canyon View or Sage Lane owner while reserving the synthetic namespace
+for request/idempotency keys. A disabled-by-default fixture runtime can return a
+newly created provider invitation token once, outside JSON, only after proving
+non-production local-review PostgreSQL on `yardfolio_study`; it also records
+the normal delivered transition. Canyon View and Sage Lane have separate fixed
+local-review Property Owner principals, preventing their owner-scoped records
+from collapsing under one synthetic user. A tested create-once preparer runs
+the boundary preflight, verifies both principals, and writes the ignored
+mode-0600 manifest with exact source/migration provenance before any record
+mutation. The prepared manifest now has an atomic, mode-0600, exclusive-lock
+state journal for idempotently recording generated IDs, verified snapshots,
+manager-delegation progression, and a zero-remaining reset receipt. It is a
+required recoverability primitive. A tested owner-foundation
+plan now fixes the supported workspace, property, ready-brief, and invitation
+requests for both isolated owners and fails closed on cross-owner results,
+same-label collisions, duplicates, or stale journal IDs. Its exact-match
+recovery rules journal and resume the fixed workspace identity, close the
+non-idempotent property-create crash window, and avoid replaying an already
+saved ready brief without persisting invitation tokens. The paired
+provider-to-outcome executor drives both records through proposal v3,
+acceptance, activation, manager delegation, first-visit confirmation, service
+release, published field routes, assigned exceptions, field completion,
+placeholder evidence, manager correction/re-review, immutable delivery, and
+minimized owner/manager proof with stable request keys. A tested reset
+inventory now covers every allowlisted manifest table, orders exact primary keys
+child before parent, supports a workspace-only partial run, and emits no SQL or
+broad owner predicate. Derived selectors now trace the owner/provider,
+delegation, visit/recommendation, and field-operation children back to exact
+manifest workspace, invitation, capability, assessment, proposal, activation,
+release, job, stop, or plan IDs. Its executor snapshots those exact roots and
+removes derived/direct records inside one rollback-safe PostgreSQL transaction;
+the manifest reaches `reset` only after exact IDs verify absent. Repository
+tests and three isolated full-lifecycle live seed/read/reset cycles pass; the
+latest also proved zero derived audits. Each ended with zero manifest records
+and namespace matches. Participant evidence,
+real-image quality, and unsupported Crew Lead-originated handoff remain open.
+Repository validation is now deterministic in restricted development shells:
+the release-preflight contract supplies its own fake Terraform command, and
+protected-release evidence tests call the exported validator directly instead
+of spawning a child Node process. The complete repository scope—including
+shell contracts, smoke/evidence/budget/manifest tests, and Compose
+configuration—passes without treating unavailable external tooling as a test
+failure.
+
+The signed-in Yard Owner home now keeps property/provider setup reachable. When
+portal access is not active, it recommends continuing care setup instead of
+leading with a protected portal read, and its access notice points to the same
+recovery path; owners with active access retain a secondary setup path for
+another property or provider connection. The recommended path resumes a single
+property at its incomplete brief or ready care connection; it still requires
+property selection when more than one home exists. A
+checkpoint-gated mobile browser contract starts at `/app`, selects Canyon,
+follows that handoff directly to the ready care connection, and verifies the
+one current proposal at version 3 and $420. The live rehearsal made no
+decision, revalidated the checkpoint afterward, and reset to zero. It is
+technical evidence, not participant evidence.
+
+B6 preparation now includes an internal
+[public trust-center content contract](docs/public-trust-center-content-contract.md).
+It maps plain-language identity, authorization, customer/provider separation,
+offline, photo, notification, availability, recovery, retention, export,
+erasure, incident, and provider statements to repository sources and required
+protected evidence. It explicitly withholds unsupported compliance, uptime,
+encryption, deletion, backup, provider-enablement, and response promises. No
+public route is approved until B4 evidence and accountable owner reviews exist.
+
+B8 repository delivery now enforces a tested crawler policy for the five public
+routes and excludes authenticated, auth-callback, diagnostics, invitation,
+shared-token, design-review, and Yardfolio Study review paths. The production
+server returns durable 404 responses for unknown, invalid nested marketing,
+missing-asset, and unshipped review paths. It also emits route-specific copy and
+metadata in initial HTML and generates absolute canonical/share URLs, robots,
+and a five-route sitemap from a production-required exact HTTPS
+`PUBLIC_APP_URL`. The
+[search/sharing readiness contract](docs/search-sharing-readiness.md) records
+the remaining B4 final-origin, deployed preview/crawler, browser, and B5/B6
+approval evidence gates.
+
+The public hero is now a compact, route-specific introduction with no persona
+controls. The root homepage focuses on one Yard Owner and one yard; dedicated
+audience routes retain their own headline and primary action. A full-bleed
+landscape image now carries the hero copy instead of duplicating persona detail
+in a sample-workspace overlay. Those entry details remain fixed to the page the
+visitor entered. A dedicated
+audience-review section follows immediately, where owner-first keyboard tabs
+are organized into Property customers and Service teams. They change the
+supporting narrative, outcomes, and role-specific action without rewriting the
+hero, URL, canonical metadata, or original conversion path. The oversized company planning surface remains in the
+Plan product-tour step. Prepared phone/desktop geometry coverage keeps the
+full-height photographic hero within the first screen without removing any
+audience route or conversion path.
+
+The current experience-language pass now keeps the first signed-in journeys in
+plain, role-appropriate terms. Company setup speaks in companies, crews,
+customers, routes, services, and reports; authentication and Property Manager
+failures explain what the person can do next without exposing claim,
+membership, or persistence mechanics. Crew work now uses tasks, job photos, and
+"saved on this phone" recovery states consistently from assignment through
+customer handoff. Completion-report previews no longer expose report IDs,
+storage object keys, upload modes, or backend lifecycle terminology.
+The manager report queue now presents the next useful action for each report,
+uses task/photo language for missing work, distinguishes reports saved on a
+device, and adds color-coded states plus full-width phone actions for faster
+scanning and handoff.
+Notification delivery history now uses customer-facing work labels and clear
+delivery states, withholds provider/template/error identifiers, and confirms
+before closing a failed delivery without sending it.
+Photo-preview recovery follows the same standard: managers see preview outcomes
+instead of worker terminology or raw processing errors, and closing a failed
+preview requires confirming that no new preview is needed.
+
+### Raspberry Pi development hosting
+
+- The repository has an opt-in `main` deployment job gated by all CI checks,
+  an ARM64 image build, private Compose runtime, readiness/rollback script,
+  and Tailscale setup instructions. SSH key access to `eric480@192.168.50.10`
+  works after a verified host-key change. The Raspberry Pi 3 Model B with 1 GB
+  RAM now runs 64-bit Debian Trixie (`aarch64`). A prior home-directory backup
+  is held outside the repository. Docker Engine, Compose, and Tailscale are
+  installed and their services active; a fresh SSH session can use Docker.
+- The GitHub `pi-development` environment exists with a `main`-only branch
+  policy and a dedicated CI SSH private-key secret. `PI_DEPLOY_ENABLED=false`.
+  The matching CI public key is installed on the Pi and was verified with a
+  dedicated-key SSH login through Tailscale. The Compose and deployment files
+  are copied to the Pi with matching checksums. The Pi joined the tailnet as
+  `grover-dev-pi.tailf6631b.ts.net`; its SSH host key was pinned in the GitHub
+  environment, and `PI_TAILSCALE_HOST` is set. A private runtime `.env` exists
+  on the Pi and PostgreSQL is healthy with a named data volume. The owner
+  enabled Tailscale Serve and the Pi routes its private HTTPS address to local
+  port 10000. TLS validation succeeds; HTTP 502 is expected until an app image
+  runs. The Tailscale OIDC Client ID and Audience are stored in GitHub
+  environment secrets, but the credential and tailnet grants cannot be
+  exercised until the workflow runs. The broad allow-all tailnet grant was
+  replaced with full access for user-owned member devices and a restricted
+  `tag:grover-ci` to Pi TCP/22 grant. Workstation ping, SSH, and HTTPS still
+  reach the Pi after the policy change. Verify the tagged runner and first
+  deployment after publication. No application image has been deployed yet.
+
+### Yardfolio Study independent planning and review
+
+The [working mission and core values](project-planning/MISSION_AND_VALUES.md)
+now give the content review a physical-environment outcome: outdoor places that
+are more beautiful and better maintained through clear plans, practical work,
+and lasting follow-through. This is a messaging foundation; specific public
+capability claims still require the existing claim review and product decisions.
+
+The [Yardfolio Study track](yardfolio-study/README.md) owns the active
+[workplan](yardfolio-study/WORKPLAN.md), [product decisions](yardfolio-study/PRODUCT_DECISIONS.md),
+[critical workflow review](yardfolio-study/review/application-workflow-critical-review-2026-09-16.md),
+and [cross-role blueprint](yardfolio-study/review/application-experience-blueprint.md).
+Earlier website, persona, and service-thread designs remain comparison inputs;
+none is the approved target for this track. The prior
+[website and role preview](design/prototypes/yardfolio-study/README.md) remains a
+validated illustrative concept with no React adoption or participant result.
+The current React app and production access contracts remain authoritative.
+
+M0 separation is delivered. M1 is in progress: a
+[first-pass public claim inventory](yardfolio-study/CLAIM_INVENTORY.md) now marks
+supported, ambiguous, and gated promises. A
+[first-pass current journey trace](yardfolio-study/CURRENT_JOURNEYS.md) records
+five phone entry paths and local-review Home/destination state mismatches.
+The bounded current-app Home continuity repair is delivered in local review:
+Yard Owner Home now reflects the protected portal read, while Crew Lead Home
+uses the loaded route date and stop count rather than assigned-job totals.
+The route header also shows the loaded service date. Property Manager Home and
+Portfolio now use the protected customer visit collection; inactive or failed
+access withholds the former preview properties and progress. The fixed Property
+Manager now live-reads two separately delegated synthetic properties, visits,
+and delivered-proof indicators. Next, prepare independent copies for lifecycle
+moments that cannot coexist and run the participant protocol. The
+[linked Yard Owner, Company Manager, and Crew Lead prototypes](yardfolio-study/prototype/README.md)
+are interactive and clearly simulated: they cover proposal acceptance,
+customer consequence, crew fit, exact-version release, field access questions,
+tab-held offline state, manager access verification, revised Plan 9 release,
+proof correction, reviewed customer outcome, stale versions, and failed-read
+recovery. The six prototype task moments have no shared persistence or real
+photo; the supported current-app records are now repeatable, while Plan 8/9 and
+Crew Lead-originated access handoff remain non-comparable. Two additional role perspectives are
+now simulated:
+Property Manager scans two properties and responds to an access question;
+Company Owner assigns an accountable manager to the business risk. Their
+actions do not persist or transfer across pages.
+The continuity repair is a truth correction to the existing UI; the proposed
+new composition is not approved for production adoption.
+
+The [matched synthetic fixture specification](yardfolio-study/MATCHED_FIXTURES.md)
+now defines two equivalent cross-role services for fair current/new tasks.
+Those records have been live-verified and reset through supported APIs. The
+prototype uses one specified synthetic task moment, not the current-app fixture.
+The route/API and authority map
+recorded; it identifies current-app gaps in plan revision and field-to-office
+access questions. Portfolio's protected data-source repair is delivered, while
+the old preview-only Proof and Approvals tabs are not claimed as live.
+Session-specific copies and participant sessions remain open.
+The [read-only local fixture probe](yardfolio-study/fixtures/README.md) now
+reports fixed-owner proposal, visit, delivered-proof, delegated manager,
+current route, and manager-exception counts without exposing protected fields.
+The final reset returns the isolated namespace to zero.
+The [isolated fixture seed contract](yardfolio-study/fixtures/SEED_CONTRACT.md)
+now defines supported owner transitions, reset ownership, and date/role gates.
+Its non-secret working-tree manifest template and tested validator establish the
+allowed record namespaces, provenance, lifecycle, and reset receipt, while
+explicitly remaining structural evidence. A separate tested boundary preflight
+now checks the allowed API origin/mode and the operator-selected study database,
+migrations, and empty namespaces. The backend reports database identity only
+for ready PostgreSQL persistence in local-review mode, allowing the preflight
+to prove API-to-database linkage without exposing its connection string.
+Manifest schema 2 corrects the earlier caller-defined-ID assumption by keeping
+API IDs under their owning synthetic record and validating each supported table
+prefix. The fixture-only invitation handoff is rejected outside the exact study
+runtime and keeps the transient bearer value out of JSON and manifests. The
+owner-foundation plan now pins synthetic inputs and public API request shapes,
+including deterministic invitation keys and exact workspace, property, and
+ready-brief discovery/recovery; it has no executable entry point and cannot
+seed records.
+The [separate local study database](yardfolio-study/fixtures/LOCAL_STUDY_ENV.md)
+is created and migrated, with its own active local-review API on port 8081.
+The complete seed/reset toolchain prepares either a selected forward-only
+checkpoint or the delivered outcome. A fail-closed port-5174 study frontend
+validates that runtime, proxies browser requests to it on the same origin, and
+has passed the mobile normal-entry check without changing the shared port-5173
+review app.
+The [MG-D6 product decision](yardfolio-study/PRODUCT_DECISIONS.md) now assigns
+Property Manager access to the customer after the provider relationship is
+active. The [delegation contract](yardfolio-study/PROPERTY_MANAGER_ACCESS.md)
+requires property-scoped invitation, recipient acceptance, customer
+revocation, and protected read checks. The invitation/grant schema, customer
+issuance, recipient acceptance, revocation routes, minimized UI, and
+accepted-invitation protected-read gate are implemented in the working tree.
+This comparison task stays out of completion scoring until those paths create
+and verify both matched study grants in the isolated runtime.
+The customer portal property and visit read now also requires the provider
+relationship behind an active grant to remain active. An ended relationship
+with a stale active grant fails closed; the isolated database lifecycle test
+covers both property and visit reads.
+The [Yardfolio Study formative protocol](yardfolio-study/research/SESSION_PROTOCOL.md)
+and [session notes template](yardfolio-study/research/SESSION_NOTES_TEMPLATE.md)
+now define neutral public and role tasks, comparison eligibility, and evidence
+capture. They are ready for preparation, but no participant sessions or
+matched task-completion comparison have occurred.
+The [independent Yardfolio Study persona set](yardfolio-study/personas/README.md)
+now covers five first-wave task/authority hypotheses and five secondary or
+recovery perspectives. It is a separate planning artifact, not participant
+evidence or a new role contract.
 
 ### Current frontend design continuity
 
@@ -34,6 +361,58 @@ Goal: keep current-state evidence separate from future design direction, then
 resolve the most consequential continuity flaws in reviewable design slices.
 
 Current state:
+
+- Grover is now the temporary customer-facing display name across runtime copy,
+  HTML
+  and social metadata, the installed Field app, accessible icon text,
+  server-rendered public titles, authentication challenges, and startup context.
+  Source, database/container, and infrastructure identifiers retain the stable
+  `yardfolio` technical namespace behind the documented
+  [rename boundary](docs/product-renaming.md). A tested local/CI gate rejects
+  new hard-coded or former runtime brand copy and detects drift across static
+  surfaces. The production shell cache was advanced so existing installed apps
+  discover the renamed shell through the normal update-and-reload flow without
+  clearing field queues. Active CSS variables, reusable component classes,
+  Tailwind shadows, and the public hero asset use the `yardfolio` namespace;
+  so do the frontend package, service-worker event/current cache, diagnostics,
+  and browser-test artifacts. Prior shell caches are still removed through a
+  brand-neutral matcher. The Rust crate/binary, runtime health label,
+  local-review request header, and local-review session key use `yardfolio`.
+  Persistent browser keys and the field IndexedDB database use `yardfolio`;
+  tested suffix-based migration preserves existing filters, route state, queued
+  mutations, and offline photo blobs without retaining the former brand in the
+  active bundle. The historical design archive uses Yardfolio in prototype
+  copy, accessibility labels, generated SVGs, shared-foundation links, and
+  source asset names, so historical design evidence no longer presents the
+  family name as a current product identity. Planned Render/AWS resources and
+  their operator runbooks use the Yardfolio namespace. The local Compose
+  database, role, and volume now use Yardfolio after a logical backup and
+  no-owner restore. The next Pi stack uses a Yardfolio database and role as well;
+  already-issued Pi network and repository identifiers remain isolated behind
+  the compatibility plan. The Pi release image, environment
+  key, and deployment directory are Yardfolio-namespaced for the next gated
+  release; its private hostname and CI ACL tag still require external changes.
+  A forward-only database migration replaces the seeded organization display
+  name without altering the checksum of the applied migration that introduced
+  it.
+  Professional trademark clearance, domain/app-store confirmation, final
+  visual identity, and public rollout approval remain required.
+
+- The public website now has an approved Yard Owner-first positioning boundary:
+  homeowners are the primary audience, private property setup is the root
+  conversion, and understandable visits, proof, recommendations, privacy, and
+  next decisions form the supported promise. Property Managers remain on the
+  customer side; landscaping companies and Crew Leads form the service-team
+  group and retain dedicated routes and actions. Billing/payment, open provider
+  discovery, and generalized vendor-governance claims remain explicitly outside
+  the launch promise. Social metadata uses the production hero asset.
+- Company Owner and Company Manager Home now begins with a short, service-
+  centered Today queue derived from already-authorized job and completion-report
+  reads. It prioritizes requested proof corrections, report review, evidence
+  blockers, active field work, and past/today schedule attention; each item opens
+  the exact Job workflow instead of sending the manager through a tool directory.
+  Loading and unavailable reads remain explicit and never become a false empty
+  or all-clear queue.
 
 - A validated [current frontend mirror](design/prototypes/current-frontend-review/README.md)
   represents eight public, company, crew, Yard Owner, and property-manager
@@ -44,9 +423,7 @@ Current state:
 - Browser validation covers surface switching, stable hashes, one visible page
   heading, horizontal overflow, responsive navigation, mobile touch targets,
   shared focus treatment, reviewed failure/status evidence, and clean browser
-  execution. The hosted browser job runs the current mirror, truth/recovery,
-  Yard Owner and Crew Lead functional rollout, and shared prototype-foundation
-  contracts before the production journeys.
+  execution.
 - A separate [truth and recovery design](design/prototypes/frontend-truth-recovery/README.md)
   now defines five protected Yard Owner read outcomes and five Crew Route
   date/persistence modes. Historical routes are explicitly read only; phone
@@ -74,23 +451,243 @@ Current state:
   receipts make enable/advance/suspend/resume safe to retry. Projection version
   2 distinguishes untouched legacy users from managed cohorts, so suspension
   cannot restore the old full menu. Desktop and mobile workspace destinations
-  now follow the lowest common cumulative unit across current scopes; Yard
-  Owner U2–U4 also gate Visits, delivered Proof, and
-  question/recommendation controls. Company Owner/Manager, Property
+  now follow cumulative units; Yard Owner U2–U4 also gate Visits, delivered
+  Proof, and question/recommendation controls. Company Owner/Manager, Property
   Manager, Dispatcher, Billing, and Support management categories/tools are
   also cumulative and fail closed for suspended or unknown units. Field
   composition now keeps C1/CM1 read only, adds assigned-job execution at
   C2/CM2, evidence and reports at C3/CM3, Crew Lead-only route amendments at
-  C4, and read-only company/dispatcher job oversight. Queued offline work stays
-  stored and counted but cannot replay without its corresponding active unit.
-  Property Manager composition now keeps P1 to readiness and coverage, adds
-  property search, service history, and delivered proof at P2, questions and
-  decisions at P3, and the already-bounded Manage tools at P4. Managed P1 also
+  C4, and read-only company/dispatcher job oversight. Property Manager
+  composition now keeps P1 to readiness and coverage, adds property search,
+  service history, and delivered proof at P2, questions and decisions at P3,
+  and the already-bounded Manage tools at P4. Managed P1 also avoids P2/P3
   history reads. The Manage overview now shows status or urgency only for its
   authorized categories, and managed units no longer preload later customer,
   report, activity, notification, or photo-recovery feeds. Only the exact
   selected authorized tool panel mounts, preventing hidden tools from running
   their own reads. No live cohort has been enabled.
+- Authenticated workspace composition now has a dedicated architecture boundary:
+  each persona owns one typed manifest for role eligibility, status, copy,
+  navigation, surfaces, rollout capabilities, and manager-tool requirements;
+  a shared resolver combines that presentation profile with the exact
+  server-derived capability projection. Home language, navigation, field
+  controls, manager tools, rollout metadata, and scope metadata now come from
+  the resolved workspace rather than parallel persona matrices. Explicit
+  all-false projections remain closed, Dispatcher/Billing are marked proposed,
+  and backend resource authorization remains authoritative. Production callers
+  now import the workspace core directly and the temporary legacy-domain facade
+  is removed. Remaining internal work is to extract feature/state families from
+  the top-level React `App`. The first extraction now moves the manager section
+  and tool catalog, manifest/capability filtering, active-tool validation, and
+  status-signal derivation into `workspaces/features/management`; the manager
+  React component is presentation-only. A second extraction moves Home shortcut
+  composition, persona language access, progress/priority rules, protected-read
+  continuity, and route-date interpretation into `workspaces/features/home`;
+  the Home panel retains layout and interaction. Core workspace selection now
+  owns eligible-persona state, access-change fallback, and rollout resolution
+  outside `App`. Multi-role property owners now default to Yard Owner, and the
+  signed-in switcher groups Property customers ahead of Service teams while
+  retaining every authorized workspace. Desktop and mobile Home progress now
+  share one persona-aware policy, so Yard Owner counts come from protected
+  customer visits rather than internal field jobs and remain withheld until
+  the authorized read is ready. Owners without active visit access receive a
+  direct resumable care-setup action in Home and My yard instead of internal
+  portal terminology or a refresh-only dead end. Customer policy now separates
+  Yard Owner, Property Manager,
+  and unsupported proposed modes; owns protected-read and manager-preview
+  eligibility; and derives Home customer progress. Field recovery policy now
+  centralizes job, checklist, and photo queue summaries and conflict-aware replay
+  gates. Assigned-job search, filtering, cards, data-read status, and the three
+  offline recovery queues now render through dedicated field components; their
+  filter and conflict-confirmation state no longer lives in `App`. Selected-job
+  overview, workflow navigation, tasks, photo upload, add-ons, and report
+  presentation now also live in a dedicated field component. Field detail
+  fallback construction, local photo-ticket construction, and authoritative
+  evidence merging now share the field feature boundary instead of being
+  embedded in `App`. A field selection hook now owns selected-job detail and
+  add-on reads, loading state, cancellation, and the fail-closed distinction
+  between authoritative API errors and transport-only local fallback. A
+  separate evidence hook owns selected-job photo reads, stale-result
+  cancellation, evidence merging, and unavailable state while preserving local
+  tickets. Selected completion-report loading now has its own field hook, which
+  publishes authoritative snapshots/evidence or invokes the existing local
+  fallback signal. The assigned-job collection hook now owns initial loading,
+  selection, cancellation, and the persisted-unavailable versus transport-only
+  seed fallback distinction. A durable field recovery hook now owns actor-
+  scoped queue hydration, online-triggered replay, replay locks, conflict
+  classification, and refreshed job/evidence state across job, checklist, and
+  photo mutations. The same field boundary now owns durable job, checklist, and
+  photo enqueue commands, browser-storage persistence requests, reviewed-
+  conflict deletion, authoritative server refresh, and post-review replay; the
+  application shell only maps typed outcomes to status copy. The management
+  feature boundary now also owns completion-report queue loading, partial
+  per-job fallback, strict filtered refresh, loading state, snapshot indexing,
+  and report upserts shared with the selected field report. A companion
+  management hook now owns the review, change-request, resubmit, and delivery
+commands plus their shared busy state and required report/activity refresh.
+A second companion owns completion-report notification queueing, busy state,
+and best-effort notification-history refresh without turning a refresh outage
+into a false write failure. Notification delivery history now has its own
+management coordinator for authorized initial reads, filtered refresh, retry,
+resolve, shared loading/unavailable state, and externally refreshed history.
+Photo-processing recovery now has a matching coordinator for failed-item
+initial loading, bounded thumbnail filters, retry, resolve, and shared busy
+state. Photo-erasure deletion recovery now also owns its authorized refresh,
+retry, resolve, post-write history synchronization, and shared busy state in
+the management boundary. The shell retains only outcome copy and activity
+recording for these recovery tools. Customer privacy export and photo erasure
+now have an authorization-aware coordinator with mutually exclusive results
+and shared busy state. A successful erasure remains confirmed when only its
+follow-up export refresh fails, while stale export data is withheld and the
+read outage is reported separately. Operational activity now has a dedicated
+authorization-aware coordinator for bounded refresh, cursor pagination,
+duplicate suppression, stale-request cancellation, availability, and access
+removal. A recorded customer-notification follow-up remains successful if only
+that activity refresh fails. The bounded manager recovery/data extraction is
+complete; customer portal/history coordination is the next safe internal
+feature-state slice while participant evidence remains external. The first
+customer slice now owns authorized property/visit collection loading, exact
+access-required/inconsistent/unavailable classification, retry, identity and
+persona cancellation, and access removal outside `App`. Manager preview report
+history now has a matching coordinator that preserves successful property
+results during partial outages, cancels stale reads, and clears data when the
+preview capability is removed. Manager preview bid history now has the same
+loading, unavailable, stale-request, account-scope, and capability-removal
+boundary. The bounded customer portal/history coordinator extraction is
+complete. Manager-authored runtime activity now has a dedicated local-state
+coordinator for hydration, bounded recording, reset, and persistence status.
+Recovery-source events also survive browser reload instead of being discarded
+by the stored-item validator. Crew-administration navigation now has a typed
+management coordinator for exact crew/branch/territory requests, audited-move
+inspection, return-to-activity focus, and latest-move lookup. Opening ordinary
+crew administration clears stale audit context before presenting the requested
+crew or full list. Customer portal preview navigation now also has a typed
+customer coordinator for history-view changes, mobile property selection,
+return-to-list behavior, and older-report expansion, with each context change
+clearing detail state that no longer belongs to the visible view. Manager
+workspace section/tool navigation now has one authorization-aware coordinator:
+transitions are atomic, mismatched tools clear before presentation, Team opens
+on its overview only when authorized, and persona or rollout access changes
+return unavailable navigation to a safe root. Manager refresh coordination now
+maps each completed workflow to its exact dependent views in one tested feature
+boundary, so shared Schedule, Team, Properties, customer-account, crew, and
+owner-progress data cannot drift because a callback omitted a related refresh.
+The manager property-workspace coordinator now owns the active organization,
+customer and onboarding collections, and exact profile/setup requests. A new
+organization atomically clears prior tenant data and requests, mismatched
+property records are rejected, and archived records remain visible to account
+administration without appearing as operational-onboarding choices. Recovery
+handoff now uses a typed operational-exception request coordinator; repeated
+requests for the same exception remain observable, while empty identifiers do
+not discard or replace valid context. Core workspace-view navigation now owns
+authorization fallback, desktop transitions, and mobile scroll save/restore.
+Persona or capability changes fail closed to the active default destination,
+and all customer, field, manager, and persona-switch handoffs share the same
+tested navigation policy. Field job navigation now owns exact job/workflow
+requests and repeat-presentation signals. Route, Jobs, Home, Dispatch,
+completion-report, and Recovery selections open the Job destination on desktop
+and mobile; Recovery resets to Overview, report review opens Report, and
+repeating the same request reactivates its intended workflow. Field route
+overview state now resets synchronously across identity, persona, or capability
+changes before Home or mobile context can consume it. The final shell audit
+leaves only global user-facing command/status copy in local `App` state; I1
+application-shell convergence is complete. Desktop browser assurance now
+selects a Crew Lead job from Assigned jobs, verifies the exact Job destination,
+changes the open workflow to Photos, returns to Jobs, and reopens the already-
+selected job with Overview restored. The focused Chromium journey, complete
+170-file / 706-test frontend suite, TypeScript, and production build pass.
+Manager handoff assurance now also proves that completion review opens the
+selected Job at Report while job-originated Recovery opens that same Job at
+Overview, clearing the stale report workflow. Manager Home's prioritized work
+queue also opens its report item at that exact workflow before the same record
+moves through completion review and Recovery. Its focused Chromium journey and
+the complete frontend gate pass. Phone-width Route assurance now also opens the
+current stop's exact Job at Overview, returns to the same Route, and continues
+stop progress without losing route context. Its focused Chromium journey and
+the complete frontend gate pass. Manager Dispatch workload assurance now opens
+the selected scheduled Job at Overview after traversing Schedule tools, closing
+browser coverage for the I1 Home, Route, Jobs, Dispatch, completion-review, and
+Recovery entry points. Its focused Chromium journey and the complete frontend
+gate pass.
+- The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
+  now gives all ten personas a task-first design direction rather than reusing
+  the rollout prototype as a UX target. Customer, field, operations,
+  administrative, and no-role contexts each lead with one first answer, one
+  primary action, no more than four destinations, a short queue, progressive
+  task detail, and explicit omitted scope. Attention, on-track, and no-current-
+  work scenarios are interactive and URL-addressable; illustrative actions do
+  not persist or imply new authorization.
+- The customer refinement slice replaces generic secondary content with exact
+  Yard Owner Visits/Proof and Property Manager Properties/Proof/Approvals
+  compositions. Required preparation, access, proof-feedback, and versioned-
+  decision choices disable illustrative confirmation until a response exists;
+  completion links to the next useful destination and repeats the non-
+  persistence boundary.
+- The field refinement slice replaces generic secondary content with exact Crew
+  Lead Jobs/Recovery and Crew Member read-only Route/personal Saved-work
+  compositions. Crew readiness blocks illustrative start until the assignment,
+  access, and safety context is checked. Route requests preserve the published
+  plan for office review; Crew Member recovery preserves device-held evidence
+  without adding coordination authority.
+- The operations refinement slice gives Company Owner, Company Manager, and
+  Dispatcher separate connected decision paths. Owner business readiness leads
+  into Team, Operations, and Customers; Manager service risk continues through
+  exact Schedule versions, customer impact, and Recovery; Dispatcher
+  publishability continues through crew fit and a new-plan response without
+  adding field execution authority or an implemented backend role.
+- The administrative refinement slice connects Billing Administrator
+  completion readiness to exact Account gaps and traceable Handoffs without
+  financial actions. Support ownership continues through minimized Activity to
+  a purpose-bound, expiring Access request. The no-role fallback stays within
+  one protected-data-free Home destination with explicit invitation/account
+  recovery choices.
+- The [minimal-product user workflow](design/review/minimal-product-user-workflow.md)
+  now separates workflow discovery from the broader persona prototype.
+  Dispatcher and Crew Member are deferred from the minimum product without
+  deleting their future design evidence. Company Manager absorbs planning
+  coordination, Crew Lead owns field delivery, and the next phase replaces
+  persona hypotheses with direct user and operating evidence.
+- The [WF1 workflow session guide](design/review/minimal-product-workflow-session-guide.md)
+  is ready for participant sessions. It defines research questions, participant
+  contexts, FigJam frames, neutral interview prompts, anonymous evidence IDs,
+  task scenarios, synthesis confidence, privacy handling, and an explicit exit
+  checklist. No user evidence is claimed before those sessions occur.
+- The [simplified product experience plan](design/review/simplified-product-experience-plan.md)
+  supersedes the MVP framing while retaining those research materials. The
+  application is treated as a post-MVP product whose accumulated capability
+  needs a simpler mental model: queues find an exact service thread, and customer decisions,
+  plan versions, field work, proof, and recovery remain contextual to that
+  thread. The first clean-slate slice focuses on Yard Owner, Company Manager,
+  and Crew Lead without deleting mature capability.
+- SX1 and SX2 are delivered in the
+  [simplified service-thread prototype](design/prototypes/simplified-service-thread/README.md).
+  The same Mesa Court service moves through decision, exact release, field work
+  and manager-reviewed recovery, proof publication, and customer outcome while
+  role filtering prevents provider plan data from reaching the Yard Owner and
+  customer pricing from reaching the Crew Lead. Company Owner and Property
+  Manager enter the same lifecycle through business-readiness and portfolio-
+  exception summaries, with exact Company Manager handoffs. Twenty
+  perspective/moment combinations pass desktop, phone, and narrow-phone
+  browser validation.
+- SX3 adds plan-conflict, offline-field, proof-correction, owned Support,
+  product-gated completion-readiness, ended-access, and authorization-mismatch
+  paths. Operational exceptions retain the exact service context; Support and
+  readiness return to its accountable manager moment; access failures keep
+  protected service and property data out of the document.
+- The [SX4 comparative study](design/review/simplified-product-experience-comparative-study.md)
+  is ready with matched current/new tasks, counterbalanced sequence, exact
+  observation fields, severity/stop rules, adoption gates, and a session-note
+  template. Participant evidence has not yet been collected.
+- The [yard-care completion timeline](design/review/yard-care-completion-event-timeline.md)
+  now orders 54 considered events from access and first-service relationship
+  setup through scope, release, field work, proof, customer outcome, recovery,
+  and recurring service. Conditional, later-specialized, and product-gated
+  events are attached without making them completion requirements.
+- Reversible production groundwork now extracts the already-adopted Yard Owner
+  four-stage progress rail into a typed `ServiceLifecycleProgress` component.
+  Its order, current/completed semantics, customer status mapping, and rendered
+  behavior remain unchanged; this is shared code preparation, not adoption of
+  the untested service-thread composition.
 
 Next design slices:
 
@@ -120,23 +717,25 @@ Next design slices:
    outside the active day. Confidence language is limited to Syncing, Saved on
    device, Synced, Needs attention, and Read only; transport-source language is
    removed. Yard Owner loading, valid-empty, access-ended, inconsistent, and
-   unavailable states withhold stale facts and provide retry/access recheck plus
-   Return Home without inventing provider-contact or support behavior. Yard
-   Owner Home now also withholds progress when the protected visit read is
-   unverified, recommends resumable property/provider setup when access is not
-   active, and keeps setup reachable after portal access succeeds. A one-property
-   setup resumes at its brief or care connection; multiple properties still
-   require an explicit choice.
+   unavailable states withhold stale facts and provide retry/access review plus
+   Return Home without inventing provider-contact or support behavior.
 6. Typography roles: delivered. Editorial type is reserved for audience,
    place, service, and delivered-care moments. Authenticated task destinations,
    operational headings, loading/failure states, decisions, queues, and monetary
    values now explicitly use the interface family.
-7. Application identity: delivered on the integration branch. Frontend runtime
-   copy and backend authentication branding now compose from explicit display-
-   name constants while compatibility-sensitive browser, API, package, storage,
-   service, asset, and deployment identifiers remain stable. The shared brand
-   component no longer embeds the current name, static metadata/PWA surfaces
-   are alignment-checked, and CI rejects new hard-coded display-name copy.
+7. Minimalist persona experiences: all ten persona journeys are now connected
+   or deliberately single-destination design direction validated across all
+   three scenarios. Customer, field, operations, administration, and no-role
+   boundaries are explicit. Human review and bounded family-by-family React
+   adoption remain; production adoption has not started.
+8. Simplified product experience: SX0 is delivered and supersedes the prior MVP
+   framing. SX1 and SX2 validate one role-filtered service thread across Yard
+   Owner, Property Manager, Company Owner, Company Manager, and Crew Lead
+   without feature-silo context changes or duplicate lifecycles. SX3 validates
+   seven contextual exception, recovery, Support, and product-gated readiness
+   paths without widening authority. The SX4 comparative study package is
+   delivered and participant sessions are next; research materials remain
+   usable, but no participant evidence is inferred.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.
@@ -465,6 +1064,14 @@ Current state:
   A clean local typecheck, all 481 unit tests, and production build pass; graph
   reuse reduced the measured build stage from 30.40 to 11.34 seconds. The
   existing 510.18 kB application-chunk warning remains the next bounded target.
+- The 2026-10-29 integration follow-up extends that static gate to Playwright.
+  A dedicated strict TypeScript project covers every browser spec and its
+  configuration, including Vite-served browser modules and Node globals. CI and
+  the change-aware frontend validator run it before browser launch. Its first
+  run caught and repaired missing shared rollout imports and the Yard Owner
+  Connect-care helper; both TypeScript gates, all 706 unit tests, the production
+  build, artifact/brand gates, and all four affected Yard Owner acquisition
+  Chromium journeys pass on a clean zero-finding install.
 - Phase 6A10 restores the frontend bundle boundary without changing workspace
   behavior. Vite now partitions the authenticated manager workspace graph from
   the shared application graph while retaining the React and OIDC vendor
@@ -651,7 +1258,7 @@ Current state:
 - Phase 6B7 closes the local production-artifact gate. The multi-stage image now
   copies the complete backend crate, including its migration-aware build script;
   the final 39.8 MB image builds successfully and runs as the unprivileged
-  `grover` user (UID 10001). Runtime validation serves the packaged frontend,
+  `yardfolio` user (UID 10001). Runtime validation serves the packaged frontend,
   reports PostgreSQL readiness, and confirms the 122-version migration ledger.
   Production mode exits nonzero for local-review auth and incomplete Cognito
   configuration. This completes every repository-owned Phase 6B gate without
@@ -668,17 +1275,18 @@ Current state:
   The private-VPN review service remains reachable with PostgreSQL readiness in
   explicit local-review authentication mode. This is publication and review
   evidence, not protected Cognito deployment evidence.
-- Hosted Yard Owner journeys now synchronize the transition into Connect care:
-  they wait for the ready brief, require the step control to be enabled, and
-  repeat that idempotent step selection until the UI proves it is current before
-  asserting the assessment or proposal panels. Four hosted WebKit failures had
-  stopped at unsynchronized transitions, including one that proved a completed
-  click could leave the step unchanged; the test ceiling, assertion default,
-  and zero-retry policy remain unchanged.
-- Checklist persistence integration cases now serialize their shared seeded-job
-  mutations. A protected `main` run proved the state/read assertion and offline
-  idempotency case could otherwise race on `job_1001_yard_service` after the
-  identical merge candidate passed its pull-request backend gate.
+- Phase 6B9 hardens the repeatable local publication gate after the backend
+  gained a separate migration binary. Cargo now has an explicit API default
+  target, every local launcher names that binary, and a repository contract
+  prevents the Compose watchdog or review instructions from regressing to an
+  ambiguous `cargo run`. Change-aware infrastructure validation can use either
+  host Terraform or the cached, pinned Terraform 1.13.5 image and reuses
+  initialized provider directories. The public desktop hero constrains its grid
+  row to the viewport and compacts type at the 1024px breakpoint for Firefox;
+  the provider-invitation journey also allows for a cold route-module load.
+  Mobile projects no longer apply the desktop-only hero geometry assertion.
+  The complete local matrix passes 78 journeys with those two mobile-context
+  skips across Chromium, Firefox, and WebKit.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -832,35 +1440,37 @@ its work, decisions, evidence needs, and most relevant next step.
 Current state:
 
 - Yard Owner, property-manager, landscaping-company, and crew-lead campaign
-  routes now personalize the hero, action hierarchy, product preview,
+  routes now open with a route-specific hero and fixed entry action before
+  personalizing the focused audience panel,
   perspective introduction, trust signals, outcome story, product tour, proof
   cards, capability set, and final invitation.
-- The landscaping-company hero now adapts the approved “Today’s operation”
+- The landscaping-company Plan tour adapts the approved “Today’s operation”
   prototype into a responsive, non-persistent owner overview with crews active,
   route progress, unassigned and at-risk signals, crew schedule/capacity, and an
-  interactive dispatch decision. Visitors can expose capacity risk and apply a
-  suggested balance without changing a real schedule.
+  interactive dispatch decision. Keeping this detailed interaction in the tour
+  lets the hero remain a focused photographic introduction for every audience.
 - Every public product-tour heading, step, explanation, outcome, and preview now
   follows the active audience. Yard Owners see upcoming care, visit progress,
   and controlled review; property managers see portfolio readiness, exceptions,
   and reporting; crews see routes, stop work, and handoff. The interactive
   “Today’s operation” dispatch dashboard remains exclusive to companies.
-- The audience selector switches the complete page story and canonical route
-  without a reload while retaining campaign query parameters and first-party
-  measurement.
-- The hero copy reserves the tallest persona composition at each responsive
-  width, so changing audiences does not move the selector or surrounding title
-  layout while only the selected persona remains visible and accessible.
-- The two-column desktop hero now occupies the viewport remaining below the
-  sticky header. Responsive type, spacing, and an intermediate-width planner
-  density keep the persona selector, actions, and complete visual together
-  above the fold at 1024 px and wider laptop layouts.
-- Yard and company signup remain visible from every persona view; the primary
-  action instead follows the active audience through private yard setup,
-  company onboarding, a portfolio discussion, or a field-workflow demo.
-- Responsive browser coverage verifies all four direct routes, page-level
-  persona continuity, canonical metadata, live audience switching, the embedded
-  operations tour, and mobile reflow.
+- A dedicated audience-review section immediately after the hero changes the
+  supporting page story without a reload while retaining the entry URL,
+  canonical metadata, campaign query parameters, and fixed hero action.
+- The active review panel is connected to its tab. Property customers appear
+  before service teams, Yard Owner is first, and arrow, Home, and End keys move
+  both focus and selection through that explicit order.
+- The entry hero layers its route-specific copy and actions over the full-bleed
+  landscape image with contrast gradients and no duplicate sample-workspace
+  card. Prepared geometry coverage checks the complete hero at 1024 px and
+  wider laptop layouts.
+- The second-section action follows the reviewed audience through private yard
+  setup, company onboarding, a portfolio discussion, or a field-workflow demo;
+  the hero action remains tied to the route the visitor entered.
+- Responsive browser coverage is prepared for all four direct routes,
+  entry-hero continuity, canonical metadata, live audience review, the embedded
+  operations tour, and mobile reflow. Browser execution remains environment-
+  blocked.
 
 Next slices:
 
@@ -915,6 +1525,11 @@ Current state:
   shadows, forest manager navigation, and canonical mobile header/bottom-nav
   materials. Exact browser assertions cover the canvas, display stack, sand
   wordmark, and deep-navigation surface without changing role or tool access.
+- The public entry hero now limits its first-screen choice to one persona-specific
+  conversion and one product-tour path, while a tracked three-stage sample makes
+  upcoming work, active care, and delivered proof tangible for each campaign.
+  The signed-in phone Home compresses its welcome image and moves the
+  persona-specific recommended action ahead of progress and continuity summaries.
 - Production visual convergence phase 3 aligns the reciprocal provider
   invitation entry with the acquisition family: canonical brand lockup,
   editorial page title, bone/paper/forest composition, shared action and card
@@ -1061,6 +1676,11 @@ Current state:
 
 Next design work:
 
+- Run SX4 comparative current-product and service-thread sessions using the
+  retained session kit. Measure comprehension, context changes, wrong turns,
+  completion, recovery, and perceived authority; revise the design from
+  observed evidence before defining React adoption. Keep capability rollout as
+  a separate authorization contract.
 - Adopt the Yard Owner proposal interfaces, separate proposal conversation, and
   explicit activation boundary before widening the provider-discovery surface.
 - Continue production visual convergence through the authenticated application
@@ -1544,24 +2164,6 @@ or crew assignment.
   overflow. Strict Clippy, all 417 backend tests, TypeScript, all 485 frontend
   tests, and the production build pass.
 
-### Raspberry Pi incremental development hosting
-
-- GitHub Actions deploys an ARM64 image only after repository, backend,
-  frontend, browser, assurance, Terraform, and production-image checks pass.
-- The deployment runner joins Tailscale with workload identity federation,
-  uses a pinned SSH host key, and can reach only the Pi's SSH port under the
-  tailnet policy.
-- The private Compose runtime keeps PostgreSQL in a named volume, binds the app
-  to loopback, verifies readiness, and restores the prior application image
-  when activation fails.
-- The first baseline deployment completed for merge commit
-  `1bd623731b308994d2136da89ad6ca9013b0755b`. Its tailnet-only HTTPS root,
-  readiness endpoint, PostgreSQL persistence, and `local_review` auth
-  configuration passed live checks.
-- `PI_DEPLOY_ENABLED` is active. Each later passing push to `main` deploys its
-  exact tested commit, allowing website work to ship in individual feature
-  branches and pull requests.
-
 ### Local role-review authentication
 
 - Development can run without AWS through a production-rejected
@@ -1599,19 +2201,22 @@ or crew assignment.
 ### Public product experience
 
 - Public root homepage introduces Grover without requiring authentication
-- Outcome-led hero positions Grover around the plan, field care, and customer-ready proof
-- Hero signup invitations now keep both acquisition paths visible: Yard Owners
+- The root hero focuses on one Yard Owner, one yard, and the story across its
+  visits; multi-property and provider operations remain in their dedicated routes
+- Each direct public route opens with its own focused hero action: Yard Owners
   enter the private yard workspace and landscaping companies enter authenticated
-  organization onboarding without first changing the audience selector
-- Interactive audience selector tailors the complete landing-page narrative for
-  yard owners, property managers, landscaping companies, and crew leads,
-  including the hero, trust, proof, capabilities, and final invitation
-- Persona-specific hero copy shares one responsive intrinsic-height region, so
-  switching audiences does not cause the title or selector to jump
-- The complete two-column desktop hero fits below the sticky header in the
-  first viewport, keeping persona controls, actions, and the full visual panel
-  visible together at supported laptop widths
+  organization onboarding without first using an audience selector
+- The audience selector begins in the second section and tailors the supporting
+  narrative for yard owners, property managers, landscaping companies, and crew
+  leads without changing the entry hero, URL, or canonical metadata
+- Route-specific hero copy shares one responsive full-bleed photographic
+  region below the sticky header without placing persona controls in the first
+  screen
 - Product preview, Plan-Care-Proof workflow, capability story, trust cues, and repeated workspace calls to action create a complete marketing narrative
+- The first screen presents one primary conversion plus one product-tour action
+  over the landscape image; persona comparison and workflow detail begin in the
+  sections below;
+  walkthrough capture remains available later in the company narrative
 - `/app` remains the direct authenticated or auth-disabled workspace entry, while callbacks, invitations, diagnostics, shared bids, and shared reports retain dedicated routing
 - Installed application sessions now start directly at `/app`
 - Public marketing remains independent of API, network, update, and installation banners so backend readiness cannot make the homepage appear unavailable
@@ -1663,12 +2268,14 @@ or crew assignment.
 - Selecting a job opens its dedicated mobile view with a clear return to assigned jobs
 - Returning between mobile workspaces restores each view's prior scroll position while newly selected jobs open at the top
 - Signed-in roles map to yard owner, property manager, crew lead/member, yard-care company owner/manager, dispatcher, billing, and support personas
-- Persona-specific navigation hides irrelevant workspaces, and multi-role users can switch their active view without signing out
+- Persona-specific navigation hides irrelevant workspaces; multi-role property
+  owners start in Yard Owner, and the grouped Property customers, Service teams,
+  and support options remain switchable without signing out
 - Yard owners receive a customer property workspace while property managers receive portfolio and management navigation
 - Desktop applies the same persona boundaries: customer roles see property and portfolio care, crews see field execution, company roles see operations, and support sees diagnostics and recovery
 - Install and application-update notifications stack above the mobile navbar and iPhone safe area instead of covering navigation
 - Install guidance uses device-neutral language across phones, tablets, and desktop computers
-- Failed route recovery clears stale Grover Field shell caches before reloading, and online application assets use network-first delivery with offline cache fallback
+- Failed route recovery clears stale application shell caches before reloading, and online application assets use network-first delivery with offline cache fallback
 - Manager activity renders photo-erasure recovery audits and safely falls back for newer server event kinds instead of crashing application startup
 - Managers land on a compact role-filtered category home instead of every office tool in one continuous page
 - Manager Overview, Schedule, Customers, Team, Reports, and Recovery categories render only when relevant to the active persona
@@ -2138,7 +2745,7 @@ Current state:
 - Manager completion review opens the exact selected Job directly in its Report
   workflow across desktop and mobile rather than leaving the manager tool active.
 - The secure customer completion-report link presents responsive, immutable
-  delivered proof using the public Grover hierarchy without rendering internal
+  delivered proof using the public application hierarchy without rendering internal
   billing or operating identifiers, and can retry transient report outages.
 - The secure proposal link presents customer-safe scope and pricing, requires
   explicit decision confirmation, renders recorded outcomes, and does not
@@ -2422,7 +3029,9 @@ Current state:
 - API readiness checks pause while the mobile tab is hidden and refresh immediately when it becomes visible
 - API downtime feedback includes a touch-safe immediate readiness retry action
 - Production shell updates are announced and applied only after a user-controlled reload
-- Android users receive the native install prompt while iPhone users receive Safari home-screen guidance
+- Supported browsers receive a direct install action, while iPhone users receive
+  explicit Safari Add to Home Screen guidance and can confirm the app was saved;
+  either path offers a persistent seven-day Remind me later choice
 - A public mobile diagnostics page checks connectivity, API readiness, secure context, shell control, and installed display mode
 - Mobile diagnostics react to network and shell-control changes and copy a token-safe support summary
 - Supported phones can send the sanitized diagnostics summary through the native share sheet
@@ -2638,7 +3247,7 @@ Planned boundaries:
   Yelp's business guidance prohibits review solicitation.
 - Start with outbound links. Do not automatically cross-post owner text, scrape
   reviews, import ratings, claim that a review was published, or display third-
-  party review content inside Grover without a separately approved API,
+  party review content inside the application without a separately approved API,
   attribution, consent, moderation, deletion, and platform-policy contract.
 - Require verified provider ownership of each destination, an allowlisted host
   and safe redirect contract, link-health recovery, accessibility, minimized
@@ -2663,7 +3272,7 @@ The `features/` folder now defines four major user tracks. Treat these as produc
 
 | Feature file | Primary audience | Current plan coverage | Planning decision |
 | --- | --- | --- | --- |
-| `features/yard-crew.md` | Crew leads, crew members, dispatchers, account managers, billing admins, customers | Strong near-term coverage through crew route, proof-of-completion, amendments, bids, offline sync, quality review, labor/material, and billing-readiness phases | Keep as the first field workflow track because it matches the implemented MVP foundation |
+| `features/yard-crew.md` | Crew leads, crew members, dispatchers, account managers, billing admins, customers | Strong near-term coverage through crew route, proof-of-completion, amendments, bids, offline sync, quality review, labor/material, and billing-readiness phases | Keep as the first field workflow track because it matches the implemented mature product foundation |
 | `features/yard-care-company.md` | Multi-crew yard-care companies: operations managers, dispatchers, branch managers, fleet/equipment, account managers, finance users | Partial coverage through manager command center, route capacity, service catalog, contracts, billing readiness, analytics, and scale phases | Expand Phase 3 and Phase 5 around branch, territory, equipment, inventory, and cross-crew operations |
 | `features/self-service.md` | Homeowners maintaining their own yards | Limited coverage in the current customer portal plan | Add a separate homeowner self-service phase because adaptive yard planning is a different product mode from provider-managed service delivery |
 | `features/property-managment.md` | Property management organizations coordinating multiple independent yard-care vendors | Partial coverage through portfolios, vendor-safe links, evidence, bids, and invoices, but not enough vendor governance | Add a separate multi-vendor property management phase after core tenant, evidence, service catalog, billing, and portal foundations exist |

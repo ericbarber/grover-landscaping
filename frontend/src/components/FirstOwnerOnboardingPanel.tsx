@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { APP_DISPLAY_NAME } from '../appIdentity';
+import { useEffect, useRef, useState } from 'react';
 import { isApiErrorCode } from '../api/apiError';
+import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import {
   bootstrapOrganization,
   createOrganizationCrew,
@@ -12,13 +13,20 @@ import {
   type FirstOwnerSetupProgress,
   type CrewRecord,
 } from '../api/client';
+import {
+  firstOwnerNextMilestone,
+  firstOwnerProgressMilestones,
+  newlyCompletedCompanyFirstValueStages,
+  resolveCompanySetupMembership,
+  type CompanyFirstValueTarget,
+} from '../domain/companyFirstValue';
 import { OwnerCrewAdministrationPanel } from './OwnerCrewAdministrationPanel';
 import { ProviderIdentityReadinessPanel } from './ProviderIdentityReadinessPanel';
 
 type Props = {
   providerEntryMode?: 'owner-operator' | 'company-owner' | null;
   onOrganizationReady?: (organizationName: string, organizationId: string) => void;
-  onOpenSetupStep?: (target: FirstOwnerSetupTarget) => void;
+  onOpenSetupStep?: (target: CompanyFirstValueTarget) => void;
   refreshSignal?: number;
   hierarchyRefreshSignal?: number;
   crewSelectionRequest?: string;
@@ -37,51 +45,6 @@ type Props = {
   onReturnFromCrewInspection?: () => void;
   onFindLatestCrewHierarchyMove?: (crew: CrewRecord) => void;
 };
-
-export type FirstOwnerSetupTarget =
-  | 'operational-profile'
-  | 'service-setup'
-  | 'day-plan'
-  | 'team-invitations';
-
-export function firstOwnerSetupSteps(access: PrincipalAccessSummary): string[] {
-  if (access.memberships.length === 0) return ['Create your organization'];
-  return [
-    'Confirm organization and owner access',
-    'Complete the first property profile',
-    'Configure the first crew',
-    'Publish the first day plan',
-    'Invite additional team members',
-  ];
-}
-
-export function firstOwnerSetupTarget(step: string): FirstOwnerSetupTarget | null {
-  switch (step) {
-    case 'Complete the first property profile':
-      return 'operational-profile';
-    case 'Configure the first crew':
-      return 'service-setup';
-    case 'Publish the first day plan':
-      return 'day-plan';
-    case 'Invite additional team members':
-      return 'team-invitations';
-    default:
-      return null;
-  }
-}
-
-export function firstOwnerProgressMilestones(progress: FirstOwnerSetupProgress) {
-  return [
-    { label: 'Complete organization profile', complete: progress.organizationProfileComplete, target: null },
-    { label: 'Configure the first crew', complete: progress.crewConfigured, target: null },
-    { label: 'Publish the first route', complete: progress.firstRoutePublished, target: 'day-plan' as const },
-    { label: 'Invite a team member', complete: progress.teamInvitationCreated, target: 'team-invitations' as const },
-  ];
-}
-
-export function firstOwnerNextMilestone(progress: FirstOwnerSetupProgress) {
-  return firstOwnerProgressMilestones(progress).find((milestone) => !milestone.complete) ?? null;
-}
 
 export function FirstOwnerOnboardingPanel({
   providerEntryMode = null,
@@ -125,14 +88,34 @@ export function FirstOwnerOnboardingPanel({
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [setupReadsUnavailable, setSetupReadsUnavailable] = useState(false);
+  const [membershipConflict, setMembershipConflict] = useState(false);
+  const lastViewedStage = useRef<string | null>(null);
+  const resumeTracked = useRef(false);
+  const previousProgress = useRef<FirstOwnerSetupProgress | null>(null);
+
+  function trackSetupEvent(
+    eventName: 'setup_stage_viewed' | 'setup_stage_started' | 'setup_stage_completed' | 'setup_stage_failed' | 'setup_resumed',
+    stage: string,
+  ) {
+    trackMarketingEvent(eventName, 'landscaping_company', stage);
+  }
 
   async function refresh() {
     setIsLoading(true);
     setSetupReadsUnavailable(false);
+    setMembershipConflict(false);
     try {
       const nextAccess = await fetchPrincipalAccessSummary();
       setAccess(nextAccess);
-      const nextMembership = nextAccess.memberships[0];
+      const membershipResolution = resolveCompanySetupMembership(nextAccess);
+      const nextMembership = membershipResolution.membership;
+      setMembershipConflict(membershipResolution.state === 'conflict');
+      if (membershipResolution.state === 'conflict') {
+        setSetupProgress(null);
+        previousProgress.current = null;
+        setMessage('This account belongs to more than one company. Choose the company you want to manage before continuing.');
+        return;
+      }
       if (nextMembership) {
         const [profile, progress] = await Promise.all([
           fetchOrganizationProfile(nextMembership.organizationId),
@@ -149,8 +132,34 @@ export function FirstOwnerOnboardingPanel({
         setSupportedServiceCategories(profile.supportedServiceCategories);
         setSupportedLanguages(profile.supportedLanguages);
         setSetupProgress(progress);
+        for (const stage of newlyCompletedCompanyFirstValueStages(
+          previousProgress.current,
+          progress,
+        )) {
+          trackSetupEvent('setup_stage_completed', stage);
+        }
+        previousProgress.current = progress;
+        const next = firstOwnerNextMilestone(progress);
+        if (next && lastViewedStage.current !== next.id) {
+          lastViewedStage.current = next.id;
+          trackSetupEvent('setup_stage_viewed', next.id);
+        }
+        if (
+          !resumeTracked.current
+          && progress.persisted
+          && progress.completedSteps > 0
+          && progress.completedSteps < progress.totalSteps
+        ) {
+          resumeTracked.current = true;
+          trackSetupEvent('setup_resumed', next?.id ?? 'first_value');
+        }
       } else {
         setSetupProgress(null);
+        previousProgress.current = null;
+        if (lastViewedStage.current !== 'organization') {
+          lastViewedStage.current = 'organization';
+          trackSetupEvent('setup_stage_viewed', 'organization');
+        }
       }
       setMessage(null);
     } catch (error) {
@@ -162,7 +171,7 @@ export function FirstOwnerOnboardingPanel({
       ) {
         setSetupProgress(null);
         setSetupReadsUnavailable(true);
-        setMessage('Persisted organization access and setup could not be loaded. Retry after API readiness recovers.');
+        setMessage('We couldn’t load your company access or setup progress. Wait a moment, then try again.');
       } else {
         setMessage('Your access summary could not be loaded. Check authentication and try again.');
       }
@@ -178,17 +187,27 @@ export function FirstOwnerOnboardingPanel({
   async function createOrganization() {
     const displayName = organizationName.trim();
     if (displayName.length < 2) {
-      setMessage('Enter an organization name with at least two characters.');
+      setMessage('Enter a company name with at least two characters.');
       return;
     }
     setIsLoading(true);
+    trackSetupEvent('setup_stage_started', 'organization');
     try {
       const result = await bootstrapOrganization(displayName, organizationType);
-      setMessage(`${result.displayName} is ready. You are the organization owner.`);
+      trackSetupEvent('setup_stage_completed', 'organization');
+      setMessage(`${result.displayName} is ready. You have owner access.`);
       onOrganizationReady?.(result.displayName, result.organizationId);
       await refresh();
-    } catch {
-      setMessage('The organization could not be created. Confirm owner access and database availability.');
+    } catch (error) {
+      trackSetupEvent('setup_stage_failed', 'organization');
+      if (isApiErrorCode(error, 'organization_bootstrap_not_available')) {
+        setMessage('This account already belongs to a company. Refresh access or use the invitation link instead of creating another company.');
+        await refresh();
+      } else if (isApiErrorCode(error, 'organization_bootstrap_unavailable')) {
+        setMessage('Company setup is temporarily unavailable. Nothing was created.');
+      } else {
+        setMessage('We couldn’t create the company. Confirm this account has owner access and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -197,7 +216,7 @@ export function FirstOwnerOnboardingPanel({
   async function saveOrganizationProfile() {
     const displayName = organizationName.trim();
     if (displayName.length < 2 || !membership) {
-      setMessage('Enter an organization name with at least two characters.');
+      setMessage('Enter a company name with at least two characters.');
       return;
     }
     if (
@@ -209,6 +228,7 @@ export function FirstOwnerOnboardingPanel({
       return;
     }
     setIsLoading(true);
+    trackSetupEvent('setup_stage_started', 'organization_profile');
     try {
       const profile = await updateOrganizationProfile(
         membership.organizationId,
@@ -228,10 +248,11 @@ export function FirstOwnerOnboardingPanel({
       onOrganizationReady?.(profile.displayName, profile.id);
       await refresh();
     } catch (error) {
+      trackSetupEvent('setup_stage_failed', 'organization_profile');
       if (isApiErrorCode(error, 'organization_profile_update_unavailable')) {
-        setMessage('Persisted profile storage is unavailable. No organization profile changes were saved.');
+        setMessage('We couldn’t save the company profile. No changes were made.');
       } else {
-        setMessage('The organization profile could not be saved. Confirm owner access and try again.');
+        setMessage('We couldn’t save the company profile. Confirm owner access and try again.');
       }
     } finally {
       setIsLoading(false);
@@ -245,6 +266,7 @@ export function FirstOwnerOnboardingPanel({
       return;
     }
     setIsCreatingCrew(true);
+    trackSetupEvent('setup_stage_started', 'first_crew');
     try {
       const crew = await createOrganizationCrew(membership.organizationId, name);
       onCrewCreated?.(crew);
@@ -252,9 +274,10 @@ export function FirstOwnerOnboardingPanel({
       setMessage(`${crew.name} created${crew.persisted ? '' : ' in local demo mode'}.`);
       await refresh();
     } catch (error) {
+      trackSetupEvent('setup_stage_failed', 'first_crew');
       setMessage(
         isApiErrorCode(error, 'crew_creation_unavailable')
-          ? 'Crew storage is temporarily unavailable. No duplicate crew is being reported.'
+          ? 'Crew setup is temporarily unavailable. No new crew was created.'
           : 'The crew could not be created. Use a unique name and try again.',
       );
     } finally {
@@ -262,7 +285,8 @@ export function FirstOwnerOnboardingPanel({
     }
   }
 
-  const membership = access?.memberships[0];
+  const membershipResolution = access ? resolveCompanySetupMembership(access) : null;
+  const membership = membershipResolution?.membership ?? undefined;
   const ownerClaim = access?.claimRoles.includes('OrganizationOwner')
     || access?.claimRoles.includes('SupportAdmin');
   const nextMilestone = setupProgress ? firstOwnerNextMilestone(setupProgress) : null;
@@ -277,10 +301,10 @@ export function FirstOwnerOnboardingPanel({
           </h2>
           <p className="mt-1 text-sm leading-6 text-emerald-900">
             {providerEntryMode === 'owner-operator'
-              ? `${APP_DISPLAY_NAME} still creates a provider organization of one. Combined owner and field responsibilities do not bypass organization-scoped access.`
-              : 'Create or continue one landscaping provider organization, then add crews and team roles through explicit invitations.'}
+              ? `${APP_DISPLAY_NAME} sets up one company account for you, even if you also do field work. Every crew, customer, and property remains protected inside that company.`
+              : 'Create or continue one landscaping company, then invite each teammate with the access their role needs.'}
           </p>
-          <p className="mt-2 text-xs font-bold text-emerald-800">This entry choice is guidance only. Signed-in claims and active memberships remain authoritative.</p>
+          <p className="mt-2 text-xs font-bold text-emerald-800">We’ll confirm your signed-in account and active company access before allowing changes.</p>
         </div>
       ) : null}
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
@@ -288,17 +312,17 @@ export function FirstOwnerOnboardingPanel({
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">First-user setup</p>
           <h2 className="mt-1 text-xl font-bold text-slate-950">
             {setupReadsUnavailable
-              ? 'Organization access unavailable'
+              ? 'Company setup unavailable'
               : membership
                 ? `Welcome, ${membership.organizationName}`
-                : 'Create your organization'}
+                : 'Create your company'}
           </h2>
           <p className="mt-1 text-sm text-slate-600">
             {setupReadsUnavailable
-              ? 'Persisted access must recover before setup state or owner actions can be shown.'
+              ? 'We couldn’t load your company access. Setup actions stay hidden until it can be checked again.'
               : membership
-              ? 'Your owner membership is active. Use this checklist to prepare the first live route.'
-              : 'The first signed-in organization owner creates the tenant boundary for all future crews, customers, and properties.'}
+              ? 'Your owner access is active. Follow these steps to prepare your first route and customer-ready service report.'
+              : 'Create your company account first. Crews, customers, and properties will be kept within it.'}
           </p>
         </div>
         <button
@@ -318,15 +342,20 @@ export function FirstOwnerOnboardingPanel({
       ) : null}
       {setupReadsUnavailable ? (
         <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
-          Persisted organization profile and setup progress are unavailable; missing or completed setup is not being assumed.
+          We couldn’t load your saved company profile or setup progress. To protect your work, {APP_DISPLAY_NAME} won’t guess which steps are complete.
+        </p>
+      ) : null}
+      {membershipConflict ? (
+        <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+          This account belongs to more than one company. Choose a company before continuing so the wrong one is not updated.
         </p>
       ) : null}
 
-      {!isLoading && access && !membership ? (
+      {!isLoading && access && !membership && !membershipConflict ? (
         ownerClaim ? (
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="text-sm font-semibold text-slate-700 sm:col-span-2">
-              Organization name
+              Company name
               <input
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
                 onChange={(event) => setOrganizationName(event.target.value)}
@@ -335,7 +364,7 @@ export function FirstOwnerOnboardingPanel({
               />
             </label>
             <label className="text-sm font-semibold text-slate-700 sm:col-span-2">
-              Organization type
+              Business type
               <select
                 className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
                 onChange={(event) => setOrganizationType(event.target.value as typeof organizationType)}
@@ -351,12 +380,12 @@ export function FirstOwnerOnboardingPanel({
               onClick={() => void createOrganization()}
               type="button"
             >
-              Create organization and owner membership
+              Create company and continue
             </button>
           </div>
         ) : (
           <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
-            Your identity is authenticated but does not have the OrganizationOwner claim required for first-user setup.
+            This account is signed in, but it does not have owner access to create a company. Ask an administrator for an owner invitation.
           </p>
         )
       ) : null}
@@ -365,10 +394,10 @@ export function FirstOwnerOnboardingPanel({
         <>
           <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
             <p className="rounded-lg bg-emerald-50 p-3 text-emerald-800">
-              Role: {membership.role.replace(/([A-Z])/g, ' $1').trim()}
+              Your role: {membership.role === 'OrganizationOwner' ? 'Company owner' : membership.role.replace(/([A-Z])/g, ' $1').trim()}
             </p>
             <p className="rounded-lg bg-slate-50 p-3 text-slate-700">
-              Access scope: {membership.scopeType}
+              Access: {membership.scopeType === 'organization' ? 'Entire company' : membership.scopeType}
             </p>
           </div>
           <ProviderIdentityReadinessPanel
@@ -387,8 +416,8 @@ export function FirstOwnerOnboardingPanel({
           <div className="mt-4 rounded-xl border border-slate-200 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h3 className="font-bold text-slate-950">Organization profile</h3>
-                <p className="text-xs text-slate-500">Owner-managed company identity</p>
+                <h3 className="font-bold text-slate-950">Company profile</h3>
+                <p className="text-xs text-slate-500">Details customers and crews will rely on</p>
               </div>
               <button
                 className="min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
@@ -401,7 +430,7 @@ export function FirstOwnerOnboardingPanel({
             {isEditingProfile ? (
               <div className="mt-3 grid gap-3">
                 <label className="text-sm font-semibold text-slate-700">
-                  Organization name
+                  Company name
                   <input
                     className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
                     onChange={(event) => setOrganizationName(event.target.value)}
@@ -445,7 +474,7 @@ export function FirstOwnerOnboardingPanel({
                   />
                 </label>
                 <label className="text-sm font-semibold text-slate-700">
-                  Organization type
+                  Business type
                   <select
                     className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
                     onChange={(event) => setOrganizationType(event.target.value as typeof organizationType)}
@@ -502,7 +531,7 @@ export function FirstOwnerOnboardingPanel({
                       ['desert_landscape_care', 'Desert landscape care'],
                     ].map(([value, label]) => <label className="flex min-h-11 items-center gap-3 rounded-lg bg-slate-50 px-3 text-sm font-semibold" key={value}><input checked={supportedServiceCategories.includes(value)} onChange={(event) => setSupportedServiceCategories((current) => event.target.checked ? [...current, value] : current.filter((item) => item !== value))} type="checkbox" />{label}</label>)}
                   </div>
-                  <p className="mt-2 text-xs leading-5 text-slate-500">Provider-supplied profile facts only. They do not establish eligibility, ranking, or credential status.</p>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">These are details you provide about your company. They are not {APP_DISPLAY_NAME} verification, ranking, or credential approval.</p>
                 </fieldset>
                 <fieldset className="rounded-xl border border-slate-200 p-3 sm:col-span-2">
                   <legend className="px-1 text-sm font-bold text-slate-800">Customer communication languages</legend>
@@ -514,7 +543,7 @@ export function FirstOwnerOnboardingPanel({
                   onClick={() => void saveOrganizationProfile()}
                   type="button"
                 >
-                  {isLoading ? 'Saving…' : 'Save organization profile'}
+                  {isLoading ? 'Saving…' : 'Save company profile'}
                 </button>
               </div>
             ) : null}
@@ -523,9 +552,9 @@ export function FirstOwnerOnboardingPanel({
             <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-end justify-between gap-3">
                 <div>
-                  <h3 className="font-bold text-slate-950">Setup progress</h3>
+                  <h3 className="font-bold text-slate-950">Launch progress</h3>
                   <p className="mt-1 text-xs text-slate-600">
-                    {setupProgress.completedSteps} of {setupProgress.totalSteps} launch steps complete
+                    {setupProgress.completedSteps} of {setupProgress.totalSteps} setup steps complete
                   </p>
                 </div>
                 <span className="text-lg font-bold text-slate-950">
@@ -547,15 +576,20 @@ export function FirstOwnerOnboardingPanel({
               </div>
               <ul className="mt-3 space-y-2">
                 {firstOwnerProgressMilestones(setupProgress).map((milestone) => (
-                  <li className="flex min-h-11 items-center gap-3 rounded-lg bg-white px-3 py-2 text-sm" key={milestone.label}>
+                  <li className="flex min-h-11 items-start gap-3 rounded-lg bg-white px-3 py-3 text-sm" key={milestone.id}>
                     <span aria-hidden="true" className={milestone.complete ? 'text-emerald-700' : 'text-slate-400'}>
                       {milestone.complete ? '✓' : '○'}
                     </span>
-                    <span className="flex-1 font-medium text-slate-800">{milestone.label}</span>
+                    <span className="flex-1">
+                      <span className="block font-semibold text-slate-800">{milestone.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-slate-500">
+                        {milestone.complete ? milestone.unlockedOutcome : milestone.detail}
+                      </span>
+                    </span>
                     {!milestone.complete && milestone.target ? (
                       <button
                         className="min-h-11 rounded-lg px-3 font-semibold text-emerald-700 hover:bg-emerald-50"
-                        onClick={() => onOpenSetupStep?.(milestone.target)}
+                        onClick={() => onOpenSetupStep?.(milestone.target!)}
                         type="button"
                       >
                         Open
@@ -565,30 +599,39 @@ export function FirstOwnerOnboardingPanel({
                 ))}
               </ul>
               {!setupProgress.persisted ? (
-                <p className="mt-3 text-xs font-medium text-amber-700">Demo progress is local until database persistence is available.</p>
+                <p className="mt-3 text-xs font-medium text-amber-700">This demo saves progress on this device only.</p>
               ) : null}
               {nextMilestone ? (
-                <button
-                  className="mt-4 min-h-11 w-full rounded-lg bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
-                  onClick={() => {
-                    if (nextMilestone.target) {
-                      onOpenSetupStep?.(nextMilestone.target);
-                    } else if (nextMilestone.label === 'Configure the first crew') {
-                      document.getElementById('first-owner-crew-setup')?.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center',
-                      });
-                    } else {
-                      setIsEditingProfile(true);
-                    }
-                  }}
-                  type="button"
-                >
-                  Next: {nextMilestone.label}
-                </button>
+                <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3">
+                  <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Next step</p>
+                  <p className="mt-1 font-semibold text-slate-950">{nextMilestone.label}</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">{nextMilestone.detail}</p>
+                  <p className="mt-2 text-xs font-semibold text-emerald-800">This unlocks: {nextMilestone.unlockedOutcome}</p>
+                  <button
+                    className="mt-3 min-h-11 w-full rounded-lg bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
+                    onClick={() => {
+                      if (nextMilestone.target) {
+                        trackSetupEvent('setup_stage_started', nextMilestone.id);
+                        onOpenSetupStep?.(nextMilestone.target);
+                      } else if (nextMilestone.id === 'first_crew') {
+                        trackSetupEvent('setup_stage_started', nextMilestone.id);
+                        document.getElementById('first-owner-crew-setup')?.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'center',
+                        });
+                      } else {
+                        trackSetupEvent('setup_stage_started', nextMilestone.id);
+                        setIsEditingProfile(true);
+                      }
+                    }}
+                    type="button"
+                  >
+                    Continue: {nextMilestone.label}
+                  </button>
+                </div>
               ) : (
                 <p className="mt-4 rounded-lg bg-emerald-100 px-3 py-3 text-sm font-semibold text-emerald-900">
-                  Launch setup is complete. Refresh after future changes to keep this status current.
+                  Your first service cycle is complete. The work was finished, reviewed, and delivered to the customer.
                 </p>
               )}
             </div>
@@ -596,7 +639,7 @@ export function FirstOwnerOnboardingPanel({
           {setupProgress && !setupProgress.crewConfigured ? (
             <div className="mt-4 scroll-mt-20 rounded-xl border border-slate-200 p-4" id="first-owner-crew-setup">
               <h3 className="font-bold text-slate-950">Create the first crew</h3>
-              <p className="mt-1 text-xs text-slate-600">Crews stay inside this organization and become available for properties and day plans.</p>
+              <p className="mt-1 text-xs text-slate-600">Crews belong to this company and can be assigned to properties and routes.</p>
               <label className="mt-3 block text-sm font-semibold text-slate-700">
                 Crew name
                 <input
@@ -637,29 +680,14 @@ export function FirstOwnerOnboardingPanel({
               selectionSignal={crewSelectionSignal}
             />
           ) : null}
-          <ol className="mt-4 space-y-2">
-            {firstOwnerSetupSteps(access).map((step, index) => {
-              const target = firstOwnerSetupTarget(step);
-              return (
-              <li className="flex items-center gap-3 rounded-lg border border-slate-200 p-3 text-sm text-slate-700" key={step}>
-                <span className="font-bold text-slate-950">{index + 1}</span>
-                <span className="flex-1">{step}</span>
-                {target ? (
-                  <button
-                    aria-label={`Open ${step.toLowerCase()}`}
-                    className="min-h-11 rounded-lg px-3 font-semibold text-emerald-700 hover:bg-emerald-50"
-                    onClick={() => onOpenSetupStep?.(target)}
-                    type="button"
-                  >
-                    Open <span aria-hidden="true">→</span>
-                  </button>
-                ) : (
-                  <span className="font-semibold text-emerald-700">Ready</span>
-                )}
-              </li>
-              );
-            })}
-          </ol>
+          {setupProgress && !setupProgress.teamInvitationCreated ? (
+            <div className="mt-4 rounded-xl border border-slate-200 p-4">
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Optional team setup</p>
+              <h3 className="mt-1 font-bold text-slate-950">Invite an additional team member</h3>
+              <p className="mt-1 text-xs leading-5 text-slate-600">Owner-operators can finish setup without inviting anyone. Growing teams can invite each person with the access their role needs.</p>
+              <button className="mt-3 min-h-11 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-emerald-800" onClick={() => onOpenSetupStep?.('team-invitations')} type="button">Open team invitations</button>
+            </div>
+          ) : null}
         </>
       ) : null}
     </section>

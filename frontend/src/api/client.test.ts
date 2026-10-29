@@ -217,11 +217,11 @@ describe('core API client mapping', () => {
   it('maps owner-managed organization profiles', () => {
     expect(toOrganizationProfile({
       id: 'org_1',
-      display_name: 'Grover Property Services',
+      display_name: 'Sonoran Property Services',
       organization_type: 'property_management_company',
-      contact_email: 'office@grover.example',
+      contact_email: 'office@sonoran.example',
       contact_phone: '(602) 555-0142',
-      website_url: 'https://grover.example',
+      website_url: 'https://sonoran.example',
       time_zone: 'America/Phoenix',
       service_area_label: 'Phoenix metro',
       default_daily_stop_capacity: 12,
@@ -231,11 +231,11 @@ describe('core API client mapping', () => {
       persisted: true,
     })).toEqual({
       id: 'org_1',
-      displayName: 'Grover Property Services',
+      displayName: 'Sonoran Property Services',
       organizationType: 'property_management_company',
-      contactEmail: 'office@grover.example',
+      contactEmail: 'office@sonoran.example',
       contactPhone: '(602) 555-0142',
-      websiteUrl: 'https://grover.example',
+      websiteUrl: 'https://sonoran.example',
       timeZone: 'America/Phoenix',
       serviceAreaLabel: 'Phoenix metro',
       defaultDailyStopCapacity: 12,
@@ -249,7 +249,7 @@ describe('core API client mapping', () => {
   it('defaults legacy organization profiles to empty operating facts', () => {
     expect(toOrganizationProfile({
       id: 'org_1',
-      display_name: 'Grover Property Services',
+      display_name: 'Sonoran Property Services',
       organization_type: 'property_management_company',
       contact_email: null,
       contact_phone: null,
@@ -284,7 +284,7 @@ describe('core API client mapping', () => {
     expect(organizationTeamActivityPath('org/demo', {
       eventKind: 'role_changed',
       moveScope: 'cross_branch',
-      actor: 'Jordan Grover',
+      actor: 'Jordan Rivera',
       target: 'Alex Rivera',
       source: 'North Branch',
       destination: 'South Branch',
@@ -292,12 +292,12 @@ describe('core API client mapping', () => {
       before: '2026-07-19T12:00:00Z',
       limit: 25,
     })).toBe(
-      '/organizations/org%2Fdemo/team-activity?event_kind=role_changed&move_scope=cross_branch&actor=Jordan+Grover&target=Alex+Rivera&source=North+Branch&destination=South+Branch&audit_id=audit_1&before=2026-07-19T12%3A00%3A00Z&limit=25',
+      '/organizations/org%2Fdemo/team-activity?event_kind=role_changed&move_scope=cross_branch&actor=Jordan+Rivera&target=Alex+Rivera&source=North+Branch&destination=South+Branch&audit_id=audit_1&before=2026-07-19T12%3A00%3A00Z&limit=25',
     );
     expect(toTeamAdministrationActivity({
       id: 'audit_1',
       actor_user_id: 'owner_1',
-      actor_label: 'Jordan Grover',
+      actor_label: 'Jordan Rivera',
       organization_id: 'org_1',
       event_kind: 'membership_suspended',
       target_id: 'membership_1',
@@ -313,7 +313,7 @@ describe('core API client mapping', () => {
     })).toEqual({
       id: 'audit_1',
       actorUserId: 'owner_1',
-      actorLabel: 'Jordan Grover',
+      actorLabel: 'Jordan Rivera',
       organizationId: 'org_1',
       eventKind: 'membership_suspended',
       targetId: 'membership_1',
@@ -445,7 +445,7 @@ describe('core API client mapping', () => {
       memberships: [{
         id: 'membership_1',
         organization_id: 'org_1',
-        organization_name: 'Grover Landscaping',
+        organization_name: 'Desert Bloom Landscaping',
         organization_type: 'yard_care_company',
         user_id: 'cognito-sub-1',
         role: 'OrganizationOwner',
@@ -474,7 +474,7 @@ describe('core API client mapping', () => {
       },
       memberships: [{
         organizationId: 'org_1',
-        organizationName: 'Grover Landscaping',
+        organizationName: 'Desert Bloom Landscaping',
         role: 'OrganizationOwner',
       }],
     });

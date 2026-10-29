@@ -7,7 +7,7 @@ membership for an authenticated Cognito identity.
 
 ```json
 {
-  "display_name": "Grover Landscaping",
+  "display_name": "Desert Bloom Landscaping",
   "organization_type": "yard_care_company"
 }
 ```

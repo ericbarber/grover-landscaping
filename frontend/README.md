@@ -1,4 +1,4 @@
-# Grover Frontend
+# Application Frontend
 
 The frontend is a responsive React 18 and TypeScript application built with
 Vite and Tailwind CSS. It contains the public marketing site, authenticated
@@ -115,7 +115,8 @@ docker compose up --build
 ```
 
 Open <http://localhost:5173>. In `/app`, use the `Review as` selector to switch
-among the seven local personas without AWS. Each tab keeps its own reviewer.
+among the seven base role personas or the two isolated study owners without
+AWS. Each tab keeps its own reviewer.
 See [`../docs/local-development-without-cloud.md`](../docs/local-development-without-cloud.md).
 
 Host-only frontend fallback is also supported:

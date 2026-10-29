@@ -9,10 +9,19 @@ const personaByPath: Record<string, MarketingPersonaId> = {
 
 export function marketingPersonaFromPath(pathname: string): MarketingPersonaId {
   const normalized = pathname.replace(/\/+$/, '') || '/';
-  return personaByPath[normalized] ?? 'company';
+  return personaByPath[normalized] ?? 'owner';
 }
 
 export function marketingPathForPersona(persona: MarketingPersonaId): string {
   return Object.entries(personaByPath)
     .find(([, candidate]) => candidate === persona)?.[0] ?? '/';
+}
+
+export function marketingCanonicalPath(
+  currentPathname: string,
+  persona: MarketingPersonaId,
+): string {
+  const normalized = currentPathname.replace(/\/+$/, '') || '/';
+  if (normalized === '/' && persona === 'owner') return '/';
+  return marketingPathForPersona(persona);
 }

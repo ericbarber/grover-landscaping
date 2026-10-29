@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
-import { APP_DISPLAY_NAME, appPageTitle } from '../appIdentity';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 import type { MarketingPersona } from '../api/marketingLeadsClient';
 import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
 import {
-  marketingPathForPersona,
+  marketingCanonicalPath,
   type MarketingPersonaId,
 } from '../domain/marketingRoute';
 import {
@@ -11,10 +10,10 @@ import {
   MarketingLeadDialog,
 } from './MarketingLeadDialog';
 import { MarketingProductTour } from './MarketingProductTour';
-import { MarketingOperationsPlanner } from './MarketingOperationsPlanner';
 import { OWNER_ACQUISITION_PATH } from '../domain/ownerAcquisitionRoute';
 import { ProductBrand } from './ProductBrand';
-import { PROVIDER_ENTRY_PATH } from '../domain/providerEntryRoute';
+import { providerEntryHref } from '../domain/providerEntryRoute';
+import { APP_DISPLAY_NAME, appPageTitle } from '../appIdentity';
 
 const marketingPersonas: Array<{
   id: MarketingPersonaId;
@@ -28,16 +27,6 @@ const marketingPersonas: Array<{
     description: string;
   };
   outcomes: Array<{ title: string; description: string }>;
-  preview: {
-    status: string;
-    kicker: string;
-    title: string;
-    description: string;
-    progress: number;
-    progressLabel: string;
-    metaOne: string;
-    metaTwo: string;
-  };
   trust: {
     heading: string;
     items: string[];
@@ -63,9 +52,9 @@ const marketingPersonas: Array<{
   {
     id: 'owner',
     label: 'Yard owner',
-    eyebrow: 'Confidence after every visit',
-    headline: 'See the care behind your yard.',
-    description: 'Know what was planned, what was completed, and what your property may need next—without chasing an update.',
+    eyebrow: 'A private service record for your yard',
+    headline: 'Know what happened—without chasing an update.',
+    description: 'Keep upcoming visits, completed work, photos, and recommendations together while you control what your provider can see.',
     perspective: {
       eyebrow: 'A homeowner-first view',
       title: 'The service story—without the operations clutter.',
@@ -76,16 +65,6 @@ const marketingPersonas: Array<{
       { title: 'See the care', description: 'Before-and-after evidence makes each visit feel tangible.' },
       { title: 'Stay ahead', description: 'Recommendations arrive with the context needed to decide.' },
     ],
-    preview: {
-      status: 'Report ready',
-      kicker: 'Oak Street residence',
-      title: 'Your latest service is ready',
-      description: 'Completed work, photo evidence, and the next recommendation are together in one update.',
-      progress: 100,
-      progressLabel: 'Latest service report complete',
-      metaOne: 'Service complete',
-      metaTwo: '1 recommendation',
-    },
     trust: {
       heading: 'Confidence before and after care',
       items: ['Private yard setup', 'Upcoming care in one place', 'Evidence tied to each visit', 'Recommendations you control'],
@@ -103,8 +82,8 @@ const marketingPersonas: Array<{
     },
     product: {
       eyebrow: 'Your yard, one connected story',
-      title: 'From finding care to understanding every visit.',
-      description: 'A private place to describe the yard, connect a provider, follow service, and keep proof of the work without learning an operations system.',
+      title: 'From connecting your provider to understanding every visit.',
+      description: 'A private place to describe the yard, connect a provider you know, follow service, and keep proof of the work without learning an operations system.',
       capabilities: [
         { title: 'Private yard brief', description: 'Start with your goals and property context.' },
         { title: 'Connection controls', description: 'Choose who can review each detail.' },
@@ -122,86 +101,66 @@ const marketingPersonas: Array<{
     id: 'property-manager',
     label: 'Property manager',
     eyebrow: 'Clarity across every address',
-    headline: 'Keep every property ready.',
-    description: 'Track service quality, open needs, and completion evidence across your portfolio from one focused view.',
+    headline: 'Keep your entire property portfolio in view.',
+    description: 'Review service status and delivered completion evidence across the properties you are authorized to access.',
     perspective: {
-      eyebrow: 'Built for portfolio oversight',
-      title: 'Move from portfolio health to the property that needs you.',
-      description: 'Keep cross-property readiness visible, then open the exact address, exception, evidence, or decision that requires attention.',
+      eyebrow: 'Built for authorized portfolio oversight',
+      title: 'Move from your portfolio to the exact service record.',
+      description: 'Keep accessible properties visible, then open the right address, service summary, or delivered evidence without mixing customer records.',
     },
     outcomes: [
-      { title: 'See the whole portfolio', description: 'Service progress and open needs stay visible across addresses.' },
-      { title: 'Replace status chasing', description: 'Shared progress reduces calls between properties and vendors.' },
-      { title: 'Report with confidence', description: 'Property-ready evidence supports owners and stakeholders.' },
+      { title: 'See your authorized portfolio', description: 'Accessible properties and service status stay visible by address.' },
+      { title: 'Review delivered work', description: 'Customer-safe completion records replace scattered service updates.' },
+      { title: 'Keep property context', description: 'Evidence stays connected to the correct customer and address.' },
     ],
-    preview: {
-      status: '2 need review',
-      kicker: 'Portfolio readiness',
-      title: '14 of 16 properties on track',
-      description: 'The two open needs have owners, due dates, and service evidence ready for review.',
-      progress: 88,
-      progressLabel: 'Fourteen of sixteen properties on track',
-      metaOne: '14 on track',
-      metaTwo: '2 owned needs',
-    },
     trust: {
-      heading: 'Portfolio clarity without the chase',
-      items: ['Cross-property readiness', 'Owned exceptions and due dates', 'Evidence by address', 'Stakeholder-ready updates'],
+      heading: 'Portfolio clarity within approved access',
+      items: ['Scoped property access', 'Service status by property', 'Delivered evidence by address', 'Clear unavailable states'],
     },
     proof: {
-      eyebrow: 'Control across the portfolio',
-      title: 'Every address gets a clear next step.',
-      description: `${APP_DISPLAY_NAME} turns scattered vendor updates into a portfolio view built around readiness, open needs, accountable follow-through, and property-level evidence.`,
+      eyebrow: 'Clarity across the portfolio',
+      title: 'Keep service records connected to the right address.',
+      description: `${APP_DISPLAY_NAME} brings authorized property status and delivered proof into one focused portfolio without exposing provider-private operations.`,
       cards: [
-        { title: 'See portfolio readiness', description: 'Scan which properties are on track and which need review.', label: 'Portfolio view' },
-        { title: 'Own every exception', description: 'Keep open needs connected to an owner and a due date.', label: 'Accountability' },
-        { title: 'Review by property', description: 'Keep service evidence and recommendations tied to the right address.', label: 'Property context' },
-        { title: 'Report with confidence', description: 'Share a clear service story with owners and stakeholders.', label: 'Ready reporting' },
+        { title: 'Respect property access', description: 'See only properties covered by an active authorized grant.', label: 'Authorized scope' },
+        { title: 'Review service status', description: 'Scan customer-safe visit information for each accessible property.', label: 'Service visibility' },
+        { title: 'Review by property', description: 'Keep delivered evidence tied to the correct address.', label: 'Property context' },
+        { title: 'Retain delivered proof', description: 'Return to customer-safe completion history when access remains active.', label: 'Service history' },
       ],
     },
     product: {
-      eyebrow: 'Built for multi-property care',
-      title: 'One operating view for every property you represent.',
-      description: 'Move from portfolio health to the exact service, evidence, or decision that needs attention without rebuilding the story from vendor messages.',
+      eyebrow: 'Built for authorized multi-property care',
+      title: 'One focused view for the properties you can access.',
+      description: 'Move from your authorized portfolio to the exact property status or delivered service evidence without rebuilding the story from messages.',
       capabilities: [
-        { title: 'Portfolio readiness', description: 'Prioritize properties that need attention.' },
-        { title: 'Vendor accountability', description: 'Keep needs, owners, and next actions visible.' },
-        { title: 'Address-level proof', description: 'Review the work in the right property context.' },
-        { title: 'Decision history', description: 'Retain approvals and follow-through over time.' },
+        { title: 'Authorized portfolio', description: 'See properties covered by active customer grants.' },
+        { title: 'Service status', description: 'Review customer-safe visit information by address.' },
+        { title: 'Address-level proof', description: 'Review delivered work in the right property context.' },
+        { title: 'Delivered history', description: 'Return to available completion records over time.' },
       ],
     },
     invitation: {
       eyebrow: 'Bring the portfolio into focus',
-      title: 'Spend less time assembling status—and more time acting on it.',
-      description: 'Tell us about your portfolio and we’ll shape the conversation around the properties, vendors, and reporting you manage.',
+      title: 'Keep authorized property service easier to review.',
+      description: 'Tell us about your portfolio and we’ll shape the conversation around authorized access, service visibility, and delivered proof.',
     },
   },
   {
     id: 'company',
     label: 'Landscaping company',
     eyebrow: 'Operations customers can trust',
-    headline: 'Plan every visit. Care with confidence. Prove the work.',
-    description: 'Connect scheduling, crews, proof, customer communication, and revenue in one calm operating view.',
+    headline: 'Plan the day. Guide the crew. Prove the work.',
+    description: 'Connect daily planning, field progress, customer-ready proof, and follow-through in one calm operating view.',
     perspective: {
       eyebrow: 'One connected operation',
-      title: 'Keep office, field, customer, and revenue work aligned.',
-      description: 'Give each role the right operational view while schedules, service progress, evidence, customer follow-through, and billing stay connected.',
+      title: 'Keep office, field, and customer work aligned.',
+      description: 'Give each role the right operational view while plans, service progress, evidence, and customer follow-through stay connected.',
     },
     outcomes: [
       { title: 'Run a clearer day', description: 'Routes, crews, property context, and exceptions stay connected.' },
       { title: 'Move approvals faster', description: 'Evidence and recommendations give customers a complete story.' },
-      { title: 'Turn work into revenue', description: 'Verified completion keeps approved work moving toward invoice.' },
+      { title: 'Deliver proof faster', description: 'Reviewed completion records move cleanly from the field to the customer.' },
     ],
-    preview: {
-      status: 'On track',
-      kicker: 'Today · North crew',
-      title: '6 of 8 properties complete',
-      description: 'Photos are synced and one completion report is ready for review.',
-      progress: 75,
-      progressLabel: 'Six of eight properties complete',
-      metaOne: 'Field progress visible',
-      metaTwo: '1 review needed',
-    },
     trust: {
       heading: 'One shared view of the work',
       items: ['Routes and workloads aligned', 'Offline-ready field progress', 'Evidence linked to service', 'Traceable operational decisions'],
@@ -209,23 +168,23 @@ const marketingPersonas: Array<{
     proof: {
       eyebrow: 'Operational confidence by design',
       title: 'Run the day without losing the service story.',
-      description: `${APP_DISPLAY_NAME} connects planning, execution, evidence, customer follow-through, and revenue readiness so the office and field can work from the same operational truth.`,
+      description: `${APP_DISPLAY_NAME} connects planning, execution, evidence, and customer follow-through so the office and field can work from the same operational truth.`,
       cards: [
         { title: 'Plan a workable day', description: 'Balance routes, crew assignments, commitments, and workload risk.', label: 'Daily operations' },
         { title: 'Stay aligned in the field', description: 'Give crews property context and resilient progress capture.', label: 'Field execution' },
         { title: 'Review complete evidence', description: 'Connect photos, notes, exceptions, and completion status.', label: 'Quality control' },
-        { title: 'Move work forward', description: 'Carry verified service into customer updates, approvals, and billing.', label: 'Revenue readiness' },
+        { title: 'Close the service loop', description: 'Carry verified service into customer updates and the next approved action.', label: 'Customer follow-through' },
       ],
     },
     product: {
       eyebrow: 'Designed around your operation',
-      title: 'A calmer system from morning plan to completed revenue.',
-      description: 'Give owners, managers, dispatchers, crews, and billing staff the right view while keeping the underlying work connected.',
+      title: 'A calmer system from morning plan to customer-ready proof.',
+      description: 'Give owners, managers, dispatchers, and crews the right view while keeping the underlying service story connected.',
       capabilities: [
         { title: 'Route and workload planning', description: 'Build a day crews can actually deliver.' },
         { title: 'Field-safe execution', description: 'Keep progress moving beyond the signal.' },
         { title: 'Customer-ready proof', description: 'Turn completed work into a clear update.' },
-        { title: 'Revenue handoffs', description: 'Move verified service toward approval and billing.' },
+        { title: 'Accountable follow-through', description: 'Keep decisions, exceptions, and next actions connected.' },
       ],
     },
     invitation: {
@@ -250,16 +209,6 @@ const marketingPersonas: Array<{
       { title: 'Keep working offline', description: 'Progress and evidence wait safely when coverage disappears.' },
       { title: 'Finish with a clean handoff', description: 'Photos, notes, and exceptions reach the office together.' },
     ],
-    preview: {
-      status: 'In progress',
-      kicker: 'Stop 3 of 8',
-      title: 'Oak Street residence',
-      description: 'Four of six tasks are complete. Required property context is available offline.',
-      progress: 67,
-      progressLabel: 'Four of six tasks complete',
-      metaOne: 'Details offline-ready',
-      metaTwo: '2 tasks remain',
-    },
     trust: {
       heading: 'Everything the field needs to move',
       items: ['Route and stop context', 'Clear completion expectations', 'Offline-safe progress', 'One clean office handoff'],
@@ -294,6 +243,41 @@ const marketingPersonas: Array<{
   },
 ];
 
+const marketingPersonaGroups = [
+  {
+    id: 'property-customers',
+    label: 'Property customers',
+    description: 'Own or oversee the property and decide what happens next.',
+    personaIds: ['owner', 'property-manager'],
+    priorityLabel: 'Yard owner first',
+  },
+  {
+    id: 'service-teams',
+    label: 'Service teams',
+    description: 'Plan, complete, and document the care.',
+    personaIds: ['company', 'crew'],
+    priorityLabel: null,
+  },
+] satisfies Array<{
+  id: string;
+  label: string;
+  description: string;
+  personaIds: MarketingPersonaId[];
+  priorityLabel: string | null;
+}>;
+
+const marketingPersonaGroupsForNavigation = marketingPersonaGroups.map((group) => ({
+  ...group,
+  personas: group.personaIds.map((id) => {
+    const persona = marketingPersonas.find((candidate) => candidate.id === id);
+    if (!persona) throw new Error(`Missing marketing persona: ${id}`);
+    return persona;
+  }),
+}));
+
+const marketingPersonasForNavigation = marketingPersonaGroupsForNavigation
+  .flatMap(({ personas }) => personas);
+
 function marketingPersonaFor(id: MarketingPersonaId): MarketingPersona {
   if (id === 'owner') return 'yard_owner';
   if (id === 'property-manager') return 'property_manager';
@@ -309,21 +293,33 @@ function marketingTitleFor(id: MarketingPersonaId): string {
 }
 
 export function PublicLandingPage({
-  initialPersonaId = 'company',
+  initialPersonaId = 'owner',
 }: {
   initialPersonaId?: MarketingPersonaId;
 }) {
   const [activePersonaId, setActivePersonaId] = useState<MarketingPersonaId>(initialPersonaId);
   const [leadDialogPersona, setLeadDialogPersona] = useState<MarketingPersona | null>(null);
+  const entryPersona = marketingPersonas.find((persona) => persona.id === initialPersonaId)
+    ?? marketingPersonas[0];
   const activePersona = marketingPersonas.find((persona) => persona.id === activePersonaId)
     ?? marketingPersonas[0];
+  const entryMarketingPersona = marketingPersonaFor(entryPersona.id);
+  const entryCallToAction = marketingCallToAction(entryMarketingPersona);
   const activeMarketingPersona = marketingPersonaFor(activePersona.id);
   const activeCallToAction = marketingCallToAction(activeMarketingPersona);
+  const providerEntryPath = providerEntryHref(
+    typeof window === 'undefined' ? '' : window.location.search,
+  );
 
   useEffect(() => {
-    const title = marketingTitleFor(activePersona.id);
-    const description = activePersona.description;
-    const canonicalUrl = new URL(marketingPathForPersona(activePersona.id), window.location.origin)
+    const title = marketingTitleFor(entryPersona.id);
+    const description = entryPersona.description;
+    const canonicalUrl = new URL(
+      marketingCanonicalPath(window.location.pathname, entryPersona.id),
+      window.location.origin,
+    )
+      .toString();
+    const shareImageUrl = new URL('/brand/yardfolio-landscape-home-hero.webp', window.location.origin)
       .toString();
     document.title = title;
     setMetadata('description', description);
@@ -331,11 +327,16 @@ export function PublicLandingPage({
     setMetadata('og:description', description, 'property');
     setMetadata('og:type', 'website', 'property');
     setMetadata('og:url', canonicalUrl, 'property');
+    setMetadata('og:image', shareImageUrl, 'property');
+    setMetadata('og:image:width', '1440', 'property');
+    setMetadata('og:image:height', '688', 'property');
+    setMetadata('og:image:alt', 'Landscape care team working in a Southwestern garden at sunrise', 'property');
     setMetadata('twitter:card', 'summary_large_image');
     setMetadata('twitter:title', title);
     setMetadata('twitter:description', description);
+    setMetadata('twitter:image', shareImageUrl);
     setCanonicalUrl(canonicalUrl);
-  }, [activePersona]);
+  }, [entryPersona]);
 
   useEffect(() => {
     trackMarketingEvent('page_view', marketingPersonaFor(initialPersonaId));
@@ -349,17 +350,43 @@ export function PublicLandingPage({
   function selectPersona(personaId: MarketingPersonaId, placement: string) {
     setActivePersonaId(personaId);
     trackMarketingEvent('persona_selected', marketingPersonaFor(personaId), placement);
-    window.history.replaceState(
-      null,
-      '',
-      `${marketingPathForPersona(personaId)}${window.location.search}`,
-    );
+  }
+
+  function movePersonaTab(
+    event: KeyboardEvent<HTMLButtonElement>,
+    currentIndex: number,
+  ) {
+    let nextIndex: number | null = null;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % marketingPersonasForNavigation.length;
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = (currentIndex - 1 + marketingPersonasForNavigation.length)
+        % marketingPersonasForNavigation.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = marketingPersonasForNavigation.length - 1;
+    }
+    if (nextIndex === null) return;
+
+    event.preventDefault();
+    const nextPersona = marketingPersonasForNavigation[nextIndex];
+    selectPersona(nextPersona.id, 'audience_review_tabs_keyboard');
+    const tabs = event.currentTarget.closest('[role="tablist"]')
+      ?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    tabs?.[nextIndex]?.focus();
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-bone text-ink">
+    <>
+      <a
+        className="sr-only fixed left-4 top-4 z-50 rounded-lg bg-white px-4 py-3 font-black text-emerald-900 shadow-xl focus:not-sr-only"
+        href="#main-content"
+      >
+        Skip to main content
+      </a>
       <header className="sticky inset-x-0 top-0 z-30 border-b border-slate-200 bg-paper/95 backdrop-blur-xl">
-        <nav className="mx-auto flex min-h-20 max-w-344 items-center justify-between px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
+        <nav className="mx-auto flex min-h-20 max-w-[86rem] items-center justify-between px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
           <a aria-label={`${APP_DISPLAY_NAME} home`} className="text-emerald-800" href="/">
             <ProductBrand />
           </a>
@@ -368,150 +395,131 @@ export function PublicLandingPage({
             <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#who-its-for">Who it helps</a>
             <a className="min-h-11 content-center underline-offset-4 transition hover:text-emerald-800 hover:underline" href="#proof">Why {APP_DISPLAY_NAME}</a>
           </div>
-          <a className="grover-button-primary px-4 sm:px-5" href="/app">
-            Open {APP_DISPLAY_NAME}
+          <a className="yardfolio-button-primary px-4 sm:px-5" href="/app">
+            Sign in
           </a>
         </nav>
       </header>
 
-      <section className="grid bg-bone lg:h-[calc(100svh-5.0625rem)] lg:min-h-156 lg:grid-cols-[1.02fr_0.98fr]">
-        <div className="flex items-center px-4 py-14 sm:px-8 sm:py-20 lg:min-h-0 lg:px-[max(2rem,calc((100vw-86rem)/2+2rem))] lg:py-2 xl:py-[clamp(1rem,3vh,3rem)]">
-          <div className="w-full max-w-160">
-            <div aria-atomic="true" aria-live="polite" className="grid" data-testid="hero-persona-copy">
-              {marketingPersonas.map((persona) => {
-                const isActive = persona.id === activePersona.id;
+      <main className="min-h-screen overflow-x-hidden bg-bone text-ink" id="main-content">
+      <section className="relative isolate flex min-h-[calc(100svh-5rem)] items-center overflow-hidden bg-forest" data-testid="marketing-hero">
+        <div className="absolute inset-0" data-testid="hero-visual">
+          <img alt="" aria-hidden="true" className="h-full w-full object-cover object-[68%_center]" decoding="async" {...{ fetchpriority: 'high' }} height="688" src="/brand/yardfolio-landscape-home-hero.webp" width="1440" />
+          <span className="absolute inset-0 bg-gradient-to-r from-forest/95 via-forest/80 to-forest/40" />
+          <span className="absolute inset-0 bg-gradient-to-t from-forest/50 via-transparent to-forest/20" />
+        </div>
+        <div className="relative mx-auto w-full max-w-[86rem] px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-12">
+          <div className="max-w-3xl">
+            <p className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.18em] text-emerald-200 before:h-px before:w-7 before:bg-emerald-300">
+              {entryPersona.eyebrow}
+            </p>
+            <h1 className="mt-5 max-w-[15ch] font-display text-[clamp(3rem,6vw,5.25rem)] font-bold leading-[0.94] tracking-[-0.04em] text-white [text-wrap:balance]">
+              {entryPersona.headline}
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-white/90 sm:text-xl sm:leading-9">
+              {entryPersona.description}
+            </p>
 
-                return (
-                  <div
-                    aria-hidden={!isActive}
-                    className={`col-start-1 row-start-1 ${isActive ? 'visible' : 'invisible'}`}
-                    key={persona.id}
-                  >
-                    <p className="grover-eyebrow flex items-center gap-3 before:h-px before:w-7 before:bg-emerald-700">
-                      {persona.eyebrow}
-                    </p>
-                    <h1 className="grover-display mt-6 max-w-[12ch] text-[clamp(3.25rem,6vw,5.8rem)] leading-[0.98] lg:mt-3 lg:max-w-[14ch] lg:text-[clamp(3.5rem,5vw,4.5rem)]">
-                      {persona.headline}
-                    </h1>
-                    <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl lg:mt-3 lg:leading-7">
-                      {persona.description}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-8 lg:mt-3">
-              <p className="text-xs font-extrabold uppercase tracking-widest text-slate-600">Show me {APP_DISPLAY_NAME} as a</p>
-              <div className="mt-3 flex flex-wrap gap-2 lg:mt-2" role="tablist" aria-label="Choose your perspective">
-                {marketingPersonas.map((persona) => (
-                  <button
-                    aria-selected={persona.id === activePersona.id}
-                    className={`min-h-11 rounded-full border px-3.5 py-2 text-xs font-extrabold transition ${persona.id === activePersona.id ? 'border-emerald-800 bg-emerald-800 text-white shadow-grover-sm' : 'border-slate-200 bg-paper text-slate-600 hover:border-emerald-700 hover:text-emerald-800'}`}
-                    key={persona.id}
-                    onClick={() => selectPersona(persona.id, 'hero_audience_tabs')}
-                    role="tab"
-                    type="button"
-                  >
-                    {persona.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:mt-3" aria-label="Primary next steps">
-              {activePersona.id === 'owner' ? (
-                <a className="grover-button-primary" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
-                  Sign up your yard <span className="ml-2" aria-hidden="true">→</span>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Hero next steps">
+              {entryPersona.id === 'owner' ? (
+                <a className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-300 bg-emerald-300 px-5 py-3 text-sm font-extrabold text-forest shadow-yardfolio-sm transition hover:border-emerald-200 hover:bg-emerald-200" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
+                  Create my private yard <span className="ml-2" aria-hidden="true">→</span>
                 </a>
-              ) : activePersona.id === 'company' ? (
-                <a className="grover-button-primary" href={PROVIDER_ENTRY_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}>
-                  Sign up your company <span className="ml-2" aria-hidden="true">→</span>
+              ) : entryPersona.id === 'company' ? (
+                <a className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-300 bg-emerald-300 px-5 py-3 text-sm font-extrabold text-forest shadow-yardfolio-sm transition hover:border-emerald-200 hover:bg-emerald-200" href={providerEntryPath} onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}>
+                  Start company setup <span className="ml-2" aria-hidden="true">→</span>
                 </a>
               ) : (
-                <button className="grover-button-primary" onClick={() => openLeadDialog(activeMarketingPersona, 'hero_conversation')} type="button">
-                  {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
+                <button className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-300 bg-emerald-300 px-5 py-3 text-sm font-extrabold text-forest shadow-yardfolio-sm transition hover:border-emerald-200 hover:bg-emerald-200" onClick={() => openLeadDialog(entryMarketingPersona, 'hero_conversation')} type="button">
+                  {entryCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
                 </button>
               )}
-              <a className="grover-button-secondary" href="#tour">Explore your workflow</a>
-            </div>
-            <div aria-label="Direct signup options" className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-extrabold text-slate-600 lg:mt-0.5">
-              <span className="text-xs uppercase tracking-widest text-slate-500">Ready to start?</span>
-              {activePersona.id !== 'owner' ? (
-                <a className="min-h-11 content-center underline decoration-slate-300 underline-offset-4 hover:text-emerald-800" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
-                  Sign up your yard
-                </a>
-              ) : null}
-              {activePersona.id !== 'company' ? (
-                <a className="min-h-11 content-center underline decoration-slate-300 underline-offset-4 hover:text-emerald-800" href={PROVIDER_ENTRY_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}>
-                  Sign up your company
-                </a>
-              ) : null}
-              {activePersona.id === 'owner' || activePersona.id === 'company' ? (
-                <button className="min-h-11 text-left underline decoration-slate-300 underline-offset-4 hover:text-emerald-800" onClick={() => openLeadDialog(activeMarketingPersona, 'hero_conversation')} type="button">
-                  {activeCallToAction.label}
-                </button>
-              ) : null}
+              <a className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/60 bg-forest/40 px-5 py-3 text-sm font-extrabold text-white shadow-yardfolio-sm backdrop-blur-sm transition hover:border-white hover:bg-white/20" href="#tour" onClick={() => trackMarketingEvent('cta_clicked', entryMarketingPersona, 'hero_product_tour')}>See how it works</a>
             </div>
           </div>
         </div>
-        <div className={`relative overflow-hidden bg-forest lg:min-h-0 lg:rounded-bl-[5rem] ${activePersona.id === 'company' ? 'min-h-248' : 'min-h-124'}`}>
-          <img alt="Landscape care team working in a Southwestern garden at sunrise" className="absolute inset-0 h-full w-full object-cover object-center" src="/brand/grover-landscape-home-hero.webp" />
-          <span className="absolute inset-0 bg-linear-to-t from-forest/35 via-transparent to-transparent" />
-          {activePersona.id === 'company' ? <MarketingOperationsPlanner /> : <article aria-live="polite" className="absolute bottom-5 left-4 right-4 rounded-[1.35rem] border border-white/60 bg-paper/95 p-5 text-ink shadow-grover-lg backdrop-blur-sm sm:bottom-8 sm:left-auto sm:right-8 sm:w-[min(31rem,calc(100%-4rem))] sm:p-7 lg:bottom-14 lg:right-12">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-slate-600">Illustrative product preview</p>
-              <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-[0.65rem] font-black uppercase tracking-wide text-emerald-800">{activePersona.preview.status}</span>
-            </div>
-            <p className="mt-5 text-[0.7rem] font-black uppercase tracking-widest text-emerald-700">{activePersona.preview.kicker}</p>
-            <h2 className="mt-2 text-2xl font-black leading-tight text-ink sm:text-[1.75rem]">{activePersona.preview.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">{activePersona.preview.description}</p>
-            <div aria-label={activePersona.preview.progressLabel} className="mt-5 h-2 overflow-hidden rounded-full bg-emerald-100" role="progressbar" aria-valuemax={100} aria-valuemin={0} aria-valuenow={activePersona.preview.progress}>
-              <span className="block h-full rounded-full bg-emerald-700 transition-[width]" style={{ width: `${activePersona.preview.progress}%` }} />
-            </div>
-            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-bold text-slate-600">
-              <span className="flex items-center gap-2 before:h-2 before:w-2 before:rounded-full before:bg-emerald-700">{activePersona.preview.metaOne}</span>
-              <span className="flex items-center gap-2 before:h-2 before:w-2 before:rounded-full before:bg-[#c99f55]">{activePersona.preview.metaTwo}</span>
-            </div>
-          </article>}
-        </div>
       </section>
 
-      <section aria-labelledby="trust-heading" className="grid gap-5 bg-emerald-800 px-4 py-6 text-white sm:px-6 lg:grid-cols-[minmax(13rem,0.8fr)_minmax(0,3.2fr)] lg:items-center lg:px-[max(2rem,calc((100vw-86rem)/2+2rem))]">
-        <h2 className="text-xs font-black uppercase tracking-[0.14em] text-sand" id="trust-heading">{activePersona.trust.heading}</h2>
-        <ul className="grid gap-3 text-sm font-bold text-emerald-50 sm:grid-cols-2 lg:grid-cols-4">
-          {activePersona.trust.items.map((item) => (
-            <li className="flex items-center gap-2 before:text-sand before:content-['✓']" key={item}>{item}</li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="px-4 py-20 sm:px-6 lg:px-8" id="who-its-for">
+      <section className="bg-paper px-4 py-16 sm:px-6 sm:py-20 lg:px-8" id="who-its-for">
         <div className="mx-auto max-w-7xl">
-          <div className="max-w-3xl">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">{activePersona.perspective.eyebrow}</p>
-            <h2 className="grover-display mt-4 text-4xl leading-tight sm:text-5xl">{activePersona.perspective.title}</h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">{activePersona.perspective.description}</p>
+          <div className="max-w-4xl">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">Property care starts with the owner</p>
+            <h2 className="yardfolio-display mt-4 text-4xl leading-tight sm:text-5xl">Built first for yard owners, connected to everyone who helps.</h2>
+            <p className="mt-4 text-lg leading-8 text-slate-600">Yard owners are our first priority. Their view keeps decisions, visits, proof, and next steps simple; property managers and service teams receive focused views around that same care story.</p>
           </div>
-          <article className="mt-5 grid overflow-hidden rounded-4xl bg-slate-950 text-white shadow-xl lg:grid-cols-[0.9fr_1.1fr]" role="tabpanel">
-            <div className="p-7 sm:p-10">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">{activePersona.eyebrow}</p>
-              <h3 className="mt-4 font-display text-4xl font-bold leading-tight tracking-tight">{activePersona.headline}</h3>
-              <p className="mt-4 text-base leading-7 text-slate-300">{activePersona.description}</p>
-              <button
-                className="mt-7 rounded-full bg-emerald-400 px-5 py-3 font-black text-emerald-950 transition hover:bg-emerald-300"
-                onClick={() => openLeadDialog(activeMarketingPersona, 'persona_panel')}
-                type="button"
+          <div aria-label="Choose your perspective" aria-orientation="horizontal" className="mt-8 grid gap-4 lg:grid-cols-2" role="tablist">
+            {marketingPersonaGroupsForNavigation.map((group) => (
+              <section
+                className={`rounded-2xl border p-4 sm:p-5 ${group.id === 'property-customers' ? 'border-emerald-200 bg-emerald-50/70' : 'border-slate-200 bg-slate-50'}`}
+                key={group.id}
+                role="presentation"
               >
-                {activeCallToAction.label} <span className="ml-1" aria-hidden="true">→</span>
-              </button>
-              {activePersona.id === 'owner' ? (
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-800">{group.label}</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">{group.description}</p>
+                  </div>
+                  {group.priorityLabel ? (
+                    <span className="shrink-0 rounded-full bg-emerald-800 px-3 py-1 text-[0.65rem] font-black uppercase tracking-wide text-white">
+                      {group.priorityLabel}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2" role="presentation">
+                  {group.personas.map((persona) => {
+                    const index = marketingPersonasForNavigation.findIndex(({ id }) => id === persona.id);
+                    return (
+                      <button
+                        aria-controls="persona-review-panel"
+                        aria-selected={persona.id === activePersona.id}
+                        className={`min-h-11 rounded-full border px-3.5 py-2 text-xs font-extrabold transition ${persona.id === activePersona.id ? 'border-emerald-800 bg-emerald-800 text-white shadow-yardfolio-sm' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-700 hover:text-emerald-800'}`}
+                        id={`persona-review-tab-${persona.id}`}
+                        key={persona.id}
+                        onClick={() => selectPersona(persona.id, 'audience_review_tabs')}
+                        onKeyDown={(event) => movePersonaTab(event, index)}
+                        role="tab"
+                        tabIndex={persona.id === activePersona.id ? 0 : -1}
+                        type="button"
+                      >
+                        {persona.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+          <p aria-live="polite" className="sr-only">Showing {APP_DISPLAY_NAME} for {activePersona.label}</p>
+          <article aria-labelledby={`persona-review-tab-${activePersona.id}`} className="mt-8 grid overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-xl lg:grid-cols-[0.9fr_1.1fr]" data-testid="persona-review-panel" id="persona-review-panel" role="tabpanel">
+            <div className="p-7 sm:p-10">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">{activePersona.perspective.eyebrow}</p>
+              <h3 className="mt-4 font-display text-4xl font-bold leading-tight tracking-tight">{activePersona.perspective.title}</h3>
+              <p className="mt-4 text-base leading-7 text-slate-300">{activePersona.perspective.description}</p>
+              {activePersona.id === 'company' ? (
                 <a
-                  className="ml-0 mt-3 inline-flex min-h-12 items-center rounded-full border border-white/25 px-5 py-3 font-black text-white hover:bg-white/10 sm:ml-2 sm:mt-0"
+                  className="mt-7 inline-flex min-h-12 items-center rounded-full bg-emerald-400 px-5 py-3 font-black text-emerald-950 transition hover:bg-emerald-300"
+                  href={providerEntryPath}
+                  onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'persona_company_signup')}
+                >
+                  Start company setup <span className="ml-1" aria-hidden="true">→</span>
+                </a>
+              ) : activePersona.id === 'owner' ? (
+                <a
+                  className="mt-7 inline-flex min-h-12 items-center rounded-full bg-emerald-400 px-5 py-3 font-black text-emerald-950 transition hover:bg-emerald-300"
                   href={OWNER_ACQUISITION_PATH}
                   onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'persona_private_setup')}
                 >
-                  Create my private yard
+                  Create my private yard <span className="ml-1" aria-hidden="true">→</span>
                 </a>
-              ) : null}
+              ) : (
+                <button
+                  className="mt-7 rounded-full bg-emerald-400 px-5 py-3 font-black text-emerald-950 transition hover:bg-emerald-300"
+                  onClick={() => openLeadDialog(activeMarketingPersona, 'persona_panel')}
+                  type="button"
+                >
+                  {activeCallToAction.label} <span className="ml-1" aria-hidden="true">→</span>
+                </button>
+              )}
             </div>
             <div className="bg-linear-to-br from-emerald-950 via-emerald-950 to-slate-950 p-5 sm:p-7">
               <div className="flex items-end justify-between gap-4 border-b border-white/10 pb-5">
@@ -537,6 +545,15 @@ export function PublicLandingPage({
         </div>
       </section>
 
+      <section aria-labelledby="trust-heading" className="grid gap-5 bg-emerald-800 px-4 py-6 text-white sm:px-6 lg:grid-cols-[minmax(13rem,0.8fr)_minmax(0,3.2fr)] lg:items-center lg:px-[max(2rem,calc((100vw-86rem)/2+2rem))]">
+        <h2 className="text-xs font-black uppercase tracking-[0.14em] text-sand" id="trust-heading">{activePersona.trust.heading}</h2>
+        <ul className="grid gap-3 text-sm font-bold text-emerald-50 sm:grid-cols-2 lg:grid-cols-4">
+          {activePersona.trust.items.map((item) => (
+            <li className="flex items-center gap-2 before:text-sand before:content-['✓']" key={item}>{item}</li>
+          ))}
+        </ul>
+      </section>
+
       <MarketingProductTour persona={activePersona.id} />
 
       <section className="bg-paper px-4 py-20 sm:px-6 lg:px-8" id="proof">
@@ -544,7 +561,7 @@ export function PublicLandingPage({
           <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">{activePersona.proof.eyebrow}</p>
-              <h2 className="grover-display mt-4 text-4xl leading-tight sm:text-5xl">
+              <h2 className="yardfolio-display mt-4 text-4xl leading-tight sm:text-5xl">
                 {activePersona.proof.title}
               </h2>
             </div>
@@ -603,20 +620,30 @@ export function PublicLandingPage({
           <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-slate-300">{activePersona.invitation.description}</p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             {activePersona.id === 'company' ? (
-              <a className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" href={PROVIDER_ENTRY_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'final_company_signup')}>
-                Sign up your company <span className="ml-2" aria-hidden="true">→</span>
+              <a className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" href={providerEntryPath} onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'final_company_signup')}>
+                Start company setup <span className="ml-2" aria-hidden="true">→</span>
+              </a>
+            ) : activePersona.id === 'owner' ? (
+              <a className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'final_yard_signup')}>
+                Create my private yard <span className="ml-2" aria-hidden="true">→</span>
               </a>
             ) : (
               <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => openLeadDialog(activeMarketingPersona, 'final_cta')} type="button">
                 {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
               </button>
             )}
+            {activePersona.id === 'company' ? (
+              <button className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-7 py-3 font-black text-white transition hover:bg-white/10" onClick={() => openLeadDialog('landscaping_company', 'final_walkthrough')} type="button">
+                Request a walkthrough
+              </button>
+            ) : null}
             <a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-7 py-3 font-black text-white transition hover:bg-white/10" href="/app">
               Existing user sign in
             </a>
           </div>
         </div>
       </section>
+      </main>
 
       <footer className="border-t border-slate-800 bg-slate-950 px-4 py-8 text-slate-400 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
@@ -630,7 +657,7 @@ export function PublicLandingPage({
           onClose={() => setLeadDialogPersona(null)}
         />
       ) : null}
-    </main>
+    </>
   );
 }
 

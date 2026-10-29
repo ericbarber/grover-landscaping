@@ -1,6 +1,6 @@
 # Design Artifact Status
 
-This inventory is the interpretation key for the Grover design gallery. It
+This inventory is the interpretation key for the Yardfolio design gallery. It
 classifies artifact families by how they should be used today; a polished image
 or interactive prototype is not production evidence by itself.
 
@@ -22,6 +22,9 @@ counts, people, dates, providers, or customer claims are production facts.
 
 | Artifact family | Primary classification | Exact boundary |
 | --- | --- | --- |
+| `prototypes/yardfolio-study/` | Historical input | Earlier responsive public home, customer/provider paths, and five role-filtered workspace previews. Three review states use illustrative data and non-persistent actions. The independent `yardfolio-study/` track owns new planning and review; no production adoption followed this candidate. |
+| `prototypes/simplified-service-thread/` | Design direction | Active post-MVP clean-slate redesign for five core perspectives plus seven contextual exception/recovery paths. One exact illustrative service retains decision, plan, field work, proof, handoff, and recovery context with role-filtered detail; access failures render no protected record. Actions are non-persistent and production adoption has not started. |
+| `prototypes/minimalist-personas/` | Historical input | Ten personas retain useful task-first and authority-boundary evidence, but the active post-MVP simplification starts from a clean service-thread model rather than editing these compositions. Actions are non-persistent and do not add roles or product authority. |
 | `prototypes/current-frontend-review/` | Current mirror | September 3, 2026 baseline only. Manager continuity and shell compression delivered afterward are intentionally absent. |
 | `prototypes/yard-owner-minimal-rollout/` | Adopted behavior | The version-2 projection, cohort persistence/administration, cumulative navigation, persona composition, manager continuity, and protected runner are implemented for authoritative roles. Hosted cohort execution and explicit Dispatcher/Billing backend roles remain external or gated. |
 | `prototypes/frontend-truth-recovery/` | Adopted behavior | Yard Owner protected-read exits and Crew Route date/persistence vocabulary are adopted. Illustrative prototype records remain non-production examples. |
@@ -36,17 +39,13 @@ counts, people, dates, providers, or customer claims are production facts.
 
 | Artifact family | Primary classification | Exact boundary |
 | --- | --- | --- |
-| `foundations/` | Adopted behavior | The core palette, typography roles, controls, status language, and experience principles are adopted; current production tokens and components remain authoritative. |
+| `high-fidelity/current/minimalist-personas-*` | Design direction | Responsive browser captures of customer, field, operations, and administrative task-first experiences; not production parity or implementation evidence. |
 | `high-fidelity/current/current-frontend-*` | Current mirror | September 3 capture pair associated with the dated mirror. |
 | `high-fidelity/current/*minimal-rollout*` | Adopted behavior | Functional-unit contracts are adopted in the repository; images do not prove live cohort enablement. |
 | `high-fidelity/current/frontend-truth-recovery-*` | Adopted behavior | State hierarchy and vocabulary are adopted; the static example data is illustrative. |
 | `high-fidelity/public/homepage-*` | Historical input | Retained visual and interaction rationale; current React is the composition source. |
 | `high-fidelity/field/crew-route-*` | Adopted behavior | Current-stop hierarchy, progress, sync confidence, and stable field navigation are adopted; dated example content is illustrative. |
-| `high-fidelity/field/yard-crew-acquisition-*` | Adopted behavior | Provider entry, known-owner connection, readiness, proposal, and first-service preparation are adopted. Opportunity discovery, availability, alerts, and broader team controls remain design direction or gated. |
 | `high-fidelity/manager/schedule-*` | Adopted behavior | Today’s-operation hierarchy, route board, inspector, and manager handoffs are adopted; the image is not live operational data. |
-| `high-fidelity/customer/yard-owner-acquisition-*` | Adopted behavior | Private intake, known-provider connection, assessment, proposal, activation, and first-visit confirmation are adopted. Curated discovery remains gated. |
-| `high-fidelity/customer/yard-owner-portal-*` | Adopted behavior | Core Home, Visits, Proof, Account, service-day, question, and recommendation behavior is adopted. Concern, preference, provider-contact, and billing concepts remain gated. |
-| `high-fidelity/customer/property-manager-*` | Adopted behavior | Portfolio overview, property grouping, proof, approvals, scoped composition, and partial-source recovery are adopted; displayed readiness data is illustrative. |
 | `wireframes/public/` | Adopted behavior | Persona campaigns, conversion, and customer-safe shared proof are adopted at their core. `01-homepage.svg` is historical composition input. |
 | `wireframes/auth/` | Adopted behavior | Fail-closed access, first-owner setup, and invitation paths are adopted. |
 | `wireframes/field/` | Adopted behavior | Home, Route, Jobs, and focused Job detail hierarchy are adopted. |

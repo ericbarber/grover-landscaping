@@ -1,6 +1,8 @@
 # Project Planning and Version History
 
-This directory is the review entry point for Grover Landscaping product planning.
+This directory is the review entry point for product planning. Grover is the
+current temporary display name; technical identifiers retain the `yardfolio`
+compatibility namespace.
 It brings the roadmap, feature specifications, and release history together without
 moving their existing canonical documents.
 
@@ -9,6 +11,7 @@ moving their existing canonical documents.
 | Document | Purpose |
 | --- | --- |
 | [DELIVERY_BOARD.md](DELIVERY_BOARD.md) | Authoritative active phase, next queue, blockers, and exit evidence |
+| [MISSION_AND_VALUES.md](MISSION_AND_VALUES.md) | Working mission and five core values for content and messaging review |
 | [ROADMAP.md](ROADMAP.md) | Consolidated continuation plan and phased roadmap |
 | [FEATURE_CATALOG.md](FEATURE_CATALOG.md) | Index of product capabilities and their source specifications |
 | [PROTOTYPE_ADOPTION.md](PROTOTYPE_ADOPTION.md) | Approved design-to-production status and adoption history |

@@ -1,4 +1,4 @@
-export type CustomerHistoryView = 'properties' | 'bids';
+import type { CustomerHistoryView } from '../workspaces/features/customer/useCustomerHistoryNavigation';
 
 export function customerHistoryItems(propertyCount: number, bidCount: number) {
   return [

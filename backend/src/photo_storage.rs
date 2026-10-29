@@ -874,7 +874,7 @@ mod tests {
     #[test]
     fn s3_storage_ticket_returns_presigned_put_url() {
         let config = PhotoStorageConfig::S3(S3PhotoStorageConfig {
-            bucket: "grover-dev-photos".to_string(),
+            bucket: "yardfolio-dev-photos".to_string(),
             region: "us-west-2".to_string(),
             access_key_id: "AKIDEXAMPLE".to_string(),
             secret_access_key: "secret".to_string(),
@@ -898,14 +898,14 @@ mod tests {
         assert_eq!(ticket.thumbnail_content_type, Some("image/jpeg"));
         assert_eq!(ticket.thumbnail_max_dimension_px, Some(640));
         assert!(ticket.upload_url.starts_with(
-            "https://grover-dev-photos.s3.us-west-2.amazonaws.com/evidence/jobs/job_1001/after/99_after.jpg?"
+            "https://yardfolio-dev-photos.s3.us-west-2.amazonaws.com/evidence/jobs/job_1001/after/99_after.jpg?"
         ));
         assert!(ticket
             .thumbnail_upload_url
             .as_deref()
             .unwrap_or("")
             .starts_with(
-                "https://grover-dev-photos.s3.us-west-2.amazonaws.com/evidence/thumbnails/jobs/job_1001/after/99_after.jpg?"
+                "https://yardfolio-dev-photos.s3.us-west-2.amazonaws.com/evidence/thumbnails/jobs/job_1001/after/99_after.jpg?"
             ));
         assert!(ticket
             .upload_url
@@ -916,7 +916,7 @@ mod tests {
     #[test]
     fn s3_display_url_is_presigned_for_s3_rows_only() {
         let config = PhotoStorageConfig::S3(S3PhotoStorageConfig {
-            bucket: "grover-dev-photos".to_string(),
+            bucket: "yardfolio-dev-photos".to_string(),
             region: "us-east-1".to_string(),
             access_key_id: "AKIDEXAMPLE".to_string(),
             secret_access_key: "secret".to_string(),
@@ -928,7 +928,7 @@ mod tests {
 
         let display_url = config.display_url("s3-presigned", "photos/jobs/job_1001/before/a.jpg");
         assert!(display_url.starts_with(
-            "https://grover-dev-photos.s3.amazonaws.com/photos/jobs/job_1001/before/a.jpg?"
+            "https://yardfolio-dev-photos.s3.amazonaws.com/photos/jobs/job_1001/before/a.jpg?"
         ));
         assert!(display_url.contains("X-Amz-Expires=120"));
         assert!(display_url.contains("X-Amz-Security-Token=session%2Ftoken"));
@@ -945,7 +945,7 @@ mod tests {
             .as_deref()
             .unwrap_or("")
             .starts_with(
-                "https://grover-dev-photos.s3.amazonaws.com/photos/thumbnails/jobs/job_1001/before/a.jpg?"
+                "https://yardfolio-dev-photos.s3.amazonaws.com/photos/thumbnails/jobs/job_1001/before/a.jpg?"
             ));
     }
 
@@ -965,7 +965,7 @@ mod tests {
     #[test]
     fn s3_delete_url_is_presigned_with_delete_method() {
         let config = S3PhotoStorageConfig {
-            bucket: "grover-dev-photos".to_string(),
+            bucket: "yardfolio-dev-photos".to_string(),
             region: "us-west-2".to_string(),
             access_key_id: "AKIDEXAMPLE".to_string(),
             secret_access_key: "secret".to_string(),
@@ -980,7 +980,7 @@ mod tests {
         let get_url = config.presigned_url_at("GET", "photos/jobs/job_1001/before/a.jpg", 600, 0);
 
         assert!(delete_url.starts_with(
-            "https://grover-dev-photos.s3.us-west-2.amazonaws.com/photos/jobs/job_1001/before/a.jpg?"
+            "https://yardfolio-dev-photos.s3.us-west-2.amazonaws.com/photos/jobs/job_1001/before/a.jpg?"
         ));
         assert!(delete_url.contains("X-Amz-Expires=600"));
         assert_ne!(delete_url, get_url);

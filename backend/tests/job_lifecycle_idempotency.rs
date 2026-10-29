@@ -1,4 +1,4 @@
-use grover_landscaping_api::db::{JobLifecycleWriteResult, JobRepository};
+use yardfolio_api::db::{JobLifecycleWriteResult, JobRepository};
 mod common;
 
 #[tokio::test]

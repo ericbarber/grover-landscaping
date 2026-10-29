@@ -1,4 +1,4 @@
-use grover_landscaping_api::{
+use yardfolio_api::{
     accounts::{
         AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
         CustomerAccountArchiveError, CustomerAccountListResult, CustomerContextReadResult,
@@ -272,7 +272,7 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
     let property = accounts
         .create_property(
             &created.account_id,
-            grover_landscaping_api::accounts::CreateCustomerPropertyRequest {
+            yardfolio_api::accounts::CreateCustomerPropertyRequest {
                 organization_id: "org_demo_landscaping".to_string(),
                 display_name: "Account Test Property".to_string(),
                 service_address: "789 Property Test Avenue".to_string(),

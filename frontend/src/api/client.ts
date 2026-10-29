@@ -761,7 +761,10 @@ export interface FirstOwnerSetupProgress {
   organizationProfileComplete: boolean;
   teamInvitationCreated: boolean;
   crewConfigured: boolean;
+  customerPropertyCreated: boolean;
   firstRoutePublished: boolean;
+  firstServiceCompleted: boolean;
+  firstReportDelivered: boolean;
   completedSteps: number;
   totalSteps: number;
   persisted: boolean;
@@ -2127,7 +2130,10 @@ export async function fetchFirstOwnerSetupProgress(
     organization_profile_complete: boolean;
     team_invitation_created: boolean;
     crew_configured: boolean;
+    customer_property_created: boolean;
     first_route_published: boolean;
+    first_service_completed: boolean;
+    first_report_delivered: boolean;
     completed_steps: number;
     total_steps: number;
     persisted: boolean;
@@ -2137,7 +2143,10 @@ export async function fetchFirstOwnerSetupProgress(
     organizationProfileComplete: progress.organization_profile_complete,
     teamInvitationCreated: progress.team_invitation_created,
     crewConfigured: progress.crew_configured,
+    customerPropertyCreated: progress.customer_property_created,
     firstRoutePublished: progress.first_route_published,
+    firstServiceCompleted: progress.first_service_completed,
+    firstReportDelivered: progress.first_report_delivered,
     completedSteps: progress.completed_steps,
     totalSteps: progress.total_steps,
     persisted: progress.persisted,

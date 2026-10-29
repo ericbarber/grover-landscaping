@@ -7,22 +7,17 @@ first React composition slice are delivered through `GET /me/access`,
 migrations 123–124, and the endpoints below. Accounts remain default off unless
 an exact active enrollment exists. No production cohort is enabled by these
 changes, and rollout state never grants API authority. Desktop/mobile workspace
-destinations and Yard Owner U2–U4 portal controls now use the lowest common
-unit across current persona scopes, so a lower or suspended scope fails closed.
-Company, property-management, dispatch, billing, and support management menus
+destinations and Yard Owner U2–U4 portal controls are now capability-shaped;
+company, property-management, dispatch, billing, and support management menus
 are also unit-bounded. Field route, stop, job, evidence, report, and amendment
 controls now follow the Crew Lead, Crew Member, company-oversight, and
-dispatcher unit boundaries. Existing offline work remains stored and
-counted in the shared pending-work indicator, while automatic and manual replay
-wait for the corresponding execution, evidence, or route-change unit to be
-active. Property Manager readiness, property search, service history, delivered
-proof, questions/decisions, and administration are also composed cumulatively
-from P1 through P4; P1 does not fetch P2/P3 history.
-The verified-user middleware admits only the supported recommendation list,
-detail, and decision methods before the repository repeats exact visit access.
-The repository includes a credential-safe protected runner that verifies an
-exact managed unit, required and forbidden capabilities, an authorized resource
-read, and a cross-resource denial. It has not run against a hosted cohort.
+dispatcher unit boundaries. Property Manager readiness, property search,
+service history, delivered proof, questions/decisions, and administration are
+also composed cumulatively from P1 through P4; P1 does not fetch P2/P3 history.
+The repository now includes a credential-safe protected runner that verifies
+an exact managed unit, required and forbidden capabilities, an authorized
+resource read, and a cross-resource denial. It has not run against a hosted
+cohort.
 
 ## Response
 

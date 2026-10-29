@@ -50,7 +50,7 @@ function capabilityList(environment, name, { allowNone = false } = {}) {
   return [...new Set(capabilities)];
 }
 
-function probePaths(environment, name, baseUrl) {
+function probePaths(environment, name) {
   let value;
   try {
     value = JSON.parse(required(environment, name));
@@ -64,18 +64,9 @@ function probePaths(environment, name, baseUrl) {
     if (typeof path !== 'string'
       || !path.startsWith('/')
       || path.startsWith('//')
-      || path.includes('\\')
       || path.includes('#')
       || path.includes('..')
       || /[\r\n]/.test(path)) {
-      fail(`${name} contains an unsafe application path`);
-    }
-    try {
-      if (new URL(path, `${baseUrl}/`).origin !== baseUrl) {
-        fail(`${name} contains an unsafe application path`);
-      }
-    } catch (error) {
-      if (error instanceof SmokeFailure) throw error;
       fail(`${name} contains an unsafe application path`);
     }
   }
@@ -115,8 +106,8 @@ export function workspaceRolloutSmokeConfig(environment) {
       'SMOKE_ROLLOUT_FORBIDDEN_CAPABILITIES',
       { allowNone: true },
     ),
-    successPaths: probePaths(environment, 'SMOKE_ROLLOUT_SUCCESS_PATHS_JSON', baseUrl),
-    denialPaths: probePaths(environment, 'SMOKE_ROLLOUT_DENIAL_PATHS_JSON', baseUrl),
+    successPaths: probePaths(environment, 'SMOKE_ROLLOUT_SUCCESS_PATHS_JSON'),
+    denialPaths: probePaths(environment, 'SMOKE_ROLLOUT_DENIAL_PATHS_JSON'),
     denialStatus,
     timeoutMilliseconds: timeoutSeconds * 1000,
   };
@@ -180,21 +171,19 @@ export async function runWorkspaceRolloutSmoke(
 ) {
   const config = workspaceRolloutSmokeConfig(environment);
   if (typeof fetchImplementation !== 'function') fail('A fetch implementation is required');
-  const publicInit = () => ({
-    redirect: 'error',
-    signal: AbortSignal.timeout(config.timeoutMilliseconds),
-  });
-  const protectedInit = () => ({
+  const signal = AbortSignal.timeout(config.timeoutMilliseconds);
+  const publicInit = { redirect: 'error', signal };
+  const protectedInit = {
     headers: { Authorization: `Bearer ${config.accessToken}` },
     redirect: 'error',
-    signal: AbortSignal.timeout(config.timeoutMilliseconds),
-  });
+    signal,
+  };
 
   const readiness = await jsonResponse(
     await checkedFetch(
       fetchImplementation,
       `${config.baseUrl}/health/ready`,
-      publicInit(),
+      publicInit,
       'PostgreSQL readiness could not be verified',
     ),
     'PostgreSQL readiness could not be verified',
@@ -207,7 +196,7 @@ export async function runWorkspaceRolloutSmoke(
     await checkedFetch(
       fetchImplementation,
       `${config.baseUrl}/auth/config`,
-      publicInit(),
+      publicInit,
       'Cognito runtime mode could not be verified',
     ),
     'Cognito runtime mode could not be verified',
@@ -218,7 +207,7 @@ export async function runWorkspaceRolloutSmoke(
     await checkedFetch(
       fetchImplementation,
       `${config.baseUrl}/me/access`,
-      protectedInit(),
+      protectedInit,
       'managed rollout access could not be verified',
     ),
     'managed rollout access could not be verified',
@@ -229,7 +218,7 @@ export async function runWorkspaceRolloutSmoke(
     const response = await checkedFetch(
       fetchImplementation,
       `${config.baseUrl}${path}`,
-      protectedInit(),
+      protectedInit,
       `authorized rollout probe ${index + 1} could not be completed`,
     );
     if (!response.ok) fail(`authorized rollout probe ${index + 1} did not succeed`);
@@ -239,7 +228,7 @@ export async function runWorkspaceRolloutSmoke(
     const response = await checkedFetch(
       fetchImplementation,
       `${config.baseUrl}${path}`,
-      protectedInit(),
+      protectedInit,
       `cross-resource rollout probe ${index + 1} could not be completed`,
     );
     if (response.status !== config.denialStatus) {

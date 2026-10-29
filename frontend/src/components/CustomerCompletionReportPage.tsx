@@ -61,11 +61,11 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
         if (isMounted) {
           setError(
             isApiErrorCode(requestError, 'shared_report_unavailable')
-              ? 'Report storage is temporarily unavailable. Retry after service readiness recovers.'
+              ? 'This report is temporarily unavailable. Please try again.'
               : isApiErrorCode(requestError, 'shared_report_snapshot_invalid')
-                ? 'The delivered report could not be safely prepared. Retry after service readiness recovers.'
+                ? 'We couldn’t safely prepare this delivered report. Please try again.'
               : isApiErrorCode(requestError, 'completion_report_route_unavailable')
-                ? 'Route storage is temporarily unavailable, so this report cannot be safely assembled yet.'
+                ? 'Part of this service record is temporarily unavailable. Please try again.'
                 : 'This completion report link is invalid or no longer available.',
           );
         }
@@ -79,14 +79,14 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
   if (error && !report) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-bone px-4 py-12 sm:px-6">
-        <section className="w-full max-w-xl rounded-3xl border border-slate-200 bg-paper p-7 text-center shadow-grover-md sm:p-9" role="alert">
+        <section className="w-full max-w-xl rounded-3xl border border-slate-200 bg-paper p-7 text-center shadow-yardfolio-md sm:p-9" role="alert">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-rose-100 text-rose-700">
             <WorkspaceIcon className="h-6 w-6" name="attention" />
           </span>
           <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-rose-700">Report unavailable</p>
           <h1 className="mt-3 font-display text-3xl font-black text-forest">Unable to open this completion report</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">{error}</p>
-          <button className="grover-button-primary mt-6 w-full sm:w-auto" onClick={() => setLoadAttempt((value) => value + 1)} type="button">
+          <button className="yardfolio-button-primary mt-6 w-full sm:w-auto" onClick={() => setLoadAttempt((value) => value + 1)} type="button">
             Try again
           </button>
           <p className="mt-5 text-xs text-slate-500">This secure link does not expose internal account or team information.</p>
@@ -114,7 +114,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
       <PublicCustomerLinkHeader />
 
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-paper shadow-grover-md">
+        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-paper shadow-yardfolio-md">
           <header className="bg-forest p-6 text-white sm:p-8 lg:p-10">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Delivered service proof</p>
             <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
@@ -133,7 +133,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
 
           <div className="space-y-7 p-5 sm:p-8 lg:p-10">
             <section aria-labelledby="service-identity-heading">
-              <p className="grover-eyebrow">Service identity</p>
+              <p className="yardfolio-eyebrow">Service identity</p>
               <h2 className="mt-2 font-display text-3xl font-black text-forest" id="service-identity-heading">
                 {report.propertyAddress}
               </h2>
@@ -143,25 +143,25 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
                   <dd className="mt-2 text-base font-black text-forest">{serviceDateLabel(report.scheduledDate)}</dd>
                 </div>
                 <div className="rounded-2xl bg-slate-100 p-4">
-                  <dt className="text-xs font-black uppercase tracking-wide text-slate-600">Provided by</dt>
-                  <dd className="mt-2 text-base font-black text-forest">Your service team</dd>
+                  <dt className="text-xs font-black uppercase tracking-wide text-slate-600">Report source</dt>
+                  <dd className="mt-2 text-base font-black text-forest">Landscaping service team</dd>
                 </div>
                 <div className="rounded-2xl bg-slate-100 p-4">
-                  <dt className="text-xs font-black uppercase tracking-wide text-slate-600">Evidence</dt>
+                  <dt className="text-xs font-black uppercase tracking-wide text-slate-600">Photos</dt>
                   <dd className="mt-2 text-base font-black text-forest">{evidenceLabel(report)}</dd>
                 </div>
               </dl>
-              {capturedAt ? <p className="mt-3 text-xs text-slate-500">Immutable delivery snapshot captured {capturedAt}.</p> : null}
+              {capturedAt ? <p className="mt-3 text-xs text-slate-500">Report prepared {capturedAt}.</p> : null}
             </section>
 
             <section aria-labelledby="proof-heading" className="border-t border-slate-200 pt-7">
-              <p className="grover-eyebrow">Evidence</p>
+              <p className="yardfolio-eyebrow">Service proof</p>
               <div className="mt-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
                 <div>
                   <h2 className="font-display text-3xl font-black text-forest" id="proof-heading">Work completed</h2>
-                  <p className="mt-1 text-sm text-slate-600">Checklist, photos, and completed add-ons included in this delivered snapshot.</p>
+                  <p className="mt-1 text-sm text-slate-600">Completed tasks, service photos, and approved extras from this visit.</p>
                 </div>
-                <p className="text-sm font-black text-emerald-800">{report.checklistProgress}% checklist complete</p>
+                <p className="text-sm font-black text-emerald-800">{report.checklistProgress}% of tasks complete</p>
               </div>
 
               {report.photoEvidence.length > 0 ? (
@@ -170,7 +170,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
                     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50" key={`${photo.photoType}-${photo.fileName}`}>
                       {photo.imageUrl ? (
                         <img
-                          alt={`${photo.photoType} service evidence for ${report.propertyAddress}`}
+                          alt={`${photo.photoType} service photo for ${report.propertyAddress}`}
                           className="aspect-video w-full object-cover"
                           loading="lazy"
                           src={photo.imageUrl}
@@ -190,7 +190,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
               ) : null}
 
               <div className="mt-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
-                <h3 className="text-lg font-black text-forest">Completed checklist</h3>
+                <h3 className="text-lg font-black text-forest">Completed tasks</h3>
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   {report.checklist.map((item, index) => (
                     <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3" key={`${item.label}-${index}`}>
@@ -206,7 +206,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
 
             {report.completedRecommendations.length > 0 ? (
               <section className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5" aria-labelledby="recommendation-proof-heading">
-                <p className="grover-eyebrow">Recommendation outcome</p>
+                <p className="yardfolio-eyebrow">Recommendation outcome</p>
                 <h2 className="mt-2 font-display text-2xl font-black text-forest" id="recommendation-proof-heading">Approved recommendations delivered</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   These customer-approved additions are complete and included in this service proof.

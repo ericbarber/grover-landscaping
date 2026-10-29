@@ -1,18 +1,25 @@
-use grover_landscaping_api::customer_portal_access::{
+use sha2::{Digest, Sha256};
+use sqlx::{postgres::PgPoolOptions, PgPool, Row};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use yardfolio_api::customer_portal_access::{
     CustomerPortalAccessRepository, CustomerPortalPropertyAccessResult,
     CustomerPortalVisitReadResult,
 };
-use grover_landscaping_api::customer_visit_communication::{
+use yardfolio_api::customer_property_manager_access::{
+    CreateCustomerPropertyManagerInvitationRequest, CustomerPropertyManagerAccessRepository,
+    InvitationCollectionResult, InvitationWriteResult,
+};
+use yardfolio_api::customer_visit_communication::{
     CreateCustomerVisitQuestionRequest, CreateProviderVisitResponseRequest,
     CustomerVisitCommunicationRepository, CustomerVisitMessageWriteResult,
     CustomerVisitProofReadResult, CustomerVisitThreadReadResult, ProviderVisitThreadListResult,
 };
-use grover_landscaping_api::customer_visit_recommendations::{
+use yardfolio_api::customer_visit_recommendations::{
     CustomerRecommendationDecisionResult, CustomerRecommendationDetailResult,
     CustomerRecommendationListResult, CustomerVisitRecommendationRepository,
     DecideCustomerRecommendationRequest,
 };
-use grover_landscaping_api::owner_acquisition::{
+use yardfolio_api::owner_acquisition::{
     ActivateOwnerProviderRelationshipRequest, AppealOwnerProviderOrganizationClaimRequest,
     BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerAssessmentMessageRequest,
     CreateOwnerInitialServiceProposalMessageRequest, CreateOwnerIntakeMediaRequest,
@@ -50,19 +57,16 @@ use grover_landscaping_api::owner_acquisition::{
     RetryOwnerProviderInvitationRequest, RevokeOwnerProviderDisclosureGrantRequest,
     SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
 };
-use grover_landscaping_api::project_bids::{
+use yardfolio_api::project_bids::{
     CreateProjectBidLineItemRequest, ProjectBidMutationResult, ProjectBidRepository,
     ProjectBidRevisionResult, ProjectBidSendResult, ReviseProjectBidRequest, SendProjectBidRequest,
 };
-use grover_landscaping_api::service_mobilization::{
+use yardfolio_api::service_mobilization::{
     CustomerServiceDayEventWriteResult, PublishCustomerServiceDayEventRequest,
     ReleaseInitialServiceRequest, ServiceMobilizationReadResult, ServiceMobilizationRepository,
     ServiceWorkReleaseWriteResult,
 };
-use grover_landscaping_api::PhotoUploadMetadata;
-use sha2::{Digest, Sha256};
-use sqlx::{postgres::PgPoolOptions, PgPool, Row};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use yardfolio_api::PhotoUploadMetadata;
 
 mod common;
 
@@ -271,6 +275,20 @@ async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[
     .await
     .expect("test activation events should reset");
     sqlx::query(
+        "DELETE FROM customer_property_manager_access_events
+         WHERE invitation_id IN (
+             SELECT invitation.id
+             FROM customer_property_manager_invitations invitation
+             JOIN owner_provider_relationship_activations activation
+               ON activation.id = invitation.activation_id
+             WHERE activation.owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test customer property manager access events should reset");
+    sqlx::query(
         "DELETE FROM owner_provider_active_relationships
          WHERE activation_id IN (
              SELECT id FROM owner_provider_relationship_activations
@@ -292,6 +310,33 @@ async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[
     .execute(pool)
     .await
     .expect("test portal access should reset");
+    sqlx::query(
+        "DELETE FROM organization_memberships membership
+         USING customer_property_manager_invitations invitation,
+               owner_provider_relationship_activations activation
+         WHERE invitation.activation_id = activation.id
+           AND activation.owner_user_id = ANY($1)
+           AND invitation.accepted_user_id = membership.user_id
+           AND invitation.organization_id = membership.organization_id
+           AND membership.role = 'property_manager'
+           AND membership.scope_type = 'property'
+           AND membership.scope_id = invitation.property_id",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test customer property manager memberships should reset");
+    sqlx::query(
+        "DELETE FROM customer_property_manager_invitations
+         WHERE activation_id IN (
+             SELECT id FROM owner_provider_relationship_activations
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test customer property manager invitations should reset");
     sqlx::query(
         "DELETE FROM owner_provider_relationship_activations
          WHERE owner_user_id = ANY($1)",
@@ -585,7 +630,7 @@ async fn authorized_response_capability(
 async fn repository_distinguishes_unavailable_invitation_storage() {
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
-        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
         .expect("unavailable test pool URL should be valid");
     let repository = OwnerAcquisitionRepository::from_pool(pool);
 
@@ -3580,6 +3625,193 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .execute(&pool)
     .await
     .is_err());
+    let manager_user_id = "customer-pm-schema-probe-user";
+    let manager_email = "manager-schema@example.test";
+    let manager_access = CustomerPropertyManagerAccessRepository::from_pool(pool.clone());
+    let manager_invitation_request = CreateCustomerPropertyManagerInvitationRequest {
+        recipient_email: manager_email.to_string(),
+        idempotency_key: "manager-schema-probe-001".to_string(),
+    };
+    assert!(matches!(
+        manager_access
+            .create_invitation(
+                owner_b,
+                &property.property_id,
+                &activation.activation_id,
+                manager_invitation_request.clone(),
+            )
+            .await,
+        InvitationWriteResult::InvalidState
+    ));
+    let (first_manager_invitation, second_manager_invitation) = tokio::join!(
+        manager_access.create_invitation(
+            owner_a,
+            &property.property_id,
+            &activation.activation_id,
+            manager_invitation_request.clone(),
+        ),
+        manager_access.create_invitation(
+            owner_a,
+            &property.property_id,
+            &activation.activation_id,
+            manager_invitation_request.clone(),
+        ),
+    );
+    let manager_invitation = match (first_manager_invitation, second_manager_invitation) {
+        (InvitationWriteResult::Created(created), InvitationWriteResult::Replayed(replayed))
+        | (InvitationWriteResult::Replayed(replayed), InvitationWriteResult::Created(created)) => {
+            assert_eq!(created, replayed);
+            created
+        }
+        (first, second) => panic!(
+            "concurrent exact manager invitation should create once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert!(manager_invitation.persisted);
+    assert_eq!(manager_invitation.status, "pending");
+    assert!(matches!(
+        manager_access
+            .create_invitation(
+                owner_a,
+                &property.property_id,
+                &activation.activation_id,
+                manager_invitation_request,
+            )
+            .await,
+        InvitationWriteResult::Replayed(ref invitation)
+            if invitation.invitation_id == manager_invitation.invitation_id
+    ));
+    assert!(matches!(
+        manager_access
+            .list_for_owner(owner_a, &property.property_id, &activation.activation_id)
+            .await,
+        InvitationCollectionResult::Loaded(ref invitations)
+            if invitations.iter().any(|invitation| invitation.invitation_id == manager_invitation.invitation_id)
+    ));
+    assert!(matches!(
+        manager_access.list_for_recipient(manager_email).await,
+        InvitationCollectionResult::Loaded(ref invitations)
+            if invitations.iter().any(|invitation|
+                invitation.invitation_id == manager_invitation.invitation_id
+                    && invitation.status == "pending")
+    ));
+    assert!(matches!(
+        manager_access
+            .accept_invitation(
+                &manager_invitation.invitation_id,
+                manager_user_id,
+                "different@example.test",
+            )
+            .await,
+        InvitationWriteResult::NotFound
+    ));
+    assert!(matches!(
+        manager_access
+            .accept_invitation(
+                &manager_invitation.invitation_id,
+                manager_user_id,
+                manager_email,
+            )
+            .await,
+        InvitationWriteResult::Created(ref invitation)
+            if invitation.status == "accepted"
+                && invitation.accepted_user_id.as_deref() == Some(manager_user_id)
+    ));
+    assert!(matches!(
+        manager_access
+            .accept_invitation(
+                &manager_invitation.invitation_id,
+                manager_user_id,
+                manager_email,
+            )
+            .await,
+        InvitationWriteResult::Replayed(_)
+    ));
+    let manager_portal_access = CustomerPortalAccessRepository::from_pool(pool.clone());
+    let manager_properties = manager_portal_access
+        .list_authorized_properties(manager_user_id)
+        .await;
+    assert!(matches!(
+        manager_properties,
+        CustomerPortalPropertyAccessResult::Loaded(ref properties)
+            if properties.len() == 1
+                && properties[0].property_id == activation.customer_property_id
+    ));
+    let manager_visit_communication = CustomerVisitCommunicationRepository::from_pool(pool.clone());
+    let manager_recommendations = CustomerVisitRecommendationRepository::from_pool(pool.clone());
+    assert!(matches!(
+        manager_visit_communication
+            .get_customer_thread(manager_user_id, "missing-manager-visit")
+            .await,
+        CustomerVisitThreadReadResult::NotFound
+    ));
+    assert!(matches!(
+        manager_recommendations
+            .list_for_visit(manager_user_id, "missing-manager-visit")
+            .await,
+        CustomerRecommendationListResult::NotFound
+    ));
+    let owner_activation_with_delegate = repository
+        .get_owner_provider_relationship_activation(
+            owner_a,
+            &property.property_id,
+            &proposal_v2.proposal_id,
+        )
+        .await;
+    assert!(matches!(
+        manager_access
+            .revoke_invitation(
+                owner_a,
+                &property.property_id,
+                &activation.activation_id,
+                &manager_invitation.invitation_id,
+            )
+            .await,
+        InvitationWriteResult::Created(ref invitation) if invitation.status == "revoked"
+    ));
+    assert!(matches!(
+        manager_access
+            .revoke_invitation(
+                owner_a,
+                &property.property_id,
+                &activation.activation_id,
+                &manager_invitation.invitation_id,
+            )
+            .await,
+        InvitationWriteResult::Replayed(_)
+    ));
+    assert!(matches!(
+        manager_portal_access
+            .list_authorized_properties(manager_user_id)
+            .await,
+        CustomerPortalPropertyAccessResult::NotAuthorized
+    ));
+    assert!(matches!(
+        manager_visit_communication
+            .get_customer_thread(manager_user_id, "missing-manager-visit")
+            .await,
+        CustomerVisitThreadReadResult::NotAuthorized
+    ));
+    assert!(matches!(
+        manager_recommendations
+            .list_for_visit(manager_user_id, "missing-manager-visit")
+            .await,
+        CustomerRecommendationListResult::NotAuthorized
+    ));
+    let manager_audit_kinds = sqlx::query_scalar::<_, String>(
+        "SELECT event_kind FROM customer_property_manager_access_events
+         WHERE invitation_id = $1 ORDER BY event_kind",
+    )
+    .bind(&manager_invitation.invitation_id)
+    .fetch_all(&pool)
+    .await
+    .expect("customer property manager audit trail should load");
+    assert_eq!(manager_audit_kinds, vec!["accepted", "invited", "revoked"]);
+    assert!(matches!(
+        owner_activation_with_delegate,
+        OwnerReadResult::Loaded(record)
+            if record.portal_access_id == activation.portal_access_id
+    ));
     let sibling_property_id = "customer_portal_sibling_property_fixture";
     sqlx::query(
         "INSERT INTO customer_properties (
@@ -5289,16 +5521,24 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .await
     .expect("the fixture relationship should end");
     assert!(matches!(
+        portal_access.list_authorized_properties(owner_a).await,
+        CustomerPortalPropertyAccessResult::InvalidAuthorization
+    ));
+    assert!(matches!(
+        portal_access.list_confirmed_visits(owner_a).await,
+        CustomerPortalVisitReadResult::InvalidAuthorization
+    ));
+    assert!(matches!(
         visit_communication
             .get_customer_thread(owner_a, &customer_visit_reference)
             .await,
-        CustomerVisitThreadReadResult::NotFound
+        CustomerVisitThreadReadResult::InvalidAuthorization
     ));
     assert!(matches!(
         visit_communication
             .get_customer_proof(owner_a, &customer_visit_reference)
             .await,
-        CustomerVisitProofReadResult::NotFound
+        CustomerVisitProofReadResult::InvalidAuthorization
     ));
     assert!(matches!(
         visit_communication
@@ -5310,7 +5550,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         visit_communication
             .create_customer_question(owner_a, &customer_visit_reference, question_request,)
             .await,
-        CustomerVisitMessageWriteResult::NotFound
+        CustomerVisitMessageWriteResult::InvalidAuthorization
     ));
     let ProviderVisitThreadListResult::Loaded(ended_queue) = visit_communication
         .list_provider_threads("recipient-user-1")

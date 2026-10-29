@@ -1,6 +1,6 @@
 # Repository Working Instructions
 
-These instructions apply to the entire Grover Landscaping repository.
+These instructions apply to the entire Yardfolio repository.
 
 ## Development Workflow
 

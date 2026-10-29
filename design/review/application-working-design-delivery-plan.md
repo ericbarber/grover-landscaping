@@ -2,7 +2,7 @@
 
 ## Goal
 
-Bring the current Grover application to the same review standard as the V2 public
+Bring the current Yardfolio application to the same review standard as the V2 public
 homepage through connected, responsive working designs—not a larger collection of
 isolated high-fidelity screens.
 
@@ -10,6 +10,12 @@ The plan covers the current public, access, field, manager, customer, and revenu
 application targets. The homeowner assistant and multi-vendor portfolio remain
 separate future product modes and are not promoted into current-product design by
 this plan.
+
+Workflow completeness and interface simplicity are related but separate review
+layers. The [minimalist persona experience plan](minimalist-persona-prototype-plan.md)
+defines the task-first frontend direction for all ten personas; the phases below
+continue to define the deeper cross-persona workflow and state coverage required
+before production handoff.
 
 ## Delivery strategy
 

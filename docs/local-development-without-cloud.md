@@ -21,11 +21,11 @@ Backend: http://localhost:8080
 Readiness: http://localhost:8080/health/ready
 ```
 
-The default `AUTH_MODE=local_review` publishes seven fixed reviewer profiles.
-Use the application header’s `Review as` selector to inspect Organization Owner,
-Manager, Crew Lead, Crew Member, Property Manager, Property Owner, and Support
-Administrator. Selection is tab-scoped. The backend derives roles and virtual
-demo membership from its own allowlist and rejects unknown reviewers.
+The default `AUTH_MODE=local_review` publishes nine fixed reviewer profiles:
+the seven base role identities plus separate Canyon View and Sage Lane study
+owners. Use the application header’s `Review as` selector to inspect each role
+or synthetic owner. Selection is tab-scoped. The backend derives roles and
+virtual demo membership from its own allowlist and rejects unknown reviewers.
 
 ## Local substitutes and honest boundaries
 

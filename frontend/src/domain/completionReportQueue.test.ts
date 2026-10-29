@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildCompletionReportQueue,
+  completionReportQueueActionLabel,
   completionReportQueueGroup,
   completionReportQueueGroupLabel,
   completionReportQueueReadinessFilterLabel,
@@ -84,9 +85,28 @@ describe('completion report queue helpers', () => {
     expect(completionReportQueueGroupLabel('needs_review')).toBe('Needs review');
     expect(completionReportQueueGroupLabel('changes_requested')).toBe('Changes requested');
     expect(completionReportQueueGroupLabel('draft')).toBe('Draft');
-    expect(completionReportQueueStatusFilterLabel('active')).toBe('Active');
-    expect(completionReportQueueReadinessFilterLabel('local_only')).toBe('Local only');
+    expect(completionReportQueueStatusFilterLabel('active')).toBe('Current work');
+    expect(completionReportQueueReadinessFilterLabel('local_only')).toBe('Saved on device');
     expect(completionReportReadinessBlockerLabel('route_stop')).toBe('Finish route stop');
+  });
+
+  it('uses a specific next action for each report state', () => {
+    const items = buildCompletionReportQueue([
+      report('job_1', 'submitted'),
+      report('job_2', 'in_review'),
+      report('job_3', 'changes_requested'),
+      report('job_4', 'delivered'),
+      report('job_5', 'draft', 'Blocked', { readinessBlockers: ['after_photos'] }),
+    ]);
+    const actions = Object.fromEntries(items.map((item) => [item.jobId, completionReportQueueActionLabel(item)]));
+
+    expect(actions).toEqual({
+      job_1: 'Review report',
+      job_2: 'Continue review',
+      job_3: 'Review changes',
+      job_4: 'View report',
+      job_5: 'Finish report',
+    });
   });
 
   it('retains actionable readiness blockers on queue items', () => {

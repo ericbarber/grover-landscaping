@@ -86,3 +86,13 @@ Local validation reports zero npm vulnerabilities, passes TypeScript, all 524
 Vitest tests, and the production build. The local browser runner could not
 launch because this host lacks `libnspr4`; hosted Chromium/Firefox/WebKit CI is
 therefore required before merge and must not be inferred from the local build.
+
+## 2026-10-28 audit refresh
+
+The current registry audit identified patched releases for the Vite and Vitest
+development toolchain. Vite moves from 6.4.3 to 6.4.4 and Vitest, including
+`@vitest/mocker`, moves from 4.1.11 to 4.1.12. Both updates stay within the
+existing major versions and the application runtime dependency set is
+unchanged. A clean Node 22/npm 10 install reports zero vulnerabilities; the
+audit policy tests, TypeScript, all 706 Vitest tests, and the production build
+pass on the refreshed lockfile.

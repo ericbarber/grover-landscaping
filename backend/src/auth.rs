@@ -4,7 +4,7 @@ use crate::access_control::{
     can_submit_completion_report, can_view_crew_route, can_view_customer_property_portfolios,
     AccessRole,
 };
-use crate::application_identity::authentication_realm;
+use crate::application_identity::APP_DISPLAY_NAME;
 use crate::local_review::{
     default_local_reviewer, local_reviewer_by_id, local_reviewer_profiles, LocalReviewerProfile,
     LOCAL_REVIEWER_HEADER,
@@ -460,7 +460,10 @@ pub async fn require_api_auth(
             tracing::warn!(reason = %error, path, "API authentication rejected");
             return (
                 StatusCode::UNAUTHORIZED,
-                [("www-authenticate", authentication_realm())],
+                [(
+                    "www-authenticate",
+                    format!("Bearer realm=\"{APP_DISPLAY_NAME}\""),
+                )],
                 Json(AuthFailureResponse {
                     error: "authentication_required",
                     message: "A valid sign-in session is required.",
@@ -499,6 +502,8 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/me/access"
         || path == "/customer-portal/visits"
         || path.starts_with("/customer-portal/visits/")
+        || path == "/customer-property-manager-invitations"
+        || path.starts_with("/customer-property-manager-invitations/")
         || path == "/owner-workspace"
         || path == "/owner-properties"
         || path.starts_with("/owner-properties/")
@@ -598,6 +603,12 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
             }
             _ => {}
         }
+    }
+    if path == "/customer-property-manager-invitations" {
+        return principal.verified_email.is_some() && *method == Method::GET;
+    }
+    if path.starts_with("/customer-property-manager-invitations/") && path.ends_with("/accept") {
+        return principal.verified_email.is_some() && *method == Method::POST;
     }
     if path == "/owner-workspace" {
         return principal.verified_email.is_some()
@@ -745,6 +756,15 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
             || (segment_count == 5
                 && owner_property_suffix.contains("/provider-relationships/")
                 && owner_property_suffix.ends_with("/first-visit/decision")
+                && *method == Method::POST)
+            || (segment_count == 4
+                && owner_property_suffix.contains("/provider-relationships/")
+                && owner_property_suffix.ends_with("/manager-invitations")
+                && (*method == Method::GET || *method == Method::POST))
+            || (segment_count == 6
+                && owner_property_suffix.contains("/provider-relationships/")
+                && owner_property_suffix.contains("/manager-invitations/")
+                && owner_property_suffix.ends_with("/revoke")
                 && *method == Method::POST)
             || (segment_count == 3
                 && owner_property_suffix.contains("/provider-invitations/")
@@ -1001,6 +1021,7 @@ mod tests {
         AuthService,
     };
     use crate::access_control::AccessRole;
+    use crate::application_identity::APP_DISPLAY_NAME;
     use crate::organizations::OrganizationMembership;
     use axum::{
         body::Body,
@@ -1026,7 +1047,7 @@ mod tests {
         let service = AuthService::local_review();
         let mut headers = HeaderMap::new();
         headers.insert(
-            "x-grover-local-reviewer",
+            "x-yardfolio-local-reviewer",
             HeaderValue::from_static("crew-member"),
         );
 
@@ -1041,7 +1062,7 @@ mod tests {
         );
 
         headers.insert(
-            "x-grover-local-reviewer",
+            "x-yardfolio-local-reviewer",
             HeaderValue::from_static("unconfigured-user"),
         );
         assert!(service.authenticate(&headers).await.is_err());
@@ -1843,7 +1864,7 @@ mod tests {
                 .oneshot(
                     Request::builder()
                         .uri(path)
-                        .header("x-grover-local-reviewer", "property-owner")
+                        .header("x-yardfolio-local-reviewer", "property-owner")
                         .body(Body::empty())
                         .unwrap(),
                 )
@@ -1856,7 +1877,7 @@ mod tests {
                 .oneshot(
                     Request::builder()
                         .uri(path)
-                        .header("x-grover-local-reviewer", "manager")
+                        .header("x-yardfolio-local-reviewer", "manager")
                         .body(Body::empty())
                         .unwrap(),
                 )
@@ -2081,17 +2102,10 @@ mod tests {
         for (method, path) in [
             (Method::GET, "/me/access"),
             (Method::GET, "/customer-portal/visits"),
-            (
-                Method::GET,
-                "/customer-portal/visits/customer_visit_1/recommendations",
-            ),
-            (
-                Method::GET,
-                "/customer-portal/visits/customer_visit_1/recommendations/customer_recommendation_1",
-            ),
+            (Method::GET, "/customer-property-manager-invitations"),
             (
                 Method::POST,
-                "/customer-portal/visits/customer_visit_1/recommendations/customer_recommendation_1",
+                "/customer-property-manager-invitations/invitation-1/accept",
             ),
             (Method::GET, "/owner-workspace"),
             (Method::PUT, "/owner-workspace"),
@@ -2173,6 +2187,18 @@ mod tests {
             (
                 Method::POST,
                 "/owner-properties/property-1/provider-relationships/activation-1/first-visit/decision",
+            ),
+            (
+                Method::GET,
+                "/owner-properties/property-1/provider-relationships/activation-1/manager-invitations",
+            ),
+            (
+                Method::POST,
+                "/owner-properties/property-1/provider-relationships/activation-1/manager-invitations",
+            ),
+            (
+                Method::POST,
+                "/owner-properties/property-1/provider-relationships/activation-1/manager-invitations/invitation-1/revoke",
             ),
             (
                 Method::POST,
@@ -2268,6 +2294,11 @@ mod tests {
             &unverified,
             &Method::GET,
             "/customer-portal/visits"
+        ));
+        assert!(!is_authorized(
+            &unverified,
+            &Method::GET,
+            "/customer-property-manager-invitations"
         ));
     }
 
@@ -2378,7 +2409,13 @@ mod tests {
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
-        assert!(response.headers().contains_key("www-authenticate"));
+        assert_eq!(
+            response
+                .headers()
+                .get("www-authenticate")
+                .and_then(|value| value.to_str().ok()),
+            Some(format!("Bearer realm=\"{APP_DISPLAY_NAME}\"").as_str())
+        );
     }
 
     #[tokio::test]

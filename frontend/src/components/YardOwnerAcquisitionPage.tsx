@@ -573,7 +573,7 @@ export function YardOwnerAcquisitionPage() {
       <header className="relative overflow-hidden bg-emerald-950 text-white">
         <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_80%_10%,#fbbf24,transparent_35%)]" />
         <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <a aria-label={`${APP_DISPLAY_NAME} home`} className="rounded-lg text-sand focus:outline-hidden focus:ring-2 focus:ring-sky" href="/">
+          <a aria-label={`${APP_DISPLAY_NAME} home`} className="rounded-lg text-sand focus:outline-none focus:ring-2 focus:ring-sky" href="/">
             <ProductBrand />
           </a>
           <a className="rounded-lg px-3 py-2 text-sm font-bold text-emerald-100 hover:bg-white/10 hover:text-white" href="/app">
@@ -592,7 +592,7 @@ export function YardOwnerAcquisitionPage() {
       </header>
 
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:px-8">
-        <section className="min-w-0 rounded-2xl border border-slate-200 bg-paper p-5 shadow-grover-md sm:p-8" aria-labelledby="yard-setup-title">
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-paper p-5 shadow-yardfolio-md sm:p-8" aria-labelledby="yard-setup-title">
           <Progress
             activeStep={activeStep}
             briefReady={yardBrief?.status === 'ready'}

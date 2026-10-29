@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   repository-checks:
@@ -46,8 +46,21 @@ jobs:
           bash scripts/smoke-production.test.sh
           bash scripts/deploy-pi.test.sh
           node --test scripts/validate-ci-action-runtimes.test.mjs
-          node --test scripts/smoke-workspace-rollout.test.mjs
+          node --test scripts/validate-quality-budgets.test.mjs
           node --test scripts/validate-product-brand.test.mjs
+          node scripts/validate-product-brand.mjs
+          node --test scripts/validate-crawler-policy.test.mjs
+          node scripts/validate-crawler-policy.mjs
+          node --test yardfolio-study/fixtures/validate-manifest.test.mjs
+          node --test yardfolio-study/fixtures/validate-target.test.mjs
+          node --test yardfolio-study/fixtures/prepare-manifest.test.mjs
+          node --test yardfolio-study/fixtures/fixture-state.test.mjs
+          node --test yardfolio-study/fixtures/owner-foundation-plan.test.mjs
+          node --test yardfolio-study/fixtures/reset-plan.test.mjs
+          node --test yardfolio-study/fixtures/seed-fixtures.test.mjs
+          node --test yardfolio-study/fixtures/reset-fixtures.test.mjs
+          node yardfolio-study/fixtures/validate-manifest.mjs --allow-template yardfolio-study/fixtures/fixture-manifest.example.json
+          node --test scripts/smoke-workspace-rollout.test.mjs
           node --test scripts/validate-protected-release-evidence.test.mjs
 
   backend:
@@ -58,20 +71,20 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: grover_landscaping
-          POSTGRES_USER: grover
-          POSTGRES_PASSWORD: grover
+          POSTGRES_DB: yardfolio
+          POSTGRES_USER: yardfolio
+          POSTGRES_PASSWORD: yardfolio
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U grover -d grover_landscaping"
+          --health-cmd "pg_isready -U yardfolio -d yardfolio"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
     env:
-      DATABASE_URL: postgres://grover:grover@localhost:5432/grover_landscaping
-      RUST_LOG: grover_landscaping_api=debug,tower_http=debug
+      DATABASE_URL: postgres://yardfolio:yardfolio@localhost:5432/yardfolio
+      RUST_LOG: yardfolio_api=debug,tower_http=debug
 
     steps:
       - name: Checkout repository
@@ -156,6 +169,13 @@ jobs:
           npm run typecheck
         working-directory: frontend
 
+      - name: Type-check browser journeys
+        run: >-
+          /usr/bin/time -f
+          'frontend_e2e_typecheck elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm run typecheck:e2e
+        working-directory: frontend
+
       - name: Run frontend tests
         run: >-
           /usr/bin/time -f
@@ -168,6 +188,20 @@ jobs:
           /usr/bin/time -f
           'frontend_build elapsed=%e user=%U system=%S max_rss_kb=%M'
           npm run build
+        working-directory: frontend
+
+      - name: Enforce production artifact budgets
+        run: >-
+          /usr/bin/time -f
+          'frontend_quality_budgets elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm run quality:budgets
+        working-directory: frontend
+
+      - name: Enforce product brand consistency
+        run: >-
+          /usr/bin/time -f
+          'frontend_product_brand elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm run quality:brand
         working-directory: frontend
 
   browser-journeys:
@@ -228,7 +262,7 @@ jobs:
           'manager_recovery_journey elapsed=%e user=%U system=%S max_rss_kb=%M'
           npx playwright test --config playwright.config.ts
           --project=chromium-mobile e2e/local-role-workspaces.spec.ts
-          --grep 'managed first unit withholds later manager feeds|manager Schedule opens a responsive route board and planning inspector|manager Recovery inspects an exception and returns to affected work|manager completion review opens the selected Job report workflow'
+          --grep 'managed first unit withholds later manager feeds|manager Schedule opens a responsive route board and planning inspector|manager Recovery inspects an exception and returns to affected work|manager completion review and Recovery open the selected Job workflow|desktop job selection opens Job and repeated selection restores Overview'
         working-directory: frontend
 
       - name: Validate mobile workspace clearance
@@ -296,7 +330,7 @@ jobs:
         with:
           context: .
           load: true
-          tags: grover-landscaping:ci
+          tags: yardfolio:ci
           cache-from: type=gha,scope=production-image
           cache-to: type=gha,mode=max,scope=production-image
 
@@ -326,10 +360,7 @@ jobs:
 
   deploy-pi-development:
     name: Deploy Pi development site
-    if: >-
-      github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
-      vars.PI_DEPLOY_ENABLED == 'true'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.PI_DEPLOY_ENABLED == 'true'
     needs: [repository-checks, backend, frontend, browser-journeys, pilot-assurance, production-image, terraform]
     runs-on: ubuntu-24.04-arm
     environment: pi-development
@@ -351,7 +382,7 @@ jobs:
           context: .
           platforms: linux/arm64
           load: true
-          tags: grover-landscaping:${{ github.sha }}
+          tags: yardfolio:${{ github.sha }}
           cache-from: type=gha,scope=pi-development-arm64
           cache-to: type=gha,mode=max,scope=pi-development-arm64
 
@@ -380,7 +411,7 @@ jobs:
           ssh -i "$RUNNER_TEMP/pi_ssh_key" \
             -o BatchMode=yes -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile="$RUNNER_TEMP/pi_known_hosts" \
-            "eric480@$PI_TAILSCALE_HOST" 'mkdir -p ~/grover-landscaping'
+            "eric480@$PI_TAILSCALE_HOST" 'mkdir -p ~/yardfolio'
 
       - name: Transfer and activate Pi image
         env:
@@ -391,9 +422,9 @@ jobs:
             -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile="$RUNNER_TEMP/pi_known_hosts")
           scp "${ssh_options[@]}" infra/pi/compose.yml scripts/deploy-pi.sh \
-            "eric480@$PI_TAILSCALE_HOST:grover-landscaping/"
-          docker save "grover-landscaping:$GITHUB_SHA" | gzip -1 | \
+            "eric480@$PI_TAILSCALE_HOST:yardfolio/"
+          docker save "yardfolio:$GITHUB_SHA" | gzip -1 | \
             ssh "${ssh_options[@]}" "eric480@$PI_TAILSCALE_HOST" \
               'bash -o pipefail -c "gzip -d | docker load"'
           ssh "${ssh_options[@]}" "eric480@$PI_TAILSCALE_HOST" \
-            "bash ~/grover-landscaping/deploy-pi.sh '$GITHUB_SHA'"
+            "bash ~/yardfolio/deploy-pi.sh '$GITHUB_SHA'"

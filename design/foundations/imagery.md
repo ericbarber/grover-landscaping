@@ -1,6 +1,6 @@
 # Imagery Direction
 
-Grover imagery should feel editorial, regional, and observant. Landscapes are
+Yardfolio imagery should feel editorial, regional, and observant. Landscapes are
 shown as cared-for places and operating environments—not as luxury backdrops or
 generic smiling-worker stock photography.
 
@@ -24,5 +24,5 @@ generic smiling-worker stock photography.
   remain secondary to actionable state.
 
 The first approved-direction asset is
-[`../assets/grover-southwest-sunrise-hero.png`](../assets/grover-southwest-sunrise-hero.png).
+[`../assets/yardfolio-southwest-sunrise-hero.png`](../assets/yardfolio-southwest-sunrise-hero.png).
 Its generation brief is recorded in [`../assets/README.md`](../assets/README.md).

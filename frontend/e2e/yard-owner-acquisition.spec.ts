@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { APP_DISPLAY_NAME } from '../src/appIdentity';
 import { workspaceRolloutFixture } from './workspace-rollout-fixture';
 
 async function openConnectCare(page: Page) {
@@ -203,8 +204,11 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   });
 
   await page.goto('/for-yard-owners');
-  await expect(page.getByRole('link', { name: 'Sign up your yard' })).toBeVisible();
-  await page.getByRole('link', { name: 'Sign up your yard' }).click();
+  const heroYardSignup = page.getByTestId('marketing-hero').getByRole('link', {
+    name: 'Create my private yard',
+  });
+  await expect(heroYardSignup).toBeVisible();
+  await heroYardSignup.click();
   await expect(page).toHaveURL(/\/app\/yard-owner$/);
   await expect(page.getByRole('heading', { name: 'Tell us about the yard. You choose who sees it.' })).toBeVisible();
   await page.getByLabel('Your name').fill('Morgan Reyes');
@@ -728,6 +732,40 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
     };
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(firstVisit) });
   });
+  let managerInvitations: Array<Record<string, unknown>> = [];
+  const managerInvitationPath = '**/owner-properties/owner_property_4/provider-relationships/activation_4/manager-invitations';
+  await page.route(managerInvitationPath, async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify(managerInvitations) });
+      return;
+    }
+    const body = route.request().postDataJSON();
+    expect(body).toMatchObject({ recipient_email: 'manager@example.com' });
+    expect(String(body.idempotency_key)).toMatch(/^customer-property-manager-/);
+    const invitation = {
+      invitation_id: 'manager_invitation_4', activation_id: 'activation_4',
+      owner_property_id: 'owner_property_4', organization_id: 'organization_4',
+      account_id: 'account_4', property_id: 'customer_property_4',
+      owner_user_id: 'local-development-user', recipient_email: body.recipient_email,
+      status: 'pending', accepted_user_id: null,
+      created_at_epoch_seconds: Math.floor(Date.now() / 1000),
+      expires_at_epoch_seconds: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+      accepted_at_epoch_seconds: null, revoked_at_epoch_seconds: null, persisted: true,
+    };
+    managerInvitations = [invitation];
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(invitation) });
+  });
+  await page.route(
+    '**/owner-properties/owner_property_4/provider-relationships/activation_4/manager-invitations/manager_invitation_4/revoke',
+    async (route) => {
+      const revoked = {
+        ...managerInvitations[0], status: 'revoked',
+        revoked_at_epoch_seconds: Math.floor(Date.now() / 1000),
+      };
+      managerInvitations = [revoked];
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify(revoked) });
+    },
+  );
 
   await page.goto('/app/yard-owner');
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
@@ -750,7 +788,9 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
   await expect(page.getByText(/Proposal accepted for provider setup. No visit was scheduled/)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Create the provider relationship' })).toBeVisible();
   await page.getByRole('button', { name: 'Review provider setup' }).click();
-  const activationAffirmation = page.getByLabel(/I want Grover to create this provider relationship/);
+  const activationAffirmation = page.getByLabel(
+    new RegExp(`I want ${APP_DISPLAY_NAME} to create this provider relationship`),
+  );
   await expect(page.getByRole('button', { name: 'Activate provider setup' })).toBeDisabled();
   await activationAffirmation.check();
   await page.getByRole('button', { name: 'Activate provider setup' }).click();
@@ -758,6 +798,14 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
   await expect(page.getByRole('heading', { name: 'Provider setup is underway' })).toBeVisible();
   await expect(page.getByText(/1 other open request was closed for this yard/)).toBeVisible();
   await expect(page.getByText(/No payment, recurring schedule, route, work order, or crew assignment exists yet/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Share this yard with a property manager' })).toBeVisible();
+  await page.getByLabel('Property manager’s verified email').fill('manager@example.com');
+  await page.getByRole('button', { name: 'Invite to this yard' }).click();
+  await expect(page.getByText(/Invitation ready for manager@example.com/)).toBeVisible();
+  await expect(page.getByText(/Pending acceptance/)).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel invitation' }).click();
+  await expect(page.getByText('Access for manager@example.com is revoked for this yard.')).toBeVisible();
+  await expect(page.getByText('Access revoked')).toBeVisible();
   await expect(page.getByText('First-visit proposal · version 1')).toBeVisible();
   await page.getByRole('button', { name: 'Review and confirm window' }).click();
   const firstVisitAffirmation = page.getByLabel(/I confirm this exact first-visit arrival window/);

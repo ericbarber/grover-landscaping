@@ -45,7 +45,7 @@ describe('Yard Owner persisted visit states', () => {
 
     expect(markup).toContain('Loading your yard');
     expect(markup).toContain('<h1');
-    expect(markup).toContain('grover-type-operational');
+    expect(markup).toContain('yardfolio-type-operational');
     expect(markup).not.toContain('font-display');
     expect(markup).not.toContain('Weekly yard care');
     expect(markup).not.toContain('August 27');
@@ -61,7 +61,7 @@ describe('Yard Owner persisted visit states', () => {
     expect(markup).toContain('Return Home');
     expect(markup).toContain('<h1');
     expect(markup).toContain('<h2');
-    expect(markup).toContain('grover-type-operational');
+    expect(markup).toContain('yardfolio-type-operational');
     expect(markup).not.toContain('Weekly yard care');
   });
 
@@ -73,12 +73,13 @@ describe('Yard Owner persisted visit states', () => {
       <YardOwnerPortalPanel {...commonProps} visitReadError="unavailable" />,
     );
 
-    expect(accessMarkup).toContain('Customer portal access is not active');
-    expect(accessMarkup).toContain('Check account access again');
+    expect(accessMarkup).toContain('Finish setup to see visits here');
+    expect(accessMarkup).toContain('Continue care setup');
+    expect(accessMarkup).toContain('href="/app/yard-owner?resume=care"');
     expect(accessMarkup).toContain('Return Home');
     expect(accessMarkup).not.toContain('temporarily unavailable');
     expect(unavailableMarkup).toContain('temporarily unavailable');
-    expect(unavailableMarkup).not.toContain('Customer portal access is not active');
+    expect(unavailableMarkup).not.toContain('Finish setup to see visits here');
   });
 
   it('distinguishes a valid empty property collection from an outage', () => {

@@ -6,6 +6,10 @@ import {
   type TeamAdministrationEventKind,
   type TeamActivityMoveScope,
 } from '../api/client';
+import {
+  readMigratedStorageValue,
+  APP_STORAGE_NAMESPACE,
+} from '../domain/browserStorageNamespace';
 
 export function teamActivityLabel(eventKind: TeamAdministrationEventKind): string {
   switch (eventKind) {
@@ -111,14 +115,18 @@ export function parseTeamActivityReviewFilters(raw: string | null): TeamActivity
 }
 
 function teamActivityReviewStorageKey(organizationId: string): string {
-  return `grover.team-activity-review-filters.v1.${organizationId}`;
+  return `${APP_STORAGE_NAMESPACE}.team-activity-review-filters.v1.${organizationId}`;
 }
 
 function loadTeamActivityReviewFilters(organizationId: string): TeamActivityReviewFilters {
   if (typeof window === 'undefined') return parseTeamActivityReviewFilters(null);
   try {
     return parseTeamActivityReviewFilters(
-      window.localStorage.getItem(teamActivityReviewStorageKey(organizationId)),
+      readMigratedStorageValue(
+        window.localStorage,
+        teamActivityReviewStorageKey(organizationId),
+        `.team-activity-review-filters.v1.${organizationId}`,
+      ),
     );
   } catch {
     return parseTeamActivityReviewFilters(null);

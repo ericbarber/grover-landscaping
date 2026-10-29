@@ -1,4 +1,6 @@
-use grover_landscaping_api::{
+use sqlx::{postgres::PgPoolOptions, Row};
+use std::time::Duration;
+use yardfolio_api::{
     day_plans::{
         AmendmentService, CreateDayPlanAmendmentRequest, DayPlanRepository,
         PersistedMutationResult, PersistedReadResult, ReviewDayPlanAmendmentRequest,
@@ -10,8 +12,6 @@ use grover_landscaping_api::{
         SendProjectBidRequest, SharedProjectBidReadResult,
     },
 };
-use sqlx::{postgres::PgPoolOptions, Row};
-use std::time::Duration;
 mod common;
 
 fn applied<T: std::fmt::Debug>(result: PersistedMutationResult<T>, context: &str) -> T {
@@ -31,7 +31,7 @@ fn loaded<T: std::fmt::Debug>(result: PersistedReadResult<T>, context: &str) -> 
 fn loaded_bids(
     result: ProjectBidListResult,
     context: &str,
-) -> Vec<grover_landscaping_api::project_bids::ProjectBidResponse> {
+) -> Vec<yardfolio_api::project_bids::ProjectBidResponse> {
     match result {
         ProjectBidListResult::Loaded(bids) => bids,
         ProjectBidListResult::Unavailable => panic!("{context}: unavailable"),
@@ -41,7 +41,7 @@ fn loaded_bids(
 fn updated_bid(
     result: ProjectBidMutationResult,
     context: &str,
-) -> grover_landscaping_api::project_bids::ProjectBidResponse {
+) -> yardfolio_api::project_bids::ProjectBidResponse {
     match result {
         ProjectBidMutationResult::Updated(bid) => bid,
         ProjectBidMutationResult::Conflict => panic!("{context}: conflict"),
@@ -52,7 +52,7 @@ fn updated_bid(
 fn shared_bid(
     result: SharedProjectBidReadResult,
     context: &str,
-) -> grover_landscaping_api::project_bids::ProjectBidResponse {
+) -> yardfolio_api::project_bids::ProjectBidResponse {
     match result {
         SharedProjectBidReadResult::Loaded(bid) => bid,
         SharedProjectBidReadResult::NotFound => panic!("{context}: not found"),
@@ -155,7 +155,7 @@ async fn repository_reports_rejected_persisted_amendment_writes() {
 async fn repository_reports_unavailable_persisted_amendment_reads() {
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
-        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
         .expect("unavailable test pool URL should be valid");
     let repository = DayPlanRepository::from_pool(pool);
 
@@ -170,7 +170,7 @@ async fn repository_reports_unavailable_persisted_amendment_reads() {
 async fn repository_reports_unavailable_persisted_project_bid_lists() {
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
-        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
         .expect("unavailable test pool URL should be valid");
     let repository = ProjectBidRepository::from_pool(pool);
 

@@ -4,7 +4,7 @@ set -euo pipefail
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 smoke="${repository_root}/scripts/smoke-production.sh"
 fake_curl="${repository_root}/scripts/test-fixtures/fake-smoke-curl.sh"
-test_dir="$(mktemp -d /tmp/grover-smoke-production-test.XXXXXX)"
+test_dir="$(mktemp -d /tmp/yardfolio-smoke-production-test.XXXXXX)"
 trap 'rm -rf -- "${test_dir}"' EXIT
 
 common_environment=(

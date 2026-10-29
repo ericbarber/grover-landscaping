@@ -178,9 +178,9 @@ export function ManagerOperationalExceptionsPanel({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl bg-forest p-5 text-white shadow-grover-sm sm:p-6">
+      <section className="rounded-2xl bg-forest p-5 text-white shadow-yardfolio-sm sm:p-6">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Operations recovery</p>
-        <h2 className="grover-type-operational mt-2 text-3xl font-black">Recovery and exceptions</h2>
+        <h2 className="yardfolio-type-operational mt-2 text-3xl font-black">Recovery and exceptions</h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-mist">
           Every failed or risky workflow stays visible, attributable, and actionable until it is resolved.
         </p>
@@ -249,7 +249,7 @@ export function ManagerOperationalExceptionsPanel({
           <button className="mt-4 min-h-11 rounded-lg border border-slate-300 px-3 text-sm font-bold" disabled={loading} onClick={() => void load()} type="button">Refresh queue</button>
         </section>
 
-        <aside aria-labelledby="exception-detail-heading" className="scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs" id="operational-exception-detail" tabIndex={-1}>
+        <aside aria-labelledby="exception-detail-heading" className="scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" id="operational-exception-detail" tabIndex={-1}>
           <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Exception detail</p>
           <h3 className="mt-1 text-xl font-black text-slate-950" id="exception-detail-heading">
             {selectedItem?.title ?? 'Select recovery work'}

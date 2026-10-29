@@ -49,7 +49,7 @@ test.beforeEach(async ({ page }) => {
       });
     }
     if (path === '/me/access') {
-      const reviewerId = request.headers()['x-grover-local-reviewer'] ?? reviewers[0][0];
+      const reviewerId = request.headers()['x-yardfolio-local-reviewer'] ?? reviewers[0][0];
       const reviewer = reviewers.find(([id]) => id === reviewerId) ?? reviewers[0];
       const [, displayName, role] = reviewer;
       return route.fulfill({
@@ -63,7 +63,7 @@ test.beforeEach(async ({ page }) => {
           memberships: [{
             id: `membership-${reviewerId}`,
             organization_id: 'org_demo_landscaping',
-            organization_name: 'Grover Demo Landscaping',
+            organization_name: 'Desert Bloom Landscaping',
             organization_type: 'yard_care_company',
             user_id: `local-review-${reviewerId}`,
             display_name: displayName,
@@ -111,7 +111,7 @@ test('workspace access verification fails closed and recovers without a reload',
         memberships: [{
           id: 'membership-organization-owner',
           organization_id: 'org_demo_landscaping',
-          organization_name: 'Grover Demo Landscaping',
+          organization_name: 'Desert Bloom Landscaping',
           organization_type: 'yard_care_company',
           user_id: 'local-review-organization-owner',
           display_name: 'Olivia — Organization Owner',
@@ -125,19 +125,20 @@ test('workspace access verification fails closed and recovers without a reload',
   });
 
   await page.goto('/app');
-  await expect(page.getByRole('heading', { name: 'Unable to safely open your workspace' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your information is still protected' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Desktop workspace' })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Retry access verification' }).click();
+  await page.getByRole('button', { name: 'Check access again' }).click();
 
+  await expect(page.getByRole('navigation', { name: 'Desktop workspace' }))
+    .toBeVisible({ timeout: 15_000 });
   await expect(page.getByLabel('Local reviewer account')).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'Desktop workspace' })).toBeVisible();
   expect(accessRequests).toBeGreaterThanOrEqual(2);
 });
 
 test('an unscoped role claim receives Home only until membership is assigned', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-member');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'crew-member');
   });
   await page.route('http://localhost:8080/me/access', (route) => route.fulfill({
     contentType: 'application/json',
@@ -288,8 +289,8 @@ test('desktop local review changes the rendered workspace, not only its title', 
 
 test('desktop management categories are filtered for portfolio and support roles', async ({ page }) => {
   await page.addInitScript(() => {
-    if (!window.sessionStorage.getItem('grover.local-reviewer-id')) {
-      window.sessionStorage.setItem('grover.local-reviewer-id', 'property-manager');
+    if (!window.sessionStorage.getItem('yardfolio.local-reviewer-id')) {
+      window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'property-manager');
     }
   });
   await page.goto('/app');
@@ -318,7 +319,7 @@ test('desktop management categories are filtered for portfolio and support roles
 
 test('mobile Home keeps its final action clear of fixed navigation', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'manager');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'manager');
   });
 
   for (const viewport of [
@@ -328,7 +329,19 @@ test('mobile Home keeps its final action clear of fixed navigation', async ({ pa
   ]) {
     await page.setViewportSize(viewport);
     await page.goto('/app');
-    const workspaceActions = page.locator('section.grover-card').filter({
+    const recommendedAction = page.getByRole('button', { name: /Recommended next/ });
+    const progressLabel = page.getByRole('article')
+      .filter({ has: page.getByText('jobs complete', { exact: true }) })
+      .getByText('Field delivery', { exact: true });
+    await expect(recommendedAction).toBeVisible();
+    const recommendedTop = await recommendedAction.evaluate(
+      (element) => element.getBoundingClientRect().top,
+    );
+    const progressTop = await progressLabel.evaluate(
+      (element) => element.getBoundingClientRect().top,
+    );
+    expect(recommendedTop).toBeLessThan(progressTop);
+    const workspaceActions = page.locator('section.yardfolio-card').filter({
       has: page.getByText('Your workspace', { exact: true }),
     });
     const finalAction = workspaceActions.getByRole('button').last();
@@ -340,7 +353,7 @@ test('mobile Home keeps its final action clear of fixed navigation', async ({ pa
   await page.evaluate(() => {
     document.documentElement.style.zoom = '2';
   });
-  const zoomedWorkspaceActions = page.locator('section.grover-card').filter({
+  const zoomedWorkspaceActions = page.locator('section.yardfolio-card').filter({
     has: page.getByText('Your workspace', { exact: true }),
   });
   await expectActionAboveMobileWorkspaceNavigation(
@@ -349,12 +362,42 @@ test('mobile Home keeps its final action clear of fixed navigation', async ({ pa
   );
 });
 
-test('property manager enters the connected portfolio command center on phone and desktop', async ({ page }) => {
+test('property manager portfolio uses protected visits and withholds them after access ends', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'property-manager');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'property-manager');
+  });
+  let accessActive = true;
+  await page.route('http://localhost:8080/customer-portal/visits', (route) => {
+    if (!accessActive) {
+      return route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'customer_portal_access_required', message: 'No active access.' }),
+      });
+    }
+    return route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        properties: [
+          { organization_id: 'org_demo_landscaping', account_id: 'account_1', property_id: 'canyon', property_display_name: 'Canyon View' },
+          { organization_id: 'org_demo_landscaping', account_id: 'account_1', property_id: 'sage', property_display_name: 'Sage Lane' },
+        ],
+        visits: [{
+          organization_id: 'org_demo_landscaping', account_id: 'account_1', property_id: 'canyon',
+          customer_visit_reference: 'visit_canyon', service_date: '2026-09-16',
+          window_start_epoch_seconds: 1789563600, window_end_epoch_seconds: 1789570800,
+          time_zone: 'America/Phoenix', service_title: 'One-time cleanup and pruning',
+          service_scope: ['Cleanup', 'Pruning'], status: 'confirmed',
+          preparation_message: 'Prepare the approved entrance.',
+          next_update_message: 'The provider will send an arrival update.',
+          delivered_proof_available: false,
+        }],
+      }),
+    });
   });
 
   for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
+    accessActive = true;
     await page.setViewportSize(viewport);
     await page.goto('/app');
 
@@ -365,32 +408,98 @@ test('property manager enters the connected portfolio command center on phone an
 
     const portfolio = page.locator('[data-property-manager-portfolio]');
     await expect(portfolio).toBeVisible();
-    await expect(portfolio.getByText('Local review data boundary', { exact: true })).toBeVisible();
-    await expect(portfolio.getByRole('navigation', { name: 'Property portfolio' })).toBeVisible();
-    await expect(portfolio.getByRole('heading', { name: 'Start with what needs attention.' })).toBeVisible();
-    await expect(portfolio.getByText('Provider routes, crew notes, cost basis, margins', { exact: false })).toBeVisible();
-    await expect(portfolio.getByRole('heading', { name: /Welcome back/ })).toHaveCount(0);
+    await expect(portfolio.getByRole('heading', { name: 'Your authorized properties' })).toBeVisible();
+    await expect(portfolio.getByRole('button', { name: /Canyon View/ })).toBeVisible();
+    await expect(portfolio.getByRole('button', { name: /Sage Lane/ })).toBeVisible();
+    await expect(portfolio.getByText('Roosevelt Courtyard')).toHaveCount(0);
+    await portfolio.getByRole('button', { name: /Canyon View/ }).click();
+    await expect(portfolio.getByRole('heading', { name: 'One-time cleanup and pruning' })).toBeVisible();
+    await portfolio.getByLabel('Find a property').fill('Sage');
+    await expect(portfolio.getByRole('button', { name: /Canyon View/ })).toHaveCount(0);
+    await expect(portfolio.getByRole('button', { name: /Sage Lane/ })).toBeVisible();
 
-    await portfolio.getByRole('button', { name: 'Properties', exact: true }).click();
-    await expect(portfolio.getByRole('heading', { name: 'Every property, one accountable view.' })).toBeVisible();
-    await portfolio.getByLabel('Search portfolio properties').fill('Backyard');
-    await expect(portfolio.getByRole('heading', { name: 'Backyard Renovation Area' })).toBeVisible();
-    await expect(portfolio.getByRole('heading', { name: 'Sample Customer Home' })).toHaveCount(0);
-
-    await portfolio.getByRole('button', { name: 'Proof', exact: true }).click();
-    await expect(portfolio.getByRole('heading', { name: 'Proof ready for review.' })).toBeVisible();
-    await portfolio.getByRole('button', { name: 'Approvals', exact: true }).click();
-    await expect(portfolio.getByRole('heading', { name: 'Recommendations and recorded decisions.' })).toBeVisible();
+    accessActive = false;
+    await page.reload();
+    await expect(page.getByText('Property portfolio access is not active').first()).toBeVisible();
+    await workspaceNavigation.getByRole('button', { name: 'Portfolio', exact: true }).click();
+    await expect(portfolio.getByText('Property portfolio access is not active.')).toBeVisible();
+    await expect(portfolio.getByText('Canyon View')).toHaveCount(0);
+    await expect(portfolio.getByText('Sage Lane')).toHaveCount(0);
+    await expect(portfolio.getByRole('button', { name: 'Try again' })).toBeVisible();
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(1);
   }
 });
 
+test('property manager accepts a minimized invitation before property details appear', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'property-manager');
+  });
+  let accepted = false;
+  await page.route('http://localhost:8080/customer-property-manager-invitations', (route) => (
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(accepted ? [{
+        invitation_id: 'manager_invitation_1', status: 'accepted', expires_at_epoch_seconds: 1_899_000_000,
+      }] : [{
+        invitation_id: 'manager_invitation_1', status: 'pending', expires_at_epoch_seconds: 1_899_000_000,
+      }]),
+    })
+  ));
+  await page.route(
+    'http://localhost:8080/customer-property-manager-invitations/manager_invitation_1/accept',
+    async (route) => {
+      accepted = true;
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          invitation_id: 'manager_invitation_1', activation_id: 'activation_1',
+          owner_property_id: 'owner_property_1', organization_id: 'org_demo_landscaping',
+          account_id: 'account_1', property_id: 'canyon', owner_user_id: 'owner_1',
+          recipient_email: 'property-manager@example.test', status: 'accepted',
+          accepted_user_id: 'local-review-property-manager', created_at_epoch_seconds: 1_800_000_000,
+          expires_at_epoch_seconds: 1_899_000_000, accepted_at_epoch_seconds: 1_800_000_100,
+          revoked_at_epoch_seconds: null, persisted: true,
+        }),
+      });
+    },
+  );
+  await page.route('http://localhost:8080/customer-portal/visits', (route) => {
+    if (!accepted) {
+      return route.fulfill({
+        status: 403, contentType: 'application/json',
+        body: JSON.stringify({ error: 'customer_portal_access_required', message: 'No active access.' }),
+      });
+    }
+    return route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        properties: [{
+          organization_id: 'org_demo_landscaping', account_id: 'account_1',
+          property_id: 'canyon', property_display_name: 'Canyon View',
+        }],
+        visits: [],
+      }),
+    });
+  });
+
+  await page.goto('/app');
+  await page.getByRole('navigation', { name: 'Desktop workspace' })
+    .getByRole('button', { name: 'Portfolio', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'Review access before property details are shown' })).toBeVisible();
+  await expect(page.getByText('Canyon View')).toHaveCount(0);
+  await expect(page.getByText('One-property access invitation')).toBeVisible();
+  await page.getByRole('button', { name: 'Accept one-property access' }).click();
+  await expect(page.getByText('Invitation accepted. Your protected portfolio is being refreshed.')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Canyon View/ })).toBeVisible();
+});
+
 test('organization owner Team opens the responsive team and access command center', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'organization-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'organization-owner');
   });
   await page.route('http://localhost:8080/organizations/org_demo_landscaping/memberships', (route) => (
     route.fulfill({
@@ -399,7 +508,7 @@ test('organization owner Team opens the responsive team and access command cente
         {
           id: 'membership_owner',
           organization_id: 'org_demo_landscaping',
-          organization_name: 'Grover Demo Landscaping',
+          organization_name: 'Desert Bloom Landscaping',
           organization_type: 'yard_care_company',
           user_id: 'local-review-organization-owner',
           display_name: 'Olivia — Organization Owner',
@@ -411,7 +520,7 @@ test('organization owner Team opens the responsive team and access command cente
         {
           id: 'membership_lead',
           organization_id: 'org_demo_landscaping',
-          organization_name: 'Grover Demo Landscaping',
+          organization_name: 'Desert Bloom Landscaping',
           organization_type: 'yard_care_company',
           user_id: 'crew-lead',
           display_name: 'Leah — Crew Lead',
@@ -529,7 +638,7 @@ test('organization owner Team opens the responsive team and access command cente
 
 test('team overview preserves available counts during a partial API outage', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'organization-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'organization-owner');
   });
   await page.route('http://localhost:8080/organizations/org_demo_landscaping/memberships', (route) => (
     route.fulfill({
@@ -538,7 +647,7 @@ test('team overview preserves available counts during a partial API outage', asy
         {
           id: 'membership_owner',
           organization_id: 'org_demo_landscaping',
-          organization_name: 'Grover Demo Landscaping',
+          organization_name: 'Desert Bloom Landscaping',
           organization_type: 'yard_care_company',
           user_id: 'local-review-organization-owner',
           display_name: 'Olivia — Organization Owner',
@@ -569,12 +678,12 @@ test('team overview preserves available counts during a partial API outage', asy
 
 test('member directory warns before changing the signed-in owner access', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'organization-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'organization-owner');
   });
   const member = (id: string, userId: string, displayName: string) => ({
     id,
     organization_id: 'org_demo_landscaping',
-    organization_name: 'Grover Demo Landscaping',
+    organization_name: 'Desert Bloom Landscaping',
     organization_type: 'yard_care_company',
     user_id: userId,
     display_name: displayName,
@@ -620,7 +729,7 @@ test('member directory warns before changing the signed-in owner access', async 
 
 test('member directory distinguishes unavailable persistence from an empty team', async ({ page }) => {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'organization-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'organization-owner');
   });
   await page.route('http://localhost:8080/organizations/org_demo_landscaping/memberships', (route) => (
     route.fulfill({
@@ -657,7 +766,7 @@ test('authenticated home retains the shared shell materials and type roles', asy
   const shell = await page.evaluate(() => {
     const main = document.querySelector('main');
     const heading = document.querySelector('h1');
-    const brandMark = document.querySelector('.grover-brand-mark');
+    const brandMark = document.querySelector('.yardfolio-brand-mark');
     if (!main || !heading || !brandMark) {
       throw new Error('Authenticated shell theme targets were not rendered.');
     }
@@ -763,7 +872,7 @@ test('field Route prioritizes progress, current stop, and up-next work', async (
   let activeServiceDate = serviceDate;
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-lead');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'crew-lead');
   });
   await page.route('http://localhost:8080/crews/crew_1001/day-plan/today', (route) => (
     route.fulfill({
@@ -814,6 +923,38 @@ test('field Route prioritizes progress, current stop, and up-next work', async (
       }),
     })
   ));
+  const currentJob = {
+    id: 'job_oak',
+    organization_id: 'org_demo_landscaping',
+    assigned_crew_id: 'crew_1001',
+    customer_name: 'Oak Street Residence',
+    property_address: '123 Oak Street',
+    status: 'in_progress',
+    scheduled_date: serviceDate,
+    before_photos: 1,
+    after_photos: 0,
+    checklist_items: 3,
+    completed_checklist_items: 1,
+  };
+  await page.route('http://localhost:8080/jobs/job_oak', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ...currentJob,
+      checklist: [
+        { id: 'arrival', label: 'Confirm arrival', completed: true },
+        { id: 'service', label: 'Complete service', completed: false },
+        { id: 'notes', label: 'Record notes', completed: false },
+      ],
+    }),
+  }));
+  await page.route('http://localhost:8080/jobs/job_oak/add-ons', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+  await page.route('http://localhost:8080/jobs/job_oak/photos', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
 
   await page.goto('/app');
   await page.getByRole('navigation', { name: 'Mobile workspace' })
@@ -842,6 +983,16 @@ test('field Route prioritizes progress, current stop, and up-next work', async (
   });
   expect(hierarchy.currentTop).toBeLessThan(hierarchy.changesTop);
 
+  await route.getByRole('button', { name: 'Open job details for Oak Street Residence' }).click();
+  const mobileNavigation = page.getByRole('navigation', { name: 'Mobile workspace' });
+  await expect(mobileNavigation.getByRole('button', { name: 'Job', exact: true }))
+    .toHaveAttribute('aria-current', 'page');
+  const jobDetail = page.locator('#job-detail');
+  await expect(jobDetail.getByRole('heading', { name: 'Oak Street Residence' })).toBeVisible();
+  await expect(jobDetail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
+  await mobileNavigation.getByRole('button', { name: 'Route', exact: true }).click();
+  await expect(route).toBeVisible();
+
   await route.getByRole('button', { name: 'Finish stop' }).click();
   await expect(route.getByText('1 of 3', { exact: false })).toBeVisible();
   await expect(route.getByRole('progressbar', { name: '33% of route complete' }))
@@ -867,7 +1018,7 @@ test('field Route prioritizes progress, current stop, and up-next work', async (
 test('field Jobs supports compact status and customer filtering', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-lead');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'crew-lead');
   });
   await page.route('http://localhost:8080/jobs', (route) => route.fulfill({
     contentType: 'application/json',
@@ -921,7 +1072,8 @@ test('field Jobs supports compact status and customer filtering', async ({ page 
   const jobs = page.locator('#assigned-jobs').locator('..');
   await expect(jobs.getByText('3 shown', { exact: true })).toBeVisible();
   await expect(jobs.getByText('Oak Street Residence', { exact: true })).toBeVisible();
-  await expect(jobs.getByText('4/6 checklist · 1 before · 0 after', { exact: true })).toBeVisible();
+  await expect(jobs.getByText('4/6 tasks · 1 before photo · 0 after photos', { exact: true }))
+    .toBeVisible();
 
   await jobs.getByLabel('Filter assigned jobs by status').selectOption('in_progress');
   await expect(jobs.getByText('1 shown', { exact: true })).toBeVisible();
@@ -942,7 +1094,7 @@ test('field Jobs supports compact status and customer filtering', async ({ page 
 test('field Job keeps context and primary actions while opening one workflow panel', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-lead');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'crew-lead');
   });
   const job = {
     id: 'job_oak',
@@ -985,37 +1137,102 @@ test('field Job keeps context and primary actions while opening one workflow pan
   await page.goto('/app');
   await page.getByRole('navigation', { name: 'Mobile workspace' })
     .getByRole('button', { name: 'Jobs', exact: true }).click();
-  await page.getByRole('button', { name: 'Open Job', exact: true }).click();
+  await page.getByRole('button', { name: 'Open job', exact: true }).click();
 
   const detail = page.locator('#job-detail');
-  await expect(detail.getByText('Current service target', { exact: true })).toBeVisible();
+  await expect(detail.getByText('Current job', { exact: true })).toBeVisible();
   await expect(detail.getByRole('heading', { name: 'Oak Street Residence' })).toBeVisible();
   await expect(detail.getByRole('button', { name: 'Complete Job' })).toBeDisabled();
-  await expect(detail.getByText('2 evidence gaps', { exact: true })).toBeVisible();
+  await expect(detail.getByText('2 photos needed', { exact: true })).toBeVisible();
   await expect(detail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
-  await expect(detail.getByRole('tabpanel', { name: /Checklist/ })).toBeHidden();
+  await expect(detail.getByRole('tabpanel', { name: /Tasks/ })).toBeHidden();
 
-  await detail.getByRole('tab', { name: /Checklist/ }).click();
+  await detail.getByRole('tab', { name: /Tasks/ }).click();
   await expect(detail.getByRole('button', { name: 'Complete Job' })).toBeVisible();
   await expect(detail.getByRole('tabpanel', { name: /Overview/ })).toBeHidden();
-  await expect(detail.getByRole('tabpanel', { name: /Checklist/ })).toBeVisible();
+  await expect(detail.getByRole('tabpanel', { name: /Tasks/ })).toBeVisible();
   await expect(detail.getByText('Confirm arrival', { exact: true })).toBeVisible();
 
   const photosTab = detail.getByRole('tab', { name: /Photos/ });
   await photosTab.click();
-  await expect(detail.getByRole('tabpanel', { name: /Checklist/ })).toBeHidden();
+  await expect(detail.getByRole('tabpanel', { name: /Tasks/ })).toBeHidden();
   await expect(detail.getByRole('tabpanel', { name: /Photos/ })).toBeVisible();
-  await expect(detail.getByText('Photo evidence', { exact: true })).toBeVisible();
+  await expect(detail.getByText('Job photos', { exact: true })).toBeVisible();
   await photosTab.press('End');
   await expect(detail.getByRole('tabpanel', { name: /Photos/ })).toBeHidden();
   await expect(detail.getByRole('tabpanel', { name: /Report/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('desktop job selection opens Job and repeated selection restores Overview', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'crew-lead');
+  });
+  const job = {
+    id: 'job_desktop',
+    organization_id: 'org_demo_landscaping',
+    assigned_crew_id: 'crew_1001',
+    customer_name: 'Desert Willow Home',
+    property_address: '88 Willow Lane',
+    status: 'in_progress',
+    scheduled_date: '2026-10-22',
+    before_photos: 1,
+    after_photos: 0,
+    checklist_items: 3,
+    completed_checklist_items: 1,
+  };
+  await page.route('http://localhost:8080/jobs', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([job]),
+  }));
+  await page.route('http://localhost:8080/jobs/job_desktop', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ...job,
+      checklist: [
+        { id: 'arrival', label: 'Confirm arrival', completed: true },
+        { id: 'service', label: 'Complete service', completed: false },
+        { id: 'notes', label: 'Record notes', completed: false },
+      ],
+    }),
+  }));
+  await page.route('http://localhost:8080/jobs/job_desktop/add-ons', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+  await page.route('http://localhost:8080/jobs/job_desktop/photos', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+
+  await page.goto('/app');
+  const navigation = page.getByRole('navigation', { name: 'Desktop workspace' });
+  const assignedJobs = page.locator('#assigned-jobs').locator('..');
+  await navigation.getByRole('button', { name: 'Jobs', exact: true }).click();
+  await assignedJobs.getByRole('button', { name: 'Open job', exact: true }).click();
+
+  const jobDestination = navigation.getByRole('button', { name: 'Job', exact: true });
+  const detail = page.locator('#job-detail');
+  await expect(jobDestination).toHaveAttribute('aria-current', 'page');
+  await expect(detail).toBeVisible();
+  await expect(detail.getByRole('heading', { name: 'Desert Willow Home' })).toBeVisible();
+  await expect(detail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
+
+  await detail.getByRole('tab', { name: /Photos/ }).click();
+  await expect(detail.getByRole('tabpanel', { name: /Photos/ })).toBeVisible();
+  await navigation.getByRole('button', { name: 'Jobs', exact: true }).click();
+  await assignedJobs.getByRole('button', { name: 'Job open', exact: true }).click();
+
+  await expect(jobDestination).toHaveAttribute('aria-current', 'page');
+  await expect(detail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
+  await expect(detail.getByRole('tabpanel', { name: /Photos/ })).toBeHidden();
+});
+
 test('manager Schedule opens a responsive route board and planning inspector', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'manager');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'manager');
   });
   await page.route('http://localhost:8080/crews', (route) => route.fulfill({
     contentType: 'application/json',
@@ -1070,6 +1287,36 @@ test('manager Schedule opens a responsive route board and planning inspector', a
         completed_checklist_items: 0,
       },
     ]),
+  }));
+  await page.route('http://localhost:8080/jobs/job_oak', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      id: 'job_oak',
+      organization_id: 'org_demo_landscaping',
+      assigned_crew_id: 'crew_north',
+      customer_name: 'Oak Street Residence',
+      property_address: '123 Oak Street',
+      status: 'scheduled',
+      scheduled_date: '2026-08-22',
+      before_photos: 0,
+      after_photos: 0,
+      checklist_items: 4,
+      completed_checklist_items: 0,
+      checklist: [
+        { id: 'arrival', label: 'Confirm arrival', completed: false },
+        { id: 'before', label: 'Capture before photos', completed: false },
+        { id: 'service', label: 'Complete contracted service', completed: false },
+        { id: 'notes', label: 'Record completion notes', completed: false },
+      ],
+    }),
+  }));
+  await page.route('http://localhost:8080/jobs/job_oak/add-ons', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+  await page.route('http://localhost:8080/jobs/job_oak/photos', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
   }));
   await page.route('http://localhost:8080/day-plans', async (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
@@ -1126,13 +1373,26 @@ test('manager Schedule opens a responsive route board and planning inspector', a
   ]);
   expect(mobilePositions[0]?.y).toBeLessThan(mobilePositions[1]?.y ?? 0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByRole('button', { name: 'Tools', exact: true }).click();
+  await page.getByRole('button', { name: /Workload/ }).click();
+  const workload = page.getByRole('heading', { name: 'Day workload' }).locator('xpath=ancestor::section[1]');
+  await workload.getByRole('button', { name: 'Oak Street Residence', exact: true }).click();
+
+  const navigation = page.getByRole('navigation', { name: 'Desktop workspace' });
+  await expect(navigation.getByRole('button', { name: 'Job', exact: true }))
+    .toHaveAttribute('aria-current', 'page');
+  const jobDetail = page.locator('#job-detail');
+  await expect(jobDetail.getByRole('heading', { name: 'Oak Street Residence' })).toBeVisible();
+  await expect(jobDetail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
 });
 
 test('manager Recovery inspects an exception and returns to affected work', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   const today = new Date().toISOString().slice(0, 10);
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'manager');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'manager');
   });
   await page.route(/http:\/\/localhost:8080\/operational-exceptions(?:\?.*)?$/, (route) => route.fulfill({
     contentType: 'application/json',
@@ -1229,10 +1489,10 @@ test('manager Recovery inspects an exception and returns to affected work', asyn
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test('manager completion review opens the selected Job report workflow', async ({ page }) => {
+test('manager completion review and Recovery open the selected Job workflow', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'manager');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'manager');
   });
   const job = {
     id: 'job_report',
@@ -1308,30 +1568,99 @@ test('manager completion review opens the selected Job report workflow', async (
     contentType: 'application/json',
     body: JSON.stringify(report),
   }));
+  await page.route(/http:\/\/localhost:8080\/operational-exceptions(?:\?.*)?$/, (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([
+      {
+        id: 'exception_job_report',
+        organization_id: 'org_demo_landscaping',
+        category: 'access',
+        priority: 'high',
+        status: 'open',
+        title: 'Gate access needs confirmation',
+        description: 'The office needs to confirm access before follow-up work.',
+        affected_resource_type: 'job',
+        affected_resource_id: 'job_report',
+        assigned_user_id: 'local-review-manager',
+        reported_by_user_id: 'crew_lead_1',
+        resolved_by_user_id: null,
+        resolution_note: null,
+        resolved_at: null,
+        created_at: '2026-08-22T15:00:00Z',
+        updated_at: '2026-08-22T15:05:00Z',
+      },
+    ]),
+  }));
+  await page.route(/http:\/\/localhost:8080\/operational-activity(?:\?.*)?$/, (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([
+      {
+        id: 'audit_exception_job_report_created',
+        organization_id: 'org_demo_landscaping',
+        event_kind: 'operational_exception_created',
+        target_id: 'exception_job_report',
+        actor_user_id: 'local-review-manager',
+        actor_label: 'Morgan Manager',
+        occurred_at: '2026-08-22T15:05:00Z',
+        metadata: {
+          title: 'Gate access needs confirmation',
+          category: 'access',
+          priority: 'high',
+          status: 'open',
+          assigned_user_id: 'local-review-manager',
+        },
+      },
+    ]),
+  }));
 
   await page.goto('/app');
-  await page.getByRole('navigation', { name: 'Desktop workspace' })
-    .getByRole('button', { name: 'Manage', exact: true }).click();
+  const navigation = page.getByRole('navigation', { name: 'Desktop workspace' });
+  await expect(navigation).toBeVisible({ timeout: 15_000 });
+  const todayQueue = page.getByRole('heading', { name: 'Work that needs your attention' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(todayQueue.getByRole('heading', { name: 'Completion report is ready for review' }))
+    .toBeVisible({ timeout: 15_000 });
+  await todayQueue.getByRole('button', { name: 'Open report' }).click();
+
+  const jobDetail = page.locator('#job-detail');
+  await expect(navigation.getByRole('button', { name: 'Job', exact: true }))
+    .toHaveAttribute('aria-current', 'page');
+  await expect(jobDetail.getByRole('tabpanel', { name: /Report/ })).toBeVisible();
+  await expect(jobDetail.getByRole('tabpanel', { name: /Overview/ })).toBeHidden();
+
+  await navigation.getByRole('button', { name: 'Manage', exact: true }).click();
   await page.getByRole('button', { name: /Reports/ }).click();
   await page.getByRole('button', { name: /Completion reports/ }).click();
 
   const review = page.getByRole('heading', { name: 'Reports and communication' }).locator('xpath=ancestor::div[1]');
-  await expect(review.getByRole('heading', { name: 'Completion review queue' })).toBeVisible();
+  await expect(review.getByRole('heading', { name: 'Reports to review' })).toBeVisible();
   await expect(review.getByText('Oak Street Residence', { exact: true })).toBeVisible();
-  await review.getByRole('button', { name: 'Open report' }).click();
+  await review.getByRole('button', { name: 'Review report' }).click();
 
-  const jobDetail = page.locator('#job-detail');
   await expect(jobDetail).toBeVisible();
   await expect(jobDetail.getByRole('tabpanel', { name: /Report/ })).toBeVisible();
   await expect(jobDetail.getByRole('tabpanel', { name: /Overview/ })).toBeHidden();
   await expect(jobDetail.getByText('Completion report', { exact: true })).toBeVisible();
+
+  await navigation.getByRole('button', { name: 'Manage', exact: true }).click();
+  await page.getByRole('button', { name: /Reports/ }).click();
+  await page.getByRole('button', { name: /Operations activity/ }).click();
+  await page.getByRole('button', { name: 'Open Recovery item' }).click();
+  const recovery = page.getByRole('heading', { name: 'Recovery and exceptions' }).locator('xpath=ancestor::div[1]');
+  await expect(recovery.getByRole('heading', { name: 'Gate access needs confirmation' })).toBeVisible();
+  await recovery.getByRole('button', { name: 'Open affected work' }).click();
+
+  await expect(navigation.getByRole('button', { name: 'Job', exact: true }))
+    .toHaveAttribute('aria-current', 'page');
+  await expect(jobDetail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
+  await expect(jobDetail.getByRole('tabpanel', { name: /Report/ })).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
 test('yard owner phone Home opens compact one-visit-at-a-time service history', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'property-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'property-owner');
   });
   await page.route('http://localhost:8080/customer-portal/visits', (route) => route.fulfill({
     contentType: 'application/json',
@@ -1431,7 +1760,7 @@ test('yard owner phone Home opens compact one-visit-at-a-time service history', 
 test('yard owner protected visit recovery withholds facts and returns Home', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    window.sessionStorage.setItem('grover.local-reviewer-id', 'property-owner');
+    window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'property-owner');
   });
   let visitReadUnavailable = true;
   await page.route('http://localhost:8080/customer-portal/visits', (route) => {

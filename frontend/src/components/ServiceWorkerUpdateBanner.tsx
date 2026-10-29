@@ -8,8 +8,8 @@ export function ServiceWorkerUpdateBanner() {
     const handleUpdate = (event: Event) => {
       setRegistration((event as CustomEvent<ServiceWorkerRegistration>).detail);
     };
-    window.addEventListener('grover-service-worker-update', handleUpdate);
-    return () => window.removeEventListener('grover-service-worker-update', handleUpdate);
+    window.addEventListener('yardfolio-service-worker-update', handleUpdate);
+    return () => window.removeEventListener('yardfolio-service-worker-update', handleUpdate);
   }, []);
 
   function applyUpdate() {

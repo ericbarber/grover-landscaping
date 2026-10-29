@@ -1,17 +1,18 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { workspacePersonasForRoles } from '../domain/workspacePersona';
+import { workspacePersonasForRoles } from '../workspaces/core/resolveWorkspace';
 import {
   homeGreeting,
+  homeContinuityStatus,
   homePriorityStatus,
-  ownerPortalContinuityStatus,
+  homeProgressSummary,
   personaHomeHeadline,
   personaHomePromise,
   personaProgressLanguage,
-  WorkspaceHomePanel,
   workspaceHomeActions,
-} from './WorkspaceHomePanel';
+} from '../workspaces/features/home/workspaceHome';
+import { WorkspaceHomePanel } from './WorkspaceHomePanel';
 
 describe('workspace home actions', () => {
   it('shows field shortcuts for crew without duplicating Home', () => {
@@ -60,6 +61,39 @@ describe('workspace home actions', () => {
       .toContain('every stop');
     expect(personaHomePromise(workspacePersonasForRoles(['OrganizationOwner'])[0]))
       .toContain('business customers trust');
+  });
+
+  it('puts the exact manager service queue before generic workspace summaries', () => {
+    const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
+      assignedJobCount: 3, completedJobCount: 1, hasSelectedJob: false,
+      hasWorkspaceRole: true, onOpen: () => undefined, pendingChangeCount: 0,
+      persona: workspacePersonasForRoles(['Manager'])[0], signedInName: 'Manager',
+      managerTodayQueue: {
+        items: [{
+          jobId: 'job-1', customerName: 'Sample Customer', propertyAddress: '123 Oak Street',
+          scheduledDate: '2026-10-01', title: 'Completion proof is ready for review',
+          detail: 'Review submitted proof.', statusLabel: 'Manager review', tone: 'review',
+          workflow: 'report', priority: 1,
+        }],
+        state: 'ready', onOpenAll: () => undefined, onOpenItem: () => undefined,
+      },
+    }));
+
+    expect(markup.indexOf('Work that needs your attention'))
+      .toBeLessThan(markup.indexOf('Field delivery'));
+    expect(markup).toContain('Open report');
+  });
+
+  it('puts the recommended task before mobile progress summaries', () => {
+    const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
+      assignedJobCount: 4, completedJobCount: 1, hasSelectedJob: false,
+      hasWorkspaceRole: true, onOpen: () => undefined, pendingChangeCount: 0,
+      persona: workspacePersonasForRoles(['CrewLead'])[0], signedInName: 'Crew Lead',
+    }));
+
+    expect(markup.indexOf('Recommended next')).toBeLessThan(markup.indexOf('Route progress'));
+    expect(markup).toContain('min-h-[10.5rem]');
+    expect(markup).not.toContain('<span>Plan</span>');
   });
 
   it('describes progress in language that matches the active persona', () => {
@@ -113,46 +147,104 @@ describe('workspace home actions', () => {
     }).title).toBe('2 visits remaining');
   });
 
-  it('withholds owner progress and recommends setup when portal access is inactive', () => {
-    expect(ownerPortalContinuityStatus('access_required')).toMatchObject({
-      title: 'Customer portal access is not active',
-      tone: 'attention',
+  it('uses protected customer progress and withholds it when access is not ready', () => {
+    const routeOverview = { source: 'loading' as const, totalStops: 0, completedStops: 0 };
+    expect(homeProgressSummary({
+      assignedJobCount: 3,
+      completedJobCount: 2,
+      hasWorkspaceRole: true,
+      isLoadingWork: true,
+      personaId: 'yard-owner',
+      portalReadState: 'ready',
+      routeOverview,
+    })).toEqual({ completed: 2, state: 'ready', total: 3 });
+    expect(homeProgressSummary({
+      assignedJobCount: 3,
+      completedJobCount: 2,
+      hasWorkspaceRole: true,
+      personaId: 'yard-owner',
+      portalReadState: 'unavailable',
+      routeOverview,
+    })).toEqual({ completed: 0, state: 'unavailable', total: 0 });
+  });
+
+  it('uses the published crew route instead of the general job collection', () => {
+    expect(homeProgressSummary({
+      assignedJobCount: 8,
+      completedJobCount: 7,
+      hasWorkspaceRole: true,
+      personaId: 'crew-lead',
+      portalReadState: 'ready',
+      routeOverview: { source: 'api', totalStops: 4, completedStops: 1 },
+    })).toEqual({ completed: 1, state: 'ready', total: 4 });
+  });
+
+  it('does not turn denied portal access into an empty, clear schedule', () => {
+    const routeOverview = { source: 'loading' as const, totalStops: 0, completedStops: 0 };
+    expect(homeContinuityStatus('yard-owner', 'access_required', routeOverview)).toMatchObject({
+      title: 'Finish connecting your yard', progressAvailable: false,
     });
     const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
-      assignedJobCount: 0,
-      completedJobCount: 0,
-      hasSelectedJob: false,
-      hasWorkspaceRole: true,
-      onOpen: () => undefined,
-      pendingChangeCount: 0,
+      assignedJobCount: 0, completedJobCount: 0, hasSelectedJob: false,
+      hasWorkspaceRole: true, onOpen: () => undefined, pendingChangeCount: 0,
       persona: workspacePersonasForRoles(['PropertyOwner'])[0],
-      portalReadState: 'access_required',
-      signedInName: 'Yard Owner',
+      portalReadState: 'access_required', signedInName: 'Yard Owner',
     }));
-
-    expect(markup).toContain('Customer portal access is not active');
+    expect(markup).toContain('Finish connecting your yard');
     expect(markup).toContain('Status unverified');
     expect(markup).toContain('href="/app/yard-owner?resume=care"');
     expect(markup).toContain('Continue care setup');
+    expect(markup).toContain('Complete your property and provider setup');
+    expect(markup).toContain('Open care setup');
+    expect(markup).not.toContain('Open My yard');
     expect(markup.indexOf('Continue care setup')).toBeLessThan(markup.indexOf('My yard'));
     expect(markup).not.toContain('You’re clear for now');
   });
 
   it('keeps property and provider setup reachable after portal access is active', () => {
     const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
-      assignedJobCount: 2,
-      completedJobCount: 1,
-      hasSelectedJob: false,
-      hasWorkspaceRole: true,
-      onOpen: () => undefined,
-      pendingChangeCount: 0,
+      assignedJobCount: 2, completedJobCount: 1, hasSelectedJob: false,
+      hasWorkspaceRole: true, onOpen: () => undefined, pendingChangeCount: 0,
       persona: workspacePersonasForRoles(['PropertyOwner'])[0],
-      portalReadState: 'ready',
-      signedInName: 'Yard Owner',
+      portalReadState: 'ready', signedInName: 'Yard Owner',
     }));
 
     expect(markup).toContain('href="/app/yard-owner"');
     expect(markup).toContain('Set up or connect care');
     expect(markup.indexOf('My yard')).toBeLessThan(markup.indexOf('Set up or connect care'));
+  });
+
+  it('withholds Property Manager progress when the protected portfolio read fails', () => {
+    const routeOverview = { source: 'loading' as const, totalStops: 0, completedStops: 0 };
+    expect(homeContinuityStatus('property-manager', 'access_required', routeOverview)).toMatchObject({
+      title: 'Property portfolio access is not active', progressAvailable: false,
+    });
+    const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
+      assignedJobCount: 0, completedJobCount: 0, hasSelectedJob: false,
+      hasWorkspaceRole: true, onOpen: () => undefined, pendingChangeCount: 0,
+      persona: workspacePersonasForRoles(['PropertyManager'])[0],
+      portalReadState: 'access_required', signedInName: 'Property Manager',
+    }));
+    expect(markup).toContain('Property portfolio access is not active');
+    expect(markup).toContain('Status unverified');
+    expect(markup).not.toContain('You’re clear for now');
+  });
+
+  it('uses the loaded route date and stop count instead of assigned-job count', () => {
+    const routeOverview = {
+      source: 'api' as const, serviceDate: '2026-06-15', totalStops: 2, completedStops: 0,
+    };
+    expect(homeContinuityStatus('crew-lead', 'ready', routeOverview)).toMatchObject({
+      tone: 'attention', progressAvailable: true,
+    });
+    const markup = renderToStaticMarkup(createElement(WorkspaceHomePanel, {
+      assignedJobCount: 3, completedJobCount: 0, hasSelectedJob: false,
+      hasWorkspaceRole: true, onOpen: () => undefined, pendingChangeCount: 0,
+      persona: workspacePersonasForRoles(['CrewLead'])[0], routeOverview,
+      signedInName: 'Crew Lead',
+    }));
+    expect(markup).toContain('Past route');
+    expect(markup).toContain('0 of 2');
+    expect(markup).not.toContain('3 stops');
   });
 });

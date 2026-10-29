@@ -8,11 +8,13 @@ const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
 const formerDisplayNames = ['Yardfolio'];
 
 function frontendDisplayNameFrom(source) {
-  return source.match(/export const APP_DISPLAY_NAME = '([^']+)'/)?.[1] ?? null;
+  const match = source.match(/export const APP_DISPLAY_NAME = '([^']+)'/);
+  return match?.[1] ?? null;
 }
 
 function backendDisplayNameFrom(source) {
-  return source.match(/pub const APP_DISPLAY_NAME: &str = "([^"]+)"/)?.[1] ?? null;
+  const match = source.match(/pub const APP_DISPLAY_NAME: &str = "([^"]+)"/);
+  return match?.[1] ?? null;
 }
 
 export function validateProductBrandSources({
@@ -21,16 +23,18 @@ export function validateProductBrandSources({
   indexSource,
   manifestSource,
   iconSource,
+  publicSiteSource,
   runtimeSources,
 }) {
   const errors = [];
   const displayName = frontendDisplayNameFrom(applicationIdentitySource);
   if (!displayName) return ['frontend application identity must declare a literal APP_DISPLAY_NAME'];
-
-  if (backendDisplayNameFrom(backendApplicationIdentitySource) !== displayName) {
+  const backendDisplayName = backendDisplayNameFrom(backendApplicationIdentitySource);
+  if (backendDisplayName !== displayName) {
     errors.push('backend APP_DISPLAY_NAME is not aligned with frontend APP_DISPLAY_NAME');
   }
 
+  const fieldAppName = `${displayName} Field`;
   for (const [path, source] of runtimeSources) {
     if (source.includes(displayName)) {
       errors.push(`customer-visible application name must come from appIdentity.ts: ${path}`);
@@ -42,14 +46,14 @@ export function validateProductBrandSources({
     }
   }
 
-  const fieldAppName = `${displayName} Field`;
-  for (const fragment of [
+  const requiredIndexFragments = [
     `content="${displayName}"`,
     `content="${fieldAppName}"`,
     `content="${displayName} connects`,
     `content="${displayName} |`,
     `<title>${displayName} |`,
-  ]) {
+  ];
+  for (const fragment of requiredIndexFragments) {
     if (!indexSource.includes(fragment)) {
       errors.push(`frontend index metadata is not aligned with APP_DISPLAY_NAME: ${fragment}`);
     }
@@ -72,6 +76,9 @@ export function validateProductBrandSources({
 
   if (!iconSource.includes(`>${displayName}</title>`)) {
     errors.push('app icon accessible title is not aligned with APP_DISPLAY_NAME');
+  }
+  if (!publicSiteSource.includes('app_page_title(metadata.title)')) {
+    errors.push('server-rendered public route titles must compose through app_page_title');
   }
 
   return errors;
@@ -101,6 +108,7 @@ export async function validateRepositoryProductBrand(root = repositoryRoot) {
     indexSource: await read('frontend/index.html'),
     manifestSource: await read('frontend/public/manifest.webmanifest'),
     iconSource: await read('frontend/public/app-icon.svg'),
+    publicSiteSource: await read('backend/src/public_site.rs'),
     runtimeSources: await collectRuntimeSources(resolve(root, 'frontend/src')),
   });
 }
@@ -112,7 +120,7 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  process.stdout.write('Product brand is aligned across runtime, metadata, PWA, and backend identity.\n');
+  process.stdout.write('Product brand is aligned across runtime, metadata, PWA, and server-rendered titles.\n');
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

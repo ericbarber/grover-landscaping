@@ -101,7 +101,7 @@ function homepage() {
   let b = `<rect width="1440" height="1200" fill="${c.bone}"/>`;
   b += r(0, 0, 1440, 92, c.paper, 0);
   b += leafMark(38, 28, 34);
-  b += t(83, 55, 'GROVER', 19, 850, c.evergreen, 'start', sans, 2.6);
+  b += t(83, 55, 'YARDFOLIO', 19, 850, c.evergreen, 'start', sans, 2.6);
   b += t(334, 55, 'Product', 14, 650, c.ink);
   b += t(422, 55, 'How it works', 14, 650, c.ink);
   b += t(548, 55, 'Who it helps', 14, 650, c.ink);
@@ -110,7 +110,7 @@ function homepage() {
   b += button(1172, 23, 218, 'Request a walkthrough');
 
   b += r(0, 92, 760, 614, c.bone, 0);
-  b += `<image href="../../assets/grover-southwest-sunrise-hero.png" x="718" y="92" width="698" height="614" preserveAspectRatio="xMidYMid slice" clip-path="url(#hero-photo)"/>`;
+  b += `<image href="../../assets/yardfolio-southwest-sunrise-hero.png" x="718" y="92" width="698" height="614" preserveAspectRatio="xMidYMid slice" clip-path="url(#hero-photo)"/>`;
   b += `<rect x="718" y="92" width="698" height="614" fill="url(#photo-shade)" clip-path="url(#hero-photo)"/>`;
   b += pill(54, 146, 'FIELD OPERATIONS, BEAUTIFULLY CONNECTED', c.sageSoft, c.evergreen, 306);
   b += t(54, 232, 'Plan every visit.', 61, 600, c.ink, 'start', display, -.8);
@@ -169,7 +169,7 @@ function homepage() {
     b += chevron(x + 371, 1087, i === 1 ? c.white : c.evergreen);
   });
 
-  return svg(width, height, 'Grover public homepage high-fidelity concept', 'Premium Southwestern editorial homepage combining field operations proof with calm product storytelling.', defs, b);
+  return svg(width, height, 'Yardfolio public homepage high-fidelity concept', 'Premium Southwestern editorial homepage combining field operations proof with calm product storytelling.', defs, b);
 }
 
 function crewRoute() {
@@ -181,7 +181,7 @@ function crewRoute() {
   let b = `<rect width="390" height="844" fill="${c.bone}"/>`;
   b += r(0, 0, 390, 82, c.paper, 0);
   b += leafMark(18, 19, 28);
-  b += t(55, 37, 'GROVER', 12, 850, c.evergreen, 'start', sans, 1.8);
+  b += t(55, 37, 'YARDFOLIO', 12, 850, c.evergreen, 'start', sans, 1.8);
   b += t(55, 57, 'North crew · Today', 11, 550, c.slate);
   b += pill(280, 24, 'SYNCED', c.mint, c.evergreen, 76);
   b += circle(362, 38, 4, c.evergreen2);
@@ -236,7 +236,7 @@ function crewRoute() {
     b += t(x, 818, label, 10, 750, i === 1 ? c.white : c.slate, 'middle');
   });
 
-  return svg(width, height, 'Grover crew route mobile high-fidelity concept', 'Action-focused mobile crew route with sync confidence, current stop priority, and stable navigation.', defs, b);
+  return svg(width, height, 'Yardfolio crew route mobile high-fidelity concept', 'Action-focused mobile crew route with sync confidence, current stop priority, and stable navigation.', defs, b);
 }
 
 function managerSchedule() {
@@ -246,7 +246,7 @@ function managerSchedule() {
   let b = `<rect width="1440" height="1024" fill="#f4f4ef"/>`;
   b += r(0, 0, 232, 1024, c.forest, 0);
   b += leafMark(28, 25, 31, true);
-  b += t(70, 50, 'GROVER', 16, 850, c.white, 'start', sans, 2.2);
+  b += t(70, 50, 'YARDFOLIO', 16, 850, c.white, 'start', sans, 2.2);
   b += t(28, 92, 'DESERT BLOOM LANDSCAPING', 9, 750, c.sand, 'start', sans, 1.2);
   const sections = [['⌂', 'Overview'], ['▤', 'Schedule'], ['◇', 'Customers'], ['◎', 'Team'], ['▥', 'Reports'], ['!', 'Recovery']];
   sections.forEach(([icon, label], i) => {
@@ -374,7 +374,7 @@ function managerSchedule() {
   b += circle(1150, 935, 7, c.gold); b += t(1168, 939, '1 draft has blockers', 11, 600, c.slate);
   b += button(1138, 953, 252, 'Review blocked route');
 
-  return svg(width, height, 'Grover manager schedule high-fidelity concept', 'Professional desktop dispatch command center with realistic schedule lanes, capacity signals, and focused risk review.', defs, b);
+  return svg(width, height, 'Yardfolio manager schedule high-fidelity concept', 'Professional desktop dispatch command center with realistic schedule lanes, capacity signals, and focused risk review.', defs, b);
 }
 
 function visualSystem() {
@@ -384,7 +384,7 @@ function visualSystem() {
   let b = `<rect width="1440" height="1024" fill="${c.bone}"/>`;
   b += r(0, 0, 1440, 116, c.evergreen, 0);
   b += leafMark(48, 37, 38, true);
-  b += t(100, 63, 'GROVER', 18, 850, c.white, 'start', sans, 2.6);
+  b += t(100, 63, 'YARDFOLIO', 18, 850, c.white, 'start', sans, 2.6);
   b += t(100, 84, 'VISUAL FOUNDATION · V1', 9, 750, c.sand, 'start', sans, 1.5);
   b += t(1368, 64, 'Premium landscape character × operational clarity', 13, 550, '#d9e6e0', 'end');
 
@@ -462,7 +462,7 @@ function visualSystem() {
     b += t(1010, y + 20, copy, 10, 500, '#d4e2dc');
   });
 
-  return svg(width, height, 'Grover visual foundation high-fidelity board', 'Color, typography, components, status language, and experience principles for the professional Grover design system.', defs, b);
+  return svg(width, height, 'Yardfolio visual foundation high-fidelity board', 'Color, typography, components, status language, and experience principles for the professional Yardfolio design system.', defs, b);
 }
 
 const outputs = [
@@ -478,4 +478,4 @@ for (const [relativePath, content] of outputs) {
   await writeFile(outputPath, content, 'utf8');
 }
 
-console.log(`Rendered ${outputs.length} high-fidelity Grover concepts.`);
+console.log(`Rendered ${outputs.length} high-fidelity Yardfolio concepts.`);

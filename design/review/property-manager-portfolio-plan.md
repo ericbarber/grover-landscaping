@@ -4,7 +4,7 @@
 
 Turn the existing portfolio wireframe into a connected, responsive customer
 workspace before production React adoption. This phase serves property managers
-who oversee multiple locations but must not silently expand Grover into a full
+who oversee multiple locations but must not silently expand Yardfolio into a full
 multi-vendor marketplace or expose provider-private operations.
 
 ## Audited baseline

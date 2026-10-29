@@ -15,7 +15,8 @@ describe('application identity', () => {
       .toBe(`Landscaping operations software | ${APP_DISPLAY_NAME}`);
   });
 
-  it('keeps the compatibility namespace explicit', () => {
-    expect(APP_TECHNICAL_NAMESPACE).toBe('grover');
+  it('keeps the compatibility namespace separate from the display name', () => {
+    expect(APP_TECHNICAL_NAMESPACE).toBe('yardfolio');
+    expect(APP_TECHNICAL_NAMESPACE).not.toBe(APP_DISPLAY_NAME.toLowerCase());
   });
 });

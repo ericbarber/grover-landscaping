@@ -92,14 +92,14 @@ export function CustomerBidReviewPage({ shareToken }: CustomerBidReviewPageProps
   if (error && !bid) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-bone px-4 py-12 sm:px-6">
-        <section className="w-full max-w-xl rounded-3xl border border-slate-200 bg-paper p-7 text-center shadow-grover-md sm:p-9" role="alert">
+        <section className="w-full max-w-xl rounded-3xl border border-slate-200 bg-paper p-7 text-center shadow-yardfolio-md sm:p-9" role="alert">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-rose-100 text-rose-700">
             <WorkspaceIcon className="h-6 w-6" name="attention" />
           </span>
           <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-rose-700">Proposal unavailable</p>
           <h1 className="mt-3 font-display text-3xl font-black text-forest">Unable to open this proposal</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">{error}</p>
-          <button className="grover-button-primary mt-6 w-full sm:w-auto" onClick={reloadProposal} type="button">
+          <button className="yardfolio-button-primary mt-6 w-full sm:w-auto" onClick={reloadProposal} type="button">
             Try again
           </button>
           <p className="mt-5 text-xs text-slate-500">Closed links cannot be used to approve or decline work.</p>
@@ -128,7 +128,7 @@ export function CustomerBidReviewPage({ shareToken }: CustomerBidReviewPageProps
       <PublicCustomerLinkHeader />
 
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-paper shadow-grover-md">
+        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-paper shadow-yardfolio-md">
           <header className="bg-forest p-6 text-white sm:p-8 lg:p-10">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Customer decision</p>
             <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
@@ -148,14 +148,14 @@ export function CustomerBidReviewPage({ shareToken }: CustomerBidReviewPageProps
           <div className="space-y-7 p-5 sm:p-8 lg:p-10">
             {bid.customerMessage ? (
               <section className="rounded-2xl bg-emerald-50 p-5" aria-labelledby="proposal-message-heading">
-                <p className="grover-eyebrow">From your landscaping team</p>
+                <p className="yardfolio-eyebrow">From your landscaping team</p>
                 <h2 className="sr-only" id="proposal-message-heading">Proposal message</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-700">{bid.customerMessage}</p>
               </section>
             ) : null}
 
             <section aria-labelledby="proposed-scope-heading">
-              <p className="grover-eyebrow">Proposed scope</p>
+              <p className="yardfolio-eyebrow">Proposed scope</p>
               <h2 className="mt-2 font-display text-3xl font-black text-forest" id="proposed-scope-heading">
                 Work and pricing
               </h2>
@@ -178,7 +178,7 @@ export function CustomerBidReviewPage({ shareToken }: CustomerBidReviewPageProps
 
               <div className="mt-5 flex items-center justify-between gap-4 rounded-2xl bg-forest p-5 text-white sm:p-6">
                 <span className="font-black">Proposal total</span>
-                <span className="grover-type-operational text-3xl font-black">{currencyLabel(bid.totalCents)}</span>
+                <span className="yardfolio-type-operational text-3xl font-black">{currencyLabel(bid.totalCents)}</span>
               </div>
               {bid.expiresAt && bid.status === 'sent' ? (
                 <p className="mt-3 text-xs text-slate-500">This secure response link expires {dateTimeLabel(bid.expiresAt)}.</p>
@@ -186,8 +186,8 @@ export function CustomerBidReviewPage({ shareToken }: CustomerBidReviewPageProps
             </section>
 
             <section aria-labelledby="proposal-decision-heading" className="border-t border-slate-200 pt-7">
-              <p className="grover-eyebrow">Your decision</p>
-              <h2 className="grover-type-operational mt-2 text-3xl font-black text-forest" id="proposal-decision-heading">
+              <p className="yardfolio-eyebrow">Your decision</p>
+              <h2 className="yardfolio-type-operational mt-2 text-3xl font-black text-forest" id="proposal-decision-heading">
                 {answered ? 'Response recorded' : 'Approve or decline'}
               </h2>
 
@@ -215,14 +215,14 @@ export function CustomerBidReviewPage({ shareToken }: CustomerBidReviewPageProps
                     <div className="mt-3 rounded-xl bg-rose-100 p-3 text-sm font-bold text-rose-900" role="alert">{error}</div>
                   ) : null}
                   <div className="mt-4 grid gap-2 sm:flex">
-                    <button className="grover-button-primary" disabled={isSubmitting} onClick={confirmDecision} type="button">
+                    <button className="yardfolio-button-primary" disabled={isSubmitting} onClick={confirmDecision} type="button">
                       {isSubmitting ? 'Recording response…' : `Confirm ${pendingDecision === 'approve' ? 'approval' : 'decline'}`}
                     </button>
-                    <button className="grover-button-secondary" disabled={isSubmitting} onClick={() => setPendingDecision(null)} type="button">
+                    <button className="yardfolio-button-secondary" disabled={isSubmitting} onClick={() => setPendingDecision(null)} type="button">
                       Cancel
                     </button>
                     {error ? (
-                      <button className="grover-button-secondary" disabled={isSubmitting} onClick={reloadProposal} type="button">
+                      <button className="yardfolio-button-secondary" disabled={isSubmitting} onClick={reloadProposal} type="button">
                         Reload proposal
                       </button>
                     ) : null}
@@ -230,7 +230,7 @@ export function CustomerBidReviewPage({ shareToken }: CustomerBidReviewPageProps
                 </div>
               ) : (
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <button className="grover-button-primary" onClick={() => setPendingDecision('approve')} type="button">
+                  <button className="yardfolio-button-primary" onClick={() => setPendingDecision('approve')} type="button">
                     Approve proposal
                   </button>
                   <button className="inline-flex min-h-12 items-center justify-center rounded-xl border border-rose-300 bg-paper px-5 py-3 text-sm font-extrabold text-rose-800 transition hover:bg-rose-50" onClick={() => setPendingDecision('reject')} type="button">
