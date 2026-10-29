@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-10-29: Published the reconciled current-`main` integration as PR #38.
+  The first hosted run exposed an undeclared `rg` dependency in the release
+  preflight on GitHub's current Ubuntu 24.04 image. Release contract searches
+  now retain the fast `rg` path when available and fall back to portable
+  `grep`; contract coverage executes both paths. A passing hosted rerun and
+  deployment remain separate gates.
 - 2026-10-29: Added strict static type-checking for every Playwright spec and
   its configuration, enforced by frontend CI and the change-aware validator.
   The first run caught and repaired missing rollout-fixture imports and the

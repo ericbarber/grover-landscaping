@@ -42,6 +42,27 @@ external() {
   external_prerequisites=$((external_prerequisites + 1))
 }
 
+file_contains() {
+  local match_mode="$1"
+  local pattern="$2"
+  local path="$3"
+
+  if [[ "${PREFLIGHT_FORCE_PORTABLE_SEARCH:-0}" != "1" ]] && command -v rg >/dev/null 2>&1; then
+    if [[ "${match_mode}" == "fixed" ]]; then
+      rg -Fq -- "${pattern}" "${path}"
+    else
+      rg -q -- "${pattern}" "${path}"
+    fi
+    return
+  fi
+
+  if [[ "${match_mode}" == "fixed" ]]; then
+    grep -Fq -- "${pattern}" "${path}"
+  else
+    grep -Eq -- "${pattern}" "${path}"
+  fi
+}
+
 require_files() {
   local missing=()
   local path
@@ -116,13 +137,13 @@ validate_render_blueprint() {
 validate_production_guards() {
   local errors=0
 
-  rg -q 'app_environment\.eq_ignore_ascii_case\("production"\)' backend/src/main.rs || errors=$((errors + 1))
-  rg -q 'DATABASE_URL is required when APP_ENV=production' backend/src/main.rs || errors=$((errors + 1))
-  rg -q 'production && matches!\(mode, "disabled" \| "local_review"\)' backend/src/auth.rs || errors=$((errors + 1))
-  rg -q 'production Cognito URLs must use HTTPS' backend/src/auth.rs || errors=$((errors + 1))
-  rg -q 'unsafe_development_auth_modes_are_rejected_in_production' backend/src/auth.rs || errors=$((errors + 1))
-  rg -q 'PUBLIC_APP_URL is required when APP_ENV=production' backend/src/public_site.rs || errors=$((errors + 1))
-  rg -q 'PUBLIC_APP_URL must be an exact HTTPS origin in production' backend/src/public_site.rs || errors=$((errors + 1))
+  file_contains regex 'app_environment\.eq_ignore_ascii_case\("production"\)' backend/src/main.rs || errors=$((errors + 1))
+  file_contains regex 'DATABASE_URL is required when APP_ENV=production' backend/src/main.rs || errors=$((errors + 1))
+  file_contains regex 'production && matches!\(mode, "disabled" \| "local_review"\)' backend/src/auth.rs || errors=$((errors + 1))
+  file_contains regex 'production Cognito URLs must use HTTPS' backend/src/auth.rs || errors=$((errors + 1))
+  file_contains regex 'unsafe_development_auth_modes_are_rejected_in_production' backend/src/auth.rs || errors=$((errors + 1))
+  file_contains regex 'PUBLIC_APP_URL is required when APP_ENV=production' backend/src/public_site.rs || errors=$((errors + 1))
+  file_contains regex 'PUBLIC_APP_URL must be an exact HTTPS origin in production' backend/src/public_site.rs || errors=$((errors + 1))
 
   if ((errors)); then
     failed "production persistence/authentication/public-origin guard contract is incomplete (${errors} missing assertion(s))"
@@ -137,26 +158,26 @@ validate_smoke_contract() {
   local rollout_smoke=scripts/smoke-workspace-rollout.mjs
 
   [[ -x "${smoke}" ]] || errors=$((errors + 1))
-  rg -q 'BASE_URL:\?Set BASE_URL' "${smoke}" || errors=$((errors + 1))
-  rg -q 'ACCESS_TOKEN:\?Set ACCESS_TOKEN' "${smoke}" || errors=$((errors + 1))
-  rg -q '/health/ready' "${smoke}" || errors=$((errors + 1))
-  rg -q '/auth/config' "${smoke}" || errors=$((errors + 1))
-  rg -q 'unauthorized_status.*401|return 401' "${smoke}" || errors=$((errors + 1))
-  rg -q 'BASE_URL must be an HTTPS origin' "${smoke}" || errors=$((errors + 1))
-  rg -q -- '--connect-timeout' "${smoke}" || errors=$((errors + 1))
-  rg -q -- '--max-time' "${smoke}" || errors=$((errors + 1))
-  rg -q 'completed photo was not readable from the persisted job' "${smoke}" || errors=$((errors + 1))
-  rg -q 'cross-tenant job access did not fail closed with 403' "${smoke}" || errors=$((errors + 1))
+  file_contains regex 'BASE_URL:\?Set BASE_URL' "${smoke}" || errors=$((errors + 1))
+  file_contains regex 'ACCESS_TOKEN:\?Set ACCESS_TOKEN' "${smoke}" || errors=$((errors + 1))
+  file_contains regex '/health/ready' "${smoke}" || errors=$((errors + 1))
+  file_contains regex '/auth/config' "${smoke}" || errors=$((errors + 1))
+  file_contains regex 'unauthorized_status.*401|return 401' "${smoke}" || errors=$((errors + 1))
+  file_contains regex 'BASE_URL must be an HTTPS origin' "${smoke}" || errors=$((errors + 1))
+  file_contains regex '--connect-timeout' "${smoke}" || errors=$((errors + 1))
+  file_contains regex '--max-time' "${smoke}" || errors=$((errors + 1))
+  file_contains regex 'completed photo was not readable from the persisted job' "${smoke}" || errors=$((errors + 1))
+  file_contains regex 'cross-tenant job access did not fail closed with 403' "${smoke}" || errors=$((errors + 1))
   for name in SMOKE_JOB_ID SMOKE_OTHER_TENANT_JOB_ID SMOKE_DAY_PLAN_ID SMOKE_ACCOUNT_ID SMOKE_PROPERTY_ID; do
-    rg -Fq "${name}:?Set" "${smoke}" || errors=$((errors + 1))
+    file_contains fixed "${name}:?Set" "${smoke}" || errors=$((errors + 1))
   done
   [[ -x "${rollout_smoke}" ]] || errors=$((errors + 1))
   for name in SMOKE_ROLLOUT_PERSONA SMOKE_ROLLOUT_UNIT SMOKE_ROLLOUT_SCOPE_TYPE SMOKE_ROLLOUT_SCOPE_ID SMOKE_ROLLOUT_ORGANIZATION_ID SMOKE_ROLLOUT_REQUIRED_CAPABILITIES SMOKE_ROLLOUT_FORBIDDEN_CAPABILITIES SMOKE_ROLLOUT_SUCCESS_PATHS_JSON SMOKE_ROLLOUT_DENIAL_PATHS_JSON; do
-    rg -Fq "'${name}'" "${rollout_smoke}" || errors=$((errors + 1))
+    file_contains fixed "'${name}'" "${rollout_smoke}" || errors=$((errors + 1))
   done
-  rg -q 'enforcement_mode.*managed' "${rollout_smoke}" || errors=$((errors + 1))
-  rg -q 'rollout_mode.*cohort' "${rollout_smoke}" || errors=$((errors + 1))
-  rg -q 'cross-resource.*fail closed' "${rollout_smoke}" || errors=$((errors + 1))
+  file_contains regex 'enforcement_mode.*managed' "${rollout_smoke}" || errors=$((errors + 1))
+  file_contains regex 'rollout_mode.*cohort' "${rollout_smoke}" || errors=$((errors + 1))
+  file_contains regex 'cross-resource.*fail closed' "${rollout_smoke}" || errors=$((errors + 1))
 
   if ((errors)); then
     failed "production smoke input/behavior contract is incomplete (${errors} missing assertion(s))"

@@ -12,7 +12,7 @@ infer execution order from section position.
 | Lane | Current state | Next phase |
 | --- | --- | --- |
 | Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-delivered-outcome toolchain are implemented; full lifecycles, exact checkpoint receipts, isolated frontend entry, consolidated session control, and the seeded owner proposal path are live-verified; MG-Y1/open-decision is selected for Round 1 | Recruit two Yard Owners, instantiate each current-app condition immediately before use, then synthesize the matched findings |
-| Private review | A bounded local integration branch now reconciles the complete review line with current `main`, retaining the workspace architecture while adopting the supported CI actions, Tailwind 4 toolchain, security patches, and current backend checks. The clean local frontend, repository, and backend gates pass; publication, hosted PR CI, and the first deployment remain unclaimed | Publish the integration branch when requested, run hosted PR CI, then verify the first gated deploy |
+| Private review | The reconciled integration branch is published in PR #38 with clean local frontend, repository, and backend gates. Its first hosted run exposed an undeclared `rg` dependency in release preflight; the portable-search repair is implemented and locally contract-tested while the hosted rerun remains pending | Complete hosted PR CI, then deploy and smoke the exact passing commit |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered; B1/B3 and repository-owned B7/B8 work are implemented, B6/B9 preparations are ready, and a bounded B10 decision packet awaits approval | Approve or revise B10 boundaries while B4/B5/B6/B8/B9 evidence proceeds in an authorized environment |
 | Design | Prior concepts remain review inputs; Yardfolio Study M1 remains open, eight M2 task moments are simulated, and live provider-to-outcome fixtures are repeatable | Run B9 participant sessions and synthesize evidence before B2 expansion |
@@ -74,15 +74,19 @@ and aligned marketing-tour assertions with the shipped copy and document
 geometry. The accumulated delivery was committed as `c3f7301` and pushed to
 `origin/codex-review-feature`.
 
-A bounded local integration branch now merges that complete review line with
-current `origin/main`. It preserves the newer workspace and job-navigation
+A bounded integration branch now merges that complete review line with current
+`origin/main` and is published for hosted review in PR #38. It preserves the
+newer workspace and job-navigation
 architecture while incorporating Tailwind 4, supported Docker action runtimes,
 current backend authorization coverage, and the latest dependency-security
 baseline. The merge-artifact repair, clean Node 22 install, zero-finding live
 audit, 170-file / 706-test frontend suite, production build, artifact budgets,
 repository contracts, Rust formatting, strict Clippy, backend tests, and the
 five-journey focused Chromium handoff gate pass.
-This integration remains local: hosted PR CI and publication are not claimed.
+The first hosted run exposed that GitHub's current Ubuntu 24.04 image does not
+provide `rg`; release preflight now falls back to portable `grep`, with both
+search paths contract-tested. A passing hosted rerun and deployment remain
+unclaimed.
 
 B7 now adds a versioned production-artifact and browser-experience budget,
 privacy-bounded operational indicator contracts, an actionable validator with

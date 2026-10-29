@@ -17,7 +17,7 @@ for account access or live-service evidence.
 | --- | --- | --- | --- |
 | Repository | B0, B1, B3, the repository-owned B7/B8 contracts, and the B9 provider-to-outcome/session chain are implemented and live-verified through full cycles, exact checkpoint receipts, isolated frontend entry, seeded owner-to-proposal navigation, and consolidated cleanup | First value, delegation, public-hero, search/share, field commands, and repeatable Canyon/Sage proposal-to-proof fixtures pass repository and local live gates; MG-Y1/open-decision is selected for Round 1 | Recruit the first two Yard Owners, instantiate each condition immediately before use, and keep exact reset green |
 | Design review | B9 study materials and live provider-to-outcome fixtures are ready; participant evidence is incomplete | Ten persona profiles, responsive public-to-workspace preview, matched comprehension tasks, and repeatable two-owner live records cover supported task moments | Conduct participant sessions and synthesize findings before B2 expansion |
-| Private review | Local integration ready | The complete review line is reconciled with current `main`; clean frontend, repository, and backend gates pass while the existing Tailscale review remains on its previously published build | Publish the integration branch when requested, run hosted PR CI, then deploy and smoke the exact tested commit |
+| Private review | Hosted review in progress | PR #38 publishes the current-`main` reconciliation; clean local gates pass and the initial hosted run identified an undeclared release-preflight search dependency that is repaired and contract-tested | Complete hosted PR CI, then deploy and smoke the exact passing commit |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | B10 decision packet prepared | Core workflows plus exact activity-to-Recovery exception handoff are delivered; the bounded concern proposal remains unapproved | Approve or revise concern ownership, response, retention, privacy, categories, urgent handling, and notification scope before implementation |
 | Internal convergence | I1 is delivered | Authorization-aware feature coordinators, exact workspace/job destinations, and scope-safe route summaries leave the top-level React shell focused on composition and global outcome copy | Preserve the boundary during regression maintenance while B9, R2, and P2 remain the next evidence gates |
@@ -27,8 +27,8 @@ for account access or live-service evidence.
 ### B0 — Best-in-class program handoff
 
 State: implementation validated, committed, and published on
-`codex-review-feature`; a bounded current-`main` integration is locally
-validated and awaits publication.
+`codex-review-feature`; the bounded current-`main` integration is published in
+PR #38 and awaits a passing hosted-CI rerun.
 
 The approved ten-initiative program, dependencies, acceptance evidence,
 measures, rollout, and rollback boundaries are defined in
@@ -36,8 +36,8 @@ measures, rollout, and rollback boundaries are defined in
 
 Immediate order:
 
-1. Preserve the published B0/B1/B3/B7/B8/B9 repository delivery and the
-   locally validated current-`main` integration.
+1. Preserve the published B0/B1/B3/B7/B8/B9 repository delivery and complete
+   hosted CI for the current-`main` integration in PR #38.
 2. Preserve the completed field command boundary and the passing 86-journey
    local cross-browser acceptance gate.
 3. Preserve the complete B9 seed/reset, checkpoint, and isolated frontend gates;

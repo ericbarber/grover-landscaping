@@ -17,6 +17,14 @@ repository_output="$(PATH="${test_bin}:${PATH}" bash "${preflight}" --repository
 [[ "${repository_output}" == *'PREFLIGHT RESULT: READY'* ]]
 [[ "${repository_output}" == *'Failed checks: 0'* ]]
 
+portable_search_output="$(
+  PREFLIGHT_FORCE_PORTABLE_SEARCH=1 \
+  PATH="${test_bin}:${PATH}" \
+  bash "${preflight}" --repository-only
+)"
+[[ "${portable_search_output}" == *'PREFLIGHT RESULT: READY'* ]]
+[[ "${portable_search_output}" == *'Failed checks: 0'* ]]
+
 set +e
 external_output="$(
   TF_VAR_application_url=https://pilot.example.com \
