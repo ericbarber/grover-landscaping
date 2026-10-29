@@ -301,6 +301,10 @@ Delivery evidence:
 - `scripts/validate-changes.test.sh` verifies representative scope mappings.
 - Branch-scoped GitHub Actions concurrency cancels superseded runs without
   changing the surviving run's job matrix.
+- A dedicated strict TypeScript project covers every Playwright spec and its
+  configuration. Frontend CI and the change-aware validator run it before
+  browser launch, preventing missing fixtures or helpers from becoming late
+  cross-browser failures.
 - Existing CI timing markers remain the comparison source for measured
   bottleneck work.
 

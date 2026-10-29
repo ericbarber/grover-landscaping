@@ -169,6 +169,13 @@ jobs:
           npm run typecheck
         working-directory: frontend
 
+      - name: Type-check browser journeys
+        run: >-
+          /usr/bin/time -f
+          'frontend_e2e_typecheck elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm run typecheck:e2e
+        working-directory: frontend
+
       - name: Run frontend tests
         run: >-
           /usr/bin/time -f

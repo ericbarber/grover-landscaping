@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-10-29: Added strict static type-checking for every Playwright spec and
+  its configuration, enforced by frontend CI and the change-aware validator.
+  The first run caught and repaired missing rollout-fixture imports and the
+  Yard Owner Connect-care helper left by integration. A clean npm 10 install
+  and live audit report zero findings; both TypeScript gates, 170 files / 706
+  unit tests, the production build, artifact/brand gates, validation-contract
+  tests, and all four affected Yard Owner acquisition Chromium journeys pass.
 - 2026-10-29: Reconciled the complete review line with current `main` on a
   bounded local integration branch. The merge retains the newer workspace and
   exact Job-navigation architecture while adopting Tailwind 4, supported

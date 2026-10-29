@@ -1,5 +1,18 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { APP_DISPLAY_NAME } from '../src/appIdentity';
+import { workspaceRolloutFixture } from './workspace-rollout-fixture';
+
+async function openConnectCare(page: Page) {
+  const connectCare = page.getByRole('button', { name: 'Connect care', exact: true });
+  await expect(connectCare).toBeEnabled();
+  await expect.poll(async () => {
+    if (await connectCare.getAttribute('aria-current') !== 'step') await connectCare.click();
+    return connectCare.getAttribute('aria-current');
+  }, {
+    message: 'Connect care becomes the current Yard Owner step',
+    timeout: 5_000,
+  }).toBe('step');
+}
 
 test('a verified owner creates a private profile and reconfirms a changed address', async ({ page }) => {
   let yardBriefVersion = 0;

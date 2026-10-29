@@ -277,7 +277,7 @@ print_scope_commands() {
   case "$1" in
     repository) echo "  git diff --check; bash -n scripts/*.sh; shell, rollout-smoke, release-evidence, quality-budget, product-brand, crawler-policy, and matched-fixture contract tests; docker compose config --quiet" ;;
     docs) echo "  validate changed Markdown links and delivery records" ;;
-    frontend) echo "  npm run typecheck; npm test; npm run build; npm run quality:budgets; npm run quality:brand" ;;
+    frontend) echo "  npm run typecheck; npm run typecheck:e2e; npm test; npm run build; npm run quality:budgets; npm run quality:brand" ;;
     backend) echo "  cargo fmt --all -- --check; cargo clippy --all-targets --all-features -- -D warnings; cargo test --all" ;;
     database) echo "  bash scripts/apply-local-migrations.sh" ;;
     infra) echo "  terraform fmt -check -recursive and validate dev/prod modules" ;;
@@ -328,6 +328,7 @@ for scope in "${ordered_scopes[@]}"; do
       ;;
     frontend)
       frontend_command run typecheck
+      frontend_command run typecheck:e2e
       frontend_command test
       frontend_command run build
       frontend_command run quality:budgets

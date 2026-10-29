@@ -1053,6 +1053,14 @@ Current state:
   A clean local typecheck, all 481 unit tests, and production build pass; graph
   reuse reduced the measured build stage from 30.40 to 11.34 seconds. The
   existing 510.18 kB application-chunk warning remains the next bounded target.
+- The 2026-10-29 integration follow-up extends that static gate to Playwright.
+  A dedicated strict TypeScript project covers every browser spec and its
+  configuration, including Vite-served browser modules and Node globals. CI and
+  the change-aware frontend validator run it before browser launch. Its first
+  run caught and repaired missing shared rollout imports and the Yard Owner
+  Connect-care helper; both TypeScript gates, all 706 unit tests, the production
+  build, artifact/brand gates, and all four affected Yard Owner acquisition
+  Chromium journeys pass on a clean zero-finding install.
 - Phase 6A10 restores the frontend bundle boundary without changing workspace
   behavior. Vite now partitions the authenticated manager workspace graph from
   the shared application graph while retaining the React and OIDC vendor

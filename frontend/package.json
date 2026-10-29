@@ -17,7 +17,8 @@
     "test:e2e:cross-browser": "playwright test --config playwright.config.ts e2e/browser-accessibility.spec.ts e2e/provider-invitation-progress.spec.ts e2e/yard-owner-acquisition.spec.ts",
     "test:e2e:study": "playwright test --config playwright.config.ts e2e/study-runtime-entry.spec.ts --project=chromium-mobile",
     "test:e2e:study-checkpoint": "playwright test --config playwright.config.ts e2e/study-checkpoint-entry.spec.ts --project=chromium-mobile",
-    "typecheck": "tsc --noEmit --incremental --tsBuildInfoFile tsconfig.tsbuildinfo"
+    "typecheck": "tsc --noEmit --incremental --tsBuildInfoFile tsconfig.tsbuildinfo",
+    "typecheck:e2e": "tsc --project tsconfig.e2e.json --noEmit"
   },
   "dependencies": {
     "oidc-client-ts": "^3.5.0",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.20.5",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",

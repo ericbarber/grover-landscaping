@@ -21,7 +21,7 @@ const currentPublication = {
 
 test('yard owner reviews version history and approves the exact recommendation on mobile', async ({ page }) => {
   let lifecycleStatus = 'pending';
-  let decisionBody: Record<string, unknown> | null = null;
+  let decisionBody: Record<string, unknown> = {};
 
   await page.addInitScript(() => {
     window.sessionStorage.setItem('yardfolio.local-reviewer-id', 'property-owner');
@@ -172,7 +172,7 @@ test('yard owner reviews version history and approves the exact recommendation o
     action: 'approve',
     affirmation_text_version: 'customer_recommendation_approval_v1',
   });
-  expect(String(decisionBody?.idempotency_key)).toMatch(/^customer-recommendation-/);
+  expect(String(decisionBody.idempotency_key)).toMatch(/^customer-recommendation-/);
   expect(decisionBody).not.toHaveProperty('customer_safe_note');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
