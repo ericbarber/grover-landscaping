@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { FIELD_APP_DISPLAY_NAME } from './appIdentity';
 import { sharedBidTokenFromPath } from './domain/sharedBidRoute';
 import { sharedReportTokenFromPath } from './domain/sharedReportRoute';
 import { organizationInvitationTokenFromPath } from './domain/organizationInvitationRoute';
@@ -13,7 +14,6 @@ import { isDiagnosticsPath } from './domain/diagnosticsRoute';
 import { isApplicationPath } from './domain/applicationRoute';
 import { marketingPersonaFromPath } from './domain/marketingRoute';
 import { isProviderEntryPath } from './domain/providerEntryRoute';
-import { FIELD_APP_DISPLAY_NAME } from './appIdentity';
 import './styles.css';
 
 registerProductionServiceWorker();

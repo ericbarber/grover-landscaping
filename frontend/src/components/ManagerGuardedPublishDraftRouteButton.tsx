@@ -24,7 +24,7 @@ export function ManagerGuardedPublishDraftRouteButton({
   return (
     <div className="space-y-2">
       <button
-        className="w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-xs hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
         disabled={buttonState.isDisabled}
         onClick={() => onPublish?.()}
         type="button"

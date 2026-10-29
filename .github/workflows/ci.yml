@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [main]
   push:
@@ -16,7 +17,7 @@ concurrency:
 jobs:
   repository-checks:
     name: Repository checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -37,13 +38,14 @@ jobs:
           test -f Dockerfile
           test -f render.yaml
 
-      - name: Validate shell and release contracts
+      - name: Validate shell, release, and Pi deployment contracts
         run: |
-          bash -n scripts/*.sh scripts/test-fixtures/*.sh
+          bash -n infra/pi/install-host-dependencies.sh scripts/*.sh scripts/test-fixtures/*.sh
           bash scripts/validate-changes.test.sh
           bash scripts/release-preflight.test.sh
           bash scripts/smoke-production.test.sh
           bash scripts/deploy-pi.test.sh
+          node --test scripts/validate-ci-action-runtimes.test.mjs
           node --test scripts/validate-quality-budgets.test.mjs
           node --test scripts/validate-product-brand.test.mjs
           node scripts/validate-product-brand.mjs
@@ -63,7 +65,7 @@ jobs:
 
   backend:
     name: Backend checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
@@ -126,7 +128,7 @@ jobs:
 
   frontend:
     name: Frontend checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -197,7 +199,7 @@ jobs:
 
   browser-journeys:
     name: Chromium, Firefox, and WebKit journeys
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: frontend
 
     steps:
@@ -225,6 +227,21 @@ jobs:
           npx playwright install --with-deps chromium firefox webkit
         working-directory: frontend
 
+      - name: Validate frontend design reviews
+        run: |
+          /usr/bin/time -f \
+            'current_frontend_review elapsed=%e user=%U system=%S max_rss_kb=%M' \
+            node design/tools/validate-current-frontend-review.mjs
+          /usr/bin/time -f \
+            'frontend_truth_recovery elapsed=%e user=%U system=%S max_rss_kb=%M' \
+            node design/tools/validate-frontend-truth-recovery.mjs
+          /usr/bin/time -f \
+            'yard_owner_minimal_rollout elapsed=%e user=%U system=%S max_rss_kb=%M' \
+            node design/tools/validate-yard-owner-minimal-rollout.mjs
+          /usr/bin/time -f \
+            'prototype_foundation elapsed=%e user=%U system=%S max_rss_kb=%M' \
+            node design/tools/validate-prototype-foundation.mjs
+
       - name: Run responsive browser journeys
         run: >-
           /usr/bin/time -f
@@ -232,9 +249,47 @@ jobs:
           npm run test:e2e:cross-browser
         working-directory: frontend
 
+      - name: Validate manager continuity handoffs
+        run: >-
+          /usr/bin/time -f
+          'manager_recovery_journey elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npx playwright test --config playwright.config.ts
+          --project=chromium-mobile e2e/local-role-workspaces.spec.ts
+          --grep 'managed first unit withholds later manager feeds|manager Schedule opens a responsive route board and planning inspector|manager Recovery inspects an exception and returns to affected work|manager completion review and Recovery open the selected Job workflow|desktop job selection opens Job and repeated selection restores Overview'
+        working-directory: frontend
+
+      - name: Validate mobile workspace clearance
+        run: >-
+          /usr/bin/time -f
+          'mobile_workspace_clearance elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npx playwright test --config playwright.config.ts
+          --project=chromium-mobile --project=webkit-mobile
+          e2e/local-role-workspaces.spec.ts
+          --grep 'mobile Home keeps its final action clear of fixed navigation'
+        working-directory: frontend
+
+      - name: Validate Crew Route truth
+        run: >-
+          /usr/bin/time -f
+          'crew_route_truth elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npx playwright test --config playwright.config.ts
+          --project=chromium-mobile e2e/local-role-workspaces.spec.ts
+          --grep 'field Route prioritizes progress, current stop, and up-next work'
+        working-directory: frontend
+
+      - name: Validate Yard Owner protected recovery
+        run: >-
+          /usr/bin/time -f
+          'yard_owner_recovery elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npx playwright test --config playwright.config.ts
+          --project=chromium-mobile --project=webkit-mobile
+          e2e/local-role-workspaces.spec.ts
+          --grep 'yard owner protected visit recovery withholds facts and returns Home'
+        working-directory: frontend
+
   pilot-assurance:
     name: Yard Owner pilot assurance contract
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -253,7 +308,7 @@ jobs:
 
   production-image:
     name: Production image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [backend, frontend, browser-journeys, pilot-assurance]
 
     steps:
@@ -261,10 +316,10 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build production container
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           load: true
@@ -274,7 +329,7 @@ jobs:
 
   terraform:
     name: Terraform checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -312,10 +367,10 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build Pi application image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/arm64

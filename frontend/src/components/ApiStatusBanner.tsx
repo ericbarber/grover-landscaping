@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { API_BASE_URL } from '../api/baseUrl';
 import { API_DISPLAY_NAME } from '../appIdentity';
+import { API_BASE_URL } from '../api/baseUrl';
 
 export function ApiStatusBanner() {
   const [status, setStatus] = useState<'ready' | 'unavailable' | 'recovered'>('ready');

@@ -36,7 +36,7 @@ export function ProviderConnectionJourney({
       <ol className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {stages.map((stage, index) => {
           const content = <><span className="text-[.68rem] font-black uppercase tracking-wide opacity-70">{index + 1} · {stage.status}</span><strong className="mt-1 block text-sm">{stage.label}</strong><span className="mt-1 block text-xs leading-5 opacity-80">{stage.detail}</span></>;
-          return <li key={stage.id}>{stage.href && stage.status !== 'upcoming' ? <a className={`block min-h-24 rounded-xl border p-3 focus:outline-none focus:ring-4 focus:ring-sky-200 ${statusClasses[stage.status]}`} href={stage.href}>{content}</a> : <div className={`min-h-24 rounded-xl border p-3 ${statusClasses[stage.status]}`}>{content}</div>}</li>;
+          return <li key={stage.id}>{stage.href && stage.status !== 'upcoming' ? <a className={`block min-h-24 rounded-xl border p-3 focus:outline-hidden focus:ring-4 focus:ring-sky-200 ${statusClasses[stage.status]}`} href={stage.href}>{content}</a> : <div className={`min-h-24 rounded-xl border p-3 ${statusClasses[stage.status]}`}>{content}</div>}</li>;
         })}
       </ol>
     </nav>

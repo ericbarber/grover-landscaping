@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { workspaceRolloutFixture } from './workspace-rollout-fixture';
 
 const visitReference = 'customer_visit_0123456789abcdef0123456789abcdef';
 const recommendationReference = 'customer_recommendation_0123456789abcdef0123456789abcdef';
@@ -48,6 +49,7 @@ test('yard owner reviews version history and approves the exact recommendation o
       username: 'Jamie — Property Owner',
       verified_email: 'property.owner.local@example.test',
       claim_roles: ['PropertyOwner'],
+      workspace_rollout: workspaceRolloutFixture('PropertyOwner', 'customer_account', 'account_1', 'org_demo_landscaping'),
       memberships: [{
         id: 'membership-property-owner',
         organization_id: 'org_demo_landscaping',

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ApiRequestError } from '../api/apiError';
 import { APP_DISPLAY_NAME } from '../appIdentity';
+import { ApiRequestError } from '../api/apiError';
 import {
   bootstrapProviderOrganizationClaim,
   createProviderOpportunityResponse,

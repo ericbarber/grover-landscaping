@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { workspaceRolloutFixture } from './workspace-rollout-fixture';
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/health/ready', (route) => route.fulfill({
@@ -35,7 +36,7 @@ test('a first-time recipient completes the bounded known-owner connection path',
   }));
   await page.route('**/me/access', (route) => route.fulfill({
     contentType: 'application/json',
-    body: JSON.stringify({ user_id: 'recipient-first', username: 'Provider User', verified_email: 'dispatch@provider.example', claim_roles: [], memberships: [] }),
+    body: JSON.stringify({ user_id: 'recipient-first', username: 'Provider User', verified_email: 'dispatch@provider.example', claim_roles: [], workspace_rollout: workspaceRolloutFixture(), memberships: [] }),
   }));
   await page.route('**/provider-invitations/verify-recipient', async (route) => {
     expect(route.request().postDataJSON()).toEqual({ token: 'first_connection_secret' });
@@ -116,7 +117,7 @@ test('a checked recipient loads status without retaining the bearer fragment', a
     contentType: 'application/json',
     body: JSON.stringify({
       user_id: 'recipient-user-1', username: 'Provider User',
-      verified_email: 'dispatch@provider.example', claim_roles: [], memberships: [],
+      verified_email: 'dispatch@provider.example', claim_roles: [], workspace_rollout: workspaceRolloutFixture(), memberships: [],
     }),
   }));
   await page.route('**/provider-invitations/progress', async (route) => {
@@ -185,7 +186,7 @@ test('an activated provider sees setup status without implied first-visit author
     contentType: 'application/json',
     body: JSON.stringify({
       user_id: 'recipient-user-activation', username: 'Provider User',
-      verified_email: 'dispatch@provider.example', claim_roles: [], memberships: [],
+      verified_email: 'dispatch@provider.example', claim_roles: [], workspace_rollout: workspaceRolloutFixture(), memberships: [],
     }),
   }));
   await page.route('**/provider-invitations/progress', async (route) => {
@@ -265,7 +266,7 @@ test('a provider sees only owner-approved assessment details and loses future ac
     contentType: 'application/json',
     body: JSON.stringify({
       user_id: 'recipient-user-1', username: 'Provider User',
-      verified_email: 'dispatch@provider.example', claim_roles: [], memberships: [],
+      verified_email: 'dispatch@provider.example', claim_roles: [], workspace_rollout: workspaceRolloutFixture(), memberships: [],
     }),
   }));
   await page.route('**/provider-invitations/progress', async (route) => {
@@ -456,7 +457,7 @@ test('a provider sees only owner-approved assessment details and loses future ac
 
 test('a provider proposes a replacement after the owner requests another on-site time', async ({ page }) => {
   await page.route('**/auth/config', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }) }));
-  await page.route('**/me/access', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ user_id: 'recipient-user-1', username: 'Provider User', verified_email: 'dispatch@provider.example', claim_roles: [], memberships: [] }) }));
+  await page.route('**/me/access', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ user_id: 'recipient-user-1', username: 'Provider User', verified_email: 'dispatch@provider.example', claim_roles: [], workspace_rollout: workspaceRolloutFixture(), memberships: [] }) }));
   await page.route('**/provider-invitations/progress', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({
     invitation_id: 'invitation_3', progress_stage: 'assessment_access_ready', status_label: 'Owner-approved assessment access is ready', next_action: 'review_owner_approved_details', recipient_email_checked: true, organization_relationship_checked: true, opportunity_response_capability: true, response_action: 'express_interest', closed: false,
   }) }));

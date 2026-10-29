@@ -1,9 +1,9 @@
 import { useState } from 'react';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import type { MarketingPersonaId } from '../domain/marketingRoute';
 import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
 import type { MarketingPersona } from '../api/marketingLeadsClient';
 import { MarketingOperationsPlanner } from './MarketingOperationsPlanner';
-import { APP_DISPLAY_NAME } from '../appIdentity';
 
 type TourStepId = 'plan' | 'care' | 'prove';
 type PreviewTone = 'amber' | 'emerald' | 'sky';
@@ -308,7 +308,7 @@ export function MarketingProductTour({ persona }: { persona: MarketingPersonaId 
           <p className="mt-5 text-lg leading-8 text-slate-300">{content.description}</p>
         </div>
 
-        <div className="mt-10 grid overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 lg:grid-cols-[0.72fr_1.28fr]">
+        <div className="mt-10 grid overflow-hidden rounded-4xl border border-white/10 bg-white/5 lg:grid-cols-[0.72fr_1.28fr]">
           <div className="border-b border-white/10 p-4 lg:border-b-0 lg:border-r sm:p-6">
             <div aria-label="Product tour steps" className="grid gap-2" role="tablist">
               {content.steps.map((step) => (

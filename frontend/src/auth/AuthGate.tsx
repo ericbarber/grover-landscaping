@@ -177,12 +177,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
           <span className="font-semibold text-white">{auth.displayName}</span>
           <span className="text-xs text-slate-400">{auth.roles.join(', ') || 'No assigned role'}</span>
           {auth.authMode === 'disabled' ? (
-            <span className="rounded bg-amber-300 px-2 py-0.5 text-xs font-bold text-amber-950">
+            <span className="rounded-sm bg-amber-300 px-2 py-0.5 text-xs font-bold text-amber-950">
               AUTH DISABLED
             </span>
           ) : null}
           {auth.authMode === 'local_review' ? (
-            <span className="rounded bg-sky-300 px-2 py-0.5 text-xs font-bold text-sky-950">
+            <span className="rounded-sm bg-sky-300 px-2 py-0.5 text-xs font-bold text-sky-950">
               LOCAL REVIEW ONLY
             </span>
           ) : null}

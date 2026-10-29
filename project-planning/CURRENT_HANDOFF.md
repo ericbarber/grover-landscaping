@@ -6,15 +6,17 @@ This is the short restart document. Execution order lives in
 
 ## Restart point
 
-- Branch: `codex-review-feature`
+- Branch: `codex/integrate-review-main-20261028`
 - Resolve the current commit with `git log -1 --oneline`; do not pin a stale hash
   here.
 - Phase 6B8 is published and the latest main-branch CI gate passes.
-- `codex-review-feature` is published through the current HEAD. It has no pull
-  request: current remote `main` materially diverged from its old merge base,
-  and a merge simulation reported application, infrastructure, and planning
-  conflicts. Build a bounded integration branch; do not open the full branch as
-  a knowingly unmergeable PR or rewrite its published history.
+- `codex-review-feature` remains published without rewritten history. The
+  bounded integration branch now reconciles it with current `origin/main`,
+  preserving the newer workspace architecture while adopting current CI,
+  Tailwind 4, dependency-security, and backend-auth changes. Clean frontend,
+  repository, and backend gates pass. The integration commit is local; do not
+  claim hosted CI, deployment, or publication until that branch is explicitly
+  published and reviewed.
 - Private review is available at `http://100.88.21.105:5173/` through Tailscale.
 - The private-review API reports PostgreSQL readiness and intentionally uses
   `AUTH_MODE=local_review`; it is not production evidence.
@@ -97,6 +99,16 @@ Release-preflight tests inject a deterministic Terraform double, and the
 protected-release evidence validator exports its pure contract so tests no
 longer depend on a permitted child-process spawn. These are test-environment
 repairs; they do not claim Terraform or protected hosting is available.
+
+The current integration also passes a clean Node 22/npm 10 install, the
+fail-closed live dependency audit with zero findings, TypeScript, 170 frontend
+files / 706 tests, the production build, product-brand and artifact-budget
+gates, repository contracts, Rust formatting, strict Clippy, and backend tests.
+Tailwind 4's uncompressed CSS baseline is recorded separately while its gzip
+transfer limit remains unchanged. The focused Chromium gate also passes all
+five current manager/job handoff journeys. The next repository action is
+publication and hosted PR CI; B9 participant recruitment remains the next
+product-evidence action.
 B8 repository delivery adds a tested crawler policy and production SPA-entry
 allowlist. Public audience and known application/token routes receive the
 frontend, while unknown, invalid nested marketing, missing-asset, and unshipped

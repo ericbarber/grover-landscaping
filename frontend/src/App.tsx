@@ -345,7 +345,7 @@ function ManagementCompanyPreviewPanel({
   const supportsMultipleCrews = companySupportsMultipleCrews(company, visibleCrews);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-sky-700">Management company preview</p>
@@ -440,7 +440,7 @@ function CustomerPortalPreviewPanel({
   const needsOnboardingAttention = customerNeedsOnboardingAttention(customer);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Customer portal preview</p>
@@ -1196,7 +1196,7 @@ export function App() {
   }
 
   async function handleStartJob() {
-    if (!selectedJobId) {
+    if (!fieldControls.stopProgress || !selectedJobId) {
       return;
     }
 
@@ -1227,7 +1227,7 @@ export function App() {
   }
 
   async function handleCompleteJob() {
-    if (!selectedJobId) {
+    if (!fieldControls.fieldEvidence || !selectedJobId) {
       return;
     }
 
@@ -1287,7 +1287,7 @@ export function App() {
   }
 
   async function handleAddOnStatusChange(addOnId: string, status: JobAddOn['status']) {
-    if (!selectedJobId) return;
+    if (!fieldControls.stopProgress || !selectedJobId) return;
 
     const result = await runFieldAddOnMutationCommand({
       jobId: selectedJobId,
@@ -1714,17 +1714,17 @@ export function App() {
         personaLabel={activePersona.label}
         signedInName={auth.displayName || 'Signed-in user'}
       />
-      <section className={`relative min-h-[20rem] overflow-hidden bg-emerald-950 px-8 py-8 text-white ${mobileView === 'home' ? 'hidden lg:block' : 'hidden'}`} id="workspace-home-hero">
+      <section className={`relative min-h-80 overflow-hidden bg-emerald-950 px-8 py-8 text-white ${mobileView === 'home' ? 'hidden lg:block' : 'hidden'}`} id="workspace-home-hero">
         <img
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center"
           src="/brand/yardfolio-landscape-home-hero.webp"
         />
-        <span className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-emerald-950/20" />
-        <span className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/20" />
-        <div className="relative mx-auto flex min-h-[16rem] max-w-6xl flex-col">
+        <span className="absolute inset-0 bg-linear-to-r from-slate-950/95 via-slate-950/75 to-emerald-950/20" />
+        <span className="absolute inset-0 bg-linear-to-t from-slate-950/80 via-transparent to-slate-950/20" />
+        <div className="relative mx-auto flex min-h-64 max-w-6xl flex-col">
           <div className="flex items-center justify-end gap-5">
-            <p className="rounded-xl border border-white/15 bg-slate-950/30 px-4 py-2 text-sm font-semibold text-slate-100 backdrop-blur-sm">
+            <p className="rounded-xl border border-white/15 bg-slate-950/30 px-4 py-2 text-sm font-semibold text-slate-100 backdrop-blur-xs">
               {new Date().toLocaleDateString(undefined, {
                 weekday: 'long',
                 month: 'long',
@@ -1744,7 +1744,7 @@ export function App() {
                 {personaHomePromise(activePersona)}
               </p>
               <div className="mt-6 flex items-center gap-3 text-xs font-black uppercase tracking-[0.16em]">
-                <span className="rounded-full border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-sm">
+                <span className="rounded-full border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-xs">
                   {activePersona.label}
                 </span>
                 <span className="text-emerald-300">Plan</span>

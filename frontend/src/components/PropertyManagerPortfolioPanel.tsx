@@ -381,7 +381,7 @@ export function PropertyManagerPortfolioPanel({
           </div>
         ) : null}
 
-        {destination === 'proof' ? (
+        {destination === 'proof' && capabilities.deliveredProof ? (
           <div>
             <p className="yardfolio-eyebrow">Delivered evidence</p>
             <h1 className="yardfolio-type-operational mt-2 text-4xl font-black text-forest">Proof ready for review.</h1>
@@ -397,7 +397,7 @@ export function PropertyManagerPortfolioPanel({
           </div>
         ) : null}
 
-        {destination === 'approvals' ? (
+        {destination === 'approvals' && capabilities.questionsAndDecisions ? (
           <div>
             <p className="yardfolio-eyebrow">Approval center</p>
             <h1 className="yardfolio-type-operational mt-2 text-4xl font-black text-forest">Recommendations and recorded decisions.</h1>

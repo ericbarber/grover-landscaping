@@ -162,7 +162,7 @@ export function ManagerPropertyOnboardingPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Property onboarding</p>
         <h2 className="mt-1 text-xl font-bold text-slate-950">Operational profile</h2>

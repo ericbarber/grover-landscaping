@@ -182,7 +182,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
                       )}
                       <div className="p-4">
                         <p className="text-xs font-black uppercase tracking-wide text-emerald-800">{photo.photoType} photo</p>
-                        <p className="mt-1 break-words text-sm font-bold text-slate-800">{photo.fileName}</p>
+                        <p className="mt-1 wrap-break-word text-sm font-bold text-slate-800">{photo.fileName}</p>
                       </div>
                     </article>
                   ))}

@@ -11,7 +11,7 @@ export function ManagerAssignableJobsSummary({ jobs, stops }: ManagerAssignableJ
   const assignableJobCount = getAssignableJobCount(jobs, stops);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
       <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Assignable jobs</p>
       <div className="mt-2 flex items-center justify-between gap-4">
         <div>

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { FIELD_APP_DISPLAY_NAME } from '../appIdentity';
 import {
   createDayPlanAmendment,
   fetchDayPlanAmendments,
 } from '../api/dayPlanAmendmentsClient';
 import { DayPlanRequestError, fetchCrewDayPlan } from '../api/dayPlansClient';
-import { FIELD_APP_DISPLAY_NAME } from '../appIdentity';
 import {
   readMigratedStorageValue,
   APP_STORAGE_NAMESPACE,
@@ -420,7 +420,12 @@ export function DayPlanPanel({
   }
 
   const replayOfflineMutations = useCallback(async () => {
-    if (!actorId || !navigator.onLine || replayInProgress.current) return;
+    if (
+      !stopProgressEnabled
+      || !actorId
+      || !navigator.onLine
+      || replayInProgress.current
+    ) return;
     replayInProgress.current = true;
     setIsReplayingMutations(true);
     try {
@@ -461,10 +466,15 @@ export function DayPlanPanel({
       replayInProgress.current = false;
       setIsReplayingMutations(false);
     }
-  }, [actorId]);
+  }, [actorId, stopProgressEnabled]);
 
   const replayOfflineAmendments = useCallback(async () => {
-    if (!actorId || !navigator.onLine || amendmentReplayInProgress.current) return;
+    if (
+      !routeChangesEnabled
+      || !actorId
+      || !navigator.onLine
+      || amendmentReplayInProgress.current
+    ) return;
     amendmentReplayInProgress.current = true;
     setIsReplayingAmendments(true);
     try {
@@ -520,7 +530,7 @@ export function DayPlanPanel({
       amendmentReplayInProgress.current = false;
       setIsReplayingAmendments(false);
     }
-  }, [actorId]);
+  }, [actorId, routeChangesEnabled]);
 
   async function discardReviewedConflict(mutation: StopProgressOfflineMutation) {
     try {
@@ -680,7 +690,7 @@ export function DayPlanPanel({
   }
 
   return (
-    <section className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <section className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5">
       <div className="order-1 flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
@@ -736,6 +746,11 @@ export function DayPlanPanel({
                   {conflictMutationCount} {conflictMutationCount === 1 ? 'change needs' : 'changes need'} manager review before retrying.
                 </p>
               )}
+              {!stopProgressEnabled ? (
+                <p className="mt-1 font-medium">
+                  Saved progress stays on this phone until stop execution access returns.
+                </p>
+              ) : null}
               {conflictResolutionError && (
                 <p className="mt-1 font-medium text-red-900">
                   The reviewed conflict could not be removed from this phone. Try again.
@@ -805,11 +820,18 @@ export function DayPlanPanel({
               </details>
               <button
                 className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
-                disabled={!navigator.onLine || isReplayingMutations || conflictMutationCount > 0}
+                disabled={
+                  !stopProgressEnabled
+                  || !navigator.onLine
+                  || isReplayingMutations
+                  || conflictMutationCount > 0
+                }
                 onClick={() => void replayOfflineMutations()}
                 type="button"
               >
-                {isReplayingMutations
+                {!stopProgressEnabled
+                  ? 'Stop execution access needed'
+                  : isReplayingMutations
                   ? 'Syncing…'
                   : conflictMutationCount > 0
                     ? 'Manager review needed'
@@ -906,7 +928,7 @@ export function DayPlanPanel({
           </summary>
           <div className="mt-3 space-y-2">
             {amendmentRequests.map((request) => (
-              <article key={request.id} className="rounded-lg bg-white p-3 text-xs text-slate-600 shadow-sm">
+              <article key={request.id} className="rounded-lg bg-white p-3 text-xs text-slate-600 shadow-xs">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-slate-900">{dayPlanAmendmentTypeLabel(request.amendmentType)}</p>
@@ -945,6 +967,11 @@ export function DayPlanPanel({
             {offlineAmendmentMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
             {offlineAmendmentMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
           </p>
+          {!routeChangesEnabled ? (
+            <p className="mt-1 font-medium">
+              Saved requests stay on this phone until route-change access returns.
+            </p>
+          ) : null}
           <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
             <summary className="min-h-11 cursor-pointer py-3 font-bold">
               Review queued route requests
@@ -1009,14 +1036,19 @@ export function DayPlanPanel({
           <button
             className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
             disabled={
-              !navigator.onLine
+              !routeChangesEnabled
+              || !navigator.onLine
               || isReplayingAmendments
               || offlineAmendmentMutations.some((mutation) => mutation.syncState === 'conflict')
             }
             onClick={() => void replayOfflineAmendments()}
             type="button"
           >
-            {isReplayingAmendments ? 'Sending requests…' : 'Send queued requests'}
+            {!routeChangesEnabled
+              ? 'Route-change access needed'
+              : isReplayingAmendments
+                ? 'Sending requests…'
+                : 'Send queued requests'}
           </button>
         </div>
       )}

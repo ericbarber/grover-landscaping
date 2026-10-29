@@ -273,7 +273,7 @@ export function DesktopWorkspaceNavigation({
               aria-current={active ? 'page' : undefined}
               className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition ${
                 active
-                  ? 'bg-emerald-700 text-white shadow-sm'
+                  ? 'bg-emerald-700 text-white shadow-xs'
                   : 'text-emerald-50 hover:bg-white/10 disabled:text-emerald-950/60'
               }`}
               disabled={disabled}

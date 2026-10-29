@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import { ApiRequestError } from '../api/apiError';
 import {
   fetchProviderDisclosureAccess,
@@ -15,7 +16,6 @@ import { firstVisitWindowLabel, type OwnerProviderFirstVisit } from '../domain/i
 import { useAuth } from '../auth/AuthProvider';
 import { providerInvitationTokenFromFragment } from '../domain/providerInvitationRoute';
 import { ProductBrand } from './ProductBrand';
-import { APP_DISPLAY_NAME } from '../appIdentity';
 import { ProviderAssessmentWorkspace } from './ProviderAssessmentWorkspace';
 import { ProviderConnectionJourney } from './ProviderConnectionJourney';
 import { ProviderInvitationConnectionPanel } from './ProviderInvitationConnectionPanel';
@@ -222,7 +222,7 @@ export function ProviderInvitationProgressPage() {
             <label className="block" htmlFor="provider-invitation-token">
               <span className="text-sm font-bold">Invitation code</span>
               <span className="mt-1 block text-xs leading-5 text-slate-500">A link may fill this once. It is removed from the browser address immediately and is never stored by this page.</span>
-              <input autoComplete="off" className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-3.5 font-mono text-sm focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100" id="provider-invitation-token" onChange={(event) => setToken(event.target.value)} spellCheck={false} type="password" value={token} />
+              <input autoComplete="off" className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-3.5 font-mono text-sm focus:border-emerald-700 focus:outline-hidden focus:ring-4 focus:ring-emerald-100" id="provider-invitation-token" onChange={(event) => setToken(event.target.value)} spellCheck={false} type="password" value={token} />
             </label>
             <button className="yardfolio-button-primary mt-4 disabled:opacity-60" disabled={loading || !auth.verifiedEmail} type="submit">{loading ? 'Checking progress…' : 'Check invitation progress'}</button>
           </form>

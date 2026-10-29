@@ -521,7 +521,7 @@ export function PublicLandingPage({
                 </button>
               )}
             </div>
-            <div className="bg-gradient-to-br from-emerald-950 via-emerald-950 to-slate-950 p-5 sm:p-7">
+            <div className="bg-linear-to-br from-emerald-950 via-emerald-950 to-slate-950 p-5 sm:p-7">
               <div className="flex items-end justify-between gap-4 border-b border-white/10 pb-5">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">What improves</p>
@@ -594,7 +594,7 @@ export function PublicLandingPage({
       </section>
 
       <section className="px-4 py-20 sm:px-6 lg:px-8" id="product">
-        <div className="mx-auto grid max-w-7xl gap-10 rounded-[2rem] bg-emerald-900 p-7 text-white sm:p-10 lg:grid-cols-2 lg:items-center lg:p-14">
+        <div className="mx-auto grid max-w-7xl gap-10 rounded-4xl bg-emerald-900 p-7 text-white sm:p-10 lg:grid-cols-2 lg:items-center lg:p-14">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">{activePersona.product.eyebrow}</p>
             <h2 className="mt-4 font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">{activePersona.product.title}</h2>

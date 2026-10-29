@@ -29,7 +29,11 @@ response semantics, retention, privacy/legal review, urgent handling, and
 notification scope still require explicit approval.
 
 B0, B1, and B3 implementation/package gates and the repository-owned B7 quality
-contract are published on `codex-review-feature`. B9 now has a tested, CI-enforced
+contract are published on `codex-review-feature`. A bounded local integration
+branch now reconciles that complete line with current `main`, including the
+Tailwind 4 security migration, supported CI action runtimes, current backend
+authorization checks, and a zero-finding frontend audit. Local package and
+repository gates pass; publication and hosted PR CI remain separate. B9 now has a tested, CI-enforced
 fixture-manifest safety contract plus a fail-closed target-boundary preflight.
 The local-review backend now supplies the minimal database identity needed to
 link that preflight to the running API. Manifest schema 2 tracks normal

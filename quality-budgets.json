@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "baselineDate": "2026-10-01",
-  "baselineEnvironment": "Node 24 local production build; CI remains pinned to Node 22",
+  "baselineDate": "2026-10-28",
+  "baselineEnvironment": "Node 22 clean local production build; CI remains pinned to Node 22",
   "frontendArtifacts": {
     "maxLargestJavaScriptChunkBytes": 350000,
     "maxTotalJavaScriptBytes": 1200000,
     "maxTotalJavaScriptGzipBytes": 320000,
-    "maxTotalCssBytes": 70000,
+    "maxTotalCssBytes": 90000,
     "maxTotalCssGzipBytes": 15000,
     "maxTotalDistBytes": 1400000,
     "maxLargestPublicImageBytes": 115000,

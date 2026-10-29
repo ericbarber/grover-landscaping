@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import { ApiRequestError, isApiErrorCode } from '../api/apiError';
 import {
   completeOwnerIntakeMediaUpload,
@@ -22,11 +23,10 @@ import {
   type SaveOwnerYardBriefInput,
 } from '../api/ownerAcquisitionClient';
 import { useAuth } from '../auth/AuthProvider';
+import { ownerCareSetupResumeDestination } from '../domain/ownerAcquisitionRoute';
 import { OwnerProviderAssessmentPanel } from './OwnerProviderAssessmentPanel';
 import { OwnerProviderDisclosurePanel } from './OwnerProviderDisclosurePanel';
 import { ProductBrand } from './ProductBrand';
-import { APP_DISPLAY_NAME } from '../appIdentity';
-import { ownerCareSetupResumeDestination } from '../domain/ownerAcquisitionRoute';
 
 type PropertyDraft = Omit<CreateOwnerPropertyInput, 'addressConfirmed' | 'authorityAttested'>;
 type YardBriefDraft = Omit<SaveOwnerYardBriefInput, 'status'>;
@@ -93,7 +93,7 @@ function Field({
       {hint ? <span className="mt-0.5 block text-xs leading-5 text-slate-500">{hint}</span> : null}
       <input
         autoComplete={autoComplete}
-        className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-base text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100"
+        className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-base text-slate-950 shadow-xs outline-hidden transition placeholder:text-slate-400 focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100"
         id={id}
         onChange={(event) => onChange(event.target.value)}
         required={required}
@@ -213,7 +213,7 @@ function ConnectionProgress({
       ) : (
         <ol aria-label="Provider connections" className="mt-5 grid gap-3">
           {entries.map((entry) => (
-            <li className={`rounded-xl border bg-white p-4 ${entry.ownerActionRequired ? 'border-amber-400 shadow-sm' : 'border-emerald-200'}`} key={entry.invitationId}>
+            <li className={`rounded-xl border bg-white p-4 ${entry.ownerActionRequired ? 'border-amber-400 shadow-xs' : 'border-emerald-200'}`} key={entry.invitationId}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <strong className="text-base text-slate-950">{entry.providerName}</strong>
@@ -647,7 +647,7 @@ export function YardOwnerAcquisitionPage() {
                 value={profileName}
               />
               <div className="mt-6 flex flex-wrap gap-3">
-                <button className="min-h-12 rounded-xl bg-emerald-800 px-6 font-black text-white shadow-sm hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60" disabled={saving} type="submit">
+                <button className="min-h-12 rounded-xl bg-emerald-800 px-6 font-black text-white shadow-xs hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60" disabled={saving} type="submit">
                   {saving ? 'Saving…' : workspace ? 'Save changes and continue' : 'Save and add my property'}
                 </button>
                 {workspace ? <button className="min-h-12 rounded-xl px-5 font-bold text-slate-700 hover:bg-slate-100" onClick={() => navigateToStep(1)} type="button">Cancel</button> : null}
@@ -749,8 +749,8 @@ export function YardOwnerAcquisitionPage() {
                         </div>
                       </fieldset>
                       <div className="mt-6 grid gap-5">
-                        <label className="block" htmlFor={inputId('cadence')}><span className="text-sm font-bold text-slate-800">Preferred care cadence</span><select className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-base focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100" id={inputId('cadence')} onChange={(event) => setYardBriefDraft((current) => ({ ...current, cadencePreference: event.target.value as OwnerYardBrief['cadencePreference'] }))} value={yardBriefDraft.cadencePreference}><option value="provider_recommendation">I’d like a provider recommendation</option><option value="one_time">One-time care</option><option value="weekly">Weekly</option><option value="every_two_weeks">Every two weeks</option><option value="monthly">Monthly</option></select></label>
-                        <label className="block" htmlFor={inputId('considerations')}><span className="text-sm font-bold text-slate-800">Access, pets, concerns, or priorities</span><span className="mt-0.5 block text-xs leading-5 text-slate-500">Optional. Do not include alarm codes or other secrets.</span><textarea className="mt-2 min-h-32 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-base focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100" id={inputId('considerations')} maxLength={1500} onChange={(event) => setYardBriefDraft((current) => ({ ...current, considerations: event.target.value }))} value={yardBriefDraft.considerations} /></label>
+                        <label className="block" htmlFor={inputId('cadence')}><span className="text-sm font-bold text-slate-800">Preferred care cadence</span><select className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-base focus:border-emerald-700 focus:outline-hidden focus:ring-4 focus:ring-emerald-100" id={inputId('cadence')} onChange={(event) => setYardBriefDraft((current) => ({ ...current, cadencePreference: event.target.value as OwnerYardBrief['cadencePreference'] }))} value={yardBriefDraft.cadencePreference}><option value="provider_recommendation">I’d like a provider recommendation</option><option value="one_time">One-time care</option><option value="weekly">Weekly</option><option value="every_two_weeks">Every two weeks</option><option value="monthly">Monthly</option></select></label>
+                        <label className="block" htmlFor={inputId('considerations')}><span className="text-sm font-bold text-slate-800">Access, pets, concerns, or priorities</span><span className="mt-0.5 block text-xs leading-5 text-slate-500">Optional. Do not include alarm codes or other secrets.</span><textarea className="mt-2 min-h-32 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-base focus:border-emerald-700 focus:outline-hidden focus:ring-4 focus:ring-emerald-100" id={inputId('considerations')} maxLength={1500} onChange={(event) => setYardBriefDraft((current) => ({ ...current, considerations: event.target.value }))} value={yardBriefDraft.considerations} /></label>
                       </div>
                       <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-950"><strong className="block">Private until you approve a provider</strong>The exact address and this brief remain in your owner workspace. Saving does not request service or share anything.</div>
                       <div className="mt-6 flex flex-wrap gap-3">

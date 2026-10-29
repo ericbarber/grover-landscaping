@@ -1,5 +1,15 @@
 # Version History
 
+- 2026-10-29: Reconciled the complete review line with current `main` on a
+  bounded local integration branch. The merge retains the newer workspace and
+  exact Job-navigation architecture while adopting Tailwind 4, supported
+  Docker action runtimes, current backend authorization coverage, and patched
+  Vite 6.4.4 / Vitest 4.1.12 tooling. A clean Node 22 install and live audit
+  report zero vulnerabilities; 170 frontend files / 706 tests, TypeScript, the
+  production build, product-brand and artifact-budget gates, repository
+  contracts, Rust formatting, strict Clippy, backend tests, and the five-journey
+  focused Chromium handoff gate pass. Hosted CI, publication, and deployment
+  remain separate gates.
 - 2026-10-28: Completed browser assurance across the I1 Job entry points by
   protecting the Manager Dispatch workload handoff. Selecting scheduled work
   from Workload opens the exact Job at Overview after navigating Schedule

@@ -1,11 +1,11 @@
 import { useState } from 'react';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 import { isApiErrorCode } from '../api/apiError';
 import {
   acceptOrganizationInvitation,
   type OrganizationInvitationAcceptance,
 } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
-import { APP_DISPLAY_NAME } from '../appIdentity';
 
 export function OrganizationInvitationAcceptancePage({ token }: { token: string }) {
   const auth = useAuth();

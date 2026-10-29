@@ -40,7 +40,7 @@ export function ManagerPhotoErasureRecoveryPanel({
   );
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Photo privacy</p>
@@ -84,7 +84,7 @@ export function ManagerPhotoErasureRecoveryPanel({
                 <p>Next available: {formatDate(item.availableAt)}</p>
               </div>
               {item.lastError ? (
-                <p className="mt-2 break-words rounded-lg bg-white p-2 text-xs text-rose-700">
+                <p className="mt-2 wrap-break-word rounded-lg bg-white p-2 text-xs text-rose-700">
                   {item.lastError}
                 </p>
               ) : null}

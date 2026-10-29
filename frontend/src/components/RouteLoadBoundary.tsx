@@ -39,7 +39,7 @@ export class RouteLoadBoundary extends React.Component<
     if (this.state.failed) {
       return (
         <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
-          <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-xs">
             <h1 className="text-xl font-bold text-slate-950">This screen did not finish loading</h1>
             <p className="mt-2 text-sm text-slate-600">
               Check your connection, then reload the latest application files.

@@ -33,6 +33,9 @@ workflows are not product targets.
 - Documented navigation system separating public discovery,
   acquisition-progress, and authenticated-destination models without changing
   their common brand treatment
+- Explicit application-identity boundary for customer-visible frontend and
+  backend naming, with stable compatibility identifiers and a repository guard
+  covering runtime copy, document metadata, PWA metadata, and icon accessibility
 - Public outcome-led homepage with direct workspace entry
 - Yard-Owner-focused root hero for one private property, with a direct yard
   signup conversion and no portfolio or provider-operations framing
@@ -426,6 +429,10 @@ workflows are not product targets.
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens
+- Yard Owner Home continuity from inactive portal access to the private setup
+  flow, including unverified-progress withholding, a resumable one-property
+  brief/provider handoff, explicit selection for multiple properties, and a
+  secondary setup path after portal access becomes active
 - Validated Yard Owner V2 working design with service-day confidence, contextual
   questions, delivered proof comparison and feedback, concern recovery,
   collaborative recommendation decisions, portal-wide property selection,

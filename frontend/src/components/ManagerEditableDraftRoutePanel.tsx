@@ -15,7 +15,7 @@ export function ManagerEditableDraftRoutePanel({ stops, onMoveUp, onMoveDown, on
   const estimatedMinutes = getDraftRouteEstimatedMinutes(stops);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Draft route</p>

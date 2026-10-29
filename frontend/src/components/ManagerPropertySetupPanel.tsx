@@ -341,7 +341,7 @@ export function ManagerPropertySetupPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5">
       <p className="text-sm font-semibold uppercase tracking-wide text-sky-700">Property setup</p>
       <h2 className="mt-1 text-xl font-bold text-slate-950">Portfolio and crew</h2>
       <p className="mt-2 text-sm text-slate-600">

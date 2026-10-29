@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { workspaceRolloutFixture } from './workspace-rollout-fixture';
 
 async function mockProviderOwner(
   page: Page,

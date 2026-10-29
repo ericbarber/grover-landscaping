@@ -27,7 +27,7 @@ export function CustomerPortfolioSummaryPanel({
   const coverage = getCustomerPortfolioCoverageCounts(properties, links, customer);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Property groups</p>
         <h2 className="mt-1 text-2xl font-bold text-slate-950">{customer.displayName}</h2>

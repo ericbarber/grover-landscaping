@@ -17,7 +17,7 @@ export function ManagerDraftRoutePublishActionPanel({
   onPublish,
 }: ManagerDraftRoutePublishActionPanelProps) {
   return (
-    <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
       <ManagerDraftRoutePublishGuardCard jobs={jobs} stops={stops} />
       <ManagerGuardedPublishDraftRouteButton
         jobs={jobs}

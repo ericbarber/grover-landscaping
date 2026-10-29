@@ -103,3 +103,14 @@ When a budget fails:
 
 Missing protected dashboards, alerts, or runtime evidence remain release gates;
 the repository contract does not claim they exist.
+
+## 2026-10-28 Tailwind 4 baseline refresh
+
+The security-driven Tailwind 4.3 migration changes the framework's generated,
+uncompressed stylesheet structure. On a clean Node 22 install, total CSS is
+86,156 B while gzip remains 14,488 B, below the existing 15,000 B transfer
+budget. Total production `dist` remains 1,321,645 B, below its unchanged
+1,400,000 B budget. The uncompressed CSS limit is therefore rebased to 90,000 B
+with 3,844 B of bounded headroom; all transfer-size, JavaScript, image, and
+required-chunk limits remain unchanged. This is build-tool output growth rather
+than an added browser dependency or intentionally larger user-facing payload.

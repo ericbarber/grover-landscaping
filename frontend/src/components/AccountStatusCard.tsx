@@ -49,7 +49,7 @@ export function AccountStatusCard({ jobId }: AccountStatusCardProps) {
 
   if (persistedAccountUnavailable) {
     return (
-      <section className="rounded-2xl border border-amber-300 bg-amber-50 p-5 shadow-sm">
+      <section className="rounded-2xl border border-amber-300 bg-amber-50 p-5 shadow-xs">
         <p className="text-sm font-semibold uppercase tracking-wide text-amber-800">Account status unavailable</p>
         <p className="mt-2 text-sm text-amber-950" role="alert">
           Persisted billing and service-approval context could not be loaded. Retry after API readiness recovers.
@@ -60,7 +60,7 @@ export function AccountStatusCard({ jobId }: AccountStatusCardProps) {
 
   if (!account || !source) {
     return (
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Account status</p>
         <p className="mt-2 text-sm text-slate-600" role="status">Loading persisted account context…</p>
       </section>
@@ -71,7 +71,7 @@ export function AccountStatusCard({ jobId }: AccountStatusCardProps) {
     account.paymentStatus === 'paid' || account.paymentStatus === 'not_required' || account.paymentStatus === 'waived';
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Account status</p>
