@@ -716,8 +716,13 @@ async fn app_from_env() -> Result<Router, DynError> {
 #[cfg(test)]
 fn app_with_state(state: Arc<AppState>, persistence: &'static str) -> Router {
     let frontend_dist = PathBuf::from("../frontend/dist");
-    let public_site = PublicSite::new(frontend_dist.clone(), "http://localhost:5173", false)
-        .expect("test public-site configuration should be valid");
+    let public_site = PublicSite::from_documents(
+        include_str!("../../frontend/index.html").to_string(),
+        include_str!("../../frontend/public/robots.txt").to_string(),
+        "http://localhost:5173",
+        false,
+    )
+    .expect("embedded test public-site documents should be valid");
     app_with_runtime(
         state,
         persistence,

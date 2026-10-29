@@ -408,12 +408,12 @@ export function PublicLandingPage({
           <span className="absolute inset-0 bg-gradient-to-r from-forest/95 via-forest/80 to-forest/40" />
           <span className="absolute inset-0 bg-gradient-to-t from-forest/50 via-transparent to-forest/20" />
         </div>
-        <div className="relative mx-auto w-full max-w-[86rem] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+        <div className="relative mx-auto w-full max-w-[86rem] px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-12">
           <div className="max-w-3xl">
             <p className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.18em] text-emerald-200 before:h-px before:w-7 before:bg-emerald-300">
               {entryPersona.eyebrow}
             </p>
-            <h1 className="mt-5 max-w-[12ch] font-display text-[clamp(3rem,7vw,5.75rem)] font-bold leading-[0.94] tracking-[-0.04em] text-white [text-wrap:balance]">
+            <h1 className="mt-5 max-w-[15ch] font-display text-[clamp(3rem,6vw,5.25rem)] font-bold leading-[0.94] tracking-[-0.04em] text-white [text-wrap:balance]">
               {entryPersona.headline}
             </h1>
             <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-white/90 sm:text-xl sm:leading-9">

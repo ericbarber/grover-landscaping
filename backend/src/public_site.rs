@@ -99,30 +99,27 @@ impl PublicSite {
         public_app_url: &str,
         production: bool,
     ) -> Result<Self, PublicSiteError> {
-        let origin = Url::parse(public_app_url).map_err(|_| {
-            PublicSiteError::Configuration(
-                "PUBLIC_APP_URL must be an absolute HTTP(S) origin".to_string(),
-            )
-        })?;
-        let is_exact_origin = origin.path() == "/"
-            && origin.query().is_none()
-            && origin.fragment().is_none()
-            && origin.username().is_empty()
-            && origin.password().is_none();
-        let allowed_scheme = if production {
-            origin.scheme() == "https"
-        } else {
-            matches!(origin.scheme(), "http" | "https")
-        };
-        if !is_exact_origin || !allowed_scheme {
-            return Err(PublicSiteError::Configuration(if production {
-                "PUBLIC_APP_URL must be an exact HTTPS origin in production".to_string()
-            } else {
-                "PUBLIC_APP_URL must be an exact HTTP(S) origin".to_string()
-            }));
-        }
+        let origin = validate_public_origin(public_app_url, production)?;
         let index_template = fs::read_to_string(frontend_dist.join("index.html"))?;
         let robots_policy = fs::read_to_string(frontend_dist.join("robots.txt"))?;
+        Self::from_validated_documents(index_template, robots_policy, origin)
+    }
+
+    pub fn from_documents(
+        index_template: String,
+        robots_policy: String,
+        public_app_url: &str,
+        production: bool,
+    ) -> Result<Self, PublicSiteError> {
+        let origin = validate_public_origin(public_app_url, production)?;
+        Self::from_validated_documents(index_template, robots_policy, origin)
+    }
+
+    fn from_validated_documents(
+        index_template: String,
+        robots_policy: String,
+        origin: Url,
+    ) -> Result<Self, PublicSiteError> {
         validate_template(&index_template)?;
         Ok(Self {
             index_template,
@@ -256,6 +253,32 @@ impl PublicSite {
                 PublicSiteError::Configuration("public URL could not be composed".to_string())
             })
     }
+}
+
+fn validate_public_origin(public_app_url: &str, production: bool) -> Result<Url, PublicSiteError> {
+    let origin = Url::parse(public_app_url).map_err(|_| {
+        PublicSiteError::Configuration(
+            "PUBLIC_APP_URL must be an absolute HTTP(S) origin".to_string(),
+        )
+    })?;
+    let is_exact_origin = origin.path() == "/"
+        && origin.query().is_none()
+        && origin.fragment().is_none()
+        && origin.username().is_empty()
+        && origin.password().is_none();
+    let allowed_scheme = if production {
+        origin.scheme() == "https"
+    } else {
+        matches!(origin.scheme(), "http" | "https")
+    };
+    if !is_exact_origin || !allowed_scheme {
+        return Err(PublicSiteError::Configuration(if production {
+            "PUBLIC_APP_URL must be an exact HTTPS origin in production".to_string()
+        } else {
+            "PUBLIC_APP_URL must be an exact HTTP(S) origin".to_string()
+        }));
+    }
+    Ok(origin)
 }
 
 fn validate_template(html: &str) -> Result<(), PublicSiteError> {
