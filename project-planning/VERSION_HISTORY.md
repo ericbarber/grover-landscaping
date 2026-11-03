@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-11-03: Closed the next two hosted integration defects in PR #38. The
+  live persistence fixture now changes scope only on the owner grant, preserving
+  the manager-delegation constraint, and passes against isolated PostgreSQL 16.
+  CI browser journeys now build and preview the production bundle instead of
+  measuring cold development compilation. Every engine retains the visible
+  transition assertion while the strict interaction clock runs on the
+  controlled Chromium mobile profile. A passing hosted rerun and deployment
+  remain separate gates.
 - 2026-10-29: Published the reconciled current-`main` integration as PR #38.
   The first hosted run exposed an undeclared `rg` dependency in the release
   preflight on GitHub's current Ubuntu 24.04 image. Release contract searches
@@ -11,8 +19,8 @@
   responsive hero keeps its message and actions in the first viewport. Strict
   Clippy, the full backend suite, both frontend TypeScript gates, 170 files /
   706 tests, production build, artifact and brand gates, and the focused
-  Chromium journey pass. A passing hosted rerun and deployment remain separate
-  gates.
+  Chromium journey pass. A passing hosted rerun and deployment remained
+  separate gates.
 - 2026-10-29: Added strict static type-checking for every Playwright spec and
   its configuration, enforced by frontend CI and the change-aware validator.
   The first run caught and repaired missing rollout-fixture imports and the
