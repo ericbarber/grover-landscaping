@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-11-04: Hosted CI confirmed the responsive cross-browser,
+  production-service-worker, and manager-continuity gates, then exposed a
+  mobile-clearance test race: CSS smooth scrolling was still moving when fixed
+  navigation geometry was sampled. The shared clearance helper now requests
+  instant scrolling, accounts for the fixed navigation edge, and waits for
+  settled frames before comparing boxes. The three phone sizes and 200% zoom
+  production-preview case pass in Chromium; the final hosted rerun remains.
 - 2026-11-03: Repaired the final browser-lab boundary exposed by PR #38. The
   optimized acceptance build now keeps its API origin pinned to the
   `http://localhost:8080` local-review fixture contract, allowing the manager

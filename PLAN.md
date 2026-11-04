@@ -109,8 +109,13 @@ builds the optimized acceptance artifact against that explicit fixture origin;
 all five affected manager continuity journeys pass locally against the
 production preview. A dedicated worker-enabled production project also proves
 registration, page control, shell population, and a routed offline reload while
-the mocked workflow projects remain worker-isolated. A fully passing hosted
-rerun and deployment remain unclaimed.
+the mocked workflow projects remain worker-isolated. Hosted CI confirms the
+responsive cross-browser, production-worker, and five manager-continuity gates;
+its later mobile-clearance check exposed a measurement race with the product's
+smooth scrolling rather than an obscured action. The helper now uses explicit
+instant scrolling before settled geometry is compared, and the complete phone
+size plus 200%-zoom case passes against the production preview in Chromium. A
+fully passing hosted rerun and deployment remain unclaimed.
 
 B7 now adds a versioned production-artifact and browser-experience budget,
 privacy-bounded operational indicator contracts, an actionable validator with
