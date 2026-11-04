@@ -31,7 +31,7 @@
 - Current icon glyphs are provisional. Production concepts need one outlined SVG
   icon family before implementation handoff.
 - The generated hero image is approved-direction exploration, not automatically
-  licensed customer proof or a claim about a real Grover customer.
+  licensed customer proof or a claim about a real Yardfolio customer.
 
 ## Decisions requested
 

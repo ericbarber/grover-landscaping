@@ -36,12 +36,12 @@ describe('authenticatedFetch', () => {
     configureApiAuthentication(
       false,
       async () => null,
-      async () => ({ 'x-grover-local-reviewer': 'crew-lead' }),
+      async () => ({ 'x-yardfolio-local-reviewer': 'crew-lead' }),
     );
 
     await authenticatedFetch('http://localhost:8080/jobs');
 
     const requestInit = fetchMock.mock.calls[0][1] as RequestInit;
-    expect(new Headers(requestInit.headers).get('x-grover-local-reviewer')).toBe('crew-lead');
+    expect(new Headers(requestInit.headers).get('x-yardfolio-local-reviewer')).toBe('crew-lead');
   });
 });

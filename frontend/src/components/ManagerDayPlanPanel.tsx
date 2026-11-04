@@ -126,11 +126,11 @@ export function ManagerDayPlanPanel({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl bg-forest p-5 text-white shadow-grover-sm sm:p-6">
+      <section className="rounded-2xl bg-forest p-5 text-white shadow-yardfolio-sm sm:p-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Manager scheduling</p>
-            <h2 className="grover-type-operational mt-2 text-3xl font-black">Today’s operation</h2>
+            <h2 className="yardfolio-type-operational mt-2 text-3xl font-black">Today’s operation</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-mist">
               Balance crew readiness, route capacity, and work that still needs an owner before publishing.
             </p>

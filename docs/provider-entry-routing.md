@@ -35,7 +35,7 @@ explains the selected model. The query is presentation context only:
 
 Public entry explains the preparation sequence: verified account, provider
 organization, business profile, and operating setup. Authenticated Company setup
-now projects the fields Grover actually reads into distinct fact states:
+now projects the fields the application actually reads into distinct fact states:
 
 - business identity, contact, website, and service area are **supplied by the
   provider** or explicitly need information;

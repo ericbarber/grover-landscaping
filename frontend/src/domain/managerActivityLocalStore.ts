@@ -1,8 +1,12 @@
 import type { ManagerActivityItem, ManagerActivitySource, ManagerActivityTone } from './managerActivity';
+import {
+  readMigratedStorageValue,
+  APP_STORAGE_NAMESPACE,
+} from './browserStorageNamespace';
 
-const managerActivityStorageKey = 'grover.managerActivity.items';
+const managerActivityStorageKey = `${APP_STORAGE_NAMESPACE}.managerActivity.items`;
 const maxStoredManagerActivityItems = 20;
-const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'sync'];
+const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'recovery', 'sync'];
 const activityTones: ManagerActivityTone[] = ['info', 'warning', 'success'];
 
 function isManagerActivityItem(value: unknown): value is ManagerActivityItem {
@@ -30,7 +34,11 @@ export function readStoredManagerActivityItems(
   }
 
   try {
-    const rawValue = window.localStorage.getItem(managerActivityStorageKey);
+    const rawValue = readMigratedStorageValue(
+      window.localStorage,
+      managerActivityStorageKey,
+      '.managerActivity.items',
+    );
 
     if (!rawValue) {
       return fallbackItems;

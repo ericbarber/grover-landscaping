@@ -35,6 +35,21 @@ export function ManagerMarketingConversionDashboard() {
       <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{stages.map(([label, value, context], index) => <article className="relative overflow-hidden rounded-2xl bg-slate-950 p-5 text-white" key={label}><span className="absolute right-3 top-2 text-5xl font-black text-white/5">{index + 1}</span><p className="text-xs font-black uppercase tracking-wide text-emerald-300">{label}</p><p className="mt-5 text-4xl font-black">{value}</p><p className="mt-2 text-sm font-bold text-slate-400">{context}</p></article>)}</div>
       <div className="mt-5 rounded-2xl bg-emerald-50 p-5"><div className="flex items-center justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-wide text-emerald-700">Visit to request</p><p className="mt-1 text-3xl font-black text-emerald-950">{rate(totals.submissions, totals.page_views)}</p></div><div className="text-right"><p className="text-sm font-bold text-emerald-900">{totals.failures} form failures</p><p className="text-xs text-emerald-800">Operational signal, not unique sessions</p></div></div></div>
       <div className="mt-6 grid gap-6 xl:grid-cols-2"><SegmentTable label="By audience" segments={dashboard.by_persona} /><SegmentTable label="By campaign" segments={dashboard.by_campaign} /></div>
+      <div className="mt-6">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div><p className="text-xs font-black uppercase tracking-wide text-emerald-700">Company first value</p><h3 className="mt-1 font-black">Setup stages</h3></div>
+          <p className="text-sm font-bold text-slate-600">{dashboard.company_setup_resumes} resumed setup session{dashboard.company_setup_resumes === 1 ? '' : 's'}</p>
+        </div>
+        <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
+          <table className="w-full min-w-[36rem] text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="p-3">Stage</th><th className="p-3">Viewed</th><th className="p-3">Started</th><th className="p-3">Completed</th><th className="p-3">Failed</th></tr></thead>
+            <tbody className="divide-y divide-slate-100">
+              {dashboard.company_setup_stages.length ? dashboard.company_setup_stages.map((stage) => <tr key={stage.stage}><th className="p-3 font-black capitalize">{stage.stage.split('_').join(' ')}</th><td className="p-3">{stage.views}</td><td className="p-3">{stage.starts}</td><td className="p-3 font-black text-emerald-700">{stage.completions}</td><td className="p-3 font-bold text-rose-700">{stage.failures}</td></tr>) : <tr><td className="p-4 text-slate-500" colSpan={5}>No company setup activity measured yet.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-2 text-xs leading-5 text-slate-500">Stage identifiers and outcomes only; customer, property, note, evidence, and token content is not collected.</p>
+      </div>
     </section>
   );
 }

@@ -52,7 +52,7 @@ describe('team membership role controls', () => {
 
   it('filters members by readable name, immutable identity, role, and status', () => {
     const members = [
-      { ...membership('CrewLead'), displayName: 'Jordan Grover' },
+      { ...membership('CrewLead'), displayName: 'Jordan Rivera' },
       {
         ...membership('Manager', 'suspended'),
         id: 'membership_2',
@@ -90,9 +90,9 @@ describe('team membership role controls', () => {
   it('exports quoted member directory identities and access state', () => {
     expect(teamMembershipsCsv([{
       ...membership('CrewLead'),
-      displayName: 'Grover, "Jordan"',
+      displayName: 'Rivera, "Jordan"',
     }])).toContain(
-      '"Grover, ""Jordan""","membership_1","user_1","CrewLead","active","organization","org_1"',
+      '"Rivera, ""Jordan""","membership_1","user_1","CrewLead","active","organization","org_1"',
     );
   });
 

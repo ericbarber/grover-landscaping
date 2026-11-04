@@ -2,7 +2,7 @@
 
 ## Status
 
-Adopted in production React on September 19, 2026, following findings DFR-02
+Adopted in production React on September 5, 2026, following findings DFR-02
 and DFR-05 in the
 [September 3 current-frontend audit](current-frontend-design-audit-2026-09-03.md).
 The API authorization and offline mutation contracts remain authoritative.
@@ -15,7 +15,7 @@ The API authorization and offline mutation contracts remain authoritative.
 | --- | --- | --- |
 | Loading | Current authorization and data are unresolved. | No stale property or visit facts; no premature empty state. |
 | Valid empty | Access is valid and the authoritative read contains no confirmed visits. | Explain what happens next and allow return Home. |
-| Access ended | The signed-in account no longer has the required current grant. | Withhold all property/service facts; return Home and offer a current-access recheck. |
+| Access ended | The signed-in account no longer has the required current grant. | Withhold all property/service facts; return Home and offer account-access review. |
 | Inconsistent | Related authorization or provenance records do not form a trustworthy projection. | Withhold facts, allow retry, and return Home. |
 | Unavailable | The authoritative service could not complete the read. | State that information remains protected, allow retry, and return Home. |
 

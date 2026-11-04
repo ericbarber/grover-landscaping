@@ -1,131 +1,92 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ApiRequestError, isApiErrorCode } from './api/apiError';
+import { isApiErrorCode } from './api/apiError';
 import {
   completeJob,
   completeDispatchCustomerNotification,
-  completePhotoUpload,
-  createPhotoUploadTicket,
-  deliverCompletionReport,
-  eraseCustomerPhotoEvidence,
   fetchCompletionReport,
-  fetchCompletionReports,
   updateJobDispatchAssignment,
-  fetchCustomerPrivacyExport,
-  fetchJobDetail,
-  fetchJobAddOns,
-  fetchJobPhotoEvidence,
-  fetchJobs,
-  fetchNotificationHistory,
-  fetchOperationalActivity,
-  fetchPhotoErasureDeletionHistory,
-  fetchPhotoProcessingHistory,
-  fetchPropertyCompletionReports,
-  requestCompletionReportChanges,
-  queueCompletionReportDeliveryNotification,
-  readPhotoUploadMetadata,
-  resolveNotificationDelivery,
-  resolvePhotoErasureDeletionJob,
-  resolvePhotoProcessingJob,
-  retryNotificationDelivery,
-  retryPhotoErasureDeletionJob,
-  retryPhotoProcessingJob,
-  resubmitCompletionReport,
   startJob,
   updateChecklistItem,
-  startCompletionReportReview,
-  uploadPhotoToTicket,
-  updateJobAddOnStatus,
-  type CompletePhotoUploadMetadata,
-  type CompletionReportSnapshot,
   type CustomerPropertyRecord,
-  type CustomerPhotoErasureSummary,
-  type CustomerPrivacyExport,
-  type JobDetail,
   type JobAddOn,
-  type NotificationHistoryItem,
-  type OperationalActivity,
-  type PhotoErasureDeletionHistoryItem,
-  type PhotoProcessingHistoryItem,
   type PhotoUploadTicket,
   type PropertyCompletionReportSummary,
 } from './api/client';
-import { fetchAccountProjectBids } from './api/projectBidsClient';
-import { fetchCustomerPortalVisits } from './api/customerPortalClient';
 import { useAuth } from './auth/AuthProvider';
-import {
-  enqueueChecklistMutation,
-  enqueueJobLifecycleMutation,
-  enqueuePhotoUploadMutation,
-  getOfflinePhotoBlob,
-  isChecklistOfflineMutation,
-  isOfflineMutationConflict,
-  isJobLifecycleOfflineMutation,
-  isPhotoUploadOfflineMutation,
-  listOfflineMutationsForActor,
-  markOfflineMutationFailed,
-  removeOfflineMutation,
-  requestPersistentOfflineStorage,
-  type ChecklistOfflineMutation,
-  type JobLifecycleOfflineMutation,
-  type PhotoUploadOfflineMutation,
+import type {
+  ChecklistOfflineMutation,
+  JobLifecycleOfflineMutation,
+  PhotoUploadOfflineMutation,
 } from './domain/offlineMutationQueue';
-import {
-  MissingOfflinePhotoBlobError,
-  replayOfflinePhotoMutation,
-} from './domain/offlinePhotoReplay';
-import {
-  assessPhotoQuality,
-  photoQualityMessage,
-  requiredPhotoEvidence,
-} from './domain/photoQuality';
+import { requiredPhotoEvidence } from './domain/photoQuality';
 import { workspaceGuidanceForRoles, workspaceRolesForAccess } from './domain/workspaceAccess';
-import {
-  workspacePersonasForRoles,
-  workspaceEnabledUnitForPersona,
-  workspaceFieldControlsForPersona,
-  workspacePersonaForRollout,
-  workspaceSurfacesForPersona,
-  type WorkspacePersonaId,
-} from './domain/workspacePersona';
+import { useWorkspaceSelection } from './workspaces/core/useWorkspaceSelection';
+import { useWorkspaceViewNavigation } from './workspaces/core/useWorkspaceViewNavigation';
 import {
   DesktopWorkspaceNavigation,
   MobileWorkspaceHeader,
   MobileWorkspaceNavigation,
-  mobileWorkspaceScrollTop,
-  type MobileWorkspaceView,
 } from './components/MobileWorkspaceShell';
 import {
   ManagerWorkspaceMenu,
   ManagerWorkspaceToolMenu,
-  managerWorkspaceActiveToolForPersona,
+} from './components/ManagerWorkspaceMenu';
+import {
   managerWorkspaceSectionSignalsForPersona,
   managerWorkspaceSectionsForPersona,
   managerWorkspaceToolsForPersona,
-  type ManagerWorkspaceSection,
   type ManagerWorkspaceTool,
-} from './components/ManagerWorkspaceMenu';
-import {
-  JobWorkflowMenu,
-  type JobWorkflowSection,
-} from './components/JobWorkflowMenu';
+} from './workspaces/features/management/managerWorkspace';
+import { useManagerWorkspaceNavigation } from './workspaces/features/management/useManagerWorkspaceNavigation';
 import {
   CustomerHistoryMenu,
-  type CustomerHistoryView,
 } from './components/CustomerHistoryMenu';
 import {
+  WorkspaceHomePanel,
+} from './components/WorkspaceHomePanel';
+import {
   homeGreeting,
+  homeProgressSummary,
   personaHomeHeadline,
   personaHomePromise,
   personaProgressLanguage,
-  WorkspaceHomePanel,
-} from './components/WorkspaceHomePanel';
-import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
-import { CompletionReport } from './components/CompletionReport';
-import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
+} from './workspaces/features/home/workspaceHome';
 import {
-  PropertyManagerPortfolioPanel,
-  propertyManagerPortfolioCapabilities,
-} from './components/PropertyManagerPortfolioPanel';
+  customerHomeWorkSummary,
+  customerWorkspaceModeForPersona,
+  personaUsesAuthorizedCustomerRead,
+  personaUsesManagerCustomerPreview,
+} from './workspaces/features/customer/customerWorkspace';
+import { useCustomerPortalCollection } from './workspaces/features/customer/useCustomerPortalCollection';
+import { useCustomerPropertyReportHistory } from './workspaces/features/customer/useCustomerPropertyReportHistory';
+import { useCustomerProjectBidHistory } from './workspaces/features/customer/useCustomerProjectBidHistory';
+import { useCustomerHistoryNavigation } from './workspaces/features/customer/useCustomerHistoryNavigation';
+import {
+  fieldRecoveryState,
+  mergePhotoEvidence,
+  type FieldPhotoType,
+} from './workspaces/features/field/fieldWorkspace';
+import { useFieldJobSelection } from './workspaces/features/field/useFieldJobSelection';
+import { useFieldPhotoEvidence } from './workspaces/features/field/useFieldPhotoEvidence';
+import { useFieldCompletionReport } from './workspaces/features/field/useFieldCompletionReport';
+import { useFieldJobs } from './workspaces/features/field/useFieldJobs';
+import { useFieldOfflineRecovery } from './workspaces/features/field/useFieldOfflineRecovery';
+import { useFieldJobNavigation } from './workspaces/features/field/useFieldJobNavigation';
+import { useFieldRouteOverview } from './workspaces/features/field/useFieldRouteOverview';
+import {
+  reviewedFieldConflictMessage,
+  runChecklistMutationCommand,
+  runFieldAddOnMutationCommand,
+  runFieldPhotoUploadCommand,
+  runJobLifecycleMutationCommand,
+} from './workspaces/features/field/fieldMutationCommands';
+import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
+import { AssignedJobsPanel } from './components/AssignedJobsPanel';
+import { FieldOfflineRecoveryPanel } from './components/FieldOfflineRecoveryPanel';
+import { JobDetailPanel } from './components/JobDetailPanel';
+import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
+import { PropertyManagerAuthorizedPortfolioPanel } from './components/PropertyManagerAuthorizedPortfolioPanel';
+import { PropertyManagerInvitationInbox } from './components/PropertyManagerInvitationInbox';
 import { YardOwnerPortalPanel } from './components/YardOwnerPortalPanel';
 import { providerEntryModeFromSearch } from './domain/providerEntryRoute';
 import { DayPlanPanel } from './components/DayPlanPanel';
@@ -138,9 +99,27 @@ import { ManagerMarketingConversionDashboard } from './components/ManagerMarketi
 import { ManagerDispatchWorkloadPanel } from './components/ManagerDispatchWorkloadPanel';
 import { ManagerDispatchHierarchyPanel } from './components/ManagerDispatchHierarchyPanel';
 import {
-  matchesCompletionReportOperationalFilters,
   type CompletionReportOperationalFilters,
 } from './domain/completionReportOperationalFilters';
+import { useManagerCompletionReportQueue } from './workspaces/features/management/useManagerCompletionReportQueue';
+import { useManagerCompletionReportActions } from './workspaces/features/management/useManagerCompletionReportActions';
+import { useManagerCompletionReportNotifications } from './workspaces/features/management/useManagerCompletionReportNotifications';
+import {
+  useManagerNotificationHistory,
+  type ManagerNotificationHistoryFilters,
+} from './workspaces/features/management/useManagerNotificationHistory';
+import {
+  useManagerPhotoProcessingRecovery,
+  type ManagerPhotoProcessingFilters,
+} from './workspaces/features/management/useManagerPhotoProcessingRecovery';
+import { useManagerPhotoErasureRecovery } from './workspaces/features/management/useManagerPhotoErasureRecovery';
+import { useManagerCustomerPrivacy } from './workspaces/features/management/useManagerCustomerPrivacy';
+import { useManagerOperationalActivity } from './workspaces/features/management/useManagerOperationalActivity';
+import { useManagerCrewNavigation } from './workspaces/features/management/useManagerCrewNavigation';
+import { useManagerRefreshSignals } from './workspaces/features/management/useManagerRefreshSignals';
+import { useManagerPropertyWorkspace } from './workspaces/features/management/useManagerPropertyWorkspace';
+import { useManagerOperationalExceptionNavigation } from './workspaces/features/management/useManagerOperationalExceptionNavigation';
+import { buildManagerTodayQueue } from './domain/managerTodayQueue';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
@@ -152,12 +131,8 @@ import { ManagerTeamActivityPanel } from './components/ManagerTeamActivityPanel'
 import { TeamOrganizationOverviewPanel } from './components/TeamOrganizationOverviewPanel';
 import {
   ManagerNotificationHistoryPanel,
-  type NotificationHistoryFilters,
 } from './components/ManagerNotificationHistoryPanel';
-import {
-  ManagerPhotoProcessingRecoveryPanel,
-  type PhotoProcessingRecoveryFilters,
-} from './components/ManagerPhotoProcessingRecoveryPanel';
+import { ManagerPhotoProcessingRecoveryPanel } from './components/ManagerPhotoProcessingRecoveryPanel';
 import { ManagerPhotoErasureRecoveryPanel } from './components/ManagerPhotoErasureRecoveryPanel';
 import { ManagerOperationalExceptionsPanel } from './components/ManagerOperationalExceptionsPanel';
 import {
@@ -167,42 +142,23 @@ import {
   countReadyCustomerReports,
   customerNeedsOnboardingAttention,
   filterCrewsForCompany,
-  filterAssignedJobs,
   filterPropertiesForCustomerPortal,
   filterWorkSummariesForCustomerPortal,
-  getCompletionProgress,
   getContractedServiceCount,
   getCustomerPropertyCount,
   getEnabledCrewCapacityMinutes,
   getEnabledCrewCount,
-  seedJobs,
   type CompanyProfile,
   type CrewProfile,
   type CustomerAccountProfile,
   type CustomerPortalWorkSummary,
   type CustomerPropertyProfile,
-  type YardCareJob,
 } from './domain/jobs';
-import {
-  prependManagerActivity,
-  type ManagerActivityItem,
-} from './domain/managerActivity';
-import {
-  readStoredManagerActivityItems,
-  writeStoredManagerActivityItems,
-} from './domain/managerActivityLocalStore';
 import { notificationsToManagerActivity } from './domain/notificationManagerActivity';
 import { operationsToManagerActivity } from './domain/operationalManagerActivity';
-import type {
-  CustomerPortalPropertySummary,
-  CustomerPortalVisitSummary,
-} from './domain/customerPortalVisits';
 import type { PortfolioPropertyLink, PropertyPortfolio } from './domain/propertyPortfolios';
 import { projectBidTotalCents, type ProjectBid } from './domain/stopProgress';
-
-type PhotoType = 'before' | 'after' | 'issue' | 'extra';
-
-type NewManagerActivity = Pick<ManagerActivityItem, 'title' | 'message' | 'tone' | 'source'>;
+import { useManagerLocalActivity } from './workspaces/features/management/useManagerLocalActivity';
 
 const managementCompanyPreview: CompanyProfile = {
   id: 'company_demo_property_manager',
@@ -333,56 +289,6 @@ const customerPortalPreviewWorkSummaries: CustomerPortalWorkSummary[] = [
   },
 ];
 
-const customerPortalPreviewVisits: CustomerPortalVisitSummary[] = [
-  {
-    id: 'visit_1001',
-    customerId: 'customer_1001',
-    organizationId: 'org_demo_landscaping',
-    propertyId: 'property_1001',
-    scheduledDate: '2026-08-27',
-    arrivalWindow: '8:00–10:00 AM',
-    serviceTitle: 'Weekly yard care',
-    scope: ['Mow and edge the lawn', 'Clear hard surfaces', 'Check irrigation coverage'],
-    status: 'confirmed',
-    preparationMessage: 'Please unlock the side gate and keep pets inside during the arrival window.',
-    nextUpdateMessage: 'We will update this visit when your care team is on the way.',
-    deliveredProofAvailable: false,
-  },
-  {
-    id: 'visit_1002',
-    customerId: 'customer_1001',
-    organizationId: 'org_demo_landscaping',
-    propertyId: 'property_1002',
-    scheduledDate: '2026-09-05',
-    arrivalWindow: '10:00 AM–12:00 PM',
-    serviceTitle: 'Seasonal tree care',
-    scope: ['Inspect the renovation area', 'Trim approved limbs', 'Remove green waste'],
-    status: 'confirmed',
-    preparationMessage: 'Keep the backyard work area clear during the arrival window.',
-    nextUpdateMessage: 'We will confirm when the care team begins traveling to this property.',
-    deliveredProofAvailable: false,
-  },
-];
-
-function managerActivityTimestamp() {
-  return `Today ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
-}
-
-function StatusBadge({ status }: { status: YardCareJob['status'] }) {
-  const label = status.replace('_', ' ');
-  const tone = status === 'completed'
-    ? 'success'
-    : status === 'in_progress'
-      ? 'warning'
-      : 'info';
-
-  return (
-    <WorkspaceStatusBadge className="uppercase tracking-wide" tone={tone}>
-      {label}
-    </WorkspaceStatusBadge>
-  );
-}
-
 function ManagerToolSurface({
   activeTool,
   children,
@@ -398,60 +304,6 @@ function ManagerToolSurface({
 }) {
   if (activeTool !== tool) return null;
   return <div className={className} id={id}>{children}</div>;
-}
-
-function JobCard({
-  job,
-  isSelected,
-  onSelect,
-  position,
-}: {
-  job: YardCareJob;
-  isSelected: boolean;
-  onSelect: (jobId: string) => void;
-  position: number;
-}) {
-  const progress = getCompletionProgress(job);
-
-  return (
-    <article
-      className={`rounded-2xl border bg-paper p-4 shadow-xs ${
-        isSelected ? 'border-emerald-500 ring-2 ring-emerald-200' : 'border-slate-200'
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-black ${
-          isSelected ? 'bg-forest text-white' : 'bg-slate-100 text-forest'
-        }`}>
-          {position}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{job.scheduledDate}</p>
-              <h3 className="mt-1 text-lg font-black text-slate-950">{job.customerName}</h3>
-            </div>
-            <StatusBadge status={job.status} />
-          </div>
-          <p className="mt-1 text-sm text-slate-600">{job.propertyAddress}</p>
-          <p className="mt-3 text-xs font-semibold text-slate-600">
-            {job.completedChecklistItems}/{job.checklistItems} checklist · {job.beforePhotos} before · {job.afterPhotos} after
-          </p>
-        </div>
-      </div>
-
-      <div aria-label={`${progress}% checklist complete`} className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-emerald-700" style={{ width: `${progress}%` }} />
-      </div>
-
-      <button
-        className="mt-4 min-h-11 w-full rounded-xl bg-emerald-800 px-4 py-3 text-sm font-bold text-white shadow-xs hover:bg-emerald-900"
-        onClick={() => onSelect(job.id)}
-      >
-        {isSelected ? 'Selected Job' : 'Open Job'}
-      </button>
-    </article>
-  );
 }
 
 function companyTypeLabel(companyType: CompanyProfile['companyType']): string {
@@ -573,10 +425,7 @@ function CustomerPortalPreviewPanel({
   isLoadingProjectBids: boolean;
   hasProjectBidHistoryError: boolean;
 }) {
-  const [selectedPortalPropertyId, setSelectedPortalPropertyId] = useState<string | null>(null);
-  const [activeCustomerHistory, setActiveCustomerHistory] =
-    useState<CustomerHistoryView>('properties');
-  const [expandedReportPropertyId, setExpandedReportPropertyId] = useState<string | null>(null);
+  const historyNavigation = useCustomerHistoryNavigation();
   const visibleProperties = filterPropertiesForCustomerPortal(properties, customer);
   const visibleWorkSummaries = filterWorkSummariesForCustomerPortal(workSummaries, customer);
   const deliveredReportCount = Object.values(completionReportsByProperty).reduce(
@@ -629,18 +478,14 @@ function CustomerPortalPreviewPanel({
       </div>
 
       <CustomerHistoryMenu
-        activeView={activeCustomerHistory}
+        activeView={historyNavigation.activeView}
         bidCount={projectBids.length}
-        onChange={(view) => {
-          setActiveCustomerHistory(view);
-          setSelectedPortalPropertyId(null);
-          setExpandedReportPropertyId(null);
-        }}
+        onChange={historyNavigation.changeView}
         propertyCount={visibleProperties.length}
       />
 
-      <div className={`${activeCustomerHistory === 'properties' ? 'block' : 'hidden'} mt-5 space-y-3 lg:block`}>
-        <div className={`${selectedPortalPropertyId ? 'hidden' : 'grid'} gap-2 lg:hidden`}>
+      <div className={`${historyNavigation.activeView === 'properties' ? 'block' : 'hidden'} mt-5 space-y-3 lg:block`}>
+        <div className={`${historyNavigation.selectedPropertyId ? 'hidden' : 'grid'} gap-2 lg:hidden`}>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Choose a property
           </p>
@@ -653,10 +498,7 @@ function CustomerPortalPreviewPanel({
               <button
                 className="flex min-h-16 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left"
                 key={property.id}
-                onClick={() => {
-                  setSelectedPortalPropertyId(property.id);
-                  setExpandedReportPropertyId(null);
-                }}
+                onClick={() => historyNavigation.selectProperty(property.id)}
                 type="button"
               >
                 <span className="min-w-0">
@@ -676,21 +518,18 @@ function CustomerPortalPreviewPanel({
         {visibleProperties.map((property) => {
           const propertyWork = visibleWorkSummaries.filter((workSummary) => workSummary.propertyId === property.id);
           const propertyReports = completionReportsByProperty[property.id] ?? [];
-          const mobilePropertyReports = expandedReportPropertyId === property.id
+          const mobilePropertyReports = historyNavigation.expandedReportPropertyId === property.id
             ? propertyReports
             : propertyReports.slice(0, 2);
 
           return (
             <article
               key={property.id}
-              className={`${selectedPortalPropertyId === property.id ? 'block' : 'hidden'} rounded-xl border border-slate-200 p-4 lg:block`}
+              className={`${historyNavigation.selectedPropertyId === property.id ? 'block' : 'hidden'} rounded-xl border border-slate-200 p-4 lg:block`}
             >
               <button
                 className="mb-3 min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 lg:hidden"
-                onClick={() => {
-                  setSelectedPortalPropertyId(null);
-                  setExpandedReportPropertyId(null);
-                }}
+                onClick={historyNavigation.showAllProperties}
                 type="button"
               >
                 ← All properties
@@ -733,18 +572,16 @@ function CustomerPortalPreviewPanel({
                   {propertyReports.length > 2 ? (
                     <button
                       className="min-h-11 w-full rounded-lg border border-emerald-200 bg-white px-3 text-sm font-bold text-emerald-900 lg:hidden"
-                      onClick={() => setExpandedReportPropertyId((current) =>
-                        current === property.id ? null : property.id
-                      )}
+                      onClick={() => historyNavigation.toggleOlderReports(property.id)}
                       type="button"
                     >
-                      {expandedReportPropertyId === property.id
+                      {historyNavigation.expandedReportPropertyId === property.id
                         ? 'Show recent reports'
                         : `Show ${propertyReports.length - 2} older reports`}
                     </button>
                   ) : null}
                   <div className="hidden space-y-2 lg:block">
-                    {(expandedReportPropertyId === property.id
+                    {(historyNavigation.expandedReportPropertyId === property.id
                       ? []
                       : propertyReports.slice(2)
                     ).map((report) => (
@@ -779,7 +616,7 @@ function CustomerPortalPreviewPanel({
         })}
       </div>
       {projectBids.length > 0 ? (
-        <div className={`${activeCustomerHistory === 'bids' ? 'block' : 'hidden'} mt-5 space-y-2 lg:block`}>
+        <div className={`${historyNavigation.activeView === 'bids' ? 'block' : 'hidden'} mt-5 space-y-2 lg:block`}>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Bid history</p>
           {projectBids.map((bid) => {
             const bidTotal = currencyLabel(projectBidTotalCents(bid));
@@ -807,438 +644,13 @@ function CustomerPortalPreviewPanel({
             );
           })}
         </div>
-      ) : activeCustomerHistory === 'bids' ? (
+      ) : historyNavigation.activeView === 'bids' ? (
         <p className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 lg:hidden">
           No bids are currently available for this customer.
         </p>
       ) : null}
     </section>
   );
-}
-
-function JobDetailPanel({
-  job,
-  executionEnabled,
-  fieldEvidenceEnabled,
-  isLoading,
-  uploadTickets,
-  reportSnapshot,
-  addOns,
-  onStart,
-  onComplete,
-  onChecklistItemChange,
-  onPhotoSelected,
-  onAddOnStatusChange,
-  onStartReportReview,
-  onRequestReportChanges,
-  onResubmitReport,
-  onDeliverReport,
-  onQueueReportDeliveryNotification,
-  reportActionStatus,
-  reportEnabled,
-  requestedWorkflow,
-}: {
-  job: JobDetail | null;
-  executionEnabled: boolean;
-  fieldEvidenceEnabled: boolean;
-  isLoading: boolean;
-  uploadTickets: PhotoUploadTicket[];
-  reportSnapshot: CompletionReportSnapshot | null;
-  addOns: JobAddOn[];
-  onStart: () => Promise<void>;
-  onComplete: () => Promise<void>;
-  onChecklistItemChange: (itemId: string, completed: boolean) => Promise<void>;
-  onPhotoSelected: (file: File, photoType: PhotoType) => Promise<void>;
-  onAddOnStatusChange: (addOnId: string, status: JobAddOn['status']) => Promise<void>;
-  onStartReportReview: (reportId: string) => Promise<void>;
-  onRequestReportChanges: (reportId: string, reason: string) => Promise<void>;
-  onResubmitReport: (reportId: string) => Promise<void>;
-  onDeliverReport: (reportId: string) => Promise<void>;
-  onQueueReportDeliveryNotification: (
-    reportId: string,
-    channel: 'email' | 'sms',
-    recipient: string,
-  ) => Promise<void>;
-  reportActionStatus: string | null;
-  reportEnabled: boolean;
-  requestedWorkflow: JobWorkflowSection;
-}) {
-  const [photoType, setPhotoType] = useState<PhotoType>('before');
-  const [activeWorkflow, setActiveWorkflow] = useState<JobWorkflowSection>(requestedWorkflow);
-  const allowedWorkflowSections: JobWorkflowSection[] = [
-    'overview',
-    ...(fieldEvidenceEnabled ? ['checklist', 'photos'] as JobWorkflowSection[] : []),
-    ...(executionEnabled ? ['addons'] as JobWorkflowSection[] : []),
-    ...(reportEnabled ? ['report'] as JobWorkflowSection[] : []),
-  ];
-
-  useEffect(() => {
-    setActiveWorkflow(
-      allowedWorkflowSections.includes(requestedWorkflow) ? requestedWorkflow : 'overview',
-    );
-  }, [executionEnabled, fieldEvidenceEnabled, job?.id, reportEnabled, requestedWorkflow]);
-
-  if (isLoading) {
-    return (
-      <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5">
-        <p className="text-sm font-semibold text-slate-500">Loading job details...</p>
-      </aside>
-    );
-  }
-
-  if (!job) {
-    return (
-      <aside className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-slate-600 sm:p-5">
-        Select a job to view checklist, workflow actions, and local photo upload placeholders.
-      </aside>
-    );
-  }
-
-  const completedChecklistItems = job.checklist.filter((item) => item.completed).length;
-  const checklistProgress = job.checklist.length === 0
-    ? 0
-    : Math.round((completedChecklistItems / job.checklist.length) * 100);
-  const beforePhotos = Math.max(
-    job.beforePhotos,
-    uploadTickets.filter((ticket) => ticket.photoType === 'before').length,
-  );
-  const afterPhotos = Math.max(
-    job.afterPhotos,
-    uploadTickets.filter((ticket) => ticket.photoType === 'after').length,
-  );
-  const missingRequiredEvidence = [
-    ...(beforePhotos === 0 ? ['before'] : []),
-    ...(afterPhotos === 0 ? ['after'] : []),
-  ];
-  const pendingAddOns = addOns.filter((addOn) => (
-    addOn.status === 'scheduled' || addOn.status === 'in_progress'
-  )).length;
-  const nextAction = !executionEnabled
-    ? 'This rollout unit provides read-only job status. Field actions remain with the assigned crew.'
-    : job.status === 'scheduled'
-      ? 'Start this job when the crew is ready to begin.'
-      : !fieldEvidenceEnabled
-        ? 'Continue stop progress from Today’s route; proof actions are outside this rollout unit.'
-        : missingRequiredEvidence.length > 0
-          ? `Capture ${missingRequiredEvidence.join(' and ')} photo evidence before completing this job.`
-          : pendingAddOns > 0
-            ? `Finish ${pendingAddOns} approved add-on${pendingAddOns === 1 ? '' : 's'} before the customer report is ready.`
-            : checklistProgress < 100
-              ? `Finish ${job.checklist.length - completedChecklistItems} checklist item${job.checklist.length - completedChecklistItems === 1 ? '' : 's'} before customer handoff.`
-              : 'Required field evidence is ready. Complete the job when service is finished.';
-
-  return (
-    <div className="space-y-4">
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5">
-        <div className="flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-800">Current service target</p>
-            <h2 className="mt-2 font-display text-3xl font-black text-forest">{job.customerName}</h2>
-            <p className="mt-1 text-sm text-slate-600">{job.propertyAddress}</p>
-            <p className="mt-1 text-xs font-semibold text-slate-500">Scheduled {job.scheduledDate}</p>
-          </div>
-          <StatusBadge status={job.status} />
-        </div>
-
-        {executionEnabled ? <div className="mt-5 rounded-2xl border border-slate-200 bg-paper p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="text-xs font-black uppercase tracking-wide text-slate-500">Primary action</p>
-              <p className="mt-1 text-sm font-bold text-slate-900">Move this visit forward without losing context.</p>
-            </div>
-            <WorkspaceStatusBadge tone={!fieldEvidenceEnabled || missingRequiredEvidence.length === 0 ? 'success' : 'warning'}>
-              {!fieldEvidenceEnabled
-                ? 'Execution enabled'
-                : missingRequiredEvidence.length === 0
-                  ? 'Evidence ready'
-                  : `${missingRequiredEvidence.length} evidence gap${missingRequiredEvidence.length === 1 ? '' : 's'}`}
-            </WorkspaceStatusBadge>
-          </div>
-          <div className="mt-3 grid gap-3 min-[380px]:grid-cols-2">
-            <button
-              className="min-h-12 rounded-xl border border-emerald-700 px-4 py-3 text-sm font-bold text-emerald-900 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
-              disabled={job.status !== 'scheduled'}
-              onClick={() => void onStart()}
-              type="button"
-            >
-              {job.status === 'scheduled' ? 'Start Job' : 'Job Started'}
-            </button>
-            {fieldEvidenceEnabled ? <button
-              className="min-h-12 rounded-xl bg-emerald-800 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:bg-slate-300"
-              disabled={job.status === 'completed' || missingRequiredEvidence.length > 0}
-              onClick={() => void onComplete()}
-              type="button"
-            >
-              {job.status === 'completed' ? 'Job Completed' : 'Complete Job'}
-            </button> : null}
-          </div>
-        </div> : (
-          <WorkspaceStatusNotice
-            className="mt-5"
-            compact
-            detail="Progress, checklist, photo, add-on, and completion actions remain hidden."
-            title="Job oversight is read only."
-            tone="info"
-          />
-        )}
-
-        <JobWorkflowMenu
-          activeSection={activeWorkflow}
-          addOnCount={addOns.length}
-          checklistComplete={completedChecklistItems}
-          checklistTotal={job.checklist.length}
-          onChange={setActiveWorkflow}
-          photoCount={uploadTickets.length}
-          reportReady={Boolean(reportSnapshot?.readyForCustomer)}
-          allowedSections={allowedWorkflowSections}
-        />
-
-        <div
-          aria-labelledby="job-workflow-tab-overview"
-          className={`${activeWorkflow === 'overview' ? 'block' : 'hidden'} mt-5`}
-          id="job-workflow-panel-overview"
-          role="tabpanel"
-        >
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-xl bg-paper p-3">
-              <p className="text-2xl font-black text-forest">{checklistProgress}%</p>
-              <p className="text-xs font-bold text-slate-500">Checklist</p>
-            </div>
-            <div className="rounded-xl bg-paper p-3">
-              <p className="text-2xl font-black text-forest">{beforePhotos}</p>
-              <p className="text-xs font-bold text-slate-500">Before</p>
-            </div>
-            <div className="rounded-xl bg-paper p-3">
-              <p className="text-2xl font-black text-forest">{afterPhotos}</p>
-              <p className="text-xs font-bold text-slate-500">After</p>
-            </div>
-            <div className="rounded-xl bg-paper p-3">
-              <p className="text-2xl font-black text-forest">{pendingAddOns}</p>
-              <p className="text-xs font-bold text-slate-500">Open add-ons</p>
-            </div>
-          </div>
-          <WorkspaceStatusNotice
-            className="mt-3"
-            detail={nextAction}
-            title="Next best action"
-            tone={fieldEvidenceEnabled && missingRequiredEvidence.length > 0 ? 'warning' : 'info'}
-          />
-        </div>
-
-        {fieldEvidenceEnabled ? <section
-          aria-labelledby="job-workflow-tab-checklist"
-          className={`${activeWorkflow === 'checklist' ? 'block' : 'hidden'} mt-5 rounded-xl border border-slate-200 bg-paper px-3`}
-          id="job-workflow-panel-checklist"
-          role="tabpanel"
-        >
-          <div className="flex min-h-12 items-center justify-between gap-3 text-sm font-semibold uppercase tracking-wide text-slate-600">
-            Checklist
-            <span className="rounded-full bg-white px-2 py-1 text-xs tracking-normal text-slate-600">
-              {completedChecklistItems}/{job.checklist.length} complete
-            </span>
-          </div>
-          <div className="mt-3 space-y-2">
-            {job.checklist.map((item) => (
-              <button
-                key={item.id}
-                className="flex min-h-12 w-full items-center gap-3 rounded-xl bg-white p-3 text-left"
-                onClick={() => void onChecklistItemChange(item.id, !item.completed)}
-                type="button"
-              >
-                <span
-                  className={`h-3 w-3 rounded-full ${item.completed ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                  aria-hidden="true"
-                />
-                <span className="text-sm font-medium text-slate-700">{item.label}</span>
-              </button>
-            ))}
-          </div>
-          <div className="h-3" />
-        </section> : null}
-
-        {executionEnabled ? (addOns.length > 0 ? (
-          <div
-            aria-labelledby="job-workflow-tab-addons"
-            className={`${activeWorkflow === 'addons' ? 'block' : 'hidden'} mt-5`}
-            id="job-workflow-panel-addons"
-            role="tabpanel"
-          >
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-sky-700">Approved add-on work</h3>
-            <div className="mt-3 space-y-2">
-              {addOns.map((addOn) => (
-                <article key={addOn.id} className="rounded-xl border border-sky-200 bg-sky-50 p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-sky-950">{addOn.serviceName}</p>
-                      {addOn.serviceDescription ? <p className="mt-1 text-xs text-sky-800">{addOn.serviceDescription}</p> : null}
-                      {addOn.note ? <p className="mt-1 text-xs text-sky-700">{addOn.note}</p> : null}
-                    </div>
-                    <span className="rounded-full bg-white px-2 py-1 text-[11px] font-semibold uppercase text-sky-800">{addOn.status}</span>
-                  </div>
-                  <p className="mt-2 text-xs text-sky-800">Quantity {addOn.quantity}</p>
-                  {addOn.status === 'scheduled' ? (
-                    <button
-                      className="mt-3 rounded-lg bg-sky-800 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-900"
-                      onClick={() => void onAddOnStatusChange(addOn.id, 'in_progress')}
-                    >
-                      Start add-on
-                    </button>
-                  ) : null}
-                  {addOn.status === 'in_progress' ? (
-                    <button
-                      className="mt-3 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
-                      onClick={() => void onAddOnStatusChange(addOn.id, 'completed')}
-                    >
-                      Complete add-on
-                    </button>
-                  ) : null}
-                </article>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div
-            aria-labelledby="job-workflow-tab-addons"
-            className={`${activeWorkflow === 'addons' ? 'block' : 'hidden'} mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600`}
-            id="job-workflow-panel-addons"
-            role="tabpanel"
-          >
-            No approved add-on work is attached to this job.
-          </div>
-        )) : null}
-
-        {fieldEvidenceEnabled ? <div
-          aria-labelledby="job-workflow-tab-photos"
-          className={`${activeWorkflow === 'photos' ? 'block' : 'hidden'} mt-5 rounded-2xl bg-paper p-4`}
-          id="job-workflow-panel-photos"
-          role="tabpanel"
-        >
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Photo evidence</h3>
-          <p className="mt-2 text-sm text-slate-600">
-            Use a previewable JPEG, PNG, GIF, or WebP image at least 640×480. Duplicate files are blocked, and both before and after evidence are required to complete the job.
-          </p>
-
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <select
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
-              value={photoType}
-              onChange={(event) => setPhotoType(event.target.value as PhotoType)}
-            >
-              <option value="before">Before photo</option>
-              <option value="after">After photo</option>
-              <option value="issue">Issue photo</option>
-              <option value="extra">Extra photo</option>
-            </select>
-            <label className="flex-1 cursor-pointer rounded-xl border border-dashed border-slate-400 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-100">
-              Choose Photo
-              <input
-                className="sr-only"
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) {
-                    void onPhotoSelected(file, photoType);
-                    event.currentTarget.value = '';
-                  }
-                }}
-              />
-            </label>
-          </div>
-
-          {uploadTickets.length > 0 && (
-            <div className="mt-4 space-y-2">
-              {uploadTickets.map((ticket) => (
-                <div key={ticket.photoId} className="rounded-xl bg-white p-3 text-xs text-slate-600 shadow-xs">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-800">{ticket.fileName}</p>
-                      <p className="capitalize">{ticket.photoType} photo</p>
-                    </div>
-                    <span className="rounded-full bg-slate-100 px-2 py-1 font-semibold uppercase text-slate-500">
-                      {ticket.status}
-                    </span>
-                  </div>
-                  <p className="mt-2">{ticket.uploadMode}</p>
-                  <p className="break-all">{ticket.objectKey}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div> : null}
-      </section>
-
-      {reportEnabled ? <div
-        aria-labelledby="job-workflow-tab-report"
-        className={activeWorkflow === 'report' ? 'block' : 'hidden'}
-        id="job-workflow-panel-report"
-        role="tabpanel"
-      >
-      <CompletionReport
-        job={job}
-        uploadTickets={uploadTickets}
-        reportSnapshot={reportSnapshot}
-        onStartReview={onStartReportReview}
-        onRequestChanges={onRequestReportChanges}
-        onResubmit={onResubmitReport}
-        onDeliver={onDeliverReport}
-        onQueueDeliveryNotification={onQueueReportDeliveryNotification}
-        actionStatus={reportActionStatus}
-      />
-      </div> : null}
-    </div>
-  );
-}
-
-function fallbackJobDetail(job: YardCareJob): JobDetail {
-  return {
-    ...job,
-    checklist: [
-      { id: 'before-photos', label: 'Capture before photos', completed: job.beforePhotos > 0 },
-      { id: 'yard-service', label: 'Complete yard service', completed: job.status !== 'scheduled' },
-      { id: 'after-photos', label: 'Capture after photos', completed: job.afterPhotos > 0 },
-      { id: 'completion-notes', label: 'Submit completion notes', completed: job.status === 'completed' },
-    ],
-  };
-}
-
-function localPhotoTicket(
-  jobId: string,
-  file: File,
-  photoType: PhotoType,
-  metadata: CompletePhotoUploadMetadata,
-): PhotoUploadTicket {
-  return {
-    status: 'created',
-    jobId,
-    photoId: `local_${jobId}_${photoType}_${Date.now()}`,
-    photoType,
-    fileName: file.name,
-    contentType: file.type || 'application/octet-stream',
-    uploadMode: 'browser-local-placeholder',
-    uploadUrl: `local://${file.name}`,
-    objectKey: `browser/jobs/${jobId}/${photoType}/${file.name}`,
-    thumbnailUrl: URL.createObjectURL(file),
-    fileSizeBytes: metadata.fileSizeBytes,
-    imageWidthPx: metadata.imageWidthPx,
-    imageHeightPx: metadata.imageHeightPx,
-    metadataSource: 'client_reported',
-  };
-}
-
-function mergePhotoEvidence(
-  current: PhotoUploadTicket[],
-  jobId: string,
-  persistedEvidence: PhotoUploadTicket[],
-): PhotoUploadTicket[] {
-  const persistedIds = new Set(persistedEvidence.map((photo) => photo.photoId));
-  const currentJobLocalEvidence = current.filter(
-    (photo) => photo.jobId === jobId && !persistedIds.has(photo.photoId),
-  );
-  const otherJobEvidence = current.filter((photo) => photo.jobId !== jobId);
-
-  return [...persistedEvidence, ...currentJobLocalEvidence, ...otherJobEvidence];
 }
 
 export function App() {
@@ -1249,199 +661,356 @@ export function App() {
     [auth.memberships, auth.roles],
   );
   const workspaceGuidance = workspaceGuidanceForRoles(workspaceRoles);
-  const availablePersonas = useMemo(
-    () => workspacePersonasForRoles(workspaceRoles),
-    [workspaceRoles],
-  );
-  const initialPersona = availablePersonas[0];
+  const {
+    activeWorkspace,
+    availablePersonas,
+    selectPersona: selectWorkspacePersona,
+  } = useWorkspaceSelection(workspaceRoles, auth.workspaceRollout);
+  const activePersona = activeWorkspace.persona;
+  const workspaceSurfaces = activeWorkspace.surfaces;
+  const managedPersonaUnit = activeWorkspace.rolloutUnit;
+  const fieldControls = activeWorkspace.fieldControls;
   const canManageDispatchHierarchy = workspaceRoles.includes('OrganizationOwner')
     || workspaceRoles.includes('SupportAdmin');
   const canReviewMarketingLeads = workspaceRoles.includes('SupportAdmin');
-  const [jobs, setJobs] = useState<YardCareJob[]>(seedJobs);
-  const [jobSearch, setJobSearch] = useState('');
-  const [jobStatusFilter, setJobStatusFilter] = useState<YardCareJob['status'] | 'all'>('all');
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(seedJobs[0]?.id ?? null);
-  const [requestedJobWorkflow, setRequestedJobWorkflow] = useState<JobWorkflowSection>('overview');
-  const visibleAssignedJobs = useMemo(
-    () => filterAssignedJobs(jobs, jobSearch, jobStatusFilter),
-    [jobSearch, jobStatusFilter, jobs],
+  const {
+    jobs,
+    setJobs,
+    selectedJobId,
+    setSelectedJobId,
+    readState: fieldJobsReadState,
+    isLoadingJobs,
+    jobsUnavailable,
+  } = useFieldJobs();
+  const availableWorkspaceViews = useMemo(
+    () => activePersona.navigation.map(({ view }) => view),
+    [activePersona.navigation],
   );
-  const [activePersonaId, setActivePersonaId] = useState<WorkspacePersonaId>(
-    initialPersona.id,
+  const workspaceViewNavigation = useWorkspaceViewNavigation(
+    activePersona.defaultView,
+    availableWorkspaceViews,
   );
-  const [mobileView, setMobileView] = useState<MobileWorkspaceView>(
-    initialPersona.defaultView,
-  );
-  const [selectedJob, setSelectedJob] = useState<JobDetail | null>(null);
-  const [jobDetailUnavailable, setJobDetailUnavailable] = useState(false);
-  const [selectedJobAddOns, setSelectedJobAddOns] = useState<JobAddOn[]>([]);
-  const [jobAddOnsUnavailable, setJobAddOnsUnavailable] = useState(false);
-  const [photoEvidenceUnavailable, setPhotoEvidenceUnavailable] = useState(false);
-  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
-  const [jobsUnavailable, setJobsUnavailable] = useState(false);
-  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const mobileView = workspaceViewNavigation.view;
+  const openFieldJobView = useCallback((resetDestination: boolean) => {
+    workspaceViewNavigation.openView('job', resetDestination);
+  }, [workspaceViewNavigation.openView]);
+  const fieldJobNavigation = useFieldJobNavigation({
+    selectedJobId,
+    selectJob: setSelectedJobId,
+    openJobView: openFieldJobView,
+  });
+  const {
+    selectedJob,
+    setSelectedJob,
+    jobDetailUnavailable,
+    isLoadingDetail,
+    selectedJobAddOns,
+    setSelectedJobAddOns,
+    jobAddOnsUnavailable,
+  } = useFieldJobSelection(selectedJobId, jobs);
+  const {
+    uploadTickets,
+    setUploadTickets,
+    photoEvidenceUnavailable,
+  } = useFieldPhotoEvidence(selectedJobId);
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
-  const [uploadTickets, setUploadTickets] = useState<PhotoUploadTicket[]>([]);
-  const [selectedCompletionReport, setSelectedCompletionReport] = useState<CompletionReportSnapshot | null>(null);
-  const [completionReportSnapshots, setCompletionReportSnapshots] = useState<Record<string, CompletionReportSnapshot>>({});
-  const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
-  const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
-  const [operationalActivity, setOperationalActivity] = useState<OperationalActivity[]>([]);
-  const operationalActivityRequestId = useRef(0);
-  const [operationalActivityUnavailable, setOperationalActivityUnavailable] = useState(false);
-  const [isLoadingOlderOperationalActivity, setIsLoadingOlderOperationalActivity] = useState(false);
-  const [canLoadOlderOperationalActivity, setCanLoadOlderOperationalActivity] = useState(true);
-  const [requestedOperationalExceptionId, setRequestedOperationalExceptionId] = useState<string>();
-  const [requestedOperationalExceptionSignal, setRequestedOperationalExceptionSignal] = useState(0);
-  const [isLoadingNotificationHistory, setIsLoadingNotificationHistory] = useState(false);
-  const [notificationHistoryUnavailable, setNotificationHistoryUnavailable] = useState(false);
-  const [photoProcessingHistory, setPhotoProcessingHistory] = useState<PhotoProcessingHistoryItem[]>([]);
-  const [isLoadingPhotoProcessingHistory, setIsLoadingPhotoProcessingHistory] = useState(false);
-  const [photoErasureDeletionHistory, setPhotoErasureDeletionHistory] = useState<PhotoErasureDeletionHistoryItem[]>([]);
-  const [isLoadingPhotoErasureDeletionHistory, setIsLoadingPhotoErasureDeletionHistory] = useState(false);
-  const [customerPrivacyExport, setCustomerPrivacyExport] = useState<CustomerPrivacyExport | null>(null);
-  const [customerPhotoErasureSummary, setCustomerPhotoErasureSummary] = useState<CustomerPhotoErasureSummary | null>(null);
-  const [isLoadingCustomerPrivacy, setIsLoadingCustomerPrivacy] = useState(false);
-  const [activeManagerOrganizationId, setActiveManagerOrganizationId] = useState('org_demo_landscaping');
-  const [managerPropertyOnboardingOptions, setManagerPropertyOnboardingOptions] = useState(
-    initialManagerPropertyOnboardingOptions,
-  );
-  const [managerCustomerProperties, setManagerCustomerProperties] = useState(
+  const operationalExceptionNavigation = useManagerOperationalExceptionNavigation();
+  const managerProperties = useManagerPropertyWorkspace(
+    'org_demo_landscaping',
     initialManagerCustomerProperties,
   );
-  const [propertyCompletionReports, setPropertyCompletionReports] = useState<
-    Record<string, PropertyCompletionReportSummary[]>
-  >({});
-  const [customerPortalProperties, setCustomerPortalProperties] = useState<
-    CustomerPortalPropertySummary[]
-  >([]);
-  const [customerPortalVisits, setCustomerPortalVisits] = useState<CustomerPortalVisitSummary[]>([]);
-  const [isLoadingCustomerPortalVisits, setIsLoadingCustomerPortalVisits] = useState(false);
-  const [customerPortalVisitError, setCustomerPortalVisitError] = useState<
-    'access_required' | 'inconsistent' | 'unavailable' | null
-  >(null);
-  const [customerPortalVisitRefreshSignal, setCustomerPortalVisitRefreshSignal] = useState(0);
-  const [isLoadingPropertyCompletionReports, setIsLoadingPropertyCompletionReports] = useState(false);
-  const [hasPropertyCompletionReportHistoryError, setHasPropertyCompletionReportHistoryError] = useState(false);
-  const [customerProjectBids, setCustomerProjectBids] = useState<ProjectBid[]>([]);
-  const [isLoadingCustomerProjectBids, setIsLoadingCustomerProjectBids] = useState(false);
-  const [hasCustomerProjectBidHistoryError, setHasCustomerProjectBidHistoryError] = useState(false);
-  const [completionReportActionStatus, setCompletionReportActionStatus] = useState<string | null>(null);
-  const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
-  const [propertyOnboardingRefreshSignal, setPropertyOnboardingRefreshSignal] = useState(0);
-  const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
-  const [teamActivityRefreshSignal, setTeamActivityRefreshSignal] = useState(0);
-  const [teamActivityRequestedCrewId, setTeamActivityRequestedCrewId] = useState<string>();
-  const [teamActivityRequestedCrewBranchId, setTeamActivityRequestedCrewBranchId] =
-    useState<string>();
-  const [teamActivityRequestedCrewTerritoryId, setTeamActivityRequestedCrewTerritoryId] =
-    useState<string>();
-  const [teamActivityRequestedCrewSignal, setTeamActivityRequestedCrewSignal] = useState(0);
-  const [teamActivityReturnedAuditId, setTeamActivityReturnedAuditId] = useState<string>();
-  const [teamActivityReturnedAuditSignal, setTeamActivityReturnedAuditSignal] = useState(0);
-  const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
-  const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
-  const [dispatchHierarchyRefreshSignal, setDispatchHierarchyRefreshSignal] = useState(0);
-  const [crewAdministrationSelection, setCrewAdministrationSelection] = useState<string>();
-  const [crewAdministrationBranch, setCrewAdministrationBranch] = useState<string>();
-  const [crewAdministrationTerritory, setCrewAdministrationTerritory] = useState<string>();
-  const [crewAdministrationReturnTarget, setCrewAdministrationReturnTarget] = useState<
-    'team-activity' | undefined
-  >();
-  const [crewAdministrationInspectionSummary, setCrewAdministrationInspectionSummary] =
-    useState<string>();
-  const [crewAdministrationInspectionAuditLabel, setCrewAdministrationInspectionAuditLabel] =
-    useState<string>();
-  const [crewAdministrationInspectionAuditId, setCrewAdministrationInspectionAuditId] =
-    useState<string>();
-  const [
-    crewAdministrationInspectedDestinationBranchId,
-    setCrewAdministrationInspectedDestinationBranchId,
-  ] = useState<string>();
-  const [
-    crewAdministrationInspectedDestinationTerritoryId,
-    setCrewAdministrationInspectedDestinationTerritoryId,
-  ] = useState<string>();
-  const [crewAdministrationSelectionSignal, setCrewAdministrationSelectionSignal] = useState(0);
-  const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
-  const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
-  const [offlinePhotoMutations, setOfflinePhotoMutations] = useState<PhotoUploadOfflineMutation[]>([]);
-  const [offlineRouteMutationCount, setOfflineRouteMutationCount] = useState(0);
-  const [isReplayingJobMutations, setIsReplayingJobMutations] = useState(false);
-  const [isReplayingChecklistMutations, setIsReplayingChecklistMutations] = useState(false);
-  const [isReplayingPhotoMutations, setIsReplayingPhotoMutations] = useState(false);
-  const [jobConflictDiscardId, setJobConflictDiscardId] = useState<string | null>(null);
-  const [checklistConflictDiscardId, setChecklistConflictDiscardId] = useState<string | null>(null);
-  const [photoConflictDiscardId, setPhotoConflictDiscardId] = useState<string | null>(null);
-  const jobReplayInProgress = useRef(false);
-  const checklistReplayInProgress = useRef(false);
-  const photoReplayInProgress = useRef(false);
-  const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
-  const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
-  const [managerWorkspaceSection, setManagerWorkspaceSection] =
-    useState<ManagerWorkspaceSection | null>(null);
-  const [managerWorkspaceTool, setManagerWorkspaceTool] =
-    useState<ManagerWorkspaceTool | null>(null);
-  const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
-    readStoredManagerActivityItems(),
-  );
-  const [isManagerActivityPersisted, setIsManagerActivityPersisted] = useState(true);
+  const {
+    properties: customerPortalProperties,
+    visits: customerPortalVisits,
+    isLoading: isLoadingCustomerPortalVisits,
+    readError: customerPortalVisitError,
+    readState: portalHomeReadState,
+    refresh: refreshCustomerPortalVisits,
+  } = useCustomerPortalCollection({
+    enabled: personaUsesAuthorizedCustomerRead(activePersona.id) && Boolean(auth.userId),
+    subjectKey: `${activePersona.id}:${auth.userId ?? ''}`,
+  });
+  const fieldRouteOverview = useFieldRouteOverview({
+    enabled: workspaceSurfaces.fieldOperations,
+    scopeKey: `${activePersona.id}:${auth.userId ?? ''}`,
+  });
+  const managerRefresh = useManagerRefreshSignals();
+  const crewNavigation = useManagerCrewNavigation();
+  const {
+    jobMutations: offlineJobMutations,
+    checklistMutations: offlineChecklistMutations,
+    photoMutations: offlinePhotoMutations,
+    isReplayingJobs: isReplayingJobMutations,
+    isReplayingChecklist: isReplayingChecklistMutations,
+    isReplayingPhotos: isReplayingPhotoMutations,
+    replayJobs: replayJobLifecycleMutations,
+    replayChecklist: replayChecklistMutations,
+    replayPhotos: replayPhotoMutations,
+    queueJobLifecycle,
+    queueChecklist,
+    queuePhoto,
+    discardJobConflict,
+    discardChecklistConflict,
+    discardPhotoConflict,
+  } = useFieldOfflineRecovery({
+    actorId: auth.userId,
+    selectedJobId,
+    setJobs,
+    setSelectedJob,
+    setUploadTickets,
+  });
+  const managerNavigation = useManagerWorkspaceNavigation({
+    personaId: activePersona.id,
+    rolloutUnit: managedPersonaUnit,
+    capabilities: activeWorkspace.capabilities,
+  });
+  const {
+    items: managerActivity,
+    isPersisted: isManagerActivityPersisted,
+    record: recordManagerActivity,
+    reset: resetManagerActivityHistory,
+  } = useManagerLocalActivity();
+  useEffect(() => {
+    if (fieldJobsReadState === 'ready') {
+      setStatusMessage('Connected to the local API.');
+    } else if (fieldJobsReadState === 'unavailable') {
+      setStatusMessage('Persisted field work is unavailable. Seed jobs were not substituted.');
+    } else if (fieldJobsReadState === 'fallback') {
+      setStatusMessage('Using seed data because the local API is not reachable yet.');
+      recordManagerActivity({
+        title: 'Seed data fallback active',
+        message: 'The dashboard is using seed jobs because the API is not reachable.',
+        tone: 'warning',
+        source: 'sync',
+      });
+    }
+  }, [fieldJobsReadState, recordManagerActivity]);
   const jobDetailRef = useRef<HTMLDivElement>(null);
   const providerEntryOpened = useRef(false);
-  const mobileScrollPositions = useRef<Partial<Record<MobileWorkspaceView, number>>>({});
-  const activePersonaWithoutRollout = availablePersonas.find(
-    (persona) => persona.id === activePersonaId,
-  ) ?? initialPersona;
-  const activePersona = useMemo(
-    () => workspacePersonaForRollout(activePersonaWithoutRollout, auth.workspaceRollout),
-    [activePersonaWithoutRollout, auth.workspaceRollout],
-  );
-  const workspaceSurfaces = workspaceSurfacesForPersona(activePersona.id);
-  const managedPersonaUnit = auth.workspaceRollout?.enforcementMode === 'managed'
-    ? workspaceEnabledUnitForPersona(activePersona.id, auth.workspaceRollout)
-    : undefined;
-  const fieldControls = workspaceFieldControlsForPersona(
+  const homeWorkSummary = customerHomeWorkSummary(
     activePersona.id,
-    managedPersonaUnit,
+    customerPortalVisits,
+    jobs,
   );
-  const propertyManagerPortfolioControls = propertyManagerPortfolioCapabilities(
-    activePersona.id === 'property-manager' ? managedPersonaUnit : undefined,
-  );
-  const homeCustomerVisits = activePersona.id === 'yard-owner'
-    ? customerPortalVisits
-    : activePersona.id === 'property-manager'
-      ? customerPortalPreviewVisits
-      : null;
-  const homeAssignedWorkCount = homeCustomerVisits?.length ?? jobs.length;
-  const homeCompletedWorkCount = homeCustomerVisits
-    ? homeCustomerVisits.filter((visit) => (
-      visit.status === 'complete_proof_pending' || visit.deliveredProofAvailable
-    )).length
-    : jobs.filter((job) => job.status === 'completed').length;
+  const desktopHomeProgress = homeProgressSummary({
+    assignedJobCount: homeWorkSummary.assigned,
+    completedJobCount: homeWorkSummary.completed,
+    hasWorkspaceRole: workspaceRoles.length > 0,
+    isLoadingWork: isLoadingJobs,
+    personaId: activePersona.id,
+    portalReadState: portalHomeReadState,
+    routeOverview: fieldRouteOverview.overview,
+  });
+  const customerWorkspaceMode = customerWorkspaceModeForPersona(activePersona.id);
+  const fieldRecovery = fieldRecoveryState({
+    jobMutations: offlineJobMutations,
+    checklistMutations: offlineChecklistMutations,
+    photoMutations: offlinePhotoMutations,
+  });
   const canUseManagerTools = workspaceGuidance.managerTools && workspaceSurfaces.management;
   const hostedSignOut = auth.authMode === 'cognito'
     ? () => void auth.signOut()
     : undefined;
   const enabledManagerTools = useMemo(() => new Set(
-    managerWorkspaceSectionsForPersona(activePersona.id, managedPersonaUnit).flatMap(
+    managerWorkspaceSectionsForPersona(
+      activePersona.id,
+      managedPersonaUnit,
+      activeWorkspace.capabilities,
+    ).flatMap(
       (section) => managerWorkspaceToolsForPersona(
         activePersona.id,
         section.id,
         managedPersonaUnit,
+        activeWorkspace.capabilities,
       ).map(({ id }) => id),
     ),
-  ), [activePersona.id, managedPersonaUnit]);
-  const activeAuthorizedManagerTool = managerWorkspaceActiveToolForPersona(
-    activePersona.id,
-    managedPersonaUnit,
-    managerWorkspaceTool,
-  );
+  ), [activePersona.id, activeWorkspace.capabilities, managedPersonaUnit]);
+  const activeAuthorizedManagerTool = managerNavigation.tool;
   const canLoadCustomerPortalPreview = enabledManagerTools.has('customer-portal');
   const canLoadCompletionReportQueue = enabledManagerTools.has('completion-reports');
   const canLoadNotificationHistory = enabledManagerTools.has('notifications');
   const canLoadOperationalActivity = enabledManagerTools.has('operations-activity');
   const canLoadPhotoProcessingHistory = enabledManagerTools.has('photo-processing');
+  const canUseCustomerPrivacy = enabledManagerTools.has('customer-privacy');
   const canUsePhotoErasureRecovery = enabledManagerTools.has('photo-erasure');
+  const handleInitialNotificationHistoryUnavailable = useCallback(() => {
+    recordManagerActivity({
+      title: 'Notification history unavailable',
+      message: 'Delivery notification history could not be loaded from the API.',
+      tone: 'warning',
+      source: 'sync',
+    });
+  }, [recordManagerActivity]);
+  const {
+    items: notificationHistory,
+    isLoading: isLoadingNotificationHistory,
+    isUnavailable: notificationHistoryUnavailable,
+    applyExternalRefresh: applyNotificationHistoryRefresh,
+    refresh: refreshManagerNotificationHistory,
+    retry: retryManagerNotificationDelivery,
+    resolve: resolveManagerNotificationDelivery,
+  } = useManagerNotificationHistory({
+    enabled: canLoadNotificationHistory,
+    onInitialUnavailable: handleInitialNotificationHistoryUnavailable,
+  });
+  const handleInitialPhotoProcessingUnavailable = useCallback(() => {
+    recordManagerActivity({
+      title: 'Photo processing history unavailable',
+      message: 'Photo processing recovery history could not be loaded from the API.',
+      tone: 'warning',
+      source: 'sync',
+    });
+  }, [recordManagerActivity]);
+  const {
+    items: photoProcessingHistory,
+    isLoading: isLoadingPhotoProcessingHistory,
+    refresh: refreshManagerPhotoProcessingHistory,
+    retry: retryManagerPhotoProcessing,
+    resolve: resolveManagerPhotoProcessing,
+  } = useManagerPhotoProcessingRecovery({
+    enabled: canLoadPhotoProcessingHistory,
+    onInitialUnavailable: handleInitialPhotoProcessingUnavailable,
+  });
+  const {
+    items: photoErasureDeletionHistory,
+    isLoading: isLoadingPhotoErasureDeletionHistory,
+    refresh: refreshManagerPhotoErasureDeletionHistory,
+    retry: retryManagerPhotoErasureDeletion,
+    resolve: resolveManagerPhotoErasureDeletion,
+  } = useManagerPhotoErasureRecovery({
+    enabled: canUsePhotoErasureRecovery,
+  });
+  const {
+    privacyExport: customerPrivacyExport,
+    erasure: customerPhotoErasureSummary,
+    isLoading: isLoadingCustomerPrivacy,
+    exportAccount: exportManagerCustomerPrivacy,
+    erasePhotos: eraseManagerCustomerPhotos,
+  } = useManagerCustomerPrivacy({
+    enabled: canUseCustomerPrivacy,
+  });
+  const {
+    items: operationalActivity,
+    isUnavailable: operationalActivityUnavailable,
+    canLoadOlder: canLoadOlderOperationalActivity,
+    isLoadingOlder: isLoadingOlderOperationalActivity,
+    refresh: refreshOperationalActivity,
+    loadOlder: loadOlderOperationalActivity,
+  } = useManagerOperationalActivity({
+    enabled: canLoadOperationalActivity,
+    refreshSignal: managerRefresh.signals.dayPlan,
+  });
+  const managerPreviewPropertyIds = useMemo(
+    () => filterPropertiesForCustomerPortal(
+      customerPortalPreviewProperties,
+      customerPortalPreviewCustomer,
+    ).map((property) => property.id),
+    [],
+  );
+  const handlePartialCustomerReportHistory = useCallback(() => {
+    recordManagerActivity({
+      title: 'Customer report history unavailable',
+      message: 'Delivered property report history could not be loaded for every customer portal property.',
+      tone: 'warning',
+      source: 'sync',
+    });
+  }, [recordManagerActivity]);
+  const {
+    reportsByProperty: propertyCompletionReports,
+    isLoading: isLoadingPropertyCompletionReports,
+    hasError: hasPropertyCompletionReportHistoryError,
+  } = useCustomerPropertyReportHistory({
+    enabled: personaUsesManagerCustomerPreview(
+      activePersona.id,
+      canLoadCustomerPortalPreview,
+    ),
+    propertyIds: managerPreviewPropertyIds,
+    onPartialUnavailable: handlePartialCustomerReportHistory,
+  });
+  const handleCustomerBidHistoryUnavailable = useCallback(() => {
+    recordManagerActivity({
+      title: 'Customer bid history unavailable',
+      message: 'Customer account bid history could not be loaded for the portal preview.',
+      tone: 'warning',
+      source: 'sync',
+    });
+  }, [recordManagerActivity]);
+  const {
+    bids: customerProjectBids,
+    isLoading: isLoadingCustomerProjectBids,
+    hasError: hasCustomerProjectBidHistoryError,
+  } = useCustomerProjectBidHistory({
+    enabled: personaUsesManagerCustomerPreview(
+      activePersona.id,
+      canLoadCustomerPortalPreview,
+    ),
+    accountId: customerPortalPreviewCustomer.id,
+    onUnavailable: handleCustomerBidHistoryUnavailable,
+  });
+  const handlePartialManagerReportQueue = useCallback(() => {
+    recordManagerActivity({
+      title: 'Report queue partially loaded',
+      message: 'Some completion report snapshots could not be loaded for the manager review queue.',
+      tone: 'warning',
+      source: 'sync',
+    });
+  }, [recordManagerActivity]);
+  const {
+    reports: managerReportQueueReports,
+    snapshots: completionReportSnapshots,
+    isLoading: isLoadingReportQueue,
+    upsertReport: upsertManagerReport,
+    refresh: refreshManagerReports,
+  } = useManagerCompletionReportQueue({
+    enabled: canLoadCompletionReportQueue,
+    jobs,
+    onPartialLoad: handlePartialManagerReportQueue,
+  });
+  const showManagerTodayQueue = activePersona.id === 'company-owner'
+    || activePersona.id === 'company-manager';
+  const managerTodayItems = useMemo(
+    () => showManagerTodayQueue
+      ? buildManagerTodayQueue(jobs, managerReportQueueReports)
+      : [],
+    [jobs, managerReportQueueReports, showManagerTodayQueue],
+  );
+  const managerTodayState = isLoadingJobs
+    || (canLoadCompletionReportQueue && isLoadingReportQueue)
+    ? 'loading' as const
+    : jobsUnavailable
+      ? 'unavailable' as const
+      : 'ready' as const;
+  const {
+    selectedCompletionReport,
+    setSelectedCompletionReport,
+  } = useFieldCompletionReport(selectedJobId, {
+    onLoaded: (report) => {
+      upsertManagerReport(report);
+      setUploadTickets((current) => mergePhotoEvidence(current, report.jobId, report.photoEvidence));
+    },
+    onFallback: (jobId) => {
+      recordManagerActivity({
+        title: 'Completion report fallback active',
+        message: `${jobId} completion report is using browser-local evidence until the API is reachable.`,
+        tone: 'warning',
+        source: 'photo',
+      });
+    },
+  });
+  const {
+    actionStatus: managerReportActionStatus,
+    startReview: startManagerReportReview,
+    requestChanges: requestManagerReportChanges,
+    resubmit: resubmitManagerReport,
+    deliver: deliverManagerReport,
+  } = useManagerCompletionReportActions({
+    refreshReport: refreshCompletionReport,
+    refreshActivity: refreshOperationalActivity,
+  });
+  const {
+    actionStatus: reportNotificationActionStatus,
+    queueDelivery: queueManagerReportDeliveryNotification,
+  } = useManagerCompletionReportNotifications();
   const managerWorkspaceSignals = useMemo(
     () => managerWorkspaceSectionSignalsForPersona(
       activePersona.id,
@@ -1467,9 +1036,11 @@ export function App() {
           ({ status }) => status === 'failed' || status === 'dead_letter',
         ).length,
       },
+      activeWorkspace.capabilities,
     ),
     [
       activePersona.id,
+      activeWorkspace.capabilities,
       completionReportSnapshots,
       canLoadPhotoProcessingHistory,
       canUsePhotoErasureRecovery,
@@ -1500,119 +1071,28 @@ export function App() {
       : 'Scheduling, customers, and recovery';
 
   useEffect(() => {
-    if (availablePersonas.some((persona) => persona.id === activePersonaId)) return;
-    setActivePersonaId(initialPersona.id);
-    setMobileView(initialPersona.defaultView);
-  }, [activePersonaId, availablePersonas, initialPersona]);
-
-  useEffect(() => {
-    if (activePersona.navigation.some(({ view }) => view === mobileView)) return;
-    setMobileView(activePersona.defaultView);
-  }, [activePersona, mobileView]);
-
-  useEffect(() => {
     if (!providerEntryMode || providerEntryOpened.current || activePersona.id !== 'company-owner') return;
     providerEntryOpened.current = true;
-    setMobileView('manager');
-    setManagerWorkspaceSection('overview');
-    setManagerWorkspaceTool('owner-setup');
-  }, [activePersona.id, providerEntryMode]);
-
-  useEffect(() => {
-    const sections = managerWorkspaceSectionsForPersona(activePersona.id, managedPersonaUnit);
-    if (
-      managerWorkspaceSection
-      && !sections.some((section) => section.id === managerWorkspaceSection)
-    ) {
-      setManagerWorkspaceSection(null);
-      setManagerWorkspaceTool(null);
-      return;
-    }
-    if (
-      managerWorkspaceSection
-      && managerWorkspaceTool
-      && !managerWorkspaceToolsForPersona(
-        activePersona.id,
-        managerWorkspaceSection,
-        managedPersonaUnit,
-      )
-        .some((tool) => tool.id === managerWorkspaceTool)
-    ) {
-      setManagerWorkspaceTool(null);
-    }
-  }, [activePersona.id, managedPersonaUnit, managerWorkspaceSection, managerWorkspaceTool]);
-
-  function changeMobileView(
-    destination: MobileWorkspaceView,
-    resetDestination = false,
-  ) {
-    if (window.innerWidth >= 1024) {
-      setMobileView(destination);
-      return;
-    }
-
-    mobileScrollPositions.current[mobileView] = window.scrollY;
-    setMobileView(destination);
-    window.requestAnimationFrame(() => {
-      window.scrollTo({
-        top: mobileWorkspaceScrollTop(
-          mobileScrollPositions.current,
-          destination,
-          resetDestination,
-        ),
-        behavior: 'auto',
-      });
-    });
-  }
-
-  function registerManagerProperties(properties: CustomerPropertyRecord[]) {
-    setManagerCustomerProperties((current) => {
-      const next = new Map(current.map((property) => [property.propertyId, property]));
-      properties.forEach((property) => next.set(property.propertyId, property));
-      return Array.from(next.values()).sort((a, b) => a.displayName.localeCompare(b.displayName));
-    });
-    setManagerPropertyOnboardingOptions((current) => {
-      const next = new Map(current.map((property) => [property.propertyId, property]));
-      properties.forEach((property) => {
-        if (property.status === 'archived') {
-          next.delete(property.propertyId);
-          return;
-        }
-        next.set(property.propertyId, {
-          propertyId: property.propertyId,
-          accountId: property.accountId,
-          organizationId: property.organizationId,
-          displayName: property.displayName,
-          serviceAddress: property.serviceAddress,
-        });
-      });
-      return Array.from(next.values()).sort((a, b) => a.displayName.localeCompare(b.displayName));
-    });
-  }
-
-  function selectJobForReview(jobId: string) {
-    setSelectedJobId(jobId);
-    setRequestedJobWorkflow('overview');
-    if (window.innerWidth < 1024) {
-      changeMobileView('job', jobId !== selectedJobId);
-    }
-  }
+    workspaceViewNavigation.openView('manager', true);
+    managerNavigation.openTool('overview', 'owner-setup');
+  }, [
+    activePersona.id,
+    managerNavigation.openTool,
+    providerEntryMode,
+    workspaceViewNavigation.openView,
+  ]);
 
   function openPropertyWorkspace(
     propertyId: string,
     workspace: 'operational-profile' | 'service-setup',
   ) {
-    setManagerWorkspaceSection('customers');
-    setManagerWorkspaceTool(
+    managerNavigation.openTool(
+      'customers',
       workspace === 'operational-profile' ? 'property-profile' : 'property-service',
     );
     const managerTools = document.getElementById('manager-tools') as HTMLDetailsElement | null;
     if (managerTools) managerTools.open = true;
-    if (workspace === 'operational-profile') {
-      setRequestedOperationalProfilePropertyId(propertyId);
-    } else {
-      setRequestedServiceSetupPropertyId(propertyId);
-    }
+    managerProperties.requestPropertyWorkspace(propertyId, workspace);
     window.setTimeout(() => {
       document.getElementById(`property-${workspace}`)?.scrollIntoView({
         behavior: 'smooth',
@@ -1622,20 +1102,24 @@ export function App() {
   }
 
   function openFirstOwnerSetupStep(
-    target: 'operational-profile' | 'service-setup' | 'day-plan' | 'team-invitations',
+    target: 'operational-profile' | 'service-setup' | 'customer-accounts' | 'day-plan' | 'completion-reports' | 'team-invitations',
   ) {
-    setManagerWorkspaceSection(
+    managerNavigation.openTool(
       target === 'day-plan'
         ? 'schedule'
-        : target === 'team-invitations'
-          ? 'team'
-          : 'customers',
-    );
-    setManagerWorkspaceTool(
+        : target === 'completion-reports'
+          ? 'reports'
+          : target === 'team-invitations'
+            ? 'team'
+            : 'customers',
       target === 'day-plan'
         ? 'day-plan'
+        : target === 'completion-reports'
+          ? 'completion-reports'
         : target === 'team-invitations'
           ? 'team-invitations'
+          : target === 'customer-accounts'
+            ? 'customer-accounts'
           : target === 'operational-profile'
             ? 'property-profile'
             : 'property-service',
@@ -1657,10 +1141,6 @@ export function App() {
     () => uploadTickets.filter((ticket) => ticket.jobId === selectedJobId),
     [selectedJobId, uploadTickets],
   );
-  const managerReportQueueReports = useMemo(
-    () => Object.values(completionReportSnapshots),
-    [completionReportSnapshots],
-  );
   const visibleManagerActivity = useMemo(
     () => [
       ...operationsToManagerActivity(operationalActivity),
@@ -1676,776 +1156,24 @@ export function App() {
     return Array.from(new Set([...reportAccountIds, 'acct_1001', 'acct_1002'])).sort();
   }, [managerReportQueueReports]);
 
-  function recordManagerActivity(item: NewManagerActivity) {
-    setManagerActivity((current) =>
-      prependManagerActivity(current, {
-        ...item,
-        id: `${item.source}_${item.tone}_${Date.now()}`,
-        occurredAt: managerActivityTimestamp(),
-      }),
-    );
-  }
-
-  function resetManagerActivityHistory() {
-    setManagerActivity([]);
-    setIsManagerActivityPersisted(writeStoredManagerActivityItems([]));
-  }
-
-  const replayJobLifecycleMutations = useCallback(async () => {
-    if (
-      !fieldControls.stopProgress
-      || !auth.userId
-      || !navigator.onLine
-      || jobReplayInProgress.current
-    ) return;
-    jobReplayInProgress.current = true;
-    setIsReplayingJobMutations(true);
-    try {
-      const mutations = (await listOfflineMutationsForActor(auth.userId))
-        .filter(isJobLifecycleOfflineMutation);
-      for (const mutation of mutations) {
-        if (mutation.syncState === 'conflict') break;
-        try {
-          const result = mutation.action === 'start'
-            ? await startJob(mutation.jobId, mutation.id)
-            : await completeJob(mutation.jobId, mutation.id);
-          if (!result.persisted) {
-            await markOfflineMutationFailed(mutation, 'API used local fallback');
-            break;
-          }
-          await removeOfflineMutation(mutation.id);
-        } catch (error) {
-          await markOfflineMutationFailed(
-            mutation,
-            error instanceof Error ? error.message : 'Job lifecycle sync failed',
-            isOfflineMutationConflict(error) ? 'conflict' : 'failed',
-          );
-          break;
-        }
-      }
-      setOfflineJobMutations(
-        (await listOfflineMutationsForActor(auth.userId)).filter(isJobLifecycleOfflineMutation),
-      );
-    } catch {
-      // Keep the last durable queue snapshot visible.
-    } finally {
-      jobReplayInProgress.current = false;
-      setIsReplayingJobMutations(false);
-    }
-  }, [auth.userId, fieldControls.stopProgress]);
-
-  const replayChecklistMutations = useCallback(async () => {
-    if (
-      !fieldControls.fieldEvidence
-      || !auth.userId
-      || !navigator.onLine
-      || checklistReplayInProgress.current
-    ) return;
-    checklistReplayInProgress.current = true;
-    setIsReplayingChecklistMutations(true);
-    try {
-      const mutations = (await listOfflineMutationsForActor(auth.userId))
-        .filter(isChecklistOfflineMutation);
-      for (const mutation of mutations) {
-        if (mutation.syncState === 'conflict') break;
-        try {
-          const result = await updateChecklistItem(
-            mutation.jobId,
-            mutation.checklistItemId,
-            mutation.completed,
-            mutation.id,
-          );
-          if (!result.persisted) {
-            await markOfflineMutationFailed(mutation, 'API used local fallback');
-            break;
-          }
-          await removeOfflineMutation(mutation.id);
-        } catch (error) {
-          await markOfflineMutationFailed(
-            mutation,
-            error instanceof Error ? error.message : 'Checklist sync failed',
-            isOfflineMutationConflict(error) ? 'conflict' : 'failed',
-          );
-          break;
-        }
-      }
-      setOfflineChecklistMutations(
-        (await listOfflineMutationsForActor(auth.userId)).filter(isChecklistOfflineMutation),
-      );
-    } catch {
-      // Keep the last durable queue snapshot visible.
-    } finally {
-      checklistReplayInProgress.current = false;
-      setIsReplayingChecklistMutations(false);
-    }
-  }, [auth.userId, fieldControls.fieldEvidence]);
-
-  const replayPhotoMutations = useCallback(async () => {
-    if (
-      !fieldControls.fieldEvidence
-      || !auth.userId
-      || !navigator.onLine
-      || photoReplayInProgress.current
-    ) return;
-    photoReplayInProgress.current = true;
-    setIsReplayingPhotoMutations(true);
-    let replayedAny = false;
-    try {
-      const mutations = (await listOfflineMutationsForActor(auth.userId))
-        .filter(isPhotoUploadOfflineMutation);
-      for (const mutation of mutations) {
-        if (mutation.syncState === 'conflict') break;
-        try {
-          const ticket = await replayOfflinePhotoMutation(mutation, {
-            getBlob: getOfflinePhotoBlob,
-            createTicket: createPhotoUploadTicket,
-            upload: uploadPhotoToTicket,
-            readMetadata: readPhotoUploadMetadata,
-            complete: completePhotoUpload,
-            remove: removeOfflineMutation,
-          });
-          setUploadTickets((current) => [
-            ticket,
-            ...current.filter((item) => item.photoId !== ticket.photoId),
-          ]);
-          replayedAny = true;
-        } catch (error) {
-          await markOfflineMutationFailed(
-            mutation,
-            error instanceof Error ? error.message : 'Photo replay failed',
-            error instanceof MissingOfflinePhotoBlobError || isOfflineMutationConflict(error)
-              ? 'conflict'
-              : 'failed',
-          );
-          break;
-        }
-      }
-      setOfflinePhotoMutations(
-        (await listOfflineMutationsForActor(auth.userId)).filter(isPhotoUploadOfflineMutation),
-      );
-      if (replayedAny) setJobs(await fetchJobs());
-    } catch {
-      // Keep the last durable queue snapshot visible.
-    } finally {
-      photoReplayInProgress.current = false;
-      setIsReplayingPhotoMutations(false);
-    }
-  }, [auth.userId, fieldControls.fieldEvidence]);
-
-  useEffect(() => {
-    if (!auth.userId) {
-      setOfflineJobMutations([]);
-      setOfflineChecklistMutations([]);
-      setOfflinePhotoMutations([]);
-      return;
-    }
-    setOfflineJobMutations([]);
-    setOfflineChecklistMutations([]);
-    setOfflinePhotoMutations([]);
-    let active = true;
-    void listOfflineMutationsForActor(auth.userId)
-      .then((mutations) => {
-        if (!active) return;
-        const jobMutations = mutations.filter(isJobLifecycleOfflineMutation);
-        setOfflineJobMutations(jobMutations);
-        setOfflineChecklistMutations(mutations.filter(isChecklistOfflineMutation));
-        setOfflinePhotoMutations(mutations.filter(isPhotoUploadOfflineMutation));
-        if (jobMutations.length > 0 && navigator.onLine) void replayJobLifecycleMutations();
-        if (mutations.some(isChecklistOfflineMutation) && navigator.onLine) {
-          void replayChecklistMutations();
-        }
-        if (mutations.some(isPhotoUploadOfflineMutation) && navigator.onLine) {
-          void replayPhotoMutations();
-        }
-      })
-      .catch(() => {
-        if (!active) return;
-        setOfflineJobMutations([]);
-        setOfflineChecklistMutations([]);
-        setOfflinePhotoMutations([]);
-      });
-    const handleOnline = () => {
-      void replayJobLifecycleMutations();
-      void replayChecklistMutations();
-      void replayPhotoMutations();
-    };
-    window.addEventListener('online', handleOnline);
-    return () => {
-      active = false;
-      window.removeEventListener('online', handleOnline);
-    };
-  }, [
-    auth.userId,
-    replayChecklistMutations,
-    replayJobLifecycleMutations,
-    replayPhotoMutations,
-  ]);
-
-  useEffect(() => {
-    setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));
-  }, [managerActivity]);
-
-  useEffect(() => {
-    if (activePersona.id !== 'yard-owner' || !auth.userId) {
-      setCustomerPortalProperties([]);
-      setCustomerPortalVisits([]);
-      setCustomerPortalVisitError(null);
-      setIsLoadingCustomerPortalVisits(false);
-      return;
-    }
-
-    let isMounted = true;
-    setIsLoadingCustomerPortalVisits(true);
-    setCustomerPortalVisitError(null);
-    void fetchCustomerPortalVisits()
-      .then((collection) => {
-        if (!isMounted) return;
-        setCustomerPortalProperties(collection.properties);
-        setCustomerPortalVisits(collection.visits);
-      })
-      .catch((error: unknown) => {
-        if (!isMounted) return;
-        setCustomerPortalProperties([]);
-        setCustomerPortalVisits([]);
-        setCustomerPortalVisitError(
-          error instanceof ApiRequestError && error.code === 'customer_portal_access_required'
-            ? 'access_required'
-            : error instanceof ApiRequestError
-                && error.code === 'customer_portal_access_inconsistent'
-              ? 'inconsistent'
-              : 'unavailable',
-        );
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingCustomerPortalVisits(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activePersona.id, auth.userId, customerPortalVisitRefreshSignal]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const canLoadHistory = activePersona.id === 'property-manager'
-      ? propertyManagerPortfolioControls.deliveredProof
-      : canLoadCustomerPortalPreview;
-    if (activePersona.id === 'yard-owner' || !canLoadHistory) {
-      setPropertyCompletionReports({});
-      setIsLoadingPropertyCompletionReports(false);
-      setHasPropertyCompletionReportHistoryError(false);
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    const visibleProperties = filterPropertiesForCustomerPortal(
-      customerPortalPreviewProperties,
-      customerPortalPreviewCustomer,
-    );
-    setPropertyCompletionReports({});
-    setIsLoadingPropertyCompletionReports(true);
-
-    Promise.allSettled(
-      visibleProperties.map(async (property) => ({
-        propertyId: property.id,
-        reports: await fetchPropertyCompletionReports(property.id),
-      })),
-    )
-      .then((results) => {
-        if (!isMounted) return;
-
-        const hasRejectedHistory = results.some((result) => result.status === 'rejected');
-        setPropertyCompletionReports(
-          results.reduce<Record<string, PropertyCompletionReportSummary[]>>((next, result) => {
-            if (result.status === 'fulfilled') {
-              next[result.value.propertyId] = result.value.reports;
-            }
-            return next;
-          }, {}),
-        );
-        setHasPropertyCompletionReportHistoryError(hasRejectedHistory);
-
-        if (hasRejectedHistory) {
-          recordManagerActivity({
-            title: 'Customer report history unavailable',
-            message: 'Delivered property report history could not be loaded for every customer portal property.',
-            tone: 'warning',
-            source: 'sync',
-          });
-        }
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingPropertyCompletionReports(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [
-    activePersona.id,
-    canLoadCustomerPortalPreview,
-    customerPortalProperties,
-    propertyManagerPortfolioControls.deliveredProof,
-  ]);
-
-  useEffect(() => {
-    if (!canLoadPhotoProcessingHistory) {
-      setPhotoProcessingHistory([]);
-      setIsLoadingPhotoProcessingHistory(false);
-      return;
-    }
-
-    let isMounted = true;
-    setIsLoadingPhotoProcessingHistory(true);
-
-    fetchPhotoProcessingHistory({ status: 'failed', limit: 25 })
-      .then((items) => {
-        if (isMounted) setPhotoProcessingHistory(items);
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setPhotoProcessingHistory([]);
-        recordManagerActivity({
-          title: 'Photo processing history unavailable',
-          message: 'Photo processing recovery history could not be loaded from the API.',
-          tone: 'warning',
-          source: 'sync',
-        });
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingPhotoProcessingHistory(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [canLoadPhotoProcessingHistory]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const canLoadBids = activePersona.id === 'property-manager'
-      ? propertyManagerPortfolioControls.questionsAndDecisions
-      : canLoadCustomerPortalPreview;
-    if (activePersona.id === 'yard-owner' || !canLoadBids) {
-      setCustomerProjectBids([]);
-      setIsLoadingCustomerProjectBids(false);
-      setHasCustomerProjectBidHistoryError(false);
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    setIsLoadingCustomerProjectBids(true);
-
-    fetchAccountProjectBids(customerPortalPreviewCustomer.id)
-      .then((bids) => {
-        if (!isMounted) return;
-        setCustomerProjectBids(bids);
-        setHasCustomerProjectBidHistoryError(false);
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setCustomerProjectBids([]);
-        setHasCustomerProjectBidHistoryError(true);
-        recordManagerActivity({
-          title: 'Customer bid history unavailable',
-          message: 'Customer account bid history could not be loaded for the portal preview.',
-          tone: 'warning',
-          source: 'sync',
-        });
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingCustomerProjectBids(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [
-    activePersona.id,
-    canLoadCustomerPortalPreview,
-    propertyManagerPortfolioControls.questionsAndDecisions,
-  ]);
-
-  useEffect(() => {
-    let isMounted = true;
-    setJobsUnavailable(false);
-
-    fetchJobs()
-      .then((apiJobs) => {
-        if (!isMounted) {
-          return;
-        }
-
-        setJobs(apiJobs);
-        setSelectedJobId((current) => current ?? apiJobs[0]?.id ?? null);
-        setStatusMessage('Connected to the local API.');
-      })
-      .catch((error: unknown) => {
-        if (!isMounted) {
-          return;
-        }
-
-        if (error instanceof ApiRequestError) {
-          setJobs([]);
-          setSelectedJobId(null);
-          setJobsUnavailable(true);
-          setStatusMessage('Persisted field work is unavailable. Seed jobs were not substituted.');
-        } else {
-          setJobs(seedJobs);
-          setSelectedJobId((current) => current ?? seedJobs[0]?.id ?? null);
-          setStatusMessage('Using seed data because the local API is not reachable yet.');
-          recordManagerActivity({
-            title: 'Seed data fallback active',
-            message: 'The dashboard is using seed jobs because the API is not reachable.',
-            tone: 'warning',
-            source: 'sync',
-          });
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoadingJobs(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!selectedJobId) {
-      setSelectedJob(null);
-      setSelectedCompletionReport(null);
-      return;
-    }
-
-    let isMounted = true;
-    setIsLoadingDetail(true);
-    setJobDetailUnavailable(false);
-
-    fetchJobDetail(selectedJobId)
-      .then((detail) => {
-        if (isMounted) {
-          setSelectedJob(detail);
-        }
-      })
-      .catch((error: unknown) => {
-        if (isMounted) {
-          if (error instanceof ApiRequestError) {
-            setSelectedJob(null);
-            setJobDetailUnavailable(true);
-          } else {
-            const fallback = jobs.find((job) => job.id === selectedJobId) ?? null;
-            setSelectedJob(fallback ? fallbackJobDetail(fallback) : null);
-          }
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoadingDetail(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [jobs, selectedJobId]);
-
-  useEffect(() => {
-    if (!selectedJobId) {
-      setSelectedJobAddOns([]);
-      setJobAddOnsUnavailable(false);
-      return;
-    }
-
-    let isMounted = true;
-    setJobAddOnsUnavailable(false);
-    fetchJobAddOns(selectedJobId)
-      .then((addOns) => {
-        if (isMounted) setSelectedJobAddOns(addOns);
-      })
-      .catch((error: unknown) => {
-        if (isMounted) {
-          setSelectedJobAddOns([]);
-          setJobAddOnsUnavailable(error instanceof ApiRequestError);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedJobId]);
-
-  useEffect(() => {
-    if (!selectedJobId) {
-      setPhotoEvidenceUnavailable(false);
-      return;
-    }
-
-    let isMounted = true;
-    setPhotoEvidenceUnavailable(false);
-    fetchJobPhotoEvidence(selectedJobId)
-      .then((photos) => {
-        if (isMounted) {
-          setUploadTickets((current) => mergePhotoEvidence(current, selectedJobId, photos));
-        }
-      })
-      .catch((error: unknown) => {
-        if (isMounted) setPhotoEvidenceUnavailable(error instanceof ApiRequestError);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedJobId]);
-
-  useEffect(() => {
-    if (!selectedJobId) {
-      setSelectedCompletionReport(null);
-      return;
-    }
-
-    let isMounted = true;
-    setSelectedCompletionReport(null);
-
-    fetchCompletionReport(selectedJobId)
-      .then((report) => {
-        if (isMounted) {
-          setSelectedCompletionReport(report);
-          setCompletionReportSnapshots((current) => ({ ...current, [report.jobId]: report }));
-          setUploadTickets((current) => mergePhotoEvidence(current, selectedJobId, report.photoEvidence));
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          recordManagerActivity({
-            title: 'Completion report fallback active',
-            message: `${selectedJobId} completion report is using browser-local evidence until the API is reachable.`,
-            tone: 'warning',
-            source: 'photo',
-          });
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedJobId]);
-
-  useEffect(() => {
-    if (!canLoadCompletionReportQueue || jobs.length === 0) {
-      setCompletionReportSnapshots({});
-      setIsLoadingReportQueue(false);
-      return;
-    }
-
-    let isMounted = true;
-    setIsLoadingReportQueue(true);
-    const applyReports = (reports: CompletionReportSnapshot[]) => {
-      setCompletionReportSnapshots((current) => {
-        const next = { ...current };
-        reports.forEach((report) => {
-          next[report.jobId] = report;
-        });
-        return next;
-      });
-    };
-
-    fetchCompletionReports()
-      .then((reports) => {
-        if (!isMounted) return;
-        applyReports(reports);
-      })
-      .catch(() =>
-        Promise.allSettled(jobs.map((job) => fetchCompletionReport(job.id))).then((results) => {
-          if (!isMounted) return;
-
-          const reports = results
-            .filter((result): result is PromiseFulfilledResult<CompletionReportSnapshot> => result.status === 'fulfilled')
-            .map((result) => result.value);
-          applyReports(reports);
-
-          if (results.some((result) => result.status === 'rejected')) {
-            recordManagerActivity({
-              title: 'Report queue partially loaded',
-              message: 'Some completion report snapshots could not be loaded for the manager review queue.',
-              tone: 'warning',
-              source: 'sync',
-            });
-          }
-        }),
-      )
-      .finally(() => {
-        if (isMounted) setIsLoadingReportQueue(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [canLoadCompletionReportQueue, jobs]);
-
-  useEffect(() => {
-    if (!canLoadNotificationHistory) {
-      setNotificationHistory([]);
-      setNotificationHistoryUnavailable(false);
-      setIsLoadingNotificationHistory(false);
-      return;
-    }
-
-    let isMounted = true;
-    setIsLoadingNotificationHistory(true);
-
-    fetchNotificationHistory({ limit: 25 })
-      .then((items) => {
-        if (isMounted) {
-          setNotificationHistory(items);
-          setNotificationHistoryUnavailable(false);
-        }
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setNotificationHistory([]);
-        setNotificationHistoryUnavailable(true);
-        recordManagerActivity({
-          title: 'Notification history unavailable',
-          message: 'Delivery notification history could not be loaded from the API.',
-          tone: 'warning',
-          source: 'sync',
-        });
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingNotificationHistory(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [canLoadNotificationHistory]);
-
-  useEffect(() => {
-    void refreshOperationalActivity();
-  }, [activePersona.id, canLoadOperationalActivity, dayPlanRefreshSignal, managedPersonaUnit]);
-
-  async function refreshOperationalActivity() {
-    const requestId = operationalActivityRequestId.current + 1;
-    operationalActivityRequestId.current = requestId;
-    if (!canLoadOperationalActivity) {
-      setOperationalActivity([]);
-      setCanLoadOlderOperationalActivity(false);
-      setIsLoadingOlderOperationalActivity(false);
-      setOperationalActivityUnavailable(false);
-      return;
-    }
-    setOperationalActivityUnavailable(false);
-    try {
-      const items = await fetchOperationalActivity({ limit: 25 });
-      if (requestId !== operationalActivityRequestId.current) return;
-      setOperationalActivity(items);
-      setCanLoadOlderOperationalActivity(items.length === 25);
-    } catch {
-      if (requestId !== operationalActivityRequestId.current) return;
-      setOperationalActivity([]);
-      setCanLoadOlderOperationalActivity(false);
-      setOperationalActivityUnavailable(true);
-    }
-  }
-
-  async function loadOlderOperationalActivity() {
-    const before = operationalActivity[operationalActivity.length - 1]?.occurredAt;
-    if (!canLoadOperationalActivity || !before || isLoadingOlderOperationalActivity) return;
-    const requestId = operationalActivityRequestId.current;
-    setIsLoadingOlderOperationalActivity(true);
-    try {
-      const items = await fetchOperationalActivity({ before, limit: 25 });
-      if (requestId !== operationalActivityRequestId.current) return;
-      setOperationalActivity((current) => {
-        const existingIds = new Set(current.map((item) => item.id));
-        return [...current, ...items.filter((item) => !existingIds.has(item.id))];
-      });
-      setCanLoadOlderOperationalActivity(items.length === 25);
-    } catch {
-      if (requestId !== operationalActivityRequestId.current) return;
-      setCanLoadOlderOperationalActivity(false);
-    } finally {
-      if (requestId === operationalActivityRequestId.current) {
-        setIsLoadingOlderOperationalActivity(false);
-      }
-    }
-  }
-
-  async function queueJobLifecycleAction(
-    jobId: string,
-    action: JobLifecycleOfflineMutation['action'],
-  ): Promise<boolean> {
-    if (!fieldControls.stopProgress) return false;
-    const job = jobs.find((item) => item.id === jobId);
-    if (!job?.organizationId || !auth.userId) return false;
-    try {
-      const mutation = await enqueueJobLifecycleMutation({
-        organizationId: job.organizationId,
-        actorId: auth.userId,
-        jobId,
-        action,
-      });
-      setOfflineJobMutations((current) => [...current, mutation].sort(
-        (left, right) => left.createdAt.localeCompare(right.createdAt),
-      ));
-      void requestPersistentOfflineStorage();
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   async function discardReviewedJobConflict(mutation: JobLifecycleOfflineMutation) {
-    try {
-      await removeOfflineMutation(mutation.id);
-    } catch {
-      setStatusMessage('The reviewed job conflict could not be removed from this phone. Try again.');
-      return;
-    }
-    setJobConflictDiscardId(null);
-    setOfflineJobMutations((current) => current.filter((item) => item.id !== mutation.id));
-    try {
-      const serverJob = await fetchJobDetail(mutation.jobId);
-      setJobs((current) => current.map((job) => job.id === serverJob.id ? serverJob : job));
-      setStatusMessage(`Discarded the reviewed ${mutation.action} conflict and restored server job state.`);
-    } catch {
-      setStatusMessage(`Discarded the reviewed ${mutation.action} conflict; refresh when the API is available.`);
-    }
-    await replayJobLifecycleMutations();
+    const outcome = await discardJobConflict(mutation);
+    setStatusMessage(reviewedFieldConflictMessage('job', outcome, mutation.action));
   }
 
   async function handleChecklistItemChange(itemId: string, completed: boolean) {
-    if (!fieldControls.fieldEvidence || !selectedJobId || !selectedJob) return;
-    let outcome = 'Checklist updated.';
-    try {
-      const result = await updateChecklistItem(selectedJobId, itemId, completed);
-      if (!result.persisted) throw new Error('Checklist update used local fallback');
-    } catch {
-      if (selectedJob.organizationId && auth.userId) {
-        try {
-          const mutation = await enqueueChecklistMutation({
-            organizationId: selectedJob.organizationId,
-            actorId: auth.userId,
-            jobId: selectedJobId,
-            checklistItemId: itemId,
-            completed,
-          });
-          setOfflineChecklistMutations((current) => [...current, mutation]);
-          outcome = 'Checklist change saved locally and queued offline.';
-        } catch {
-          outcome = 'Checklist changed locally, but durable offline storage is unavailable.';
-        }
-      } else {
-        outcome = 'Checklist changed locally without a resolved tenant; reconnect before continuing.';
-      }
-    }
+    if (!selectedJobId || !selectedJob) return;
+    const result = await runChecklistMutationCommand({
+      persist: () => updateChecklistItem(selectedJobId, itemId, completed),
+      queue: selectedJob.organizationId && auth.userId
+        ? () => queueChecklist(
+          selectedJob.organizationId,
+          selectedJobId,
+          itemId,
+          completed,
+        )
+        : undefined,
+    });
     const checklist = selectedJob.checklist.map(
       (item) => item.id === itemId ? { ...item, completed } : item,
     );
@@ -2454,45 +1182,17 @@ export function App() {
     setJobs((current) => current.map((job) => job.id === selectedJobId
       ? { ...job, completedChecklistItems }
       : job));
-    setStatusMessage(outcome);
+    setStatusMessage(result.message);
   }
 
   async function discardReviewedChecklistConflict(mutation: ChecklistOfflineMutation) {
-    try {
-      await removeOfflineMutation(mutation.id);
-    } catch {
-      setStatusMessage('The reviewed checklist conflict could not be removed from this phone.');
-      return;
-    }
-    setChecklistConflictDiscardId(null);
-    setOfflineChecklistMutations((current) => current.filter((item) => item.id !== mutation.id));
-    try {
-      const serverJob = await fetchJobDetail(mutation.jobId);
-      setJobs((current) => current.map((job) => job.id === serverJob.id ? serverJob : job));
-      if (selectedJobId === serverJob.id) setSelectedJob(serverJob);
-      setStatusMessage('Discarded the reviewed checklist conflict and restored server state.');
-    } catch {
-      setStatusMessage('Discarded the reviewed checklist conflict; refresh when the API is available.');
-    }
-    await replayChecklistMutations();
+    const outcome = await discardChecklistConflict(mutation);
+    setStatusMessage(reviewedFieldConflictMessage('checklist', outcome));
   }
 
   async function discardReviewedPhotoConflict(mutation: PhotoUploadOfflineMutation) {
-    try {
-      await removeOfflineMutation(mutation.id);
-    } catch {
-      setStatusMessage('The reviewed photo conflict could not be removed from this phone.');
-      return;
-    }
-    setPhotoConflictDiscardId(null);
-    setOfflinePhotoMutations((current) => current.filter((item) => item.id !== mutation.id));
-    try {
-      setJobs(await fetchJobs());
-      setStatusMessage('Discarded the reviewed photo conflict and refreshed server photo counts.');
-    } catch {
-      setStatusMessage('Discarded the reviewed photo conflict; refresh when the API is available.');
-    }
-    await replayPhotoMutations();
+    const outcome = await discardPhotoConflict(mutation);
+    setStatusMessage(reviewedFieldConflictMessage('photo', outcome));
   }
 
   async function handleStartJob() {
@@ -2500,17 +1200,18 @@ export function App() {
       return;
     }
 
-    try {
-      const result = await startJob(selectedJobId);
-      if (!result.persisted) throw new Error('Job start used local fallback');
-      setStatusMessage(`Started ${selectedJobId}.`);
-    } catch {
-      const queued = await queueJobLifecycleAction(selectedJobId, 'start');
-      setStatusMessage(
-        queued
-          ? `Started ${selectedJobId} locally; the change is queued offline.`
-          : `Started ${selectedJobId} locally, but durable offline storage is unavailable.`,
-      );
+    const organizationId = selectedJob?.organizationId
+      ?? jobs.find((job) => job.id === selectedJobId)?.organizationId;
+    const result = await runJobLifecycleMutationCommand({
+      jobId: selectedJobId,
+      action: 'start',
+      persist: () => startJob(selectedJobId),
+      queue: organizationId && auth.userId
+        ? () => queueJobLifecycle(organizationId, selectedJobId, 'start')
+        : undefined,
+    });
+    setStatusMessage(result.message);
+    if (result.outcome !== 'persisted') {
       recordManagerActivity({
         title: 'Job started locally',
         message: `${selectedJobId} was started in browser state because the API is not reachable.`,
@@ -2537,28 +1238,30 @@ export function App() {
     );
     if (!evidence.ready) {
       setStatusMessage(
-        `Cannot complete this job yet. Capture ${evidence.missing.join(' and ')} photo evidence first.`,
+        `Cannot complete this job yet. Add ${evidence.missing.join(' and ')} ${evidence.missing.length === 1 ? 'photo' : 'photos'} first.`,
       );
       return;
     }
 
-    try {
-      const result = await completeJob(selectedJobId);
-      if (!result.persisted) throw new Error('Job completion used local fallback');
-      setStatusMessage(`Completed ${selectedJobId}.`);
+    const organizationId = selectedJob?.organizationId
+      ?? jobs.find((job) => job.id === selectedJobId)?.organizationId;
+    const result = await runJobLifecycleMutationCommand({
+      jobId: selectedJobId,
+      action: 'complete',
+      persist: () => completeJob(selectedJobId),
+      queue: organizationId && auth.userId
+        ? () => queueJobLifecycle(organizationId, selectedJobId, 'complete')
+        : undefined,
+    });
+    setStatusMessage(result.message);
+    if (result.outcome === 'persisted') {
       recordManagerActivity({
         title: 'Job completion ready',
         message: `${selectedJobId} was completed and is ready for manager review.`,
         tone: 'success',
         source: 'job',
       });
-    } catch {
-      const queued = await queueJobLifecycleAction(selectedJobId, 'complete');
-      setStatusMessage(
-        queued
-          ? `Completed ${selectedJobId} locally; the change is queued offline.`
-          : `Completed ${selectedJobId} locally, but durable offline storage is unavailable.`,
-      );
+    } else {
       recordManagerActivity({
         title: 'Job completed locally',
         message: `${selectedJobId} was completed locally because the API is not reachable.`,
@@ -2578,63 +1281,50 @@ export function App() {
           }
         : current
     ));
+    if (result.outcome === 'persisted') {
+      managerRefresh.markFirstOwnerProgressChanged();
+    }
   }
 
   async function handleAddOnStatusChange(addOnId: string, status: JobAddOn['status']) {
     if (!fieldControls.stopProgress || !selectedJobId) return;
 
-    try {
-      const updated = await updateJobAddOnStatus(selectedJobId, addOnId, status);
-      setSelectedJobAddOns((current) => current.map((addOn) => (addOn.id === updated.id ? updated : addOn)));
-      setStatusMessage(`${updated.serviceName} marked ${status.replace('_', ' ')}.`);
-
-      if (status === 'completed') {
-        const report = await fetchCompletionReport(selectedJobId);
-        setSelectedCompletionReport(report);
-      }
-    } catch {
-      setStatusMessage('Could not update add-on work. Check the API connection and try again.');
+    const result = await runFieldAddOnMutationCommand({
+      jobId: selectedJobId,
+      addOnId,
+      status,
+    });
+    if (result.addOn) {
+      setSelectedJobAddOns((current) => current.map(
+        (addOn) => addOn.id === result.addOn?.id ? result.addOn : addOn,
+      ));
     }
+    if (result.report) setSelectedCompletionReport(result.report);
+    setStatusMessage(result.message);
   }
 
   async function refreshCompletionReport(jobId: string) {
     const report = await fetchCompletionReport(jobId);
     setSelectedCompletionReport(report);
-    setCompletionReportSnapshots((current) => ({ ...current, [report.jobId]: report }));
+    upsertManagerReport(report);
     setUploadTickets((current) => mergePhotoEvidence(current, jobId, report.photoEvidence));
     return report;
   }
 
   async function refreshManagerReportQueue(filters: CompletionReportOperationalFilters = {}) {
-    if (jobs.length === 0) return;
-
-    setIsLoadingReportQueue(true);
-    try {
-      let reports: CompletionReportSnapshot[];
-      try {
-        reports = await fetchCompletionReports(filters);
-      } catch {
-        reports = await Promise.all(jobs.map((job) => fetchCompletionReport(job.id)));
-        reports = reports.filter((report) => matchesCompletionReportOperationalFilters(report, filters));
-      }
-      setCompletionReportSnapshots(
-        reports.reduce<Record<string, CompletionReportSnapshot>>((next, report) => {
-          next[report.jobId] = report;
-          return next;
-        }, {}),
-      );
+    const outcome = await refreshManagerReports(filters);
+    if (outcome === 'empty') return;
+    if (outcome === 'refreshed') {
       setStatusMessage('Completion report review queue refreshed.');
-    } catch {
-      setStatusMessage('Could not refresh every completion report. Check the API connection and try again.');
-      recordManagerActivity({
-        title: 'Report queue refresh failed',
-        message: 'The manager completion report queue could not refresh all job reports.',
-        tone: 'warning',
-        source: 'sync',
-      });
-    } finally {
-      setIsLoadingReportQueue(false);
+      return;
     }
+    setStatusMessage('Could not refresh every completion report. Check the API connection and try again.');
+    recordManagerActivity({
+      title: 'Report queue refresh failed',
+      message: 'The manager completion report queue could not refresh all job reports.',
+      tone: 'warning',
+      source: 'sync',
+    });
   }
 
   async function handleJobDispatchAssignment(
@@ -2650,7 +1340,7 @@ export function App() {
     });
     setJobs((current) => current.map((job) => job.id === updated.id ? updated : job));
     setStatusMessage(`${updated.customerName} moved to ${crewId} on ${scheduledDate}.`);
-    setFirstOwnerProgressRefreshSignal((current) => current + 1);
+    managerRefresh.markFirstOwnerProgressChanged();
   }
 
   async function handleCompleteDispatchCustomerNotification(
@@ -2659,26 +1349,21 @@ export function App() {
   ) {
     try {
       await completeDispatchCustomerNotification(jobId, channel);
-      await refreshOperationalActivity();
-      setStatusMessage(`Customer notification follow-up recorded by ${channel}.`);
+      const activityRefreshed = await refreshOperationalActivity();
+      setStatusMessage(activityRefreshed
+        ? `Customer notification follow-up recorded by ${channel}.`
+        : `Customer notification follow-up recorded by ${channel}. Activity could not be refreshed.`);
     } catch {
       setStatusMessage('Customer notification follow-up could not be recorded.');
     }
   }
 
-  async function refreshNotificationHistory(filters: NotificationHistoryFilters) {
-    setIsLoadingNotificationHistory(true);
-    try {
-      const items = await fetchNotificationHistory({
-        entityType: filters.entityType === 'all' ? undefined : filters.entityType,
-        status: filters.status === 'all' ? undefined : filters.status,
-        limit: 25,
-      });
-      setNotificationHistory(items);
-      setNotificationHistoryUnavailable(false);
+  async function refreshNotificationHistory(
+    filters: ManagerNotificationHistoryFilters,
+  ) {
+    if (await refreshManagerNotificationHistory(filters)) {
       setStatusMessage('Notification delivery history refreshed.');
-    } catch {
-      setNotificationHistoryUnavailable(true);
+    } else {
       setStatusMessage('Could not refresh notification delivery history. Check the API connection and try again.');
       recordManagerActivity({
         title: 'Notification history refresh failed',
@@ -2686,32 +1371,23 @@ export function App() {
         tone: 'warning',
         source: 'sync',
       });
-    } finally {
-      setIsLoadingNotificationHistory(false);
     }
   }
 
   async function handleRetryNotificationDelivery(
     notificationId: string,
-    filters: NotificationHistoryFilters,
+    filters: ManagerNotificationHistoryFilters,
   ) {
-    setIsLoadingNotificationHistory(true);
-    try {
-      const retried = await retryNotificationDelivery(notificationId);
-      setNotificationHistory(await fetchNotificationHistory({
-        entityType: filters.entityType === 'all' ? undefined : filters.entityType,
-        status: filters.status === 'all' ? undefined : filters.status,
-        limit: 25,
-      }));
-      setNotificationHistoryUnavailable(false);
-      setStatusMessage(`${retried.id} queued for retry.`);
+    const result = await retryManagerNotificationDelivery(notificationId, filters);
+    if (result.ok) {
+      setStatusMessage(`${result.item.id} queued for retry.`);
       recordManagerActivity({
         title: 'Notification retry queued',
-        message: `${retried.channel} delivery for ${retried.entityId} was returned to the queue.`,
+        message: `${result.item.channel} delivery for ${result.item.entityId} was returned to the queue.`,
         tone: 'success',
         source: 'sync',
       });
-    } catch {
+    } else {
       setStatusMessage('Could not retry the notification. Confirm it is failed or needs attention.');
       recordManagerActivity({
         title: 'Notification retry failed',
@@ -2719,32 +1395,23 @@ export function App() {
         tone: 'warning',
         source: 'sync',
       });
-    } finally {
-      setIsLoadingNotificationHistory(false);
     }
   }
 
   async function handleResolveNotificationDelivery(
     notificationId: string,
-    filters: NotificationHistoryFilters,
+    filters: ManagerNotificationHistoryFilters,
   ) {
-    setIsLoadingNotificationHistory(true);
-    try {
-      const resolved = await resolveNotificationDelivery(notificationId);
-      setNotificationHistory(await fetchNotificationHistory({
-        entityType: filters.entityType === 'all' ? undefined : filters.entityType,
-        status: filters.status === 'all' ? undefined : filters.status,
-        limit: 25,
-      }));
-      setNotificationHistoryUnavailable(false);
-      setStatusMessage(`${resolved.id} marked resolved.`);
+    const result = await resolveManagerNotificationDelivery(notificationId, filters);
+    if (result.ok) {
+      setStatusMessage(`${result.item.id} marked resolved.`);
       recordManagerActivity({
         title: 'Notification resolved',
-        message: `${resolved.channel} delivery for ${resolved.entityId} was marked resolved.`,
+        message: `${result.item.channel} delivery for ${result.item.entityId} was marked resolved.`,
         tone: 'success',
         source: 'sync',
       });
-    } catch {
+    } else {
       setStatusMessage('Could not resolve the notification. Confirm it is failed or needs attention.');
       recordManagerActivity({
         title: 'Notification resolution failed',
@@ -2752,22 +1419,13 @@ export function App() {
         tone: 'warning',
         source: 'sync',
       });
-    } finally {
-      setIsLoadingNotificationHistory(false);
     }
   }
 
-  async function refreshPhotoProcessingHistory(filters: PhotoProcessingRecoveryFilters) {
-    setIsLoadingPhotoProcessingHistory(true);
-    try {
-      const items = await fetchPhotoProcessingHistory({
-        taskType: 'thumbnail_generation',
-        status: filters.status === 'all' ? undefined : filters.status,
-        limit: 25,
-      });
-      setPhotoProcessingHistory(items);
+  async function refreshPhotoProcessingHistory(filters: ManagerPhotoProcessingFilters) {
+    if (await refreshManagerPhotoProcessingHistory(filters)) {
       setStatusMessage('Photo processing recovery queue refreshed.');
-    } catch {
+    } else {
       setStatusMessage('Could not refresh photo processing history. Check the API connection and try again.');
       recordManagerActivity({
         title: 'Photo processing refresh failed',
@@ -2775,31 +1433,23 @@ export function App() {
         tone: 'warning',
         source: 'sync',
       });
-    } finally {
-      setIsLoadingPhotoProcessingHistory(false);
     }
   }
 
   async function handleRetryPhotoProcessing(
     processingJobId: string,
-    filters: PhotoProcessingRecoveryFilters,
+    filters: ManagerPhotoProcessingFilters,
   ) {
-    setIsLoadingPhotoProcessingHistory(true);
-    try {
-      const retried = await retryPhotoProcessingJob(processingJobId);
-      setPhotoProcessingHistory(await fetchPhotoProcessingHistory({
-        taskType: 'thumbnail_generation',
-        status: filters.status === 'all' ? undefined : filters.status,
-        limit: 25,
-      }));
-      setStatusMessage(`${retried.id} queued for photo processing retry.`);
+    const result = await retryManagerPhotoProcessing(processingJobId, filters);
+    if (result.ok) {
+      setStatusMessage(`${result.item.id} queued for photo processing retry.`);
       recordManagerActivity({
         title: 'Photo processing retry queued',
-        message: `${retried.fileName} thumbnail work was returned to the queue.`,
+        message: `${result.item.fileName} thumbnail work was returned to the queue.`,
         tone: 'success',
         source: 'photo',
       });
-    } catch {
+    } else {
       setStatusMessage('Could not retry photo processing. Confirm the job is failed or needs attention.');
       recordManagerActivity({
         title: 'Photo processing retry failed',
@@ -2807,31 +1457,23 @@ export function App() {
         tone: 'warning',
         source: 'photo',
       });
-    } finally {
-      setIsLoadingPhotoProcessingHistory(false);
     }
   }
 
   async function handleResolvePhotoProcessing(
     processingJobId: string,
-    filters: PhotoProcessingRecoveryFilters,
+    filters: ManagerPhotoProcessingFilters,
   ) {
-    setIsLoadingPhotoProcessingHistory(true);
-    try {
-      const resolved = await resolvePhotoProcessingJob(processingJobId);
-      setPhotoProcessingHistory(await fetchPhotoProcessingHistory({
-        taskType: 'thumbnail_generation',
-        status: filters.status === 'all' ? undefined : filters.status,
-        limit: 25,
-      }));
-      setStatusMessage(`${resolved.id} marked resolved.`);
+    const result = await resolveManagerPhotoProcessing(processingJobId, filters);
+    if (result.ok) {
+      setStatusMessage(`${result.item.id} marked resolved.`);
       recordManagerActivity({
         title: 'Photo processing resolved',
-        message: `${resolved.fileName} thumbnail work was marked resolved.`,
+        message: `${result.item.fileName} thumbnail work was marked resolved.`,
         tone: 'success',
         source: 'photo',
       });
-    } catch {
+    } else {
       setStatusMessage('Could not resolve photo processing. Confirm the job is failed or needs attention.');
       recordManagerActivity({
         title: 'Photo processing resolution failed',
@@ -2839,75 +1481,58 @@ export function App() {
         tone: 'warning',
         source: 'photo',
       });
-    } finally {
-      setIsLoadingPhotoProcessingHistory(false);
     }
   }
 
   async function refreshPhotoErasureDeletionHistory() {
-    setIsLoadingPhotoErasureDeletionHistory(true);
-    try {
-      setPhotoErasureDeletionHistory(await fetchPhotoErasureDeletionHistory());
+    if (await refreshManagerPhotoErasureDeletionHistory()) {
       setStatusMessage('Photo erasure deletion recovery queue refreshed.');
-    } catch {
+    } else {
       setStatusMessage('Could not refresh photo erasure deletion history.');
-    } finally {
-      setIsLoadingPhotoErasureDeletionHistory(false);
     }
   }
 
   async function handleRetryPhotoErasureDeletion(id: string) {
-    setIsLoadingPhotoErasureDeletionHistory(true);
-    try {
-      const retried = await retryPhotoErasureDeletionJob(id);
-      setPhotoErasureDeletionHistory(await fetchPhotoErasureDeletionHistory());
-      setStatusMessage(`${retried.id} queued for object deletion retry.`);
+    const result = await retryManagerPhotoErasureDeletion(id);
+    if (result.ok) {
+      setStatusMessage(`${result.item.id} queued for object deletion retry.`);
       recordManagerActivity({
         title: 'Photo erasure deletion retry queued',
-        message: `${retried.objectKey} was returned to the deletion queue.`,
+        message: `${result.item.objectKey} was returned to the deletion queue.`,
         tone: 'success',
         source: 'photo',
       });
-    } catch {
+    } else {
       setStatusMessage('Could not retry the photo erasure object deletion.');
-    } finally {
-      setIsLoadingPhotoErasureDeletionHistory(false);
     }
   }
 
   async function handleResolvePhotoErasureDeletion(id: string) {
-    setIsLoadingPhotoErasureDeletionHistory(true);
-    try {
-      const resolved = await resolvePhotoErasureDeletionJob(id);
-      setPhotoErasureDeletionHistory(await fetchPhotoErasureDeletionHistory());
-      setStatusMessage(`${resolved.id} marked resolved.`);
+    const result = await resolveManagerPhotoErasureDeletion(id);
+    if (result.ok) {
+      setStatusMessage(`${result.item.id} marked resolved.`);
       recordManagerActivity({
         title: 'Photo erasure deletion resolved',
-        message: `${resolved.objectKey} was manually resolved.`,
+        message: `${result.item.objectKey} was manually resolved.`,
         tone: 'success',
         source: 'photo',
       });
-    } catch {
+    } else {
       setStatusMessage('Could not resolve the photo erasure object deletion.');
-    } finally {
-      setIsLoadingPhotoErasureDeletionHistory(false);
     }
   }
 
   async function handleCustomerPrivacyExport(accountId: string) {
-    setIsLoadingCustomerPrivacy(true);
-    try {
-      const privacyExport = await fetchCustomerPrivacyExport(accountId);
-      setCustomerPrivacyExport(privacyExport);
-      setCustomerPhotoErasureSummary(null);
-      setStatusMessage(`Exported privacy data for ${privacyExport.account.customerName}.`);
+    const result = await exportManagerCustomerPrivacy(accountId);
+    if (result.ok) {
+      setStatusMessage(`Exported privacy data for ${result.privacyExport.account.customerName}.`);
       recordManagerActivity({
         title: 'Customer privacy export created',
-        message: `${privacyExport.account.customerName} export includes ${privacyExport.photoEvidence.length} photo evidence metadata item${privacyExport.photoEvidence.length === 1 ? '' : 's'}.`,
+        message: `${result.privacyExport.account.customerName} export includes ${result.privacyExport.photoEvidence.length} photo evidence metadata item${result.privacyExport.photoEvidence.length === 1 ? '' : 's'}.`,
         tone: 'success',
         source: 'sync',
       });
-    } catch {
+    } else {
       setStatusMessage('Could not export customer privacy data. Confirm the account is in scope.');
       recordManagerActivity({
         title: 'Customer privacy export failed',
@@ -2915,26 +1540,30 @@ export function App() {
         tone: 'warning',
         source: 'sync',
       });
-    } finally {
-      setIsLoadingCustomerPrivacy(false);
     }
   }
 
   async function handleCustomerPhotoErasure(accountId: string, reason: string) {
-    setIsLoadingCustomerPrivacy(true);
-    try {
-      const erasure = await eraseCustomerPhotoEvidence(accountId, reason);
-      setCustomerPhotoErasureSummary(erasure);
-      const privacyExport = await fetchCustomerPrivacyExport(accountId);
-      setCustomerPrivacyExport(privacyExport);
-      setStatusMessage(`Erased retained photo evidence for ${accountId}.`);
+    const result = await eraseManagerCustomerPhotos(accountId, reason);
+    if (result.ok) {
+      setStatusMessage(result.privacyExport
+        ? `Erased retained photo evidence for ${accountId}.`
+        : `Erased retained photo evidence for ${accountId}. The latest export could not be refreshed.`);
       recordManagerActivity({
         title: 'Customer photo evidence erased',
-        message: `${erasure.erasedPhotoCount} photo evidence item${erasure.erasedPhotoCount === 1 ? '' : 's'} erased for ${accountId}.`,
+        message: `${result.erasure.erasedPhotoCount} photo evidence item${result.erasure.erasedPhotoCount === 1 ? '' : 's'} erased for ${accountId}.`,
         tone: 'success',
         source: 'photo',
       });
-    } catch {
+      if (!result.privacyExport) {
+        recordManagerActivity({
+          title: 'Customer privacy export refresh failed',
+          message: `Photo evidence was erased for ${accountId}, but the updated privacy export could not be loaded.`,
+          tone: 'warning',
+          source: 'sync',
+        });
+      }
+    } else {
       setStatusMessage('Could not erase customer photo evidence. Confirm the reason and account scope.');
       recordManagerActivity({
         title: 'Customer photo erasure failed',
@@ -2942,69 +1571,44 @@ export function App() {
         tone: 'warning',
         source: 'photo',
       });
-    } finally {
-      setIsLoadingCustomerPrivacy(false);
     }
   }
 
   async function handleStartReportReview(reportId: string) {
-    setCompletionReportActionStatus('Starting manager review...');
-
-    try {
-      const action = await startCompletionReportReview(reportId);
-      await refreshCompletionReport(action.jobId);
-      await refreshOperationalActivity();
-      setStatusMessage(`${action.reportId} is in manager review.`);
-      setCompletionReportActionStatus(null);
-    } catch {
-      setCompletionReportActionStatus(null);
+    const result = await startManagerReportReview(reportId);
+    if (!result.ok) {
       setStatusMessage('Could not start manager review. Confirm the report is submitted and persisted.');
+      return;
     }
+    setStatusMessage(`${result.action.reportId} is in manager review.`);
   }
 
   async function handleRequestReportChanges(reportId: string, reason: string) {
-    setCompletionReportActionStatus('Requesting report changes...');
-
-    try {
-      const action = await requestCompletionReportChanges(reportId, reason);
-      await refreshCompletionReport(action.jobId);
-      await refreshOperationalActivity();
-      setStatusMessage(`${action.reportId} has changes requested.`);
-      setCompletionReportActionStatus(null);
-    } catch {
-      setCompletionReportActionStatus(null);
+    const result = await requestManagerReportChanges(reportId, reason);
+    if (!result.ok) {
       setStatusMessage('Could not request changes. Confirm the report is currently in review.');
+      return;
     }
+    setStatusMessage(`${result.action.reportId} has changes requested.`);
   }
 
   async function handleResubmitReport(reportId: string) {
-    setCompletionReportActionStatus('Resubmitting completion report...');
-
-    try {
-      const action = await resubmitCompletionReport(reportId);
-      await refreshCompletionReport(action.jobId);
-      await refreshOperationalActivity();
-      setStatusMessage(`${action.reportId} resubmitted for manager review.`);
-      setCompletionReportActionStatus(null);
-    } catch {
-      setCompletionReportActionStatus(null);
+    const result = await resubmitManagerReport(reportId);
+    if (!result.ok) {
       setStatusMessage('Could not resubmit. Confirm the report is change-requested and delivery-ready.');
+      return;
     }
+    setStatusMessage(`${result.action.reportId} resubmitted for manager review.`);
   }
 
   async function handleDeliverReport(reportId: string) {
-    setCompletionReportActionStatus('Delivering completion report...');
-
-    try {
-      const action = await deliverCompletionReport(reportId);
-      await refreshCompletionReport(action.jobId);
-      await refreshOperationalActivity();
-      setStatusMessage(`${action.reportId} delivered to the customer portal.`);
-      setCompletionReportActionStatus(null);
-    } catch {
-      setCompletionReportActionStatus(null);
+    const result = await deliverManagerReport(reportId);
+    if (!result.ok) {
       setStatusMessage('Could not deliver. Confirm the report passed review and delivery readiness checks.');
+      return;
     }
+    setStatusMessage(`${result.action.reportId} delivered to the customer portal.`);
+    managerRefresh.markFirstOwnerProgressChanged();
   }
 
   async function handleQueueReportDeliveryNotification(
@@ -3012,109 +1616,56 @@ export function App() {
     channel: 'email' | 'sms',
     recipient: string,
   ) {
-    setCompletionReportActionStatus('Queueing customer notification...');
-
-    try {
-      const notification = await queueCompletionReportDeliveryNotification(reportId, channel, recipient);
-      try {
-        setNotificationHistory(await fetchNotificationHistory({ limit: 25 }));
-        setNotificationHistoryUnavailable(false);
-      } catch {
-        setNotificationHistoryUnavailable(true);
-        recordManagerActivity({
-          title: 'Notification history refresh failed',
-          message: 'The customer notification was queued, but the history panel did not refresh.',
-          tone: 'warning',
-          source: 'sync',
-        });
-      }
-      setStatusMessage(`${notification.reportId} notification queued for ${notification.recipient}.`);
-      setCompletionReportActionStatus(null);
-      recordManagerActivity({
-        title: 'Completion report notification queued',
-        message: `${notification.channel} delivery queued for ${notification.reportId}.`,
-        tone: 'success',
-        source: 'sync',
-      });
-    } catch (error) {
-      setCompletionReportActionStatus(null);
+    const result = await queueManagerReportDeliveryNotification(reportId, channel, recipient);
+    if (!result.ok) {
       setStatusMessage(
-        isApiErrorCode(error, 'completion_report_notification_preference_blocked')
+        isApiErrorCode(result.error, 'completion_report_notification_preference_blocked')
           ? 'Delivery blocked by this customer’s account preferences. Enable the selected channel and use the configured account recipient.'
           : 'Could not queue the customer notification. Confirm the report is delivered and the recipient is valid.',
       );
+      return;
     }
+
+    if (result.history) {
+      applyNotificationHistoryRefresh(result.history);
+    } else {
+      applyNotificationHistoryRefresh(null);
+      recordManagerActivity({
+        title: 'Notification history refresh failed',
+        message: 'The customer notification was queued, but the history panel did not refresh.',
+        tone: 'warning',
+        source: 'sync',
+      });
+    }
+    setStatusMessage(
+      `${result.notification.reportId} notification queued for ${result.notification.recipient}.`,
+    );
+    recordManagerActivity({
+      title: 'Completion report notification queued',
+      message: `${result.notification.channel} delivery queued for ${result.notification.reportId}.`,
+      tone: 'success',
+      source: 'sync',
+    });
   }
 
-  async function handlePhotoSelected(file: File, photoType: PhotoType) {
-    if (!fieldControls.fieldEvidence || !selectedJobId) {
+  async function handlePhotoSelected(file: File, photoType: FieldPhotoType) {
+    if (!selectedJobId) {
       return;
     }
 
-    const metadata = await readPhotoUploadMetadata(file);
-    const quality = assessPhotoQuality(file, metadata, selectedJobTickets);
-    if (!quality.accepted) {
-      setStatusMessage(`Photo not added: ${photoQualityMessage(quality)}.`);
-      return;
-    }
-
-    let ticket: PhotoUploadTicket;
-
-    try {
-      ticket = await createPhotoUploadTicket(selectedJobId, file, photoType);
-      await uploadPhotoToTicket(ticket, file);
-      await completePhotoUpload(selectedJobId, ticket.photoId, metadata);
-      ticket = {
-        ...ticket,
-        status: 'uploaded',
-        fileSizeBytes: metadata.fileSizeBytes,
-        imageWidthPx: metadata.imageWidthPx,
-        imageHeightPx: metadata.imageHeightPx,
-        metadataSource: 'client_reported',
-      };
-      setStatusMessage(`Uploaded ${photoType} photo evidence for ${file.name}.`);
-      recordManagerActivity({
-        title: 'Photo evidence uploaded',
-        message: `${photoType} photo evidence was uploaded for ${selectedJobId}.`,
-        tone: 'success',
-        source: 'photo',
-      });
-    } catch {
-      ticket = localPhotoTicket(selectedJobId, file, photoType, metadata);
-      let queued = false;
-      if (selectedJob?.organizationId && auth.userId) {
-        try {
-          const mutation = await enqueuePhotoUploadMutation(
-            {
-              organizationId: selectedJob.organizationId,
-              actorId: auth.userId,
-              jobId: selectedJobId,
-              photoType,
-              fileName: file.name,
-            },
-            file,
-          );
-          setOfflinePhotoMutations((current) => [...current, mutation]);
-          void requestPersistentOfflineStorage();
-          queued = true;
-        } catch {
-          queued = false;
-        }
-      }
-      setStatusMessage(
-        queued
-          ? `Saved ${photoType} photo in the durable offline queue.`
-          : `Prepared ${photoType} photo locally, but it could not be queued for offline upload.`,
-      );
-      recordManagerActivity({
-        title: queued ? 'Photo evidence queued offline' : 'Photo evidence saved locally',
-        message: queued
-          ? `${photoType} photo evidence for ${selectedJobId} is queued durably until the API is reachable.`
-          : `${photoType} photo evidence for ${selectedJobId} is browser-local until the API is reachable.`,
-        tone: 'warning',
-        source: 'photo',
-      });
-    }
+    const result = await runFieldPhotoUploadCommand({
+      jobId: selectedJobId,
+      photoType,
+      file,
+      existingPhotos: selectedJobTickets,
+      queue: selectedJob?.organizationId && auth.userId
+        ? () => queuePhoto(selectedJob.organizationId, selectedJobId, photoType, file)
+        : undefined,
+    });
+    setStatusMessage(result.message);
+    if (!result.ticket) return;
+    const ticket = result.ticket;
+    if (result.activity) recordManagerActivity(result.activity);
 
     setUploadTickets((current) => [ticket, ...current]);
     setJobs((current) =>
@@ -3139,16 +1690,25 @@ export function App() {
   return (
     <main className="authenticated-workspace-shell min-h-screen overflow-x-hidden bg-bone text-ink md:pl-24 lg:pl-60">
       <DesktopWorkspaceNavigation
+        activePersonaId={activePersona.id}
         activeView={mobileView}
+        availablePersonas={availablePersonas}
         hasEnvironmentBanner={auth.authMode !== 'cognito'}
         hasSelectedJob={Boolean(selectedJobId)}
         navigationItems={activePersona.navigation}
         onChange={(view) => {
           if (view === 'manager') {
-            setManagerWorkspaceSection(null);
-            setManagerWorkspaceTool(null);
+            managerNavigation.openRoot();
           }
-          changeMobileView(view, true);
+          workspaceViewNavigation.openView(view, true);
+        }}
+        onPersonaChange={(personaId) => {
+          const persona = selectWorkspacePersona(personaId);
+          if (!persona) return;
+          if (persona.defaultView === 'manager') {
+            managerNavigation.openRoot();
+          }
+          workspaceViewNavigation.openView(persona.defaultView, true);
         }}
         onSignOut={hostedSignOut}
         personaLabel={activePersona.label}
@@ -3158,7 +1718,7 @@ export function App() {
         <img
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center"
-          src="/brand/grover-landscape-home-hero.webp"
+          src="/brand/yardfolio-landscape-home-hero.webp"
         />
         <span className="absolute inset-0 bg-linear-to-r from-slate-950/95 via-slate-950/75 to-emerald-950/20" />
         <span className="absolute inset-0 bg-linear-to-t from-slate-950/80 via-transparent to-slate-950/20" />
@@ -3194,21 +1754,25 @@ export function App() {
                 <span className="text-emerald-300">Proof</span>
               </div>
             </div>
-            <aside className="rounded-2xl border border-white/15 bg-slate-950/45 p-5 shadow-grover-md backdrop-blur-md">
+            <aside className="rounded-2xl border border-white/15 bg-slate-950/45 p-5 shadow-yardfolio-md backdrop-blur-md">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">
                 {personaProgressLanguage(activePersona).eyebrow}
               </p>
               <p className="mt-3 text-4xl font-black">
-                {workspaceRoles.length === 0
-                  ? '—'
-                  : isLoadingJobs
-                    ? '…'
-                    : `${jobs.filter((job) => job.status === 'completed').length}/${jobs.length}`}
+                {desktopHomeProgress.state === 'loading'
+                  ? '…'
+                  : desktopHomeProgress.state === 'ready'
+                    ? `${desktopHomeProgress.completed}/${desktopHomeProgress.total}`
+                    : '—'}
               </p>
               <p className="mt-1 text-sm font-semibold text-slate-200">
                 {workspaceRoles.length === 0
                   ? 'Protected work stays hidden'
-                  : personaProgressLanguage(activePersona).completed}
+                  : desktopHomeProgress.state === 'loading'
+                    ? `Checking ${personaProgressLanguage(activePersona).total}`
+                    : desktopHomeProgress.state === 'unavailable'
+                      ? `${personaProgressLanguage(activePersona).eyebrow} unavailable`
+                      : personaProgressLanguage(activePersona).completed}
               </p>
               <div className="my-4 h-px bg-white/15" />
               <p className="text-sm font-bold text-white">{workspaceGuidance.label}</p>
@@ -3222,24 +1786,20 @@ export function App() {
         activePersonaId={activePersona.id}
         assignedJobCount={jobs.length}
         availablePersonas={availablePersonas}
-        onBackToJobs={() => changeMobileView('jobs')}
+        onBackToJobs={() => workspaceViewNavigation.openView('jobs')}
         onPersonaChange={(personaId) => {
-          const persona = availablePersonas.find((item) => item.id === personaId);
+          const persona = selectWorkspacePersona(personaId);
           if (!persona) return;
-          setActivePersonaId(persona.id);
           if (persona.defaultView === 'manager') {
-            setManagerWorkspaceSection(null);
-            setManagerWorkspaceTool(null);
+            managerNavigation.openRoot();
           }
-          changeMobileView(persona.defaultView, true);
+          workspaceViewNavigation.openView(persona.defaultView, true);
         }}
         onSignOut={hostedSignOut}
         pendingChangeCount={
-          offlineJobMutations.length
-          + offlineChecklistMutations.length
-          + offlinePhotoMutations.length
-          + offlineRouteMutationCount
+          fieldRecovery.pendingChangeCount
         }
+        routeOverview={fieldRouteOverview.overview}
         personaDescription={activePersona.description}
         personaLabel={activePersona.label}
         signedInName={auth.displayName || 'Signed-in user'}
@@ -3253,29 +1813,30 @@ export function App() {
         <div className="min-w-0">
           <div className={mobileView === 'home' ? 'block' : 'hidden'}>
             <WorkspaceHomePanel
-              assignedJobCount={homeAssignedWorkCount}
-              completedJobCount={homeCompletedWorkCount}
+              assignedJobCount={homeWorkSummary.assigned}
+              completedJobCount={homeWorkSummary.completed}
               hasSelectedJob={Boolean(selectedJobId)}
               hasWorkspaceRole={workspaceRoles.length > 0}
+              managerTodayQueue={showManagerTodayQueue ? {
+                items: managerTodayItems,
+                state: managerTodayState,
+                onOpenAll: () => workspaceViewNavigation.openView('jobs', true),
+                onOpenItem: (item) => {
+                  fieldJobNavigation.openJob(item.jobId, item.workflow, true);
+                },
+              } : undefined}
               onOpen={(view) => {
                 if (view === 'manager') {
-                  setManagerWorkspaceSection(null);
-                  setManagerWorkspaceTool(null);
+                  managerNavigation.openRoot();
                 }
-                changeMobileView(view, true);
+                workspaceViewNavigation.openView(view, true);
               }}
               pendingChangeCount={
-                offlineJobMutations.length
-                + offlineChecklistMutations.length
-                + offlinePhotoMutations.length
-                + offlineRouteMutationCount
+                fieldRecovery.pendingChangeCount
               }
               persona={activePersona}
-              portalReadState={activePersona.id !== 'yard-owner'
-                ? 'ready'
-                : isLoadingCustomerPortalVisits
-                  ? 'loading'
-                  : customerPortalVisitError ?? 'ready'}
+              portalReadState={portalHomeReadState}
+              routeOverview={fieldRouteOverview.overview}
               signedInName={auth.displayName || 'Signed-in user'}
             />
           </div>
@@ -3283,408 +1844,90 @@ export function App() {
             <DayPlanPanel
               actorId={auth.userId}
               jobDetailsEnabled={fieldControls.jobDetails}
-              onPendingChangeCountChange={setOfflineRouteMutationCount}
-              onSelectJob={selectJobForReview}
-              refreshSignal={dayPlanRefreshSignal}
+              onSelectJob={fieldJobNavigation.openJob}
+              onOverviewChange={fieldRouteOverview.updateOverview}
+              refreshSignal={managerRefresh.signals.dayPlan}
               routeChangesEnabled={fieldControls.routeChanges}
               stopProgressEnabled={fieldControls.stopProgress}
             />
           </div>
-          <section className={workspaceSurfaces.fieldOperations && mobileView === 'jobs' ? 'block' : 'hidden'}>
-          <div className="mb-4 mt-0 scroll-mt-16 lg:mt-6" id="assigned-jobs">
-            <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Assigned jobs</h2>
-            <p className="mt-1 text-sm text-slate-600" role="status">{statusMessage}</p>
-            {jobsUnavailable ? (
-              <WorkspaceStatusNotice
-                className="mt-2"
-                compact
-                detail="Assigned jobs remain hidden until API readiness recovers."
-                title="Persisted field work could not be loaded."
-                tone="danger"
+          <AssignedJobsPanel
+            className={workspaceSurfaces.fieldOperations && mobileView === 'jobs' ? 'block' : 'hidden'}
+            jobs={jobs}
+            jobsUnavailable={jobsUnavailable}
+            onSelectJob={fieldJobNavigation.openJob}
+            recovery={(
+              <FieldOfflineRecoveryPanel
+                checklistMutations={offlineChecklistMutations}
+                isOnline={navigator.onLine}
+                isReplayingChecklist={isReplayingChecklistMutations}
+                isReplayingJobs={isReplayingJobMutations}
+                isReplayingPhotos={isReplayingPhotoMutations}
+                jobMutations={offlineJobMutations}
+                jobs={jobs}
+                onDiscardChecklistConflict={discardReviewedChecklistConflict}
+                onDiscardJobConflict={discardReviewedJobConflict}
+                onDiscardPhotoConflict={discardReviewedPhotoConflict}
+                onReplayChecklist={replayChecklistMutations}
+                onReplayJobs={replayJobLifecycleMutations}
+                onReplayPhotos={replayPhotoMutations}
+                photoMutations={offlinePhotoMutations}
+                recovery={fieldRecovery}
+                selectedJob={selectedJob}
               />
-            ) : null}
-            {offlineJobMutations.length > 0 && (
-              <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
-                <p>
-                  {offlineJobMutations.length} job {offlineJobMutations.length === 1 ? 'change is' : 'changes are'} queued offline on this phone.
-                </p>
-                <p className="mt-1 font-medium">
-                  {offlineJobMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
-                  {offlineJobMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
-                </p>
-                {!fieldControls.stopProgress ? (
-                  <p className="mt-1 font-medium">
-                    Saved changes stay on this phone until job execution access returns.
-                  </p>
-                ) : null}
-                <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
-                  <summary className="min-h-11 cursor-pointer py-3 font-bold">
-                    Review queued job changes
-                  </summary>
-                  <div className="space-y-2 border-t border-amber-200 pt-2">
-                    {offlineJobMutations.map((mutation) => {
-                      const job = jobs.find((item) => item.id === mutation.jobId);
-                      return (
-                        <article className="rounded-lg bg-amber-50 p-2 font-medium" key={mutation.id}>
-                          <p className="font-bold text-slate-900">
-                            {job?.customerName ?? mutation.jobId}
-                          </p>
-                          <p className="mt-1 text-slate-700">
-                            {mutation.action === 'start' ? 'Start job' : 'Complete job'} · {mutation.syncState}
-                          </p>
-                          <p className="mt-1 text-slate-600">
-                            Queued {new Date(mutation.createdAt).toLocaleString()}
-                            {mutation.attemptCount > 0
-                              ? ` · ${mutation.attemptCount} ${mutation.attemptCount === 1 ? 'attempt' : 'attempts'}`
-                              : ''}
-                          </p>
-                          {mutation.syncState === 'conflict' && (
-                            jobConflictDiscardId === mutation.id ? (
-                              <div className="mt-2 rounded-lg border border-red-300 bg-white p-2">
-                                <p className="text-red-900">
-                                  Confirm a manager reviewed this job action. Discarding restores server state.
-                                </p>
-                                <div className="mt-2 flex gap-2">
-                                  <button
-                                    className="min-h-11 flex-1 rounded-lg bg-red-800 px-3 font-bold text-white"
-                                    onClick={() => void discardReviewedJobConflict(mutation)}
-                                    type="button"
-                                  >
-                                    Discard conflict
-                                  </button>
-                                  <button
-                                    className="min-h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 font-bold"
-                                    onClick={() => setJobConflictDiscardId(null)}
-                                    type="button"
-                                  >
-                                    Keep change
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <button
-                                className="mt-2 min-h-11 rounded-lg border border-red-300 bg-white px-3 font-bold text-red-900"
-                                onClick={() => setJobConflictDiscardId(mutation.id)}
-                                type="button"
-                              >
-                                Resolve after manager review
-                              </button>
-                            )
-                          )}
-                        </article>
-                      );
-                    })}
-                  </div>
-                </details>
-                <button
-                  className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
-                  disabled={
-                    !fieldControls.stopProgress
-                    || !navigator.onLine
-                    || isReplayingJobMutations
-                    || offlineJobMutations.some((mutation) => mutation.syncState === 'conflict')
-                  }
-                  onClick={() => void replayJobLifecycleMutations()}
-                  type="button"
-                >
-                  {!fieldControls.stopProgress
-                    ? 'Job execution access needed'
-                    : isReplayingJobMutations
-                      ? 'Syncing job changes…'
-                      : 'Sync job changes'}
-                </button>
-              </div>
             )}
-            {offlineChecklistMutations.length > 0 && (
-              <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
-                <p>
-                  {offlineChecklistMutations.length} checklist {offlineChecklistMutations.length === 1 ? 'change is' : 'changes are'} queued offline.
-                </p>
-                <p className="mt-1 font-medium">
-                  {offlineChecklistMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
-                  {offlineChecklistMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
-                </p>
-                {!fieldControls.fieldEvidence ? (
-                  <p className="mt-1 font-medium">
-                    Saved checklist work stays on this phone until evidence access returns.
-                  </p>
-                ) : null}
-                <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
-                  <summary className="min-h-11 cursor-pointer py-3 font-bold">
-                    Review queued checklist changes
-                  </summary>
-                  <div className="space-y-2 border-t border-amber-200 pt-2">
-                    {offlineChecklistMutations.map((mutation) => {
-                      const job = jobs.find((item) => item.id === mutation.jobId);
-                      const checklistItem = selectedJob?.id === mutation.jobId
-                        ? selectedJob.checklist.find((item) => item.id === mutation.checklistItemId)
-                        : undefined;
-                      return (
-                        <article className="rounded-lg bg-amber-50 p-2 font-medium" key={mutation.id}>
-                          <p className="font-bold text-slate-900">
-                            {job?.customerName ?? mutation.jobId}
-                          </p>
-                          <p className="mt-1 text-slate-700">
-                            {checklistItem?.label ?? mutation.checklistItemId} ·{' '}
-                            {mutation.completed ? 'Complete' : 'Not complete'} · {mutation.syncState}
-                          </p>
-                          <p className="mt-1 text-slate-600">
-                            Queued {new Date(mutation.createdAt).toLocaleString()}
-                            {mutation.attemptCount > 0
-                              ? ` · ${mutation.attemptCount} ${mutation.attemptCount === 1 ? 'attempt' : 'attempts'}`
-                              : ''}
-                          </p>
-                          {mutation.syncState === 'conflict' && (
-                            checklistConflictDiscardId === mutation.id ? (
-                              <div className="mt-2 rounded-lg border border-red-300 bg-white p-2">
-                                <p className="text-red-900">
-                                  Confirm a manager reviewed this checklist change. Discarding restores server state.
-                                </p>
-                                <div className="mt-2 flex gap-2">
-                                  <button
-                                    className="min-h-11 flex-1 rounded-lg bg-red-800 px-3 font-bold text-white"
-                                    onClick={() => void discardReviewedChecklistConflict(mutation)}
-                                    type="button"
-                                  >
-                                    Discard conflict
-                                  </button>
-                                  <button
-                                    className="min-h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 font-bold"
-                                    onClick={() => setChecklistConflictDiscardId(null)}
-                                    type="button"
-                                  >
-                                    Keep change
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <button
-                                className="mt-2 min-h-11 rounded-lg border border-red-300 bg-white px-3 font-bold text-red-900"
-                                onClick={() => setChecklistConflictDiscardId(mutation.id)}
-                                type="button"
-                              >
-                                Resolve after manager review
-                              </button>
-                            )
-                          )}
-                        </article>
-                      );
-                    })}
-                  </div>
-                </details>
-                <button
-                  className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
-                  disabled={
-                    !fieldControls.fieldEvidence
-                    || !navigator.onLine
-                    || isReplayingChecklistMutations
-                    || offlineChecklistMutations.some((mutation) => mutation.syncState === 'conflict')
-                  }
-                  onClick={() => void replayChecklistMutations()}
-                  type="button"
-                >
-                  {!fieldControls.fieldEvidence
-                    ? 'Evidence access needed'
-                    : isReplayingChecklistMutations
-                      ? 'Syncing checklist…'
-                      : 'Sync checklist changes'}
-                </button>
-              </div>
-            )}
-            {offlinePhotoMutations.length > 0 && (
-              <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
-                <p>
-                  {offlinePhotoMutations.length} photo {offlinePhotoMutations.length === 1 ? 'upload is' : 'uploads are'} stored offline on this phone.
-                </p>
-                <p className="mt-1 font-medium">
-                  {offlinePhotoMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
-                  {offlinePhotoMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
-                </p>
-                {!fieldControls.fieldEvidence ? (
-                  <p className="mt-1 font-medium">
-                    Saved photos stay on this phone until evidence access returns.
-                  </p>
-                ) : null}
-                <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
-                  <summary className="min-h-11 cursor-pointer py-3 font-bold">
-                    Review queued photos
-                  </summary>
-                  <div className="space-y-2 border-t border-amber-200 pt-2">
-                    {offlinePhotoMutations.map((mutation) => {
-                      const job = jobs.find((item) => item.id === mutation.jobId);
-                      return (
-                        <article className="rounded-lg bg-amber-50 p-2 font-medium" key={mutation.id}>
-                          <p className="font-bold text-slate-900">
-                            {job?.customerName ?? mutation.jobId}
-                          </p>
-                          <p className="mt-1 break-all text-slate-700">
-                            {mutation.photoType} photo · {mutation.fileName} ·{' '}
-                            {(mutation.fileSizeBytes / 1024 / 1024).toFixed(1)} MB · {mutation.syncState}
-                          </p>
-                          <p className="mt-1 text-slate-600">
-                            Queued {new Date(mutation.createdAt).toLocaleString()}
-                            {mutation.attemptCount > 0
-                              ? ` · ${mutation.attemptCount} ${mutation.attemptCount === 1 ? 'attempt' : 'attempts'}`
-                              : ''}
-                          </p>
-                          {mutation.syncState === 'conflict' && (
-                            photoConflictDiscardId === mutation.id ? (
-                              <div className="mt-2 rounded-lg border border-red-300 bg-white p-2">
-                                <p className="text-red-900">
-                                  Confirm a manager reviewed this photo. Discarding permanently removes its local image bytes.
-                                </p>
-                                <div className="mt-2 flex gap-2">
-                                  <button
-                                    className="min-h-11 flex-1 rounded-lg bg-red-800 px-3 font-bold text-white"
-                                    onClick={() => void discardReviewedPhotoConflict(mutation)}
-                                    type="button"
-                                  >
-                                    Discard photo
-                                  </button>
-                                  <button
-                                    className="min-h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 font-bold"
-                                    onClick={() => setPhotoConflictDiscardId(null)}
-                                    type="button"
-                                  >
-                                    Keep photo
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <button
-                                className="mt-2 min-h-11 rounded-lg border border-red-300 bg-white px-3 font-bold text-red-900"
-                                onClick={() => setPhotoConflictDiscardId(mutation.id)}
-                                type="button"
-                              >
-                                Resolve after manager review
-                              </button>
-                            )
-                          )}
-                        </article>
-                      );
-                    })}
-                  </div>
-                </details>
-                <button
-                  className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
-                  disabled={
-                    !fieldControls.fieldEvidence
-                    || !navigator.onLine
-                    || isReplayingPhotoMutations
-                    || offlinePhotoMutations.some((mutation) => mutation.syncState === 'conflict')
-                  }
-                  onClick={() => void replayPhotoMutations()}
-                  type="button"
-                >
-                  {!fieldControls.fieldEvidence
-                    ? 'Evidence access needed'
-                    : isReplayingPhotoMutations
-                      ? 'Uploading photos…'
-                      : 'Upload queued photos'}
-                </button>
-              </div>
-            )}
-            <div className="mt-4 grid gap-2 rounded-2xl border border-slate-200 bg-paper p-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-center">
-              <label className="text-xs font-black uppercase tracking-wide text-slate-600">
-                Search
-                <input
-                  aria-label="Search assigned jobs"
-                  className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium normal-case tracking-normal text-slate-900"
-                  onChange={(event) => setJobSearch(event.target.value)}
-                  placeholder="Customer or address"
-                  type="search"
-                  value={jobSearch}
-                />
-              </label>
-              <label className="text-xs font-black uppercase tracking-wide text-slate-600">
-                Status
-                <select
-                  aria-label="Filter assigned jobs by status"
-                  className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium normal-case tracking-normal text-slate-900"
-                  onChange={(event) => setJobStatusFilter(event.target.value as YardCareJob['status'] | 'all')}
-                  value={jobStatusFilter}
-                >
-                  <option value="all">All jobs</option>
-                  <option value="scheduled">Scheduled</option>
-                  <option value="in_progress">In progress</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </label>
-              <WorkspaceStatusBadge className="justify-self-start sm:mt-5" tone="neutral">
-                {visibleAssignedJobs.length} shown
-              </WorkspaceStatusBadge>
-            </div>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            {visibleAssignedJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                isSelected={job.id === selectedJobId}
-                onSelect={selectJobForReview}
-                position={jobs.findIndex((item) => item.id === job.id) + 1}
-              />
-            ))}
-            {visibleAssignedJobs.length === 0 ? (
-              <WorkspaceStatusNotice
-                className="md:col-span-2"
-                detail="Clear or change the search and status filters to see other assignments."
-                title="No assigned jobs match these filters."
-                tone="neutral"
-              />
-            ) : null}
-          </div>
-          </section>
+            selectedJobId={selectedJobId}
+            statusMessage={statusMessage}
+          />
 
           <div className={workspaceSurfaces.customerCare && mobileView === 'customer' ? 'space-y-6' : 'hidden'} id="customer-workspace">
-            {activePersona.id === 'property-manager' ? (
-              <PropertyManagerPortfolioPanel
-                customer={customerPortalPreviewCustomer}
-                rolloutUnit={managedPersonaUnit}
-                portfolios={customerPortalPreviewPortfolios}
-                properties={customerPortalPreviewProperties}
-                links={customerPortalPreviewPortfolioLinks}
-                visits={customerPortalPreviewVisits}
-                completionReportsByProperty={propertyCompletionReports}
-                isLoadingReportHistory={isLoadingPropertyCompletionReports}
-                hasReportHistoryError={hasPropertyCompletionReportHistoryError}
-                projectBids={customerProjectBids}
-                isLoadingProjectBids={isLoadingCustomerProjectBids}
-                hasProjectBidHistoryError={hasCustomerProjectBidHistoryError}
-                providerDisplayName="Desert Bloom Landscaping"
-              />
-            ) : (
+            {customerWorkspaceMode === 'portfolio' ? (
+              <div className="space-y-6">
+                <PropertyManagerInvitationInbox
+                  onAccepted={() => void refreshCustomerPortalVisits()}
+                />
+                <PropertyManagerAuthorizedPortfolioPanel
+                  rolloutUnit={managedPersonaUnit}
+                  properties={customerPortalProperties}
+                  visits={customerPortalVisits}
+                  readState={portalHomeReadState}
+                  onRetry={() => void refreshCustomerPortalVisits()}
+                  onReturnHome={() => workspaceViewNavigation.openView('home', true)}
+                />
+              </div>
+            ) : customerWorkspaceMode === 'yard' ? (
               <YardOwnerPortalPanel
                 customerDisplayName={auth.displayName}
-                rolloutUnit={activePersona.id === 'yard-owner' ? managedPersonaUnit : undefined}
+                rolloutUnit={managedPersonaUnit}
                 properties={customerPortalProperties}
                 visits={customerPortalVisits}
                 isLoadingVisits={isLoadingCustomerPortalVisits}
                 visitReadError={customerPortalVisitError}
-                onRetryVisits={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
-                onReturnHome={() => changeMobileView('home', true)}
+                onRetryVisits={() => void refreshCustomerPortalVisits()}
+                onReturnHome={() => workspaceViewNavigation.openView('home', true)}
+              />
+            ) : (
+              <WorkspaceStatusNotice
+                detail="This proposed persona does not yet have an authoritative customer-account workflow. No customer data is shown."
+                title={`${activePersona.label} customer workspace is not available.`}
+                tone="neutral"
               />
             )}
           </div>
 
           {canUseManagerTools ? (
-          <details className={`${mobileView === 'manager' ? 'block' : 'hidden'} mt-0 scroll-mt-16 rounded-2xl border border-slate-200 bg-paper p-3 shadow-grover-sm open:bg-transparent open:p-0 open:shadow-none`} id="manager-tools" open={mobileView === 'manager' ? true : undefined}>
+          <details className={`${mobileView === 'manager' ? 'block' : 'hidden'} mt-0 scroll-mt-16 rounded-2xl border border-slate-200 bg-paper p-3 shadow-yardfolio-sm open:bg-transparent open:p-0 open:shadow-none`} id="manager-tools" open={mobileView === 'manager' ? true : undefined}>
             <summary className="cursor-pointer list-none rounded-xl bg-forest px-4 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
               {managerWorkspaceHeading}
               <span className="ml-2 text-xs font-normal text-slate-300">{managerWorkspaceDescription}</span>
             </summary>
             <div className="mt-5 space-y-6">
-          {managerWorkspaceSection === null ? (
+          {managerNavigation.section === null ? (
             <ManagerWorkspaceMenu
-              activeSection={managerWorkspaceSection}
+              activeSection={managerNavigation.section}
+              capabilities={activeWorkspace.capabilities}
               onChange={(section) => {
-                setManagerWorkspaceSection(section);
-                setManagerWorkspaceTool(
-                  section === 'team' && activePersona.id === 'company-owner'
-                    ? 'team-overview'
-                    : null,
-                );
+                managerNavigation.openSection(section);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               personaId={activePersona.id}
@@ -3692,59 +1935,49 @@ export function App() {
               signals={managerWorkspaceSignals}
             />
           ) : null}
-          {managerWorkspaceSection ? (
+          {managerNavigation.section ? (
             <ManagerWorkspaceToolMenu
-              activeTool={managerWorkspaceTool}
-              onBack={() => {
-                setManagerWorkspaceSection(null);
-                setManagerWorkspaceTool(null);
-              }}
-              onClear={() => setManagerWorkspaceTool(null)}
+              activeTool={managerNavigation.tool}
+              capabilities={activeWorkspace.capabilities}
+              onBack={managerNavigation.openRoot}
+              onClear={() => managerNavigation.selectTool(null)}
               onChange={(tool) => {
-                setManagerWorkspaceTool(tool);
+                managerNavigation.selectTool(tool);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               personaId={activePersona.id}
               rolloutUnit={managedPersonaUnit}
-              section={managerWorkspaceSection}
+              section={managerNavigation.section}
             />
           ) : null}
           <ManagerToolSurface activeTool={activeAuthorizedManagerTool} tool="owner-setup">
           <FirstOwnerOnboardingPanel
             providerEntryMode={providerEntryMode}
-            crewBranchRequest={crewAdministrationBranch}
-            crewSelectionRequest={crewAdministrationSelection}
-            crewSelectionSignal={crewAdministrationSelectionSignal}
-            crewTerritoryRequest={crewAdministrationTerritory}
+            crewBranchRequest={crewNavigation.crewRequest.branchId}
+            crewSelectionRequest={crewNavigation.crewRequest.crewId}
+            crewSelectionSignal={crewNavigation.crewSelectionSignal}
+            crewTerritoryRequest={crewNavigation.crewRequest.territoryId}
             crewInspectionReturnLabel={
-              crewAdministrationReturnTarget === 'team-activity'
+              crewNavigation.inspection
                 ? 'Return to owner activity'
                 : undefined
             }
-            crewInspectionSummary={crewAdministrationInspectionSummary}
-            crewInspectionAuditLabel={crewAdministrationInspectionAuditLabel}
-            crewInspectionAuditId={crewAdministrationInspectionAuditId}
+            crewInspectionSummary={crewNavigation.inspection?.summary}
+            crewInspectionAuditLabel={crewNavigation.inspection?.auditLabel}
+            crewInspectionAuditId={crewNavigation.inspection?.auditId}
             crewInspectedDestinationBranchId={
-              crewAdministrationInspectedDestinationBranchId
+              crewNavigation.inspection?.destinationBranchId
             }
             crewInspectedDestinationTerritoryId={
-              crewAdministrationInspectedDestinationTerritoryId
+              crewNavigation.inspection?.destinationTerritoryId
             }
-            hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
+            hierarchyRefreshSignal={managerRefresh.signals.dispatchHierarchy}
             onOpenSetupStep={openFirstOwnerSetupStep}
-            refreshSignal={firstOwnerProgressRefreshSignal}
-            onCrewCreated={() => {
-              setCrewRefreshSignal((current) => current + 1);
-              setDispatchHierarchyRefreshSignal((current) => current + 1);
-            }}
-            onCrewChanged={() => {
-              setCrewRefreshSignal((current) => current + 1);
-              setDispatchHierarchyRefreshSignal((current) => current + 1);
-              setTeamActivityRefreshSignal((current) => current + 1);
-            }}
+            refreshSignal={managerRefresh.signals.firstOwnerProgress}
+            onCrewCreated={managerRefresh.markCrewCreated}
+            onCrewChanged={managerRefresh.markCrewChanged}
             onReturnToDispatchHierarchy={() => {
-              setManagerWorkspaceSection('schedule');
-              setManagerWorkspaceTool('dispatch-hierarchy');
+              managerNavigation.openTool('schedule', 'dispatch-hierarchy');
               window.setTimeout(() => {
                 const target = document.getElementById('dispatch-hierarchy-administration');
                 target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3752,17 +1985,8 @@ export function App() {
               }, 0);
             }}
             onReturnFromCrewInspection={() => {
-              setManagerWorkspaceSection('team');
-              setManagerWorkspaceTool('team-activity');
-              const inspectedAuditId = crewAdministrationInspectionAuditId;
-              setCrewAdministrationReturnTarget(undefined);
-              setCrewAdministrationInspectionSummary(undefined);
-              setCrewAdministrationInspectionAuditLabel(undefined);
-              setCrewAdministrationInspectionAuditId(undefined);
-              setCrewAdministrationInspectedDestinationBranchId(undefined);
-              setCrewAdministrationInspectedDestinationTerritoryId(undefined);
-              setTeamActivityReturnedAuditId(inspectedAuditId);
-              setTeamActivityReturnedAuditSignal((current) => current + 1);
+              managerNavigation.openTool('team', 'team-activity');
+              const inspectedAuditId = crewNavigation.returnFromInspection();
               window.setTimeout(() => {
                 const target = inspectedAuditId
                   ? document.getElementById(`team-activity-${inspectedAuditId}`)
@@ -3772,18 +1996,8 @@ export function App() {
               }, 0);
             }}
             onFindLatestCrewHierarchyMove={(crew) => {
-              setManagerWorkspaceSection('team');
-              setManagerWorkspaceTool('team-activity');
-              setCrewAdministrationReturnTarget(undefined);
-              setCrewAdministrationInspectionSummary(undefined);
-              setCrewAdministrationInspectionAuditLabel(undefined);
-              setCrewAdministrationInspectionAuditId(undefined);
-              setCrewAdministrationInspectedDestinationBranchId(undefined);
-              setCrewAdministrationInspectedDestinationTerritoryId(undefined);
-              setTeamActivityRequestedCrewId(crew.id);
-              setTeamActivityRequestedCrewBranchId(crew.branchId ?? undefined);
-              setTeamActivityRequestedCrewTerritoryId(crew.territoryId ?? undefined);
-              setTeamActivityRequestedCrewSignal((current) => current + 1);
+              managerNavigation.openTool('team', 'team-activity');
+              crewNavigation.requestLatestMove(crew);
               window.setTimeout(() => {
                 const target = document.getElementById('team-activity-review');
                 target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3791,8 +2005,8 @@ export function App() {
               }, 0);
             }}
             onOrganizationReady={(organizationName, organizationId) => {
-              setActiveManagerOrganizationId(organizationId);
-              setFirstOwnerProgressRefreshSignal((current) => current + 1);
+              managerProperties.activateOrganization(organizationId);
+              managerRefresh.markFirstOwnerProgressChanged();
               setStatusMessage(`${organizationName} owner setup completed.`);
               recordManagerActivity({
                 title: 'Organization owner setup completed',
@@ -3810,11 +2024,10 @@ export function App() {
             tool="day-plan"
           >
             <ManagerDayPlanPanel
-              crewRefreshSignal={crewRefreshSignal}
+              crewRefreshSignal={managerRefresh.signals.crew}
               jobs={jobs}
               onDayPlanPublished={(dayPlan) => {
-                setDayPlanRefreshSignal((current) => current + 1);
-                setFirstOwnerProgressRefreshSignal((current) => current + 1);
+                managerRefresh.markDayPlanPublished();
                 recordManagerActivity({
                   title: 'Day plan published',
                   message: `${dayPlan.crewId} route for ${dayPlan.serviceDate} was published and crew route refreshed.`,
@@ -3841,11 +2054,10 @@ export function App() {
             tool="property-profile"
           >
             <ManagerPropertyOnboardingPanel
-              properties={managerPropertyOnboardingOptions}
-              requestedPropertyId={requestedOperationalProfilePropertyId}
+              properties={managerProperties.onboardingOptions}
+              requestedPropertyId={managerProperties.requestedOperationalProfilePropertyId}
               onSaved={(profile) => {
-                setPropertyOnboardingRefreshSignal((current) => current + 1);
-                setCustomerAccountRefreshSignal((current) => current + 1);
+                managerRefresh.markPropertyOnboardingSaved();
                 setStatusMessage(`Saved onboarding profile for ${profile.propertyId}.`);
                 recordManagerActivity({
                   title: 'Property onboarding saved',
@@ -3863,25 +2075,27 @@ export function App() {
             tool="property-service"
           >
             <ManagerPropertySetupPanel
-              properties={managerCustomerProperties}
-              onboardingRefreshSignal={propertyOnboardingRefreshSignal}
-              requestedPropertyId={requestedServiceSetupPropertyId}
-              onSetupChanged={() => setCustomerAccountRefreshSignal((current) => current + 1)}
-              onPropertyUpdated={(property) => registerManagerProperties([property])}
+              properties={managerProperties.customerProperties}
+              onboardingRefreshSignal={managerRefresh.signals.propertyOnboarding}
+              requestedPropertyId={managerProperties.requestedServiceSetupPropertyId}
+              onSetupChanged={managerRefresh.markPropertySetupChanged}
+              onPropertyUpdated={(property) => managerProperties.registerProperties([property])}
             />
           </ManagerToolSurface>
           <ManagerToolSurface
             activeTool={activeAuthorizedManagerTool}
             className="mt-6"
+            id="first-owner-customer-accounts"
             tool="customer-accounts"
           >
             <ManagerCustomerAccountOnboardingPanel
-              organizationId={activeManagerOrganizationId}
+              organizationId={managerProperties.organizationId}
               onOpenPropertyWorkspace={openPropertyWorkspace}
-              refreshSignal={customerAccountRefreshSignal}
-              onPropertiesLoaded={registerManagerProperties}
+              refreshSignal={managerRefresh.signals.customerAccount}
+              onPropertiesLoaded={managerProperties.registerProperties}
               onPropertyCreated={(property) => {
-                registerManagerProperties([property]);
+                managerProperties.registerProperties([property]);
+                managerRefresh.markFirstOwnerProgressChanged();
                 setStatusMessage(`${property.displayName} is ready for operational onboarding.`);
               }}
             />
@@ -3893,11 +2107,8 @@ export function App() {
           >
             <ManagerTeamMembershipsPanel
               actorUserId={auth.userId}
-              onTeamChanged={() => {
-                setTeamActivityRefreshSignal((current) => current + 1);
-                setFirstOwnerProgressRefreshSignal((current) => current + 1);
-              }}
-              organizationId={activeManagerOrganizationId}
+              onTeamChanged={managerRefresh.markTeamChanged}
+              organizationId={managerProperties.organizationId}
             />
           </ManagerToolSurface>
           <ManagerToolSurface
@@ -3906,19 +2117,18 @@ export function App() {
             tool="team-overview"
           >
             <TeamOrganizationOverviewPanel
-              organizationId={activeManagerOrganizationId}
+              organizationId={managerProperties.organizationId}
               refreshSignal={
-                teamActivityRefreshSignal
-                + firstOwnerProgressRefreshSignal
-                + crewRefreshSignal
-                + dispatchHierarchyRefreshSignal
+                managerRefresh.signals.teamActivity
+                + managerRefresh.signals.firstOwnerProgress
+                + managerRefresh.signals.crew
+                + managerRefresh.signals.dispatchHierarchy
               }
-              onOpenMembers={() => setManagerWorkspaceTool('team-members')}
-              onOpenInvitations={() => setManagerWorkspaceTool('team-invitations')}
-              onOpenActivity={() => setManagerWorkspaceTool('team-activity')}
+              onOpenMembers={() => managerNavigation.selectTool('team-members')}
+              onOpenInvitations={() => managerNavigation.selectTool('team-invitations')}
+              onOpenActivity={() => managerNavigation.selectTool('team-activity')}
               onOpenHierarchy={() => {
-                setManagerWorkspaceSection('schedule');
-                setManagerWorkspaceTool('dispatch-hierarchy');
+                managerNavigation.openTool('schedule', 'dispatch-hierarchy');
                 window.setTimeout(() => {
                   const target = document.getElementById('dispatch-hierarchy-administration');
                   target?.scrollIntoView({
@@ -3929,9 +2139,8 @@ export function App() {
                 }, 0);
               }}
               onOpenCrews={() => {
-                setManagerWorkspaceSection('overview');
-                setManagerWorkspaceTool('owner-setup');
-                setCrewAdministrationReturnTarget(undefined);
+                managerNavigation.openTool('overview', 'owner-setup');
+                crewNavigation.openCrewList();
                 window.setTimeout(() => {
                   const target = document.getElementById('crew-administration');
                   target?.scrollIntoView({
@@ -3950,11 +2159,8 @@ export function App() {
             tool="team-invitations"
           >
             <ManagerTeamInvitationsPanel
-              onTeamChanged={() => {
-                setTeamActivityRefreshSignal((current) => current + 1);
-                setFirstOwnerProgressRefreshSignal((current) => current + 1);
-              }}
-              organizationId={activeManagerOrganizationId}
+              onTeamChanged={managerRefresh.markTeamChanged}
+              organizationId={managerProperties.organizationId}
             />
           </ManagerToolSurface>
           <ManagerToolSurface
@@ -3964,48 +2170,20 @@ export function App() {
           >
             <ManagerTeamActivityPanel
               onOpenCrew={(activity) => {
-                setManagerWorkspaceSection('overview');
-                setManagerWorkspaceTool('owner-setup');
-                setCrewAdministrationSelection(activity.targetId);
-                setCrewAdministrationBranch(undefined);
-                setCrewAdministrationTerritory(undefined);
-                setCrewAdministrationReturnTarget('team-activity');
-                setCrewAdministrationInspectionSummary(
-                  `${
-                    activity.crossBranchMove ? 'Cross-branch' : 'Within-branch'
-                  } audited move: ${
-                    activity.sourceBranchLabel ?? 'unknown branch'
-                  } · ${
-                    activity.sourceTerritoryLabel ?? 'unknown territory'
-                  } → ${
-                    activity.destinationBranchLabel ?? 'unknown branch'
-                  } · ${
-                    activity.destinationTerritoryLabel ?? 'unknown territory'
-                  }`,
-                );
-                setCrewAdministrationInspectionAuditLabel(
-                  `Audit ${activity.id} · ${new Date(activity.occurredAt).toLocaleString()}`,
-                );
-                setCrewAdministrationInspectionAuditId(activity.id);
-                setCrewAdministrationInspectedDestinationBranchId(
-                  activity.destinationBranchId,
-                );
-                setCrewAdministrationInspectedDestinationTerritoryId(
-                  activity.destinationTerritoryId,
-                );
-                setCrewAdministrationSelectionSignal((current) => current + 1);
+                managerNavigation.openTool('overview', 'owner-setup');
+                crewNavigation.inspectCrewMove(activity);
                 const target = document.getElementById('crew-administration');
                 target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 target?.focus({ preventScroll: true });
               }}
-              organizationId={activeManagerOrganizationId}
-              requestedCrewId={teamActivityRequestedCrewId}
-              requestedCrewBranchId={teamActivityRequestedCrewBranchId}
-              requestedCrewSignal={teamActivityRequestedCrewSignal}
-              requestedCrewTerritoryId={teamActivityRequestedCrewTerritoryId}
-              returnedAuditId={teamActivityReturnedAuditId}
-              returnedAuditSignal={teamActivityReturnedAuditSignal}
-              refreshSignal={teamActivityRefreshSignal}
+              organizationId={managerProperties.organizationId}
+              requestedCrewId={crewNavigation.teamActivityRequest.crewId}
+              requestedCrewBranchId={crewNavigation.teamActivityRequest.branchId}
+              requestedCrewSignal={crewNavigation.teamActivityRequestSignal}
+              requestedCrewTerritoryId={crewNavigation.teamActivityRequest.territoryId}
+              returnedAuditId={crewNavigation.returnedAuditId}
+              returnedAuditSignal={crewNavigation.returnedAuditSignal}
+              refreshSignal={managerRefresh.signals.teamActivity}
             />
           </ManagerToolSurface>
           <ManagerToolSurface
@@ -4052,10 +2230,8 @@ export function App() {
               onResetHistory={resetManagerActivityHistory}
               onCompleteDispatchNotification={handleCompleteDispatchCustomerNotification}
               onOpenOperationalException={(exceptionId) => {
-                setRequestedOperationalExceptionId(exceptionId);
-                setRequestedOperationalExceptionSignal((current) => current + 1);
-                setManagerWorkspaceSection('recovery');
-                setManagerWorkspaceTool('operational-exceptions');
+                operationalExceptionNavigation.openException(exceptionId);
+                managerNavigation.openTool('recovery', 'operational-exceptions');
               }}
             />
           </ManagerToolSurface>
@@ -4110,22 +2286,20 @@ export function App() {
             tool="operational-exceptions"
           >
             <ManagerOperationalExceptionsPanel
-              organizationId={activeManagerOrganizationId}
+              organizationId={managerProperties.organizationId}
               onActivityChanged={() => void refreshOperationalActivity()}
-              requestedExceptionId={requestedOperationalExceptionId}
-              requestedExceptionSignal={requestedOperationalExceptionSignal}
+              requestedExceptionId={operationalExceptionNavigation.requestedExceptionId}
+              requestedExceptionSignal={operationalExceptionNavigation.requestedExceptionSignal}
               onOpenAffectedResource={(resourceType, resourceId) => {
                 if (resourceType === 'job') {
-                  setSelectedJobId(resourceId);
-                  changeMobileView('job', true);
+                  fieldJobNavigation.openJob(resourceId, 'overview', true);
                   return;
                 }
                 if (resourceType === 'property') {
                   openPropertyWorkspace(resourceId, 'operational-profile');
                   return;
                 }
-                setManagerWorkspaceSection('schedule');
-                setManagerWorkspaceTool('day-plan');
+                managerNavigation.openTool('schedule', 'day-plan');
                 window.setTimeout(() => {
                   document.getElementById('first-owner-day-plan')?.scrollIntoView({
                     behavior: 'smooth',
@@ -4169,29 +2343,16 @@ export function App() {
           >
             {canManageDispatchHierarchy ? (
               <ManagerDispatchHierarchyPanel
-                organizationId={activeManagerOrganizationId}
+                organizationId={managerProperties.organizationId}
                 onOpenCrewAdministration={(request) => {
-                  setManagerWorkspaceSection('overview');
-                  setManagerWorkspaceTool('owner-setup');
-                  setCrewAdministrationReturnTarget(undefined);
-                  setCrewAdministrationInspectionSummary(undefined);
-                  setCrewAdministrationInspectionAuditLabel(undefined);
-                  setCrewAdministrationInspectionAuditId(undefined);
-                  setCrewAdministrationInspectedDestinationBranchId(undefined);
-                  setCrewAdministrationInspectedDestinationTerritoryId(undefined);
-                  setCrewAdministrationSelection(request?.crewId);
-                  setCrewAdministrationBranch(request?.branchId);
-                  setCrewAdministrationTerritory(request?.territoryId);
-                  setCrewAdministrationSelectionSignal((current) => current + 1);
+                  managerNavigation.openTool('overview', 'owner-setup');
+                  crewNavigation.openCrewAdministration(request);
                   const target = document.getElementById('crew-administration');
                   target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   target?.focus({ preventScroll: true });
                 }}
-                refreshSignal={dispatchHierarchyRefreshSignal}
-                onChanged={() => {
-                  setDispatchHierarchyRefreshSignal((current) => current + 1);
-                  setTeamActivityRefreshSignal((current) => current + 1);
-                }}
+                refreshSignal={managerRefresh.signals.dispatchHierarchy}
+                onChanged={managerRefresh.markDispatchHierarchyChanged}
               />
             ) : null}
           </ManagerToolSurface>
@@ -4201,15 +2362,16 @@ export function App() {
             tool="dispatch-workload"
           >
             <ManagerDispatchWorkloadPanel
-              hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
+              hierarchyRefreshSignal={managerRefresh.signals.dispatchHierarchy}
               jobs={jobs}
               onReassign={handleJobDispatchAssignment}
-              onSelectJob={selectJobForReview}
+              onSelectJob={fieldJobNavigation.openJob}
             />
           </ManagerToolSurface>
           <ManagerToolSurface
             activeTool={activeAuthorizedManagerTool}
             className="mt-6"
+            id="first-owner-completion-reports"
             tool="completion-reports"
           >
             <ManagerCompletionReportQueuePanel
@@ -4217,9 +2379,7 @@ export function App() {
               isLoading={isLoadingReportQueue}
               onRefresh={(filters) => void refreshManagerReportQueue(filters)}
               onSelectJob={(jobId) => {
-                setSelectedJobId(jobId);
-                setRequestedJobWorkflow('report');
-                changeMobileView('job', true);
+                fieldJobNavigation.openJob(jobId, 'report', true);
               }}
             />
           </ManagerToolSurface>
@@ -4281,9 +2441,10 @@ export function App() {
             onResubmitReport={handleResubmitReport}
             onDeliverReport={handleDeliverReport}
             onQueueReportDeliveryNotification={handleQueueReportDeliveryNotification}
-            reportActionStatus={completionReportActionStatus}
+            reportActionStatus={managerReportActionStatus ?? reportNotificationActionStatus}
             reportEnabled={fieldControls.report}
-            requestedWorkflow={requestedJobWorkflow}
+            requestedWorkflow={fieldJobNavigation.requestedWorkflow}
+            requestedWorkflowSignal={fieldJobNavigation.requestedWorkflowSignal}
           />
         </div>
       </section>
@@ -4293,10 +2454,9 @@ export function App() {
         navigationItems={activePersona.navigation}
         onChange={(view) => {
           if (view === 'manager') {
-            setManagerWorkspaceSection(null);
-            setManagerWorkspaceTool(null);
+            managerNavigation.openRoot();
           }
-          changeMobileView(view);
+          workspaceViewNavigation.openView(view);
         }}
       />
     </main>

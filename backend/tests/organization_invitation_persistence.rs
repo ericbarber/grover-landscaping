@@ -1,12 +1,12 @@
-use grover_landscaping_api::organizations::{
+use sqlx::postgres::PgPoolOptions;
+use std::time::Duration;
+use yardfolio_api::organizations::{
     CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, MembershipStatusUpdateResult,
     OrganizationCollectionResult, OrganizationMutationResult, OrganizationProfileUpdateResult,
     OrganizationRepository, OrganizationResourceResult, ReissueOrganizationInvitationRequest,
     UpdateOrganizationMembershipProfileRequest, UpdateOrganizationMembershipRoleRequest,
     UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
 };
-use sqlx::postgres::PgPoolOptions;
-use std::time::Duration;
 
 mod common;
 
@@ -123,7 +123,7 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
                 "org_demo_landscaping",
                 "local-development-user",
                 UpdateOrganizationProfileRequest {
-                    display_name: "Grover Property Services".to_string(),
+                    display_name: "Desert Bloom Property Services".to_string(),
                     organization_type: "property_management_company".to_string(),
                     contact_email: None,
                     contact_phone: None,
@@ -158,11 +158,11 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
                 "membership_local_owner_demo",
                 "local-development-user",
                 UpdateOrganizationMembershipProfileRequest {
-                    display_name: "Jordan Grover".to_string(),
+                    display_name: "Jordan Rivera".to_string(),
                 },
             )
             .await,
-        grover_landscaping_api::organizations::MembershipProfileUpdateResult::Unavailable
+        yardfolio_api::organizations::MembershipProfileUpdateResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -180,7 +180,7 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
 
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
-        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
         .expect("unavailable test pool URL should be valid");
     let repository = OrganizationRepository::from_pool(pool);
 
@@ -239,7 +239,7 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
                 "org_demo_landscaping",
                 "local-development-user",
                 UpdateOrganizationProfileRequest {
-                    display_name: "Grover Landscaping".to_string(),
+                    display_name: "Desert Bloom Landscaping".to_string(),
                     organization_type: "yard_care_company".to_string(),
                     contact_email: Some("office@example.com".to_string()),
                     contact_phone: None,
@@ -323,7 +323,7 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
                 },
             )
             .await,
-        grover_landscaping_api::organizations::MembershipProfileUpdateResult::Unavailable
+        yardfolio_api::organizations::MembershipProfileUpdateResult::Unavailable
     ));
     assert!(matches!(
         repository

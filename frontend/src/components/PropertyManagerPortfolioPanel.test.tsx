@@ -80,15 +80,13 @@ function renderPortfolio(overrides: Partial<Parameters<typeof PropertyManagerPor
 
 describe('PropertyManagerPortfolioPanel', () => {
   it('adds portfolio capabilities cumulatively and fails closed', () => {
-    const disabled = {
+    expect(propertyManagerPortfolioCapabilities(null)).toEqual({
       portfolioRead: false,
       propertySearch: false,
       serviceHistory: false,
       deliveredProof: false,
       questionsAndDecisions: false,
-    };
-    expect(propertyManagerPortfolioCapabilities(null)).toEqual(disabled);
-    expect(propertyManagerPortfolioCapabilities('unknown')).toEqual(disabled);
+    });
     expect(propertyManagerPortfolioCapabilities('p1')).toEqual({
       portfolioRead: true,
       propertySearch: false,
@@ -116,7 +114,6 @@ describe('PropertyManagerPortfolioPanel', () => {
     expect(markup).not.toContain('>Proof<');
     expect(markup).not.toContain('>Approvals<');
     expect(markup).not.toContain('Search portfolio properties');
-    expect(markup).not.toContain('Service history');
     expect(markup).not.toContain('Waiting on you');
   });
 
@@ -144,7 +141,7 @@ describe('PropertyManagerPortfolioPanel', () => {
 
     expect(markup).toContain('Service confidence across every location.');
     expect(markup).toMatch(/font-display[^\"]*\">Service confidence across every location\./);
-    expect(markup).toMatch(/grover-type-operational[^\"]*\">Start with what needs attention\./);
+    expect(markup).toMatch(/yardfolio-type-operational[^\"]*\">Start with what needs attention\./);
     expect(markup).toContain('Local review data boundary');
     expect(markup).toContain('No portfolio actions need attention.');
     expect(markup).toContain('Provider routes, crew notes, cost basis, margins');

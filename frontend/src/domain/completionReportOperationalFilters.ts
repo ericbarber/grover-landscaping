@@ -4,6 +4,7 @@ import type {
   CompletionReportListStatusFilter,
   CompletionReportSnapshot,
 } from '../api/client';
+import { APP_STORAGE_NAMESPACE } from './browserStorageNamespace';
 
 export type CompletionReportOperationalFilters = {
   organizationId?: string;
@@ -17,7 +18,8 @@ export type CompletionReportOperationalFilters = {
   readinessBlocker?: CompletionReportListReadinessBlockerFilter;
 };
 
-export const COMPLETION_REPORT_FILTER_STORAGE_KEY = 'grover.manager-completion-report-filters.v1';
+export const COMPLETION_REPORT_FILTER_STORAGE_KEY = `${APP_STORAGE_NAMESPACE}.manager-completion-report-filters.v1`;
+export const COMPLETION_REPORT_FILTER_STORAGE_SUFFIX = '.manager-completion-report-filters.v1';
 
 const statusFilters = ['all', 'active', 'draft', 'submitted', 'in_review', 'changes_requested', 'delivered'];
 const readinessFilters = ['all', 'ready', 'blocked', 'local_only'];

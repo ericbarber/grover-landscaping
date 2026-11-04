@@ -120,5 +120,5 @@ resource "aws_cognito_user_group" "roles" {
 
   name         = each.value
   user_pool_id = aws_cognito_user_pool.this.id
-  description  = "Grover Landscaping ${each.value} application role"
+  description  = "Yardfolio ${each.value} application role"
 }

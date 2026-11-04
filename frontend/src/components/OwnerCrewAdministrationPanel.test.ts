@@ -8,7 +8,7 @@ const membership: OrganizationMembership = {
   organizationName: 'Test',
   organizationType: 'yard_care_company',
   userId: 'cognito-user-123',
-  displayName: 'Jordan Grover',
+  displayName: 'Jordan Rivera',
   role: 'CrewLead',
   status: 'active',
   scopeType: 'organization',
@@ -17,7 +17,7 @@ const membership: OrganizationMembership = {
 
 describe('crew lead option labels', () => {
   it('prefers the readable member display name', () => {
-    expect(crewLeadOptionLabel(membership)).toBe('Jordan Grover · crew lead');
+    expect(crewLeadOptionLabel(membership)).toBe('Jordan Rivera · crew lead');
   });
 
   it('falls back to the immutable identity when a label is unavailable', () => {

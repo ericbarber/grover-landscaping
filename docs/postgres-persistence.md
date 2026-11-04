@@ -96,15 +96,15 @@ The existing Docker Compose stack already includes PostgreSQL:
 
 ```text
 localhost:5432
-database: grover_landscaping
-user: grover
-password: grover
+database: yardfolio
+user: yardfolio
+password: yardfolio
 ```
 
 The local connection string is captured in `.env.example`:
 
 ```text
-DATABASE_URL=postgres://grover:grover@localhost:5432/grover_landscaping
+DATABASE_URL=postgres://yardfolio:yardfolio@localhost:5432/yardfolio
 ```
 
 Apply migrations locally with:

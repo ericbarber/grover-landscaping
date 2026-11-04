@@ -1,5 +1,152 @@
 [
   {
+    "id": "simplified-service-thread-desktop-v1",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#manager/field",
+    "preview": "current/simplified-service-thread-desktop-v1.png"
+  },
+  {
+    "id": "simplified-service-thread-company-owner-desktop-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#company/field",
+    "preview": "current/simplified-service-thread-company-owner-desktop-v2.png"
+  },
+  {
+    "id": "simplified-service-thread-owner-mobile-v1",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#owner/proof",
+    "preview": "current/simplified-service-thread-owner-mobile-v1.png"
+  },
+  {
+    "id": "simplified-service-thread-field-mobile-v1",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#lead/field",
+    "preview": "current/simplified-service-thread-field-mobile-v1.png"
+  },
+  {
+    "id": "simplified-service-thread-property-manager-mobile-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#property/decision",
+    "preview": "current/simplified-service-thread-property-manager-mobile-v2.png"
+  },
+  {
+    "id": "simplified-service-thread-support-desktop-v3",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#manager/field/support-incident",
+    "preview": "current/simplified-service-thread-support-desktop-v3.png"
+  },
+  {
+    "id": "simplified-service-thread-offline-mobile-v3",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#lead/field/field-offline",
+    "preview": "current/simplified-service-thread-offline-mobile-v3.png"
+  },
+  {
+    "id": "simplified-service-thread-access-mobile-v3",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/simplified-service-thread/index.html#owner/decision/access-ended",
+    "preview": "current/simplified-service-thread-access-mobile-v3.png"
+  },
+  {
+    "id": "minimalist-administration-journey-desktop-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#billing-admin/attention/handoffs",
+    "preview": "current/minimalist-administration-journey-desktop-v2.png"
+  },
+  {
+    "id": "minimalist-administration-journey-mobile-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#support/attention/access",
+    "preview": "current/minimalist-administration-journey-mobile-v2.png"
+  },
+  {
+    "id": "minimalist-access-fallback-mobile-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#general/attention/home",
+    "preview": "current/minimalist-access-fallback-mobile-v2.png"
+  },
+  {
+    "id": "minimalist-operations-journey-desktop-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#company-manager/attention/schedule",
+    "preview": "current/minimalist-operations-journey-desktop-v2.png"
+  },
+  {
+    "id": "minimalist-operations-journey-mobile-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#dispatcher/attention/changes",
+    "preview": "current/minimalist-operations-journey-mobile-v2.png"
+  },
+  {
+    "id": "minimalist-field-journey-desktop-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#crew/attention/recovery",
+    "preview": "current/minimalist-field-journey-desktop-v2.png"
+  },
+  {
+    "id": "minimalist-field-journey-mobile-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#crew-member/attention/saved",
+    "preview": "current/minimalist-field-journey-mobile-v2.png"
+  },
+  {
+    "id": "minimalist-customer-journey-desktop-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#owner/attention/proof",
+    "preview": "current/minimalist-customer-journey-desktop-v2.png"
+  },
+  {
+    "id": "minimalist-customer-journey-mobile-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#property-manager/attention/approvals",
+    "preview": "current/minimalist-customer-journey-mobile-v2.png"
+  },
+  {
+    "id": "minimalist-personas-customer-desktop-v1",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#owner/attention/today",
+    "preview": "current/minimalist-personas-customer-desktop-v1.png"
+  },
+  {
+    "id": "minimalist-personas-field-mobile-v1",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#crew-member/attention/work",
+    "preview": "current/minimalist-personas-field-mobile-v1.png"
+  },
+  {
+    "id": "minimalist-personas-operations-desktop-v1",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#company-manager/attention/today",
+    "preview": "current/minimalist-personas-operations-desktop-v1.png"
+  },
+  {
+    "id": "minimalist-personas-admin-mobile-v1",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#support/attention/incidents",
+    "preview": "current/minimalist-personas-admin-mobile-v1.png"
+  },
+  {
     "id": "all-persona-minimal-rollout-desktop-v1",
     "area": "current",
     "status": "validated-rollout-design",

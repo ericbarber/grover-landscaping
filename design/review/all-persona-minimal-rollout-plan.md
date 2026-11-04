@@ -2,7 +2,7 @@
 
 ## Outcome
 
-Roll out every signed-in Grover workspace as a sequence of small, complete,
+Roll out every signed-in Yardfolio workspace as a sequence of small, complete,
 supportable capabilities. Each persona receives a minimum useful experience
 before broader destinations or write authority appear. The
 [interactive rollout map](../prototypes/yard-owner-minimal-rollout/index.html#overview/map)
@@ -13,6 +13,11 @@ capability flags, pilot cohorts, or protected hosting are live. Existing API
 authorization remains authoritative. The browser may hide an unavailable unit,
 but it may never grant one.
 
+This plan is not the task-level frontend simplicity target. Review the separate
+[minimalist persona experience plan](minimalist-persona-prototype-plan.md) for
+each role's first answer, primary task, compact navigation, responsive
+composition, and intentionally omitted interface scope.
+
 The shared projection, audited cohort administration, managed-versus-legacy
 state, cumulative desktop/mobile destinations, and Yard Owner U2–U4 contextual
 composition are now delivered. Manager-style categories and tools also follow
@@ -20,9 +25,7 @@ the Company Owner, Company Manager, Property Manager, Dispatcher, Billing, and
 Support unit maps. Field contextual controls now preserve read-only C1/CM1,
 add assigned-work execution at C2/CM2, evidence at C3/CM3, and Crew Lead-only
 route amendments at C4 while company and dispatcher field views remain
-read-only oversight. Offline work is retained across suspension, and replay
-waits for the corresponding field unit to become active. Property Manager
-composition now progresses from P1
+read-only oversight. Property Manager composition now progresses from P1
 readiness/coverage through P2 search/history/proof, P3 questions/decisions, and
 the already-bounded P4 administration tools; managed P1 does not request later
 history. Protected unit smoke, operational enablement, and hosted cohorts

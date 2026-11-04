@@ -1,8 +1,14 @@
 # Offline Mutation Queue
 
 Phase 2 field reliability uses a versioned IndexedDB database named
-`grover-field-offline`. Its `mutations` store is the durable boundary for field
+`yardfolio-field-offline`. Its `mutations` store is the durable boundary for field
 actions that cannot reach the API.
+
+The first queue access after the product rename discovers databases sharing the
+stable `-field-offline` suffix, copies missing mutation and photo-blob records
+into the Yardfolio database, then removes a prior database only after the copy
+commits. Existing Yardfolio records win when IDs collide. Browsers without the
+database-enumeration API leave earlier data untouched rather than deleting it.
 
 The initial record contract covers stop progress and stores:
 

@@ -36,7 +36,7 @@ describe('team administration activity labels', () => {
       {
         id: 'audit_1',
         actorUserId: 'owner-identity',
-        actorLabel: 'Jordan Grover',
+        actorLabel: 'Jordan Rivera',
         organizationId: 'org_1',
         eventKind: 'role_changed',
         targetId: 'membership_1',
@@ -138,7 +138,7 @@ describe('team administration activity labels', () => {
     const base: TeamAdministrationActivity = {
       id: 'audit_1',
       actorUserId: 'owner',
-      actorLabel: 'Jordan Grover',
+      actorLabel: 'Jordan Rivera',
       organizationId: 'org_1',
       eventKind: 'role_changed',
       targetId: 'membership_1',
@@ -176,7 +176,7 @@ describe('team administration activity labels', () => {
     const item: TeamAdministrationActivity = {
       id: 'audit_1',
       actorUserId: 'owner-1',
-      actorLabel: 'Grover, "Jordan"',
+      actorLabel: 'Rivera, "Jordan"',
       organizationId: 'org_1',
       eventKind: 'role_changed',
       targetId: 'membership_1',
@@ -184,7 +184,7 @@ describe('team administration activity labels', () => {
       occurredAt: '2026-07-19T12:00:00Z',
     };
     expect(teamActivityCsv([item])).toContain(
-      '"Grover, ""Jordan""","owner-1","Alex Rivera","membership_1"',
+      '"Rivera, ""Jordan""","owner-1","Alex Rivera","membership_1"',
     );
     expect(teamActivityCsv([item])).toContain(
       '"2026-07-19T12:00:00Z","audit_1","Membership role changed"',
@@ -195,7 +195,7 @@ describe('team administration activity labels', () => {
     const item: TeamAdministrationActivity = {
       id: 'audit_move',
       actorUserId: 'owner-1',
-      actorLabel: 'Jordan Grover',
+      actorLabel: 'Jordan Rivera',
       organizationId: 'org_1',
       eventKind: 'crew_hierarchy_updated',
       targetId: 'crew_1',

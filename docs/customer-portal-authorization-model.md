@@ -13,9 +13,10 @@ Grover uses a hybrid authorization model for customer portal access:
 - a delegate receives one or more explicit property-scoped grants and never
   inherits sibling or future properties from the account.
 
-The provider organization, customer account, user, role, scope, and active grant
-status are all part of the authorization boundary. A global `PropertyOwner`
-claim or organization membership alone never authorizes a customer read.
+The provider organization, customer account, user, role, scope, active grant,
+and active provider relationship are all part of the authorization boundary.
+A global `PropertyOwner` claim or organization membership alone never
+authorizes a customer read.
 
 ## Grant semantics
 
@@ -45,18 +46,26 @@ no grant may widen the organization or account recorded by another grant.
 - A delegate grant requires an explicit property and does not become account
   scope when another property is added.
 - Suspending or revoking the governing membership or portal grant fails access
-  closed. Archived accounts and properties are not returned as active portal
-  content.
+  closed. Ending the provider relationship also fails property and visit reads
+  closed even if its old grant still says `active`. Archived accounts and
+  properties are not returned as active portal content.
 
-Delegate role naming and invitation UX remain a separate product surface. That
-work may not delay the authorization boundary: any non-owner delegation must be
-persisted at property scope and must not receive provider-management authority.
+The customer-controlled Property Manager invitation and revocation rule is
+decided in [Yardfolio Study MG-D6](../yardfolio-study/PRODUCT_DECISIONS.md).
+Invitation persistence and accepted-invitation read validation are delivered;
+issuance, acceptance, and revocation routes are not. Any non-owner delegation
+must be persisted at property scope and must not receive provider-management
+authority.
+The portal collection, visit message/proof, and recommendation authorization
+checks all reject a manager grant whose customer invitation is no longer
+accepted, even if its grant row remains active.
 
 ## Read authorization
 
 Every persisted customer-facing read must start from the authenticated user and
-an active portal grant, then join through the current provider-organization,
-customer-account, and property relationships. Reads must distinguish:
+an active portal grant, then join through the current active provider
+relationship, organization, customer account, and property relationships.
+Reads must distinguish:
 
 - authorized content;
 - a valid empty collection;

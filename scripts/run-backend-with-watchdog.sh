@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 
-cargo run &
+cargo run --bin yardfolio-api &
 app_pid=$!
 
 cleanup() {

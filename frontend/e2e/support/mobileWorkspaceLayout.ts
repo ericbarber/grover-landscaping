@@ -6,7 +6,26 @@ export async function expectActionAboveMobileWorkspaceNavigation(
 ): Promise<void> {
   const navigation = page.locator('[data-mobile-workspace-navigation]');
   await expect(navigation).toBeVisible();
-  await action.scrollIntoViewIfNeeded();
+  await action.evaluate((element) => {
+    element.scrollIntoView({
+      behavior: 'instant' as ScrollBehavior,
+      block: 'end',
+      inline: 'nearest',
+    });
+    const fixedNavigation = document.querySelector<HTMLElement>(
+      '[data-mobile-workspace-navigation]',
+    );
+    if (!fixedNavigation) return;
+
+    const overlap = element.getBoundingClientRect().bottom
+      - fixedNavigation.getBoundingClientRect().top;
+    if (overlap >= 0) {
+      window.scrollBy({
+        behavior: 'instant' as ScrollBehavior,
+        top: overlap + 16,
+      });
+    }
+  });
   await page.evaluate(() => new Promise<void>((resolve) => {
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve()));
   }));

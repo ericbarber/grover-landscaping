@@ -89,7 +89,7 @@ function PublicationDetails({
         </div>
         <p className="text-right">
           <span className="block text-xs font-bold uppercase tracking-wide text-slate-500">One-time total</span>
-          <strong className="grover-type-operational text-2xl font-black text-forest">
+          <strong className="yardfolio-type-operational text-2xl font-black text-forest">
             {currencyLabel(publication.totalCents, publication.currencyCode)}
           </strong>
         </p>
@@ -219,8 +219,8 @@ export function CustomerRecommendationDecisionPanel({
       {error ? <WorkspaceStatusNotice className="mt-3" compact detail={error} title="Decision needs attention." tone="warning" /> : null}
       {!mode ? (
         <div className="mt-3 grid gap-2 sm:grid-cols-3">
-          <button className="grover-button-primary" onClick={() => chooseMode('approve')} type="button">Approve</button>
-          <button className="grover-button-secondary" onClick={() => chooseMode('request_revision')} type="button">Request revision</button>
+          <button className="yardfolio-button-primary" onClick={() => chooseMode('approve')} type="button">Approve</button>
+          <button className="yardfolio-button-secondary" onClick={() => chooseMode('request_revision')} type="button">Request revision</button>
           <button className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm font-black text-slate-700" onClick={() => chooseMode('decline')} type="button">Decline</button>
         </div>
       ) : (
@@ -244,10 +244,10 @@ export function CustomerRecommendationDecisionPanel({
             <p className="text-sm leading-6 text-slate-700">Decline this exact version? The provider will see that you chose not to proceed with it.</p>
           ) : null}
           <div className="mt-4 flex flex-wrap gap-2">
-            <button className="grover-button-primary disabled:opacity-60" disabled={saving || (mode === 'approve' && !affirmed) || (mode === 'request_revision' && !revisionNote.trim())} type="submit">
+            <button className="yardfolio-button-primary disabled:opacity-60" disabled={saving || (mode === 'approve' && !affirmed) || (mode === 'request_revision' && !revisionNote.trim())} type="submit">
               {saving ? 'Confirming…' : mode === 'approve' ? 'Confirm approval' : mode === 'request_revision' ? 'Send revision request' : 'Confirm decline'}
             </button>
-            <button className="grover-button-secondary" disabled={saving} onClick={() => setMode(null)} type="button">Cancel</button>
+            <button className="yardfolio-button-secondary" disabled={saving} onClick={() => setMode(null)} type="button">Cancel</button>
           </div>
         </form>
       )}
@@ -404,7 +404,7 @@ export function CustomerVisitRecommendationsPanel({
       {loading ? <p className="mt-3 text-sm font-bold text-slate-600" role="status">Loading recommendations…</p> : null}
       {error ? (
         <WorkspaceStatusNotice className="mt-3" compact detail={`${error} No draft or live bid data was substituted.`} title="Recommendations need attention." tone="warning">
-          <button className="grover-button-secondary mt-1" onClick={() => void loadRecommendations()} type="button">Try recommendations again</button>
+          <button className="yardfolio-button-secondary mt-1" onClick={() => void loadRecommendations()} type="button">Try recommendations again</button>
         </WorkspaceStatusNotice>
       ) : null}
       {!loading && !error && collection?.recommendations.length === 0 ? (

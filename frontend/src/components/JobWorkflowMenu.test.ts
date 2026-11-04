@@ -11,7 +11,7 @@ describe('job workflow menu', () => {
       reportReady: false,
     })).toEqual([
       { id: 'overview', label: 'Overview', context: 'At a glance' },
-      { id: 'checklist', label: 'Checklist', context: '2/4' },
+      { id: 'checklist', label: 'Tasks', context: '2/4' },
       { id: 'photos', label: 'Photos', context: '3' },
       { id: 'addons', label: 'Add-ons', context: '1' },
       { id: 'report', label: 'Report', context: 'Draft' },
@@ -28,7 +28,7 @@ describe('job workflow menu', () => {
       allowedSections: ['overview', 'checklist', 'photos'],
     })).toEqual([
       { id: 'overview', label: 'Overview', context: 'At a glance' },
-      { id: 'checklist', label: 'Checklist', context: '2/4' },
+      { id: 'checklist', label: 'Tasks', context: '2/4' },
       { id: 'photos', label: 'Photos', context: '3' },
     ]);
   });

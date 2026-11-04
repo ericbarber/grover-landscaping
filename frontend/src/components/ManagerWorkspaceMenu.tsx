@@ -1,73 +1,14 @@
-import type { WorkspacePersonaId } from '../domain/workspacePersona';
-import { WorkspaceIcon } from './WorkspaceIcon';
-import type { WorkspaceIconName } from './WorkspaceIcon';
-import { WorkspaceStatusBadge, type WorkspaceStatusTone } from './WorkspaceStatus';
-
-export type ManagerWorkspaceSection =
-  | 'overview'
-  | 'schedule'
-  | 'customers'
-  | 'team'
-  | 'reports'
-  | 'recovery';
-
-export type ManagerWorkspaceTool =
-  | 'owner-setup'
-  | 'company-readiness'
-  | 'day-plan'
-  | 'dispatch-hierarchy'
-  | 'dispatch-workload'
-  | 'property-profile'
-  | 'property-service'
-  | 'customer-accounts'
-  | 'customer-portal'
-  | 'customer-portfolios'
-  | 'team-overview'
-  | 'team-members'
-  | 'team-invitations'
-  | 'team-activity'
-  | 'operations-activity'
-  | 'notifications'
-  | 'completion-reports'
-  | 'visit-questions'
-  | 'marketing-leads'
-  | 'conversion-dashboard'
-  | 'photo-processing'
-  | 'operational-exceptions'
-  | 'customer-privacy'
-  | 'photo-erasure';
-
-export interface ManagerWorkspaceSignal {
-  label: string;
-  tone: WorkspaceStatusTone;
-}
-
-export interface ManagerWorkspaceSignalInput {
-  isLoadingJobs: boolean;
-  jobsUnavailable: boolean;
-  openJobCount: number;
-  isLoadingReports: boolean;
-  reportCount: number;
-  isLoadingNotifications: boolean;
-  notificationsUnavailable: boolean;
-  failedNotificationCount: number;
-  operationalActivityUnavailable: boolean;
-  isLoadingRecovery: boolean;
-  recoveryItemCount: number;
-}
-
-export const managerWorkspaceSections: Array<{
-  id: ManagerWorkspaceSection;
-  label: string;
-  description: string;
-}> = [
-  { id: 'overview', label: 'Overview', description: 'Setup and company readiness' },
-  { id: 'schedule', label: 'Schedule', description: 'Routes, dispatch, and workload' },
-  { id: 'customers', label: 'Customers', description: 'Accounts, properties, and portfolios' },
-  { id: 'team', label: 'Team', description: 'Members, invitations, and access' },
-  { id: 'reports', label: 'Reports', description: 'Quality, activity, and communication' },
-  { id: 'recovery', label: 'Recovery', description: 'Photos, privacy, and failed work' },
-];
+import type { WorkspaceCapability, WorkspacePersonaId } from '../workspaces/core/types';
+import {
+  managerWorkspaceSectionLabel,
+  managerWorkspaceSectionsForPersona,
+  managerWorkspaceToolsForPersona,
+  type ManagerWorkspaceSection,
+  type ManagerWorkspaceSignal,
+  type ManagerWorkspaceTool,
+} from '../workspaces/features/management/managerWorkspace';
+import { WorkspaceIcon, type WorkspaceIconName } from './WorkspaceIcon';
+import { WorkspaceStatusBadge } from './WorkspaceStatus';
 
 const managerSectionIcons: Record<ManagerWorkspaceSection, WorkspaceIconName> = {
   overview: 'home',
@@ -78,289 +19,25 @@ const managerSectionIcons: Record<ManagerWorkspaceSection, WorkspaceIconName> = 
   recovery: 'attention',
 };
 
-export function managerWorkspaceSectionLabel(section: ManagerWorkspaceSection): string {
-  return managerWorkspaceSections.find((item) => item.id === section)?.label ?? 'Manager';
-}
-
-export const managerWorkspaceTools: Record<
-  ManagerWorkspaceSection,
-  Array<{ id: ManagerWorkspaceTool; label: string; description: string }>
-> = {
-  overview: [
-    { id: 'owner-setup', label: 'Company setup', description: 'Organization and crew readiness' },
-    { id: 'company-readiness', label: 'Company summary', description: 'Capacity and onboarding status' },
-  ],
-  schedule: [
-    { id: 'day-plan', label: 'Day plans', description: 'Build and publish crew routes' },
-    { id: 'dispatch-hierarchy', label: 'Dispatch structure', description: 'Branches, territories, and crews' },
-    { id: 'dispatch-workload', label: 'Workload', description: 'Assignments and schedule risk' },
-  ],
-  customers: [
-    { id: 'property-profile', label: 'Operational profile', description: 'Property access and service details' },
-    { id: 'property-service', label: 'Property setup', description: 'Portfolios and crew assignment' },
-    { id: 'customer-accounts', label: 'Customer accounts', description: 'Contacts, billing, and onboarding' },
-    { id: 'customer-portal', label: 'Customer view', description: 'Reports, work, and bid history' },
-    { id: 'customer-portfolios', label: 'Portfolios', description: 'Grouped property coverage' },
-  ],
-  team: [
-    { id: 'team-overview', label: 'Team overview', description: 'Staffing, access, and administration' },
-    { id: 'team-members', label: 'Members', description: 'Roles, status, and names' },
-    { id: 'team-invitations', label: 'Invitations', description: 'Invite and onboard teammates' },
-    { id: 'team-activity', label: 'Team activity', description: 'Audited access and crew changes' },
-  ],
-  reports: [
-    { id: 'conversion-dashboard', label: 'Conversion dashboard', description: 'Campaign funnel and audience signals' },
-    { id: 'marketing-leads', label: 'Marketing leads', description: 'Platform inquiries and follow-up' },
-    { id: 'operations-activity', label: 'Operations activity', description: 'Route, job, photo, and sync events' },
-    { id: 'notifications', label: 'Notifications', description: 'Delivery status and retries' },
-    { id: 'completion-reports', label: 'Completion reports', description: 'Quality review and delivery' },
-    { id: 'visit-questions', label: 'Visit questions', description: 'Customer questions and exact responses' },
-  ],
-  recovery: [
-    { id: 'operational-exceptions', label: 'Operational exceptions', description: 'Delays, risks, and escalations' },
-    { id: 'photo-processing', label: 'Photo processing', description: 'Failed image work and retries' },
-    { id: 'customer-privacy', label: 'Customer privacy', description: 'Exports and photo erasure' },
-    { id: 'photo-erasure', label: 'Erasure recovery', description: 'Failed deletions and resolution' },
-  ],
-};
-
-const sectionAccess: Partial<Record<WorkspacePersonaId, ManagerWorkspaceSection[]>> = {
-  'company-owner': ['overview', 'schedule', 'customers', 'team', 'reports', 'recovery'],
-  'company-manager': ['overview', 'schedule', 'customers', 'team', 'reports', 'recovery'],
-  'property-manager': ['customers'],
-  dispatcher: ['schedule'],
-  'billing-admin': ['customers', 'reports'],
-  support: ['team', 'reports', 'recovery'],
-};
-
-const toolAccess: Partial<Record<WorkspacePersonaId, ManagerWorkspaceTool[]>> = {
-  'company-owner': [
-    'owner-setup', 'company-readiness', 'day-plan', 'dispatch-hierarchy',
-    'dispatch-workload', 'property-profile', 'property-service', 'customer-accounts',
-    'customer-portal', 'customer-portfolios', 'team-overview', 'team-members', 'team-invitations',
-    'team-activity', 'operations-activity', 'notifications', 'completion-reports', 'visit-questions',
-    'photo-processing', 'operational-exceptions', 'customer-privacy', 'photo-erasure',
-  ],
-  'company-manager': [
-    'company-readiness', 'day-plan', 'dispatch-workload', 'property-profile',
-    'property-service', 'customer-accounts', 'customer-portal', 'customer-portfolios',
-    'team-members', 'team-activity', 'operations-activity', 'notifications',
-    'completion-reports', 'visit-questions', 'photo-processing', 'operational-exceptions',
-  ],
-  'property-manager': ['customer-portal', 'customer-portfolios'],
-  dispatcher: ['day-plan', 'dispatch-workload'],
-  'billing-admin': ['customer-accounts', 'customer-portal', 'completion-reports'],
-  support: [
-    'team-members', 'team-invitations', 'team-activity', 'operations-activity',
-    'notifications', 'completion-reports', 'marketing-leads', 'conversion-dashboard',
-    'photo-processing', 'operational-exceptions', 'customer-privacy', 'photo-erasure',
-  ],
-};
-
-const rolloutToolAccess: Partial<
-Record<WorkspacePersonaId, Record<string, ManagerWorkspaceTool[]>>
-> = {
-  'company-owner': {
-    o1: ['owner-setup', 'company-readiness'],
-    o2: [
-      'owner-setup', 'company-readiness', 'day-plan', 'dispatch-hierarchy',
-      'dispatch-workload',
-    ],
-    o3: [
-      'owner-setup', 'company-readiness', 'day-plan', 'dispatch-hierarchy',
-      'dispatch-workload', 'property-profile', 'property-service', 'customer-accounts',
-      'customer-portal', 'customer-portfolios', 'team-overview', 'team-members',
-      'team-invitations', 'team-activity',
-    ],
-    o4: toolAccess['company-owner'] ?? [],
-  },
-  'company-manager': {
-    m1: ['company-readiness'],
-    m2: ['company-readiness', 'day-plan', 'dispatch-workload'],
-    m3: [
-      'company-readiness', 'day-plan', 'dispatch-workload', 'property-profile',
-      'property-service', 'customer-accounts', 'customer-portal', 'customer-portfolios',
-      'team-members', 'team-activity',
-    ],
-    m4: toolAccess['company-manager'] ?? [],
-  },
-  'property-manager': {
-    p4: toolAccess['property-manager'] ?? [],
-  },
-  dispatcher: {
-    d1: ['day-plan', 'dispatch-workload'],
-    d2: ['day-plan', 'dispatch-workload'],
-    d3: ['day-plan', 'dispatch-workload'],
-    d4: ['day-plan', 'dispatch-workload'],
-  },
-  'billing-admin': {
-    b1: ['customer-accounts', 'customer-portal'],
-    b2: ['customer-accounts', 'customer-portal', 'completion-reports'],
-    b3: ['customer-accounts', 'customer-portal', 'completion-reports'],
-  },
-  support: {
-    s1: ['operations-activity'],
-    s2: [
-      'team-members', 'team-invitations', 'team-activity', 'operations-activity',
-      'notifications',
-    ],
-    s3: [
-      'team-members', 'team-invitations', 'team-activity', 'operations-activity',
-      'notifications', 'completion-reports', 'marketing-leads', 'conversion-dashboard',
-      'photo-processing', 'operational-exceptions',
-    ],
-    s4: toolAccess.support ?? [],
-  },
-};
-
-function rolloutToolsForPersona(
-  personaId: WorkspacePersonaId,
-  rolloutUnit: string | null | undefined,
-): Set<ManagerWorkspaceTool> | null {
-  if (rolloutUnit === undefined) return null;
-  return new Set(rolloutUnit ? rolloutToolAccess[personaId]?.[rolloutUnit] ?? [] : []);
-}
-
-export function managerWorkspaceSectionsForPersona(
-  personaId: WorkspacePersonaId,
-  rolloutUnit?: string | null,
-): typeof managerWorkspaceSections {
-  const allowed = new Set(sectionAccess[personaId] ?? []);
-  const rolloutTools = rolloutToolsForPersona(personaId, rolloutUnit);
-  return managerWorkspaceSections.filter((section) => (
-    allowed.has(section.id)
-    && (rolloutTools === null
-      || managerWorkspaceTools[section.id].some(({ id }) => rolloutTools.has(id)))
-  ));
-}
-
-export function managerWorkspaceToolsForPersona(
-  personaId: WorkspacePersonaId,
-  section: ManagerWorkspaceSection,
-  rolloutUnit?: string | null,
-): Array<{ id: ManagerWorkspaceTool; label: string; description: string }> {
-  const allowed = new Set(toolAccess[personaId] ?? []);
-  const rolloutTools = rolloutToolsForPersona(personaId, rolloutUnit);
-  return managerWorkspaceTools[section].filter((tool) => (
-    allowed.has(tool.id) && (rolloutTools === null || rolloutTools.has(tool.id))
-  ));
-}
-
-export function managerWorkspaceActiveToolForPersona(
-  personaId: WorkspacePersonaId,
-  rolloutUnit: string | null | undefined,
-  requestedTool: ManagerWorkspaceTool | null,
-): ManagerWorkspaceTool | null {
-  if (!requestedTool) return null;
-  return managerWorkspaceSectionsForPersona(personaId, rolloutUnit).some((section) => (
-    managerWorkspaceToolsForPersona(personaId, section.id, rolloutUnit)
-      .some(({ id }) => id === requestedTool)
-  ))
-    ? requestedTool
-    : null;
-}
-
-function toolCountSignal(
-  section: ManagerWorkspaceSection,
-  toolCount: number,
-): ManagerWorkspaceSignal {
-  const noun: Record<ManagerWorkspaceSection, string> = {
-    overview: 'setup step',
-    schedule: 'schedule tool',
-    customers: 'customer tool',
-    team: 'team tool',
-    reports: 'report tool',
-    recovery: 'recovery tool',
-  };
-  return {
-    label: `${toolCount} ${noun[section]}${toolCount === 1 ? '' : 's'}`,
-    tone: 'neutral',
-  };
-}
-
-export function managerWorkspaceSectionSignalsForPersona(
-  personaId: WorkspacePersonaId,
-  rolloutUnit: string | null | undefined,
-  input: ManagerWorkspaceSignalInput,
-): Partial<Record<ManagerWorkspaceSection, ManagerWorkspaceSignal>> {
-  return managerWorkspaceSectionsForPersona(personaId, rolloutUnit).reduce<
-  Partial<Record<ManagerWorkspaceSection, ManagerWorkspaceSignal>>
-  >((signals, section) => {
-    const tools = managerWorkspaceToolsForPersona(personaId, section.id, rolloutUnit);
-    const toolIds = new Set(tools.map(({ id }) => id));
-    let signal = toolCountSignal(section.id, tools.length);
-
-    if (section.id === 'schedule') {
-      signal = input.jobsUnavailable
-        ? { label: 'Schedule unavailable', tone: 'warning' }
-        : input.isLoadingJobs
-          ? { label: 'Loading schedule', tone: 'info' }
-          : input.openJobCount > 0
-            ? {
-                label: `${input.openJobCount} stop${input.openJobCount === 1 ? '' : 's'} open`,
-                tone: 'info',
-              }
-            : { label: 'Route clear', tone: 'success' };
-    }
-
-    if (section.id === 'reports') {
-      if (toolIds.has('notifications') && input.notificationsUnavailable) {
-        signal = { label: 'Delivery status unavailable', tone: 'warning' };
-      } else if (toolIds.has('operations-activity') && input.operationalActivityUnavailable) {
-        signal = { label: 'Activity unavailable', tone: 'warning' };
-      } else if (toolIds.has('notifications') && input.failedNotificationCount > 0) {
-        signal = {
-          label: `${input.failedNotificationCount} delivery issue${input.failedNotificationCount === 1 ? '' : 's'}`,
-          tone: 'warning',
-        };
-      } else if (
-        (toolIds.has('completion-reports') && input.isLoadingReports)
-        || (toolIds.has('notifications') && input.isLoadingNotifications)
-      ) {
-        signal = { label: 'Loading status', tone: 'info' };
-      } else if (toolIds.has('completion-reports') && input.reportCount > 0) {
-        signal = {
-          label: `${input.reportCount} report${input.reportCount === 1 ? '' : 's'} ready`,
-          tone: 'success',
-        };
-      }
-    }
-
-    if (section.id === 'recovery') {
-      if (toolIds.has('operational-exceptions') && input.operationalActivityUnavailable) {
-        signal = { label: 'Recovery status unavailable', tone: 'warning' };
-      } else if (input.recoveryItemCount > 0) {
-        signal = {
-          label: `${input.recoveryItemCount} item${input.recoveryItemCount === 1 ? '' : 's'} need attention`,
-          tone: 'warning',
-        };
-      } else if (input.isLoadingRecovery) {
-        signal = { label: 'Checking recovery', tone: 'info' };
-      }
-    }
-
-    signals[section.id] = signal;
-    return signals;
-  }, {});
-}
-
 export function ManagerWorkspaceMenu({
   activeSection,
+  capabilities,
   onChange,
   personaId,
   rolloutUnit,
   signals,
 }: {
   activeSection: ManagerWorkspaceSection | null;
+  capabilities?: ReadonlySet<WorkspaceCapability>;
   onChange: (section: ManagerWorkspaceSection) => void;
   personaId: WorkspacePersonaId;
   rolloutUnit?: string | null;
   signals?: Partial<Record<ManagerWorkspaceSection, ManagerWorkspaceSignal>>;
 }) {
-  const sections = managerWorkspaceSectionsForPersona(personaId, rolloutUnit);
+  const sections = managerWorkspaceSectionsForPersona(personaId, rolloutUnit, capabilities);
 
   return (
-    <section className="grover-card p-4">
+    <section className="yardfolio-card p-4">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
         Manager home
       </p>
@@ -405,6 +82,7 @@ export function ManagerWorkspaceMenu({
 export function ManagerWorkspaceToolMenu({
   section,
   activeTool,
+  capabilities,
   onBack,
   onClear,
   onChange,
@@ -413,26 +91,32 @@ export function ManagerWorkspaceToolMenu({
 }: {
   section: ManagerWorkspaceSection;
   activeTool: ManagerWorkspaceTool | null;
+  capabilities?: ReadonlySet<WorkspaceCapability>;
   onBack: () => void;
   onClear: () => void;
   onChange: (tool: ManagerWorkspaceTool) => void;
   personaId: WorkspacePersonaId;
   rolloutUnit?: string | null;
 }) {
-  const tools = managerWorkspaceToolsForPersona(personaId, section, rolloutUnit);
-  const selectedTool = tools.find(
-    (tool) => tool.id === activeTool,
+  const tools = managerWorkspaceToolsForPersona(
+    personaId,
+    section,
+    rolloutUnit,
+    capabilities,
   );
+  const selectedTool = tools.find((tool) => tool.id === activeTool);
 
   if (selectedTool) {
     return (
-      <section className="grover-card flex items-center gap-3 p-3">
+      <section className="yardfolio-card flex items-center gap-3 p-3">
         <button
           className="min-h-11 rounded-xl border border-slate-300 bg-paper px-3 text-sm font-bold text-slate-700"
           onClick={onClear}
           type="button"
         >
-          <span className="inline-flex items-center gap-2"><WorkspaceIcon className="size-4" name="back" />Tools</span>
+          <span className="inline-flex items-center gap-2">
+            <WorkspaceIcon className="size-4" name="back" />Tools
+          </span>
         </button>
         <div className="min-w-0">
           <p className="truncate text-xs font-bold uppercase tracking-wide text-emerald-700">
@@ -445,13 +129,15 @@ export function ManagerWorkspaceToolMenu({
   }
 
   return (
-    <section className="grover-card p-4">
+    <section className="yardfolio-card p-4">
       <button
         className="min-h-11 rounded-xl border border-slate-300 bg-paper px-3 text-sm font-bold text-slate-700"
         onClick={onBack}
         type="button"
       >
-        <span className="inline-flex items-center gap-2"><WorkspaceIcon className="size-4" name="back" />Manager home</span>
+        <span className="inline-flex items-center gap-2">
+          <WorkspaceIcon className="size-4" name="back" />Manager home
+        </span>
       </button>
       <p className="mt-4 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
         {managerWorkspaceSectionLabel(section)}

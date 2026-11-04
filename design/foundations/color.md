@@ -1,6 +1,6 @@
 # Color System
 
-Grover uses natural materials as inspiration without turning the interface into a
+Yardfolio uses natural materials as inspiration without turning the interface into a
 literal landscaping theme. Evergreen carries brand and primary-action weight;
 bone and paper keep large surfaces warm; clay, gold, sky, and sage communicate
 state with restrained contrast.

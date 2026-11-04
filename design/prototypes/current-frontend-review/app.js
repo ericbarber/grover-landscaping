@@ -72,7 +72,7 @@ function setSurface(next, announce = true) {
     desktopNav.innerHTML = navMarkup(surface.nav, active); mobileNav.innerHTML = navMarkup(surface.nav, active);
   }
   if (location.hash !== `#${key}`) history.replaceState(null, '', `#${key}`);
-  document.title = `${surface.title} · Grover current frontend review`;
+  document.title = `${surface.title} · Yardfolio current frontend review`;
   if (announce) {
     announcer.textContent = `Showing ${surface.title}`;
     const target = surface.public ? document.querySelector('.public-mirror h1') : document.querySelector(`[data-panel="${key}"] h1`);

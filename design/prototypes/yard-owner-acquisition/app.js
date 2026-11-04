@@ -111,7 +111,7 @@ function showStep(step, { moveFocus = true, updateHash = true, replaceHistory = 
   const definition = stepDefinitions[next];
   pageTitle.textContent = definition.title;
   pageEyebrow.textContent = definition.eyebrow;
-  document.title = `${definition.title} · Grover working design`;
+  document.title = `${definition.title} · Yardfolio working design`;
   updateSaveState(definition.save);
   renderProgress(definition.progress);
   document.querySelector(`input[name="review-step"][value="${next}"]`)?.setAttribute('checked', '');
@@ -437,7 +437,7 @@ const invitationStates = {
   },
   'opted-out': {
     status: 'Opted out', eyebrow: 'Recipient contact preference', title: 'This recipient opted out of future invitations',
-    copy: 'The open invitation is closed. Grover will not automatically resend to this recipient; an owner can choose a different legitimate business contact.',
+    copy: 'The open invitation is closed. Yardfolio will not automatically resend to this recipient; an owner can choose a different legitimate business contact.',
     event: 'Opted out · Aug 12 at 9:42 AM', access: 'Historical limited receipt only', action: 'Use another authorized recipient or provider', primary: 'Choose another provider', target: 'share',
   },
   revoked: {

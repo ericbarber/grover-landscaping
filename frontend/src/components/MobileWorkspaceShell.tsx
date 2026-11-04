@@ -1,9 +1,15 @@
 import { useEffect, useRef } from 'react';
-import type { WorkspacePersona, WorkspacePersonaId } from '../domain/workspacePersona';
+import type {
+  WorkspacePersona,
+  WorkspacePersonaId,
+  WorkspaceView,
+} from '../workspaces/core/types';
+import { classifyRouteDate, type CrewRouteOverview } from '../domain/dayPlans';
+import { workspaceViewScrollTop } from '../workspaces/core/useWorkspaceViewNavigation';
 import { ProductBrand } from './ProductBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
 
-export type MobileWorkspaceView = 'home' | 'route' | 'jobs' | 'job' | 'manager' | 'customer';
+export type MobileWorkspaceView = WorkspaceView;
 
 interface MobileWorkspaceContextInput {
   view: MobileWorkspaceView;
@@ -12,6 +18,7 @@ interface MobileWorkspaceContextInput {
   selectedPropertyAddress?: string;
   selectedJobStatus?: string;
   pendingChangeCount: number;
+  routeOverview?: CrewRouteOverview;
   personaDescription: string;
   personaLabel: string;
 }
@@ -22,14 +29,53 @@ export interface MobileWorkspaceContext {
   detail: string;
 }
 
-export function mobileWorkspaceScrollTop(
-  savedPositions: Partial<Record<MobileWorkspaceView, number>>,
-  destination: MobileWorkspaceView,
-  resetDestination = false,
-): number {
-  if (resetDestination) return 0;
-  return Math.max(0, savedPositions[destination] ?? 0);
+const workspacePersonaGroups: Array<{
+  label: string;
+  personaIds: WorkspacePersonaId[];
+}> = [
+  {
+    label: 'Property customers',
+    personaIds: ['yard-owner', 'property-manager'],
+  },
+  {
+    label: 'Service teams',
+    personaIds: [
+      'company-owner',
+      'company-manager',
+      'crew-lead',
+      'crew-member',
+      'dispatcher',
+      'billing-admin',
+    ],
+  },
+  {
+    label: 'Platform support',
+    personaIds: ['support'],
+  },
+  {
+    label: 'Other',
+    personaIds: ['general'],
+  },
+];
+
+function WorkspacePersonaOptions({ personas }: { personas: WorkspacePersona[] }) {
+  return workspacePersonaGroups.map((group) => {
+    const groupedPersonas = group.personaIds
+      .map((personaId) => personas.find(({ id }) => id === personaId))
+      .filter((persona): persona is WorkspacePersona => Boolean(persona));
+    if (groupedPersonas.length === 0) return null;
+
+    return (
+      <optgroup key={group.label} label={group.label}>
+        {groupedPersonas.map((persona) => (
+          <option key={persona.id} value={persona.id}>{persona.label}</option>
+        ))}
+      </optgroup>
+    );
+  });
 }
+
+export const mobileWorkspaceScrollTop = workspaceViewScrollTop;
 
 export function mobileWorkspaceContext(
   input: MobileWorkspaceContextInput,
@@ -43,11 +89,18 @@ export function mobileWorkspaceContext(
       };
     case 'route':
       return {
-        eyebrow: 'Today',
+        eyebrow: input.routeOverview?.serviceDate
+          ? classifyRouteDate(input.routeOverview.serviceDate).label
+          : 'Route',
         title: 'Crew route',
         detail: input.pendingChangeCount > 0
           ? `${input.pendingChangeCount} change${input.pendingChangeCount === 1 ? '' : 's'} waiting to sync`
-          : `${input.assignedJobCount} assigned job${input.assignedJobCount === 1 ? '' : 's'} · Synced`,
+          : input.routeOverview?.source === 'loading' ? 'Loading crew plan'
+            : input.routeOverview?.source === 'missing' ? 'No published plan'
+              : input.routeOverview?.source === 'unavailable' ? 'Plan unavailable'
+                : input.routeOverview?.serviceDate
+                  ? classifyRouteDate(input.routeOverview.serviceDate).dateLabel
+                  : 'Review the crew plan',
       };
     case 'jobs':
       return {
@@ -97,7 +150,7 @@ export function MobileWorkspaceHeader({
   const context = mobileWorkspaceContext(input);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-paper/95 px-4 py-3 shadow-grover-sm backdrop-blur-sm lg:hidden">
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-paper/95 px-4 py-3 shadow-yardfolio-sm backdrop-blur lg:hidden">
       <div className="mx-auto flex max-w-lg items-center gap-3">
         {input.view === 'job' ? (
           <button
@@ -124,7 +177,7 @@ export function MobileWorkspaceHeader({
             >
               {signedInName.trim().slice(0, 1).toUpperCase() || 'A'}
             </summary>
-            <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 rounded-xl border border-slate-200 bg-paper p-3 text-left shadow-grover-md">
+            <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 rounded-xl border border-slate-200 bg-paper p-3 text-left shadow-yardfolio-md">
               <p className="truncate text-sm font-black text-slate-900">{signedInName}</p>
               <p className="mt-1 truncate text-xs text-slate-500">{input.personaLabel}</p>
               {availablePersonas.length > 1 ? (
@@ -136,9 +189,7 @@ export function MobileWorkspaceHeader({
                     onChange={(event) => onPersonaChange(event.target.value as WorkspacePersonaId)}
                     value={activePersonaId}
                   >
-                    {availablePersonas.map((persona) => (
-                      <option key={persona.id} value={persona.id}>{persona.label}</option>
-                    ))}
+                    <WorkspacePersonaOptions personas={availablePersonas} />
                   </select>
                 </label>
               ) : null}
@@ -162,9 +213,7 @@ export function MobileWorkspaceHeader({
               onChange={(event) => onPersonaChange(event.target.value as WorkspacePersonaId)}
               value={activePersonaId}
             >
-              {availablePersonas.map((persona) => (
-                <option key={persona.id} value={persona.id}>{persona.label}</option>
-              ))}
+              <WorkspacePersonaOptions personas={availablePersonas} />
             </select>
           </label>
         ) : (
@@ -186,24 +235,30 @@ interface MobileWorkspaceNavigationProps {
 }
 
 interface DesktopWorkspaceNavigationProps extends MobileWorkspaceNavigationProps {
+  activePersonaId: WorkspacePersonaId;
+  availablePersonas: WorkspacePersona[];
   hasEnvironmentBanner?: boolean;
+  onPersonaChange: (personaId: WorkspacePersonaId) => void;
   onSignOut?: () => void;
   personaLabel: string;
   signedInName: string;
 }
 
 export function DesktopWorkspaceNavigation({
+  activePersonaId,
   activeView,
+  availablePersonas,
   hasEnvironmentBanner = false,
   hasSelectedJob,
   navigationItems,
   onChange,
+  onPersonaChange,
   onSignOut,
   personaLabel,
   signedInName,
 }: DesktopWorkspaceNavigationProps) {
   return (
-    <aside className={`fixed bottom-0 left-0 z-30 hidden w-60 flex-col bg-forest px-5 py-8 text-white shadow-grover-md lg:flex ${hasEnvironmentBanner ? 'top-13' : 'top-0'}`}>
+    <aside className={`fixed bottom-0 left-0 z-30 hidden w-60 flex-col bg-forest px-5 py-8 text-white shadow-yardfolio-md lg:flex ${hasEnvironmentBanner ? 'top-[3.25rem]' : 'top-0'}`}>
       <ProductBrand className="text-sand" />
       <p className="mt-5 text-[0.68rem] font-black uppercase tracking-[0.16em] text-emerald-200">
         {personaLabel}
@@ -235,6 +290,19 @@ export function DesktopWorkspaceNavigation({
       <div className="mt-auto rounded-xl border border-white/10 bg-slate-950/20 p-3">
         <p className="truncate text-sm font-black text-white">{signedInName}</p>
         <p className="mt-1 truncate text-xs text-emerald-100">{personaLabel}</p>
+        {availablePersonas.length > 1 ? (
+          <label className="mt-3 block text-[0.65rem] font-bold uppercase tracking-wide text-emerald-200">
+            Workspace
+            <select
+              aria-label="Active desktop workspace persona"
+              className="mt-1 block min-h-11 w-full rounded-lg border border-white/20 bg-emerald-950 px-2 text-sm font-semibold normal-case tracking-normal text-white"
+              onChange={(event) => onPersonaChange(event.target.value as WorkspacePersonaId)}
+              value={activePersonaId}
+            >
+              <WorkspacePersonaOptions personas={availablePersonas} />
+            </select>
+          </label>
+        ) : null}
         {onSignOut ? (
           <button
             className="mt-3 min-h-11 w-full rounded-lg border border-white/20 px-3 text-left text-sm font-bold text-white hover:bg-white/10"
@@ -263,7 +331,7 @@ export function MobileWorkspaceNavigation({
     const root = document.documentElement;
     const updateHeight = () => {
       root.style.setProperty(
-        '--grover-mobile-workspace-nav-height',
+        '--yardfolio-mobile-workspace-nav-height',
         `${Math.ceil(navigation.getBoundingClientRect().height)}px`,
       );
     };
@@ -276,14 +344,14 @@ export function MobileWorkspaceNavigation({
     return () => {
       observer?.disconnect();
       window.removeEventListener('resize', updateHeight);
-      root.style.removeProperty('--grover-mobile-workspace-nav-height');
+      root.style.removeProperty('--yardfolio-mobile-workspace-nav-height');
     };
   }, [navigationItems.length]);
 
   return (
     <nav
       aria-label="Mobile workspace"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-paper/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,47,40,0.10)] backdrop-blur-sm md:inset-y-0 md:left-0 md:right-auto md:w-24 md:border-r md:border-t-0 md:px-2 md:py-24 md:shadow-grover-md lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-paper/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,47,40,0.10)] backdrop-blur md:inset-y-0 md:left-0 md:right-auto md:w-24 md:border-r md:border-t-0 md:px-2 md:py-24 md:shadow-yardfolio-md lg:hidden"
       data-mobile-workspace-navigation
       ref={navigationRef}
     >

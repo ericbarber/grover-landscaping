@@ -1,3 +1,4 @@
 export function isJobSelectionButtonText(buttonText: string): boolean {
-  return buttonText.includes('Open Job') || buttonText.includes('Selected Job');
+  const normalized = buttonText.toLowerCase();
+  return normalized.includes('open job') || normalized.includes('job open');
 }

@@ -5,12 +5,31 @@ capability areas. Use [`../PLAN.md`](../PLAN.md) for delivery status and
 [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md) for the exact design-to-React
 boundary; inclusion here alone does not mean a feature shipped.
 
+## Market Boundary
+
+The catalog is scoped to residential property care across owner-occupied and
+rental homes, residential communities and HOAs, and residential portfolios.
+Landscape care is the delivered foundation, not the permanent category limit;
+future service families may include pools, cleaning, inspections, repairs, and
+other residential maintenance. Commercial-facility and generic field-service
+workflows are not product targets.
+
 ## Public Product Experience
 
 - Shared working-design foundation across the public homepage, Yard Crew
   acquisition, Yard Owner acquisition, and Yard Owner portal, including
   canonical palette, wordmark, typography roles, banners, controls, surfaces,
   focus treatment, public headers, and application-rail materials
+- Grover temporary customer-facing display name across runtime copy, metadata,
+  PWA, icon accessibility, server-rendered titles, and authentication
+  challenges, composed through explicit frontend and backend application
+  identity modules. The stable `yardfolio` compatibility namespace remains for
+  active visual primitives, public hero assets, frontend and Rust packages,
+  health labels, local-review identifiers, browser storage, and field IndexedDB;
+  tested suffix-based migration protects prior filters, route state, queued
+  work, and photo blobs. The historical prototype/design archive and generated
+  artifacts retain the Yardfolio Study identity; an explicit compatibility
+  boundary protects installed-app, database, and infrastructure state
 - Documented navigation system separating public discovery,
   acquisition-progress, and authenticated-destination models without changing
   their common brand treatment
@@ -18,14 +37,23 @@ boundary; inclusion here alone does not mean a feature shipped.
   backend naming, with stable compatibility identifiers and a repository guard
   covering runtime copy, document metadata, PWA metadata, and icon accessibility
 - Public outcome-led homepage with direct workspace entry
-- Persistent hero invitations for private Yard Owner signup and authenticated
-  landscaping-company onboarding
+- Yard-Owner-focused root hero for one private property, with a direct yard
+  signup conversion and no portfolio or provider-operations framing
+- Dedicated company, property-manager, crew, and Yard Owner campaign routes
+  retain their own focused entry actions and capability-checked language that
+  does not imply billing, payment, open discovery, or broad vendor governance
+- Route-specific entry-hero invitations for private Yard Owner signup,
+  landscaping-company onboarding, portfolio discussion, and crew demo
 - Complete persona-specific landing narratives for yard owners, property
   managers, landscaping companies, and crew leads, spanning hero actions,
-  previews, trust signals, outcomes, proof, capabilities, and final invitations
-- Prototype-aligned “Today’s operation” landscaping-company hero overview with
-  executive day signals, crew schedule/capacity, interactive dispatch
-  assignment, suggested balancing, and an explicit non-persistent boundary
+  trust signals, outcomes, proof, capabilities, and final invitations
+- Full-bleed photographic public hero with a fixed route-specific entry action,
+  followed by a dedicated audience-review section with owner-first keyboard
+  tabs grouped into Property customers and Service teams, plus role-specific
+  narratives, outcomes, and actions
+- Simplified entry-hero conversion hierarchy with one primary action, one
+  product-tour path, improved photography focus, and no duplicate persona
+  workspace overlay
 - Plan-Care-Proof product narrative with the interactive “Today’s operation”
   company dashboard embedded in Plan and representative Care and Prove previews
 - Responsive product capability and trust sections
@@ -38,6 +66,13 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Evidence standard and trust cards grounded in delivered offline, audit, access, evidence, reporting, and bid workflows
 - First-party conversion events for visits, personas, tour steps, CTAs, form starts, submissions, and failures
 - Anonymous per-tab measurement with UTM attribution, an explicit event allowlist, and no third-party tracking
+- Company first-value onboarding with allowlisted campaign handoff, six
+  server-confirmed milestones from organization profile through delivered
+  proof, exact prerequisite/action/outcome guidance, fail-closed
+  multi-membership handling, and resumable unavailable-state recovery
+- Privacy-minimized company setup telemetry limited to allowlisted stage IDs,
+  with support reporting for stage views, starts, completions, failures, and
+  resumed sessions
 - Support-admin platform lead inbox with contact, intent, attribution, status
   filtering, ownership, follow-up scheduling, and explicit unavailable versus
   empty persistence states
@@ -80,6 +115,108 @@ boundary; inclusion here alone does not mean a feature shipped.
 
 ## Persona Workspaces
 
+- Capability-driven authenticated workspace composition with one typed manifest
+  per persona, explicit authoritative/proposed/system status, a central resolver
+  that consumes server capability flags, and shared navigation, home, field,
+  and manager-tool outputs without granting API authority
+- Extracted management workspace feature policy containing the shared section
+  and tool catalog, manifest/capability filtering, active-tool validation, and
+  status derivation independently of the React menu presentation
+- Extracted Home workspace feature policy containing shortcut composition,
+  persona language access, progress/priority rules, protected-read continuity,
+  and route-date interpretation independently of the React panel presentation,
+  with one owner-safe progress source shared by mobile and desktop Home
+- Plain-language first-use and access recovery across sign-in, company setup,
+  manager attention, and Property Manager portfolio surfaces, with internal
+  claim, membership, persistence, and rollout terms withheld from users;
+  Yard Owners without connected care can resume setup directly from Home or
+  My yard
+- Company Owner and Company Manager Today queue reducing authorized job and
+  completion-report state to one prioritized handoff per service, with direct
+  Job/Report navigation and explicit loading, unavailable, empty, and bounded
+  list states
+- Core workspace-selection hook owning eligible-persona state, Yard Owner-first
+  fallback for multi-role property owners, safe fallback after access changes,
+  grouped customer/service/support switching, and rollout resolution outside
+  the application shell
+- Extracted customer workspace policy distinguishing Yard Owner and Property
+  Manager experiences, protected reads, manager previews, and Home summaries;
+  unsupported proposed customer modes fail closed without exposing customer data
+- Extracted field recovery policy with combined job, checklist, and photo queue
+  summaries plus one online/idle/conflict-free replay gate
+- Dedicated assigned-jobs and offline-recovery presentation components owning
+  field filtering and conflict-confirmation UI outside the application shell
+- Dedicated selected-job presentation component for overview, tasks, job
+  photos, approved add-ons, and completion-report workflow
+- Consistent crew recovery language that distinguishes work saved on the phone,
+  another sync attempt, and manager review without exposing queue-state values
+- Customer-report previews and delivered proof use task/photo language and hide
+  internal report IDs, storage object keys, upload modes, and lifecycle labels
+- Manager report review queue with plain-language missing-item filters,
+  state-specific next actions, scannable status colors, and phone-width actions
+- Manager notification history with customer-report/proposal/invitation labels,
+  user-safe failure guidance, hidden provider internals, and confirmation before
+  closing an undelivered message
+- Manager photo-preview follow-up with plain processing states, user-safe error
+  guidance, phone-sized recovery actions, and confirmation before closing a
+  failed preview without recreating it
+- Centralized field-data continuity policy for job-detail fallbacks, typed local
+  photo evidence, and authoritative evidence merges that preserve unsaved work
+- Field job-selection coordinator owning detail and add-on request lifecycle,
+  stale-result cancellation, and explicit authoritative-unavailable state
+- Field photo-evidence coordinator owning selected-job reads, stale-result
+  cancellation, unavailable state, and local-preserving evidence merges
+- Selected completion-report coordinator owning request lifecycle and explicit
+  authoritative-loaded or browser-local-fallback outcomes
+- Field job-collection coordinator owning initial loading and selection with
+  fail-closed API-unavailable and explicit transport-fallback outcomes
+- Durable field recovery coordinator owning actor-scoped queue hydration,
+  reconnect replay, replay locks, conflict classification, and state refresh
+- Field mutation command boundary owning job/checklist/photo server confirmation,
+  photo quality and finalization, durable offline fallback, local evidence,
+  unresolved-tenant outcomes, reviewed-conflict recovery language, add-on
+  persistence, and truthful post-write report-refresh recovery
+- Validated minimalist task-first design direction for all ten signed-in
+  personas, separating experience simplicity from functional-unit enablement:
+  one first answer, one primary action, up to four destinations, a short queue,
+  progressive task detail, explicit exclusions, and three responsive scenarios
+- Connected minimalist customer journeys linking Yard Owner preparation,
+  Visits, and delivered Proof plus Property Manager portfolio exceptions,
+  Properties, delivered Proof, and exact-version Approvals with required
+  illustrative choices and explicit non-persistence
+- Connected minimalist field journeys linking Crew Lead Route, ordered Jobs,
+  and office-reviewed Recovery while limiting Crew Member to assigned Work,
+  read-only Route context, and personal device-held recovery
+- Connected minimalist operations journeys separating Company Owner business
+  readiness, Company Manager service risk and exact plan versions, and
+  Dispatcher publishability and crew fit without adding field authority
+- Connected minimalist administrative journeys linking Billing readiness,
+  Account gaps, and traceable Handoffs plus owned Support incidents, minimized
+  Activity, and purpose-bound Access; the no-role fallback exposes recovery but
+  no protected workspace data
+- Post-MVP simplification design that preserves mature capability while using a
+  role-filtered service thread to keep decisions, planning, field work, proof,
+  handoffs, and recovery attached to one customer outcome; the validated first
+  two prototype slices cover Yard Owner, Property Manager, Company Owner,
+  Company Manager, and Crew Lead across four service moments and three
+  responsive viewports without duplicate lifecycles
+- Contextual service-thread exception design for exact plan conflict, device-
+  held offline work, held proof correction, minimized owned Support incidents,
+  product-gated completion readiness, ended access, and inconsistent property
+  authorization; access failures keep protected records absent and Support or
+  readiness returns to the accountable service moment
+- Executable SX4 comparative study package with equivalent current/new task
+  facts, counterbalanced order, core and exception outcome prompts, observable
+  context-change and authority measures, critical stop rules, decision gates,
+  and an anonymous session-note template; participant evidence remains pending
+- Complete yard-care event timeline ordering 54 first-service, recurring,
+  decision, plan, field, offline, proof, Support, access, readiness,
+  appreciation, and external-review events with classification, ownership,
+  retained truth, relative bands, invariants, and an explicit completion rule
+- Shared typed `ServiceLifecycleProgress` React primitive extracted from the
+  already-adopted Yard Owner progress rail, preserving its four-stage status
+  mapping and accessible current/completed semantics without enabling the new
+  service-thread composition
 - Shared authenticated Home with signed-in identity, persona context, source-
   appropriate work/sync summary, persona-specific quick actions, and a direct
   action from the current priority notice
@@ -87,10 +224,15 @@ boundary; inclusion here alone does not mean a feature shipped.
   wordmark, editorial greeting hierarchy, warm/paper materials, forest manager
   navigation, mobile header and bottom-navigation surfaces, and exact style
   regression coverage
+- Task-first phone Home with a compact branded greeting and the persona-specific
+  recommended action ahead of progress and continuity summaries
 - Compressed hosted application shell with account controls consolidated into
   the desktop rail or mobile account menu, local-review-only diagnostic chrome,
   duplicate Home identity removed, and measured final-action clearance above
   the fixed phone navigation
+- Install guidance with a native supported-browser action, explicit iPhone
+  Add to Home Screen steps and saved acknowledgement, and a persistent
+  seven-day reminder snooze
 - Prototype-aligned provider invitation and assessment entry shell with shared
   wordmark, type roles, acquisition materials, action/card geometry, and guarded
   privacy-boundary emphasis
@@ -135,7 +277,7 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Cumulative field-workspace composition with read-only C1/CM1 routes,
   assigned-job execution at C2/CM2, checklist/photo/report evidence at C3/CM3,
   Crew Lead-only route amendments at C4, and read-only company/dispatcher job
-  oversight; queued offline work is retained while replay is unit-gated
+  oversight without discarding queued offline work
 - Cumulative Property Manager portfolio composition with P1 readiness and
   coverage, P2 property search/service history/delivered proof, P3 exact-visit
   questions and versioned decisions, P4-only administration, fail-closed
@@ -153,6 +295,68 @@ boundary; inclusion here alone does not mean a feature shipped.
   the minimized persisted confirmed-visit read and fail-closed Yard Owner
   Home/Visits adoption are delivered with loading, valid-empty, missing-access,
   inconsistent-access, unavailable, and retry states and no illustrative fallback
+- Delivered customer-controlled Property Manager delegation now separates the
+  owner activation grant from property-scoped manager grants, requires a
+  verified-email acceptance on protected reads, exposes minimized recipient and
+  owner access UI, and revokes the exact grant and membership immediately with
+  an immutable audit trail
+- Versioned release-quality budgets now enforce production JavaScript, CSS,
+  total-build, public-image, and stable chunk boundaries locally and in CI;
+  browser experience thresholds and privacy-bounded API/worker/offline indicator
+  contracts are prepared without claiming unavailable protected telemetry
+- B9 matched-fixture delivery now includes a strict non-secret manifest
+  template and tested local/CI validators for linked local-review API/database
+  identity, runtime provenance, fixed synthetic request namespaces, per-record
+  API-generated ID ownership, lifecycle state, empty target namespaces, and
+  scoped reset proof; an isolated-runtime-only invitation handoff enables the
+  supported provider chain without returning tokens in production or JSON; an
+  atomic, exclusively locked private manifest journal records generated IDs,
+  verified snapshots, forward-only delegation state, and zero-record reset
+  receipts; a CI-enforced owner-foundation plan
+  pins supported workspace/property/brief/invitation payloads and exact
+  discovery recovery for fixed workspaces, the non-idempotent property create,
+  and ready briefs while rejecting scope leaks, collisions, broken linkage,
+  duplicates, and stale ownership; an API executor continues through current
+  proposal v3, stale/cross-owner denial, acceptance, activation, Property
+  Manager delegation, confirmed first visit, service release, published route,
+  assigned access exception, field completion, placeholder evidence, manager
+  correction/re-review, immutable delivery, and minimized delivered proof; the
+  transactional reset snapshots exact manifest roots, removes direct
+  and derived acquisition/visit/field rows, rolls back on failure, and records
+  only a verified zero receipt. Three live full-lifecycle isolated cycles passed
+  pending/cross-owner proof denial, delivered owner/manager reads, matched
+  counts, zero-namespace resets, and finally zero derived audits; a fail-closed
+  checkpoint selector live-verified independent forward-only session setup at
+  open decision; a fail-closed port-5174 frontend validates the study runtime,
+  proxies it same-origin, and passes mobile normal entry with fixed owner
+  selection. Ordered snapshot-prefix validation and an exact matched-checkpoint
+  receipt prevent partial or later fixtures from entering a scored session; a
+  second live open-decision receipt/reset passed. Participant evidence remains
+  open. A consolidated session command now sequences new-manifest preparation,
+  seeding, runtime/receipt re-verification, and zero-proven reset; its first
+  live rehearsal passed. Yard Owner home now recommends the existing care-setup
+  journey when portal access is inactive and retains it as a secondary path
+  afterward. One-property resume opens an incomplete brief or ready care
+  connection directly, while multiple properties still require a choice. A
+  checkpoint-gated mobile browser rehearsal proved normal entry reaches the
+  current Canyon proposal v3 and $420 fixed total without making a
+  decision, then revalidated the receipt and reset to zero. Placeholder evidence
+  does not claim image quality
+- Repository release-contract tests are self-contained in restricted shells:
+  Terraform behavior is represented by an injected test double and protected
+  release evidence is validated in-process without changing operator-facing
+  preflight or command-line enforcement
+- B6 trust-center preparation now has an internal claim-to-evidence contract
+  covering identity, access, customer/provider separation, offline storage,
+  photos, notifications, recovery, retention/privacy actions, incidents, and
+  enabled providers; publication and unsupported assurances remain gated
+- B8 search/share repository delivery now enforces public-route and crawler-
+  exclusion policy through a dependency-free local/CI validator. The production
+  frontend server returns durable 404s outside its explicit SPA/static entry
+  allowlist, emits audience-specific copy and metadata in initial HTML, and
+  generates absolute canonical/share, sitemap, and robots URLs from a required
+  exact HTTPS public origin; deployed final-origin, preview/crawler, browser,
+  and approved-content evidence remain gated
 - Delivered immutable provider service-release and customer-status persistence
   linking the exact confirmed first visit, accepted service scope, current
   organization/account/property relationship, authorized provider membership,
@@ -386,7 +590,8 @@ here does not mean every capability has been delivered.
 
 - Cognito authentication and role-aware access
 - Development-only local reviewer identities with fixed role assignments,
-  virtual demo-organization memberships, and per-tab switching
+  virtual demo-organization memberships, per-tab switching, and separate
+  Canyon View/Sage Lane study-owner principals
 - Organization memberships and invitations
 - Tenant-aware resource boundaries
 - Customer, property, crew, manager, and organization onboarding

@@ -1,6 +1,6 @@
 # High-Fidelity Concepts
 
-These concepts apply the first Grover visual direction to representative product
+These concepts apply the first Yardfolio visual direction to representative product
 surfaces. They remain design-review artifacts rather than production screenshots,
 but several of their approved decisions have now been adopted in React. Track
 that distinction in the
@@ -22,6 +22,26 @@ The rollout artifact now represents adopted repository behavior for supported
 roles: server projection, cohort persistence/administration, cumulative
 composition, manager continuity, and protected smoke are implemented. It is not
 hosted cohort evidence, and Dispatcher/Billing backend roles remain gated.
+
+## Simplified product experience direction
+
+| Artifact | Review images | Purpose |
+| --- | --- | --- |
+| [`../prototypes/simplified-service-thread/index.html`](../prototypes/simplified-service-thread/index.html) | [Manager desktop](current/simplified-service-thread-desktop-v1.png) · [Company Owner desktop](current/simplified-service-thread-company-owner-desktop-v2.png) · [Yard Owner mobile](current/simplified-service-thread-owner-mobile-v1.png) · [Property Manager mobile](current/simplified-service-thread-property-manager-mobile-v2.png) · [Crew Lead mobile](current/simplified-service-thread-field-mobile-v1.png) · [Support desktop](current/simplified-service-thread-support-desktop-v3.png) · [Offline mobile](current/simplified-service-thread-offline-mobile-v3.png) · [Access recovery mobile](current/simplified-service-thread-access-mobile-v3.png) | Clean-slate post-MVP redesign showing one exact service through five role-filtered perspectives plus contextual conflict, offline, proof, Support, readiness, and fail-closed access paths without separate feature silos |
+
+This artifact is active design direction. It preserves mature capability and
+role filtering while testing a simpler service-thread mental model; it is not
+production adoption or a backend contract.
+
+## Prior minimalist persona direction
+
+| Artifact | Review images | Purpose |
+| --- | --- | --- |
+| [`../prototypes/minimalist-personas/index.html`](../prototypes/minimalist-personas/index.html) | [Customer journey desktop](current/minimalist-customer-journey-desktop-v2.png) · [Customer journey mobile](current/minimalist-customer-journey-mobile-v2.png) · [Field journey desktop](current/minimalist-field-journey-desktop-v2.png) · [Field journey mobile](current/minimalist-field-journey-mobile-v2.png) · [Operations journey desktop](current/minimalist-operations-journey-desktop-v2.png) · [Operations journey mobile](current/minimalist-operations-journey-mobile-v2.png) · [Administration journey desktop](current/minimalist-administration-journey-desktop-v2.png) · [Administration journey mobile](current/minimalist-administration-journey-mobile-v2.png) · [Access fallback mobile](current/minimalist-access-fallback-mobile-v2.png) | Ten task-first experiences with no more than four destinations, one primary action, a short queue, progressive detail, explicit omissions, and three review scenarios; every persona family now has a connected or deliberately single-destination working journey |
+
+This artifact is design direction. It simplifies experience hierarchy without
+claiming a new backend role, persistence contract, hosted cohort, or production
+adoption.
 
 The V2 public artifact is interactive and browser-validated. Its theme, split
 hero, persona continuity, Plan–Care–Proof tour, direct signup paths, and

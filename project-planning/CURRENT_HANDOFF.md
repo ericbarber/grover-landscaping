@@ -6,10 +6,17 @@ This is the short restart document. Execution order lives in
 
 ## Restart point
 
-- Branch: `main`
+- Branch: `codex/integrate-review-main-20261028`
 - Resolve the current commit with `git log -1 --oneline`; do not pin a stale hash
   here.
 - Phase 6B8 is published and the latest main-branch CI gate passes.
+- `codex-review-feature` remains published without rewritten history. The
+  bounded integration branch now reconciles it with current `origin/main`,
+  preserving the newer workspace architecture while adopting current CI,
+  Tailwind 4, dependency-security, and backend-auth changes. Clean frontend,
+  repository, and backend gates pass. The integration commit is local; do not
+  claim hosted CI, deployment, or publication until that branch is explicitly
+  published and reviewed.
 - Private review is available at `http://100.88.21.105:5173/` through Tailscale.
 - The private-review API reports PostgreSQL readiness and intentionally uses
   `AUTH_MODE=local_review`; it is not production evidence.
@@ -19,6 +26,120 @@ This is the short restart document. Execution order lives in
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
 ## Active and next work
+
+### Active: B9 participant-session instantiation; human observation gated
+
+[`BEST_IN_CLASS_DELIVERY_PLAN.md`](BEST_IN_CLASS_DELIVERY_PLAN.md) is the
+detailed plan for the approved ten-initiative quality program. B0, B1, B3, B7,
+B8, and the repository-owned B9 preparation are published on
+`codex-review-feature` through `c3f7301`. B1 adds a six-stage persisted
+company first-value path, attribution continuity, fail-closed membership selection, and
+bounded setup telemetry. B3 adds customer-issued, verified-email, one-property
+Property Manager invitation, acceptance, revocation, exact portal scope, and
+audit. The combined gate passes 151 frontend files / 628 tests, TypeScript,
+production build, strict Clippy, and the 433-test backend command. The latest
+Compose-backed run also completed the live PostgreSQL branches and migrations.
+B7 adds a versioned measured artifact baseline, stable chunk limits, browser
+experience thresholds, privacy-bounded operational indicator definitions, and
+tested local/CI enforcement. The current production build passes every artifact
+budget; protected dashboards and runtime evidence remain external gates.
+B9 delivery includes a strict non-secret fixture-manifest template,
+tested validator, and local/CI enforcement. It refuses the shared database,
+placeholder runtime provenance, unknown fields, IDs with invalid API prefixes,
+and incomplete reset receipts. Schema 2 associates normal
+API-generated IDs with their Canyon View or Sage Lane owner and validates known
+table prefixes. A second tested preflight requires a port-8081 local-review API
+and an independently inspected database to report the same
+`yardfolio_study` identity, successful migrations, and empty reserved
+namespaces. A disabled-by-default fixture runtime now provides the transient
+provider invitation value only on that isolated target and records delivery
+through the existing transition. Two fixed study-owner profiles keep owner
+scope distinct, and a tested create-once utility verifies those identities and
+the target before privately recording exact provenance. A tested fixture-state journal serializes concurrent operations,
+atomically preserves generated record ownership and verified snapshots with
+private permissions, enforces forward-only manager-delegation state, and
+accepts reset completion only with a zero-remaining receipt. A CI-enforced
+owner-foundation plan fixes both owners' supported workspace/property/brief/invitation requests
+and journals each fixed workspace identity before property work. Exact recovery
+now covers workspace, the uncertain property-create window, and persisted ready
+briefs with owner-scope, field, linkage, collision, duplicate, and journal
+checks. The provider-to-outcome executor now completes organization claim and
+capability, assessment, proposal v3, owner acceptance, activation, Property
+Manager delegation, first visit, service release, route publication, assigned
+access exception, field completion, placeholder evidence, manager correction
+and re-review, immutable delivery, and minimized owner/manager proof. The
+paired transactional reset covers the complete manifest table allowlist,
+orders exact keys child before parent, supports partial state, rolls back on
+failure, and records completion only after zero verification. The derived selector catalog now
+roots acquisition events; provider invitation,
+assessment, proposal, activation, and visit children; delegation records;
+customer visit/recommendation records; and field job/route/proof artifacts in
+exact manifest IDs. Three complete isolated full-lifecycle seed/read/reset cycles
+passed on 2026-10-09; the latest verified zero derived audits, and stopped
+partial attempts also cleaned up. A fail-closed checkpoint selector prepares both records
+at any verified forward-only moment; a live open-decision checkpoint/reset
+passed. A fail-closed port-5174 frontend now verifies the exact study runtime,
+uses a same-origin `/study-api` proxy, and passed the mobile normal-entry gate
+with both fixed owner identities available. Manifests now require an ordered,
+matched snapshot prefix, and an exact checkpoint receipt passed a second live
+open-decision seed/reset. A consolidated command now prepares, re-verifies, and
+resets one explicit session manifest; its 2026-10-10 live rehearsal also ended
+at zero. Yard Owner home now recommends care setup when portal access has not
+been activated and keeps setup reachable afterward. The checkpoint-gated
+mobile rehearsal resumed Canyon's single ready property directly to proposal
+v3/$420 from normal `/app` entry, made no decision, revalidated the receipt,
+and reset to zero. Multiple-property owners still choose the property.
+Round 1 now selects Yard Owner task `MG-Y1`: open decision first, then a
+separately prepared delivered-proof follow-up. Recruiting the two first-wave
+Yard Owners, instantiating each current-app condition immediately before use,
+and collecting participant observations are the remaining B9 gates; real-image
+quality and unsupported handoffs are not claimed.
+The repository package, database, and infrastructure scopes pass in this shell.
+Release-preflight tests inject a deterministic Terraform double, and the
+protected-release evidence validator exports its pure contract so tests no
+longer depend on a permitted child-process spawn. These are test-environment
+repairs; they do not claim Terraform or protected hosting is available.
+
+The current integration also passes a clean Node 22/npm 10 install, the
+fail-closed live dependency audit with zero findings, TypeScript, 170 frontend
+files / 706 tests, the production build, product-brand and artifact-budget
+gates, repository contracts, Rust formatting, strict Clippy, and backend tests.
+Tailwind 4's uncompressed CSS baseline is recorded separately while its gzip
+transfer limit remains unchanged. The focused Chromium gate also passes all
+five current manager/job handoff journeys. The next repository action is
+publication and hosted PR CI; B9 participant recruitment remains the next
+product-evidence action.
+B8 repository delivery adds a tested crawler policy and production SPA-entry
+allowlist. Public audience and known application/token routes receive the
+frontend, while unknown, invalid nested marketing, missing-asset, and unshipped
+design/review paths return 404. The server emits audience-specific initial HTML
+and derives absolute canonical/share URLs, sitemap, and robots output from a
+production-required exact HTTPS `PUBLIC_APP_URL`. Final-origin protected-release,
+deployed preview/crawler, browser, and approved-content evidence remain open.
+The public hero is now a compact route-specific introduction with a fixed entry
+action and preview. The root route leads with one Yard Owner and one yard;
+company, property-manager, crew, and Yard Owner campaign routes retain their
+dedicated entry stories. Persona tabs begin in the immediately following audience-
+review section, where they change supporting content without mutating the hero,
+URL, or canonical metadata; arrow/Home/End navigation remains supported. The
+detailed company planner remains in the Plan tour. The complete local Playwright
+matrix now passes 86 journeys with 2 intentional skips across mobile/desktop
+Chromium, desktop Firefox, and mobile WebKit. The responsive contract permits
+320px content to reflow at 200% zoom, measures load stability before deliberate
+interaction/zoom changes, and follows current marketing-tour copy and document
+geometry. Git commit and push are available; preserve the unrelated local files
+named above.
+
+Field mutation coordination is complete. Job lifecycle,
+checklist, reviewed-conflict, and photo commands now own server confirmation,
+quality rejection, upload/finalization, durable queue fallback, local evidence
+preservation, unresolved-tenant outcomes, and recovery language outside `App`.
+Add-on mutation and its authoritative completion-report refresh now share that
+boundary and distinguish a saved add-on from a later report-read failure. B9
+live seeding must run through the isolated study API with a complete seed/reset
+utility; participant sessions remain a human evidence gate.
+The current frontend gate passes 147 files / 613 tests, TypeScript, the
+production build, and every artifact budget.
 
 ### Delivered: F2 fast feedback orchestration
 
@@ -85,8 +206,11 @@ the measured fixed-navigation height. Chromium and WebKit pass the reusable
 
 Dispatcher and Billing Administrator remain design-only role keys because the
 authoritative backend/API role union does not contain them. Do not synthesize
-either from Manager. Concern/preferences and appreciation/external reviews
-retain their separate product gates.
+either from Manager. The bounded
+[`B10_CONCERN_BOUNDARY_DECISION.md`](B10_CONCERN_BOUNDARY_DECISION.md) packet is
+ready for product/operations/privacy/legal approval; no concern implementation
+is authorized. Appreciation/external reviews retain their separate product
+gate.
 
 ### Next input boundary
 
@@ -94,8 +218,10 @@ The repository-owned all-persona rollout foundation and smoke contract are
 complete for the currently authoritative roles. Hosted per-unit execution waits
 on R2 identities, exact resource fixtures, and operator ownership. Dispatcher/
 Billing role creation and P2 concern/preference behavior each remain separate
-product decisions. The next safe repository UX slice is frontend truth/recovery
-adoption; it may not be represented as hosted rollout evidence.
+product decisions. Frontend truth/recovery adoption is already delivered. The
+next repository implementation gate is a complete, recoverable B9 seed/reset
+utility; no live matched-study write may precede it, and it may not be
+represented as hosted rollout evidence.
 
 Prototype reconciliation is complete. Start design review from
 [`../design/ARTIFACT_STATUS.md`](../design/ARTIFACT_STATUS.md): it separates

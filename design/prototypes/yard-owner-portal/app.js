@@ -226,7 +226,7 @@ function showView(requestedView, { moveFocus = true, updateHash = true } = {}) {
     else control.removeAttribute('aria-current');
   });
   pageTitle.textContent = viewDefinitions[view].title;
-  document.title = `${viewDefinitions[view].title} · My yard · Grover working design`;
+  document.title = `${viewDefinitions[view].title} · My yard · Yardfolio working design`;
   if (updateHash) window.history.replaceState(null, '', `#${view}`);
   if (moveFocus) {
     window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });

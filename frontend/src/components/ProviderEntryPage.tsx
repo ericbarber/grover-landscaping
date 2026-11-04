@@ -1,7 +1,7 @@
-import { APP_DISPLAY_NAME } from '../appIdentity';
 import { ProductBrand } from './ProductBrand';
 import { PROVIDER_INVITATION_PATH } from '../domain/providerInvitationRoute';
 import { providerWorkspaceHref } from '../domain/providerEntryRoute';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 
 const readinessSteps = [
   { title: 'Confirm your account', detail: 'Use a verified business email so invitations and access stay tied to the right person.' },
@@ -11,12 +11,13 @@ const readinessSteps = [
 ];
 
 export function ProviderEntryPage() {
+  const search = typeof window === 'undefined' ? '' : window.location.search;
   return (
     <main className="min-h-screen overflow-x-hidden bg-bone text-ink">
       <header className="border-b border-slate-200 bg-paper">
         <nav aria-label="Provider entry navigation" className="mx-auto flex min-h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <a aria-label={`${APP_DISPLAY_NAME} home`} className="text-emerald-800" href="/"><ProductBrand /></a>
-          <a className="grover-button-secondary" href="/app">Existing provider sign in</a>
+          <a className="yardfolio-button-secondary" href="/app">Existing provider sign in</a>
         </nav>
       </header>
 
@@ -34,19 +35,19 @@ export function ProviderEntryPage() {
 
       <section aria-labelledby="choose-provider-path" className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="max-w-3xl"><p className="grover-eyebrow">Choose your path</p><h2 className="mt-3 font-display text-4xl font-black text-forest" id="choose-provider-path">One provider identity, different responsibilities.</h2><p className="mt-4 text-lg leading-8 text-slate-600">A worker invitation never creates another company, and an owner invitation never grants broader marketplace access.</p></div>
+          <div className="max-w-3xl"><p className="yardfolio-eyebrow">Choose your path</p><h2 className="mt-3 font-display text-4xl font-black text-forest" id="choose-provider-path">One provider identity, different responsibilities.</h2><p className="mt-4 text-lg leading-8 text-slate-600">A worker invitation never creates another company, and an owner invitation never grants broader marketplace access.</p></div>
           <div className="mt-9 grid gap-4 lg:grid-cols-2">
-            <article className="flex flex-col rounded-3xl border border-emerald-200 bg-paper p-6 shadow-grover-sm sm:p-8">
-              <p className="grover-eyebrow">I own and perform the work</p><h3 className="mt-3 text-2xl font-black text-forest">Owner-operator</h3><p className="mt-3 flex-1 leading-7 text-slate-600">Create a provider organization of one. You can hold business-owner and field responsibilities without bypassing organization-scoped access.</p><ul className="mt-5 space-y-2 text-sm font-bold text-slate-700"><li>Provider organization, even for one person</li><li>Owner-managed profile and readiness</li><li>Field access stays role-scoped</li></ul><a className="grover-button-primary mt-6" href={providerWorkspaceHref('owner-operator')}>Start owner-operator setup <span className="ml-2" aria-hidden="true">→</span></a>
+            <article className="flex flex-col rounded-3xl border border-emerald-200 bg-paper p-6 shadow-yardfolio-sm sm:p-8">
+              <p className="yardfolio-eyebrow">I own and perform the work</p><h3 className="mt-3 text-2xl font-black text-forest">Owner-operator</h3><p className="mt-3 flex-1 leading-7 text-slate-600">Create a provider organization of one. You can hold business-owner and field responsibilities without bypassing organization-scoped access.</p><ul className="mt-5 space-y-2 text-sm font-bold text-slate-700"><li>Provider organization, even for one person</li><li>Owner-managed profile and readiness</li><li>Field access stays role-scoped</li></ul><a className="yardfolio-button-primary mt-6" href={providerWorkspaceHref('owner-operator', search)}>Start owner-operator setup <span className="ml-2" aria-hidden="true">→</span></a>
             </article>
-            <article className="flex flex-col rounded-3xl border border-slate-200 bg-paper p-6 shadow-grover-sm sm:p-8">
-              <p className="grover-eyebrow">I manage a service business</p><h3 className="mt-3 text-2xl font-black text-forest">Company owner</h3><p className="mt-3 flex-1 leading-7 text-slate-600">Create or continue a landscaping provider organization, then configure the company profile, crews, service area, capacity, and invitations.</p><ul className="mt-5 space-y-2 text-sm font-bold text-slate-700"><li>Organization owner authority</li><li>Company profile and operating readiness</li><li>Team access by invitation</li></ul><a className="grover-button-primary mt-6" href={providerWorkspaceHref('company-owner')}>Start company setup <span className="ml-2" aria-hidden="true">→</span></a>
+            <article className="flex flex-col rounded-3xl border border-slate-200 bg-paper p-6 shadow-yardfolio-sm sm:p-8">
+              <p className="yardfolio-eyebrow">I manage a service business</p><h3 className="mt-3 text-2xl font-black text-forest">Company owner</h3><p className="mt-3 flex-1 leading-7 text-slate-600">Create or continue a landscaping provider organization, then configure the company profile, crews, service area, capacity, and invitations.</p><ul className="mt-5 space-y-2 text-sm font-bold text-slate-700"><li>Organization owner authority</li><li>Company profile and operating readiness</li><li>Team access by invitation</li></ul><a className="yardfolio-button-primary mt-6" href={providerWorkspaceHref('company-owner', search)}>Start company setup <span className="ml-2" aria-hidden="true">→</span></a>
             </article>
             <article className="flex flex-col rounded-3xl border border-slate-200 bg-paper p-6 sm:p-8">
-              <p className="grover-eyebrow">My company invited me</p><h3 className="mt-3 text-2xl font-black text-forest">Crew lead or team member</h3><p className="mt-3 flex-1 leading-7 text-slate-600">Use the organization invitation you received. Review the provider, offered role, scope, and expiration before accepting; a generic signup cannot grant team access.</p><a className="grover-button-secondary mt-6" href="/app">Sign in with your invitation <span className="ml-2" aria-hidden="true">→</span></a>
+              <p className="yardfolio-eyebrow">My company invited me</p><h3 className="mt-3 text-2xl font-black text-forest">Crew lead or team member</h3><p className="mt-3 flex-1 leading-7 text-slate-600">Use the organization invitation you received. Review the provider, offered role, scope, and expiration before accepting; a generic signup cannot grant team access.</p><a className="yardfolio-button-secondary mt-6" href="/app">Sign in with your invitation <span className="ml-2" aria-hidden="true">→</span></a>
             </article>
             <article className="flex flex-col rounded-3xl border border-sand bg-[#f5ead4] p-6 sm:p-8">
-              <p className="grover-eyebrow">A yard owner invited my business</p><h3 className="mt-3 text-2xl font-black text-forest">Known-owner connection</h3><p className="mt-3 flex-1 leading-7 text-slate-700">Review your recipient-specific invitation progress. Owner-approved yard details remain withheld until the separate disclosure decision is complete.</p><a className="grover-button-secondary mt-6" href={PROVIDER_INVITATION_PATH}>Review an owner invitation <span className="ml-2" aria-hidden="true">→</span></a>
+              <p className="yardfolio-eyebrow">A yard owner invited my business</p><h3 className="mt-3 text-2xl font-black text-forest">Known-owner connection</h3><p className="mt-3 flex-1 leading-7 text-slate-700">Review your recipient-specific invitation progress. Owner-approved yard details remain withheld until the separate disclosure decision is complete.</p><a className="yardfolio-button-secondary mt-6" href={PROVIDER_INVITATION_PATH}>Review an owner invitation <span className="ml-2" aria-hidden="true">→</span></a>
             </article>
           </div>
         </div>
@@ -54,7 +55,7 @@ export function ProviderEntryPage() {
 
       <section className="bg-paper px-4 py-16 sm:px-6 lg:px-8" aria-labelledby="provider-readiness-heading">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
-          <div><p className="grover-eyebrow">Provider readiness</p><h2 className="mt-3 font-display text-4xl font-black text-forest" id="provider-readiness-heading">Setup is preparation—not publication.</h2><p className="mt-4 leading-7 text-slate-600">{APP_DISPLAY_NAME} keeps supplied identity, active access, operational readiness, and future eligibility separate. A single “verified” badge cannot stand in for those facts.</p></div>
+          <div><p className="yardfolio-eyebrow">Provider readiness</p><h2 className="mt-3 font-display text-4xl font-black text-forest" id="provider-readiness-heading">Setup is preparation—not publication.</h2><p className="mt-4 leading-7 text-slate-600">{APP_DISPLAY_NAME} keeps supplied identity, active access, operational readiness, and future eligibility separate. A single “verified” badge cannot stand in for those facts.</p></div>
           <ol className="grid gap-3 sm:grid-cols-2">
             {readinessSteps.map((step, index) => <li className="rounded-2xl border border-slate-200 bg-bone p-5" key={step.title}><span className="grid size-9 place-items-center rounded-full bg-emerald-800 text-sm font-black text-white">{index + 1}</span><h3 className="mt-4 font-black text-forest">{step.title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{step.detail}</p></li>)}
           </ol>
@@ -62,7 +63,7 @@ export function ProviderEntryPage() {
       </section>
 
       <section className="px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl rounded-3xl bg-slate-950 p-8 text-center text-white sm:p-12"><p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">Ready to begin?</p><h2 className="mt-4 font-display text-4xl font-black">Create the provider boundary first.</h2><p className="mx-auto mt-4 max-w-2xl leading-7 text-slate-300">Choose owner-operator or company-owner setup. If someone invited you, return to that exact invitation so {APP_DISPLAY_NAME} can preserve its role and data scope.</p><div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row"><a className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 font-black text-emerald-950" href={providerWorkspaceHref('company-owner')}>Start provider setup</a><a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-6 font-black text-white" href={PROVIDER_INVITATION_PATH}>Review owner invitation</a></div></div>
+        <div className="mx-auto max-w-5xl rounded-3xl bg-slate-950 p-8 text-center text-white sm:p-12"><p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">Ready to begin?</p><h2 className="mt-4 font-display text-4xl font-black">Create the provider boundary first.</h2><p className="mx-auto mt-4 max-w-2xl leading-7 text-slate-300">Choose owner-operator or company-owner setup. If someone invited you, return to that exact invitation so {APP_DISPLAY_NAME} can preserve its role and data scope.</p><div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row"><a className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 font-black text-emerald-950" href={providerWorkspaceHref('company-owner', search)}>Start provider setup</a><a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-6 font-black text-white" href={PROVIDER_INVITATION_PATH}>Review owner invitation</a></div></div>
       </section>
     </main>
   );

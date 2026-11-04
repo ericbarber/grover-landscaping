@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { OperationalException } from '../api/operationalExceptionsClient';
 import { exceptionLabel, summarizeOperationalExceptions } from './ManagerOperationalExceptionsPanel';
-import { managerWorkspaceTools } from './ManagerWorkspaceMenu';
+import { managerWorkspaceTools } from '../workspaces/features/management/managerWorkspace';
 
 describe('manager operational exceptions', () => {
   it('uses readable lifecycle labels', () => {

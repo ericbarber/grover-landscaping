@@ -165,7 +165,7 @@ human-service moments. Use the sans face for task choice, data state, and
 operational controls. Record that rule in the shared foundation before broader
 visual tuning.
 
-**Design response — delivered September 19, 2026:** The shared typography
+**Design response — delivered September 5, 2026:** The shared typography
 foundation now names the production semantic rule and exposes an explicit
 operational type utility. Route, Yard Owner, Property Manager, Schedule, Team,
 Reports, Recovery, recommendation, and proposal surfaces use interface type for
@@ -188,22 +188,22 @@ greetings, place/service identity, dates, and delivered-care moments.
 
 1. **Baseline and parity — delivered by this review.** Maintain the dated
    current-state mirror, gallery entry, responsive captures, and browser checks.
-2. **Truth and recovery — delivered September 19, 2026.** Shared date/state
+2. **Truth and recovery — delivered September 5, 2026.** Shared date/state
    vocabulary, read-only non-current routes, and complete Yard Owner retry,
-   access-recheck, and Home recovery are adopted without fallback customer facts.
-3. **Manager continuity — delivered September 19, 2026.** The status-bearing
+   access-review, and Home recovery are adopted without fallback customer facts.
+3. **Manager continuity — delivered September 5, 2026.** The status-bearing
    Manage overview uses only authorized current sources or exact enabled-tool
    counts, and selected destinations mount on demand across Schedule, Customers,
    Team, Reports, and Recovery.
-4. **Shell compression — delivered September 19, 2026.** Hosted account controls
+4. **Shell compression — delivered September 5, 2026.** Hosted account controls
    are consolidated into the desktop rail and compact mobile account menu,
    local-review chrome is isolated, and measured navigation clearance is
    validated at 320, 390, and 430px plus 200% zoom.
-5. **Prototype reconciliation — delivered September 19, 2026.** The artifact-
+5. **Prototype reconciliation — delivered September 5, 2026.** The artifact-
    family inventory classifies dated mirrors, adopted behavior, design direction,
    historical input, and product-gated boundaries; only the prototype needed by
    the next production slice should be refreshed.
-6. **Typography roles — delivered September 19, 2026.** The shared foundation
+6. **Typography roles — delivered September 5, 2026.** The shared foundation
    names the editorial/operational boundary and the authenticated surfaces apply
    it to task destinations, state, queues, decisions, and values.
 

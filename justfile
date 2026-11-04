@@ -5,7 +5,7 @@ frontend_dir := "frontend"
 terraform_dir := "infra/terraform"
 terraform_dev_dir := "infra/terraform/environments/dev"
 terraform_prod_dir := "infra/terraform/environments/prod"
-image_name := "grover-landscaping:local"
+image_name := "yardfolio:local"
 
 # List available recipes.
 default:

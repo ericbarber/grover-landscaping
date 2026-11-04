@@ -18,7 +18,7 @@ The first behavior-neutral slice removes binary redeclarations for:
 - project bids; and
 - stop progress.
 
-The binary imports those modules from `grover_landscaping_api` exactly as it
+The binary imports those modules from `yardfolio_api` exactly as it
 already does for newer feature areas. Runtime repositories, request validation,
 worker startup, and route handlers retain the same implementations. The binary
 target now runs 215 tests, eliminating 18 duplicate unit-test executions, and
@@ -28,7 +28,7 @@ Validation after the boundary change:
 
 - `cargo fmt --all -- --check` passes;
 - `cargo clippy --all-targets --all-features -- -D warnings` passes;
-- `cargo test --bin grover-landscaping-api` passes all 215 binary tests; and
+- `cargo test --bin yardfolio-api` passes all 215 binary tests; and
 - `cargo test --all` passes all 484 backend tests.
 
 ## Phase 6A5 account convergence

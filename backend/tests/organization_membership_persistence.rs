@@ -1,4 +1,5 @@
-use grover_landscaping_api::{
+use sqlx::Row;
+use yardfolio_api::{
     access_control::{can_manage_schedule, AccessRole},
     day_plans::{
         CreateCrewRequest, CreateOrganizationBranchRequest, CreateOrganizationBranchResult,
@@ -13,7 +14,6 @@ use grover_landscaping_api::{
         UpdateOrganizationMembershipProfileRequest, UpdateOrganizationProfileRequest,
     },
 };
-use sqlx::Row;
 mod common;
 
 fn loaded<T>(result: OrganizationCollectionResult<T>, context: &str) -> Vec<T> {
@@ -230,14 +230,14 @@ async fn repository_bootstraps_first_owner_once() {
             &created.membership.id,
             &user_id,
             UpdateOrganizationMembershipProfileRequest {
-                display_name: "Jordan Grover".to_string(),
+                display_name: "Jordan Rivera".to_string(),
             },
         )
         .await;
     let MembershipProfileUpdateResult::Updated(renamed_member) = renamed_member else {
         panic!("owner membership display name should be editable");
     };
-    assert_eq!(renamed_member.display_name, "Jordan Grover");
+    assert_eq!(renamed_member.display_name, "Jordan Rivera");
     assert!(loaded(
         organizations
             .list_organization_memberships(&created.organization_id)
@@ -246,7 +246,7 @@ async fn repository_bootstraps_first_owner_once() {
     )
     .iter()
     .any(|membership| {
-        membership.id == created.membership.id && membership.display_name == "Jordan Grover"
+        membership.id == created.membership.id && membership.display_name == "Jordan Rivera"
     }));
 
     let OrganizationProfileUpdateResult::Updated(updated_profile) = organizations
@@ -305,9 +305,12 @@ async fn repository_bootstraps_first_owner_once() {
     assert!(setup_progress.organization_profile_complete);
     assert!(!setup_progress.team_invitation_created);
     assert!(!setup_progress.crew_configured);
+    assert!(!setup_progress.customer_property_created);
     assert!(!setup_progress.first_route_published);
+    assert!(!setup_progress.first_service_completed);
+    assert!(!setup_progress.first_report_delivered);
     assert_eq!(setup_progress.completed_steps, 1);
-    assert_eq!(setup_progress.total_steps, 4);
+    assert_eq!(setup_progress.total_steps, 6);
     assert!(setup_progress.persisted);
 
     let day_plans = DayPlanRepository::from_pool(pool.clone());
@@ -368,7 +371,7 @@ async fn repository_bootstraps_first_owner_once() {
         .expect("current service date should be available");
     let current_draft = applied(
         day_plans
-            .create_draft_day_plan(grover_landscaping_api::day_plans::CreateDayPlanRequest {
+            .create_draft_day_plan(yardfolio_api::day_plans::CreateDayPlanRequest {
                 crew_id: crew.id.clone(),
                 service_date: current_service_date,
             })
@@ -449,6 +452,109 @@ async fn repository_bootstraps_first_owner_once() {
         )
         .await;
     assert!(matches!(reactivated, UpdateCrewResult::Updated(_)));
+
+    let fixture_suffix = uuid::Uuid::new_v4().simple().to_string();
+    let account_id = format!("first_value_account_{fixture_suffix}");
+    let property_id = format!("first_value_property_{fixture_suffix}");
+    let job_id = format!("first_value_job_{fixture_suffix}");
+    let plan_id = format!("first_value_plan_{fixture_suffix}");
+    let report_id = format!("first_value_report_{fixture_suffix}");
+    sqlx::query(
+        r#"
+        INSERT INTO customer_accounts (
+            id, customer_name, billing_model, payment_status,
+            service_approval_status, contracted_services_per_period,
+            completed_services_this_period
+        )
+        VALUES ($1, 'First Value Customer', 'manual_account', 'not_required', 'approved', 1, 1)
+        "#,
+    )
+    .bind(&account_id)
+    .execute(&pool)
+    .await
+    .expect("first-value customer account should persist");
+    sqlx::query(
+        "INSERT INTO organization_customer_accounts (organization_id, account_id) VALUES ($1, $2)",
+    )
+    .bind(&created.organization_id)
+    .bind(&account_id)
+    .execute(&pool)
+    .await
+    .expect("first-value customer relationship should persist");
+    sqlx::query(
+        r#"
+        INSERT INTO customer_properties (
+            id, organization_id, account_id, display_name, service_address, status
+        )
+        VALUES ($1, $2, $3, 'First Value Property', '100 Test Way', 'active')
+        "#,
+    )
+    .bind(&property_id)
+    .bind(&created.organization_id)
+    .bind(&account_id)
+    .execute(&pool)
+    .await
+    .expect("first-value property should persist");
+    sqlx::query(
+        r#"
+        INSERT INTO service_jobs (
+            id, organization_id, customer_account_id, customer_name,
+            property_address, status, scheduled_date, before_photos,
+            after_photos, checklist_items, completed_checklist_items,
+            assigned_crew_id
+        )
+        VALUES ($1, $2, $3, 'First Value Customer', '100 Test Way',
+                'completed', CURRENT_DATE::text, 1, 1, 4, 4, $4)
+        "#,
+    )
+    .bind(&job_id)
+    .bind(&created.organization_id)
+    .bind(&account_id)
+    .bind(&crew.id)
+    .execute(&pool)
+    .await
+    .expect("first-value completed service should persist");
+    sqlx::query(
+        "INSERT INTO day_plans (id, crew_id, service_date, status, route_status) VALUES ($1, $2, CURRENT_DATE, 'published', 'manual')",
+    )
+    .bind(&plan_id)
+    .bind(&crew.id)
+    .execute(&pool)
+    .await
+    .expect("first-value published route should persist");
+    sqlx::query(
+        r#"
+        INSERT INTO job_completion_reports (
+            id, job_id, report_status, ready_for_customer, checklist_progress,
+            before_photos, after_photos, issue_photos, share_token,
+            delivered_at, delivered_snapshot, delivered_snapshot_at
+        )
+        VALUES ($1, $2, 'delivered', TRUE, 100, 1, 1, 0, $3,
+                NOW(), '{}'::jsonb, NOW())
+        "#,
+    )
+    .bind(&report_id)
+    .bind(&job_id)
+    .bind(format!("first-value-share-{fixture_suffix}"))
+    .execute(&pool)
+    .await
+    .expect("first-value delivered proof should persist");
+
+    let completed_progress = found(
+        organizations
+            .first_owner_setup_progress(&created.organization_id)
+            .await,
+        "completed first-value progress should be available",
+    );
+    assert!(completed_progress.organization_profile_complete);
+    assert!(completed_progress.crew_configured);
+    assert!(completed_progress.customer_property_created);
+    assert!(completed_progress.first_route_published);
+    assert!(completed_progress.first_service_completed);
+    assert!(completed_progress.first_report_delivered);
+    assert_eq!(completed_progress.completed_steps, 6);
+    assert_eq!(completed_progress.total_steps, 6);
+
     let crew_audit_count: i64 = sqlx::query_scalar(
         r#"
         SELECT COUNT(*)
@@ -535,8 +641,8 @@ async fn repository_bootstraps_first_owner_once() {
         .iter()
         .find(|item| item.event_kind == "membership_profile_updated")
         .expect("member profile activity should be readable");
-    assert_eq!(profile_activity.actor_label, "Jordan Grover");
-    assert_eq!(profile_activity.target_label, "Jordan Grover");
+    assert_eq!(profile_activity.actor_label, "Jordan Rivera");
+    assert_eq!(profile_activity.target_label, "Jordan Rivera");
     assert_eq!(
         loaded(
             organizations
@@ -591,7 +697,7 @@ async fn repository_bootstraps_first_owner_once() {
         .await
         .into_loaded()
         .iter()
-        .all(|item| item.actor_label == "Jordan Grover"));
+        .all(|item| item.actor_label == "Jordan Rivera"));
     assert!(organizations
         .list_team_administration_activity_page(
             &created.organization_id,
@@ -608,7 +714,7 @@ async fn repository_bootstraps_first_owner_once() {
         .await
         .into_loaded()
         .iter()
-        .all(|item| item.target_label == "Jordan Grover"));
+        .all(|item| item.target_label == "Jordan Rivera"));
     assert!(organizations
         .list_team_administration_activity_page(
             &created.organization_id,

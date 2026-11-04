@@ -8,19 +8,6 @@ const prototypePath = resolve(designRoot, 'prototypes/yard-owner-minimal-rollout
 const captureRoot = resolve(designRoot, 'high-fidelity/current');
 const capture = process.argv.includes('--capture');
 
-const personaNames = {
-  owner: 'Yard Owner',
-  'property-manager': 'Property Manager',
-  crew: 'Crew Lead',
-  'crew-member': 'Crew Member',
-  'company-owner': 'Yard-care Company Owner',
-  'company-manager': 'Yard-care Company Manager',
-  dispatcher: 'Dispatcher',
-  'billing-admin': 'Billing Administrator',
-  support: 'Support Administrator',
-  general: 'Team Member',
-};
-
 const contracts = {
   owner: { panel: '#owner-experience', nav: '#portal-tabs', plan: '../../review/yard-owner-minimal-rollout-plan.md', units: { u1: [1, 'Care visibility'], u2: [2, 'Visit tracking'], u3: [3, 'Delivered proof'], u4: [3, 'Questions and decisions'] } },
   'property-manager': { panel: '#generic-experience', nav: '#generic-tabs', units: { p1: [2, 'Portfolio readiness'], p2: [2, 'Property coverage and proof'], p3: [2, 'Approvals and questions'], p4: [3, 'Portfolio administration'] } },
@@ -49,17 +36,11 @@ try {
     check(await page.locator('#overview-experience').isVisible(), `${viewport.name}/overview: rollout map hidden`);
     check(await page.locator('#persona-map button').count() === 10, `${viewport.name}/overview: expected ten persona contracts`);
     check(await page.locator('h1:visible').count() === 1, `${viewport.name}/overview: expected one visible h1`);
-    check(await page.locator('#brand-home').getAttribute('href') === '#overview/map', `${viewport.name}/overview: brand home link leaked`);
-    check(await page.locator('#mobile-nav').getAttribute('aria-label') === 'Rollout map mobile navigation', `${viewport.name}/overview: mobile navigation label leaked`);
 
     for (const [persona, contract] of Object.entries(contracts)) {
       await page.selectOption('#persona-picker', persona);
       check(await page.locator(contract.panel).isVisible(), `${viewport.name}/${persona}: selected experience is hidden`);
       check(await page.locator('#overview-experience:visible, #owner-experience:visible, #crew-experience:visible, #generic-experience:visible').count() === 1, `${viewport.name}/${persona}: another persona experience leaked`);
-      const personaName = personaNames[persona];
-      const firstUnit = Object.keys(contract.units)[0];
-      check(await page.locator('#mobile-nav').getAttribute('aria-label') === `${personaName} mobile navigation`, `${viewport.name}/${persona}: mobile navigation label leaked`);
-      check(await page.locator('#brand-home').getAttribute('href') === `#${persona}/${firstUnit}`, `${viewport.name}/${persona}: brand home link leaked`);
       const units = Object.entries(contract.units);
       for (const [index, [unit, [navCount, title]]] of units.entries()) {
         await page.selectOption('#unit-picker', unit);

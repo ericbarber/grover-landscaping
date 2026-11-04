@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useAuth, type AccessVerificationStatus } from './AuthProvider';
 import { ProductBrand } from '../components/ProductBrand';
+import { APP_DISPLAY_NAME } from '../appIdentity';
 
 export type AuthGateState =
   | 'authentication-loading'
@@ -34,12 +35,12 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
       <img
         alt=""
         className="absolute inset-0 h-full w-full object-cover object-center"
-        src="/brand/grover-landscape-home-hero.webp"
+        src="/brand/yardfolio-landscape-home-hero.webp"
       />
-      <span className="absolute inset-0 bg-linear-to-r from-slate-950/95 via-slate-950/75 to-emerald-950/30" />
-      <span className="absolute inset-0 bg-linear-to-t from-slate-950/90 via-transparent to-slate-950/40" />
-      <section className="relative grid w-full max-w-5xl overflow-hidden rounded-4xl border border-white/15 bg-slate-950/55 text-white shadow-2xl shadow-slate-950/50 backdrop-blur-md lg:grid-cols-[1.15fr_0.85fr]">
-        <aside className="hidden min-h-124 flex-col justify-between border-r border-white/10 p-10 text-left lg:flex">
+      <span className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-emerald-950/30" />
+      <span className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-slate-950/40" />
+      <section className="relative grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950/55 text-white shadow-2xl shadow-slate-950/50 backdrop-blur-md lg:grid-cols-[1.15fr_0.85fr]">
+        <aside className="hidden min-h-[31rem] flex-col justify-between border-r border-white/10 p-10 text-left lg:flex">
           <ProductBrand className="text-sand" />
           <div>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">
@@ -60,7 +61,7 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
             </div>
           </div>
         </aside>
-        <div className="flex min-h-108 flex-col justify-center p-7 text-center sm:p-10">
+        <div className="flex min-h-[27rem] flex-col justify-center p-7 text-center sm:p-10">
           <ProductBrand className="mb-7 justify-center text-sand lg:hidden" />
           {children}
         </div>
@@ -89,18 +90,18 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (state === 'authentication-error') {
     return (
       <FullScreenMessage>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-400">Authentication error</p>
-        <h1 className="mt-4 text-2xl font-bold text-white">Unable to initialize sign-in</h1>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-400">Sign-in is temporarily unavailable</p>
+        <h1 className="mt-4 text-2xl font-bold text-white">We couldn’t start sign-in</h1>
         <p className="mt-3 text-sm text-slate-300">{auth.error}</p>
         <p className="mt-3 text-xs text-slate-400">
-          If the local API was still starting, wait a moment and retry without reloading the page.
+          Wait a moment, then try again. You do not need to reload this page.
         </p>
         <button
           className="mt-6 w-full rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-500"
           onClick={auth.retryInitialization}
           type="button"
         >
-          Retry authentication
+          Try sign-in again
         </button>
       </FullScreenMessage>
     );
@@ -123,7 +124,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
           className="mt-7 w-full rounded-xl bg-emerald-500 px-5 py-3 font-black text-emerald-950 shadow-lg shadow-emerald-950/30 transition hover:bg-emerald-400"
           onClick={() => void auth.signIn()}
         >
-          Open my workspace
+          Sign in
         </button>
         <p className="mt-4 text-xs text-slate-400">Secure access keeps customer and property details protected.</p>
       </FullScreenMessage>
@@ -133,14 +134,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (state === 'access-loading') {
     return (
       <FullScreenMessage>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">Verifying workspace access</p>
-        <h1 className="mt-4 text-2xl font-bold text-white">Checking your active organization and role…</h1>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">Checking your access</p>
+        <h1 className="mt-4 text-2xl font-bold text-white">Making sure you see the right work…</h1>
         <p className="mt-3 text-sm leading-6 text-slate-300">
-          Protected workspace navigation stays hidden until access verification completes.
+          We’ll only show the companies, properties, and tools connected to your account.
         </p>
         <div className="mx-auto mt-7 h-1.5 w-24 overflow-hidden rounded-full bg-white/10" role="status">
           <span className="block h-full w-2/3 animate-pulse rounded-full bg-emerald-400" />
-          <span className="sr-only">Verifying active organization access</span>
+          <span className="sr-only">Checking company and property access</span>
         </div>
       </FullScreenMessage>
     );
@@ -149,17 +150,17 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (state === 'access-unavailable') {
     return (
       <FullScreenMessage>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">Access verification unavailable</p>
-        <h1 className="mt-4 text-2xl font-bold text-white">Unable to safely open your workspace</h1>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">We couldn’t confirm your access</p>
+        <h1 className="mt-4 text-2xl font-bold text-white">Your information is still protected</h1>
         <p className="mt-3 text-sm leading-6 text-slate-300">
-          {auth.accessError ?? 'Active organization access could not be verified.'} No role or workspace data is being assumed.
+          {APP_DISPLAY_NAME} couldn’t confirm which company or properties this account can open. Nothing has been shown or changed.
         </p>
         <button
           className="mt-6 w-full rounded-xl bg-emerald-500 px-5 py-3 font-black text-emerald-950 hover:bg-emerald-400"
           onClick={() => void auth.refreshAccess()}
           type="button"
         >
-          Retry access verification
+          Check access again
         </button>
       </FullScreenMessage>
     );
@@ -187,11 +188,11 @@ export function AuthGate({ children }: { children: ReactNode }) {
           ) : null}
         </div>
         {auth.authMode === 'local_review' ? (
-          <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-sky-200">
-            Review as
+          <label className="flex w-full min-w-0 items-center gap-2 text-xs font-bold uppercase tracking-wide text-sky-200 sm:w-auto">
+            <span className="shrink-0">Review as</span>
             <select
               aria-label="Local reviewer account"
-              className="min-h-9 rounded-lg border border-slate-600 bg-slate-900 px-3 text-sm font-semibold normal-case tracking-normal text-white"
+              className="min-h-9 min-w-0 flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 text-sm font-semibold normal-case tracking-normal text-white"
               onChange={(event) => auth.selectLocalReviewer(event.target.value)}
               value={auth.activeLocalReviewerId ?? ''}
             >

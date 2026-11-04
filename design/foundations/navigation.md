@@ -1,6 +1,6 @@
 # Navigation and Shell System
 
-Grover uses one visual shell language with three navigation models. The model is
+Yardfolio uses one visual shell language with three navigation models. The model is
 chosen by user intent, not by prototype history.
 
 ## Shared shell rules

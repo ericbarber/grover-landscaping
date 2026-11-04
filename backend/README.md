@@ -1,4 +1,4 @@
-# Grover Backend
+# Application Backend
 
 The backend is a Rust 2021 Axum service using Tokio, SQLx, and PostgreSQL. It
 serves the API in development and, in the production image, also serves the
@@ -103,6 +103,15 @@ rejected and the mode cannot start with `APP_ENV=production`. The API exposes
 runtime configuration at `GET /auth/config`. See
 [`../docs/authentication.md`](../docs/authentication.md).
 
+The isolated Yardfolio Study runtime may additionally set
+`YARDFOLIO_STUDY_FIXTURE_MODE=enabled`. Startup rejects that setting unless the
+runtime is non-production, uses `local_review`, has PostgreSQL persistence, and
+is connected to the exact `yardfolio_study` database. In that mode only,
+new Canyon View or Sage Lane provider-invitation requests are marked delivered
+through the normal repository transition and return their one-time bearer value
+in `x-yardfolio-local-fixture-invitation-token`. The token remains absent from JSON,
+logs, manifests, ordinary local review, and every production configuration.
+
 ## Production runtime
 
 The production binary:
@@ -112,6 +121,8 @@ The production binary:
 - verifies access-token signature, issuer, client ID, expiry, and token use;
 - enforces coarse roles plus active PostgreSQL organization membership;
 - exposes `/health/live` and database-backed `/health/ready`;
+- adds the current database name to ready responses only in non-production
+  `local_review` mode so isolated study tooling can verify its target;
 - serves the SPA from `FRONTEND_DIST_DIR`;
 - runs bounded notification and photo-processing workers when configured; and
 - handles `SIGTERM` for graceful shutdown.
@@ -128,7 +139,7 @@ abandoned claims, and records provider receipts:
 
 ```text
 NOTIFICATION_DISPATCH_MODE=webhook
-PUBLIC_APP_URL=https://grover-landscaping.example.com
+PUBLIC_APP_URL=https://yardfolio.example.com
 NOTIFICATION_WEBHOOK_URL=https://notification-gateway.example.com/deliver
 NOTIFICATION_WEBHOOK_BEARER_TOKEN=<optional-bearer-token>
 NOTIFICATION_POLL_SECONDS=5
