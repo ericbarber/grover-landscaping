@@ -256,6 +256,13 @@ jobs:
           npm run test:e2e:cross-browser
         working-directory: frontend
 
+      - name: Validate production service-worker recovery
+        run: >-
+          /usr/bin/time -f
+          'production_service_worker elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm run test:e2e:production-pwa
+        working-directory: frontend
+
       - name: Validate manager continuity handoffs
         run: >-
           /usr/bin/time -f

@@ -32,4 +32,10 @@ When shell behavior changes incompatibly, increment `CACHE_NAME` in
 ```bash
 node --check frontend/public/sw.js
 npm --prefix frontend run build
+CI=1 npm --prefix frontend run test:e2e:production-pwa
 ```
+
+The dedicated production-PWA browser project allows service-worker ownership,
+waits for the worker to control the page and cache the built application shell,
+then reloads a routed public page with the browser offline. Routed acceptance
+projects continue to block workers so their API fixtures stay deterministic.

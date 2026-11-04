@@ -102,8 +102,15 @@ PostgreSQL 16. CI browser journeys now build and serve the production bundle;
 every browser still proves the visible transition while the wall-clock
 interaction budget runs only on the controlled Chromium mobile profile. Mocked
 acceptance contexts also block service-worker request ownership so WebKit API
-fixtures remain deterministic; production service-worker validation remains a
-separate concern. A fully passing hosted rerun and deployment remain unclaimed.
+fixtures remain deterministic. The next hosted run cleared the responsive
+Chromium, Firefox, and WebKit journeys, then exposed that production API-base
+selection no longer matched the manager suite's local-review fixtures. CI now
+builds the optimized acceptance artifact against that explicit fixture origin;
+all five affected manager continuity journeys pass locally against the
+production preview. A dedicated worker-enabled production project also proves
+registration, page control, shell population, and a routed offline reload while
+the mocked workflow projects remain worker-isolated. A fully passing hosted
+rerun and deployment remain unclaimed.
 
 B7 now adds a versioned production-artifact and browser-experience budget,
 privacy-bounded operational indicator contracts, an actionable validator with

@@ -65,10 +65,13 @@ Chromium, Firefox, and WebKit. The strict wall-clock interaction budget is
 enforced only on the designated Chromium mobile lab profile so parallel engine
 scheduling cannot masquerade as application latency. Production navigation,
 layout stability, reflow, and the resulting UI state remain explicit gates.
-Acceptance contexts block service-worker registration because their API
-fixtures use Playwright request routing, which cannot reliably intercept
-service-worker-owned requests. Production service-worker lifecycle validation
-remains a separate gate from mocked workflow acceptance.
+CI browser acceptance fixes the optimized build's API origin to the
+`http://localhost:8080` local-review fixture boundary; Playwright fulfills
+those requests without contacting an API server. Acceptance contexts also
+block service-worker registration because their API fixtures use Playwright
+request routing, which cannot reliably intercept service-worker-owned
+requests. Production service-worker lifecycle validation remains a separate
+gate from mocked workflow acceptance.
 
 ## Phase 6A10 authenticated bundle partition
 

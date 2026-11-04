@@ -1,5 +1,14 @@
 # Version History
 
+- 2026-11-03: Repaired the final browser-lab boundary exposed by PR #38. The
+  optimized acceptance build now keeps its API origin pinned to the
+  `http://localhost:8080` local-review fixture contract, allowing the manager
+  continuity suite to exercise production chunks without silently switching to
+  an unmocked same-origin API. All five affected manager journeys pass locally.
+  Added an isolated worker-enabled Chromium project that proves production
+  registration, control, hashed-shell population, and routed offline recovery;
+  mocked workflow projects continue to block workers. The new production-PWA
+  gate passes locally, while the hosted rerun and deployment remain separate.
 - 2026-11-03: Closed the next two hosted integration defects in PR #38. The
   live persistence fixture now changes scope only on the owner grant, preserving
   the manager-delegation constraint, and passes against isolated PostgreSQL 16.
