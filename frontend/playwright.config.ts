@@ -19,6 +19,7 @@ export default defineConfig({
   timeout: 60_000,
   use: {
     baseURL,
+    serviceWorkers: 'block',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },

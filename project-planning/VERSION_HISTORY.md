@@ -6,8 +6,10 @@
   CI browser journeys now build and preview the production bundle instead of
   measuring cold development compilation. Every engine retains the visible
   transition assertion while the strict interaction clock runs on the
-  controlled Chromium mobile profile. A passing hosted rerun and deployment
-  remain separate gates.
+  controlled Chromium mobile profile. Mocked acceptance contexts block service
+  workers so WebKit requests cannot bypass Playwright API fixtures; production
+  service-worker lifecycle validation remains separate. A passing hosted rerun
+  and deployment remain separate gates.
 - 2026-10-29: Published the reconciled current-`main` integration as PR #38.
   The first hosted run exposed an undeclared `rg` dependency in the release
   preflight on GitHub's current Ubuntu 24.04 image. Release contract searches

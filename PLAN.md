@@ -100,8 +100,10 @@ parallel WebKit load.
 The fixture now mutates only the owner grant and passes against isolated
 PostgreSQL 16. CI browser journeys now build and serve the production bundle;
 every browser still proves the visible transition while the wall-clock
-interaction budget runs only on the controlled Chromium mobile profile. A fully
-passing hosted rerun and deployment remain unclaimed.
+interaction budget runs only on the controlled Chromium mobile profile. Mocked
+acceptance contexts also block service-worker request ownership so WebKit API
+fixtures remain deterministic; production service-worker validation remains a
+separate concern. A fully passing hosted rerun and deployment remain unclaimed.
 
 B7 now adds a versioned production-artifact and browser-experience budget,
 privacy-bounded operational indicator contracts, an actionable validator with
