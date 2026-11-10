@@ -21,6 +21,7 @@ for account access or live-service evidence.
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | B10 decision packet prepared | Core workflows plus exact activity-to-Recovery exception handoff are delivered; the bounded concern proposal remains unapproved | Approve or revise concern ownership, response, retention, privacy, categories, urgent handling, and notification scope before implementation |
 | Internal convergence | I1 is delivered | Authorization-aware feature coordinators, exact workspace/job destinations, and scope-safe route summaries leave the top-level React shell focused on composition and global outcome copy | Preserve the boundary during regression maintenance while B9, R2, and P2 remain the next evidence gates |
+| Professional UI review | GL-01, GL-03, GL-04, and GL-05 are repository-delivered | Owners can explicitly review and send a privacy-limited known-provider invitation; the public tour and yard setup have complete keyboard/region behavior; the owner landing path explains signup and shows synthetic sample proof | Complete GL-02 through R2/R3, then run GL-06 on controlled iOS and Android pilot devices |
 
 ## Execution queue
 
@@ -301,6 +302,50 @@ Delivery evidence:
   changing the surviving run's job matrix.
 - Existing CI timing markers remain the comparison source for measured
   bottleneck work.
+
+### U1 — Professional UI review follow-through
+
+State: GL-01, GL-03, GL-04, and GL-05 are repository-delivered. GL-02 maps to
+the existing R2/R3 external lane; GL-06 follows protected hosting and controlled
+physical-device availability.
+
+Delivered implementation:
+
+- A ready private yard with no current invitation offers one self-service action
+  for a company the owner already knows. The owner reviews the recipient, expiry
+  window, included limited snapshot, and withheld fields before an explicit send.
+- Invitation retry reuses the same request key after an uncertain response,
+  double submission is disabled, terminal invitations offer a bounded restart,
+  and progress failure never masquerades as an empty connection list.
+- Exact address, photos, private contact details, and access notes remain absent
+  from the initial provider request. Later disclosure, assessment, proposal, and
+  scheduling UI stays compact until its prerequisite stage is reached.
+- Product-tour tabs have stable tab/panel relationships, one tab stop, arrow and
+  Home/End navigation, automatic activation, and visible keyboard focus.
+- Yard setup exposes a valid visible heading for each of its four steps, moves
+  focus to the selected step, keeps refresh focus in place, and announces
+  loading and failure outcomes.
+- The owner landing path explains what is created first, when provider access can
+  begin, and how returning owners sign in. A labeled synthetic sample visit shows
+  completed work and a bounded recommendation without posing as customer proof.
+- Owner setup analytics reuse the allowlisted first-party event contract with
+  coarse stage names only; addresses, recipients, contact fields, and photo URLs
+  are excluded.
+
+Validation:
+
+- 171 frontend files / 710 tests, TypeScript, production build, artifact budgets,
+  and brand validation pass.
+- The focused Chromium-mobile accessibility and owner-acquisition run passes 17
+  journeys with one intentional desktop-only skip, including empty, unavailable,
+  lost-response retry, focus, and keyboard fixtures.
+
+Remaining evidence:
+
+- GL-02 requires R2 provisioning and the R3 authenticated protected smoke.
+- GL-06 requires the protected build, controlled cross-role fixtures, and real
+  iOS Safari and Android Chrome devices. Local browser emulation is not recorded
+  as physical-device evidence.
 
 ### R1 — Release preflight contract
 

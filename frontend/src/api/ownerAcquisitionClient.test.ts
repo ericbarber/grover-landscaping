@@ -5,6 +5,7 @@ import {
   completeOwnerIntakeMediaUpload,
   createOwnerProperty,
   createOwnerIntakeMediaUpload,
+  createOwnerProviderInvitation,
   createOwnerInitialServiceProposalMessage,
   approveOwnerProviderDisclosure,
   deleteOwnerIntakeMedia,
@@ -147,6 +148,45 @@ describe('Yard Owner acquisition API client', () => {
     expect(fetchMock.mock.calls[0][0]).toContain(
       '/owner-properties/owner_property_1/provider-connection-progress',
     );
+  });
+
+  it('creates a limited provider invitation with a caller-owned retry key', async () => {
+    const invitationApi = {
+      invitation_id: 'invitation_1', owner_user_id: 'owner_1', property_id: 'property_1',
+      brief_id: 'brief_1', brief_version: 2, provider_name: 'Desert Bloom Yard Care',
+      recipient_business_email: 'dispatch@desert-bloom.example', purpose: 'yard_assessment',
+      owner_name_snapshot: 'Morgan', coarse_area_snapshot: 'Central Phoenix',
+      care_goals_snapshot: ['Routine upkeep'], cadence_snapshot: 'every_two_weeks',
+      status: 'pending_delivery', expires_at_epoch_seconds: 1_800_000_000,
+      delivery_status: 'pending', delivery_attempt_count: 1, persisted: true,
+    };
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(invitationApi), {
+      status: 202,
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(createOwnerProviderInvitation('property_1', {
+      providerName: 'Desert Bloom Yard Care',
+      recipientBusinessEmail: 'dispatch@desert-bloom.example',
+      expiresInDays: 14,
+      idempotencyKey: 'owner-invitation-request-1',
+    })).resolves.toEqual(expect.objectContaining({
+      invitationId: 'invitation_1',
+      providerName: 'Desert Bloom Yard Care',
+      deliveryStatus: 'pending',
+    }));
+
+    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
+    expect(body).toEqual({
+      provider_name: 'Desert Bloom Yard Care',
+      recipient_business_email: 'dispatch@desert-bloom.example',
+      expires_in_days: 14,
+      idempotency_key: 'owner-invitation-request-1',
+    });
+    expect(body).not.toHaveProperty('address');
+    expect(body).not.toHaveProperty('photos');
+    expect(body).not.toHaveProperty('contact_details');
+    expect(body).not.toHaveProperty('access_notes');
   });
 
   it('keeps disclosure snapshots server-derived and sends only affirmative owner choices', async () => {

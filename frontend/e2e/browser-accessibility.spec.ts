@@ -426,6 +426,40 @@ test('the product tour Plan step presents the landscaping operations dashboard',
   await expect(tour.getByText('Desert Willow Commons', { exact: true })).toBeVisible();
 });
 
+test('the product tour links its active tab and panel and supports roving keyboard focus', async ({ page }) => {
+  await page.goto('/for-yard-owners#tour');
+
+  const tour = page.locator('#tour');
+  const upcomingTab = tour.getByRole('tab', { name: /01 · Upcoming/ });
+  const progressTab = tour.getByRole('tab', { name: /02 · In progress/ });
+  const reviewTab = tour.getByRole('tab', { name: /03 · Review/ });
+
+  await expect(upcomingTab).toHaveAttribute('aria-selected', 'true');
+  await expect(upcomingTab).toHaveAttribute('tabindex', '0');
+  await expect(progressTab).toHaveAttribute('tabindex', '-1');
+  const initialPanelId = await upcomingTab.getAttribute('aria-controls');
+  expect(initialPanelId).toBeTruthy();
+  await expect(page.locator(`[id="${initialPanelId}"]`)).toHaveAttribute(
+    'aria-labelledby',
+    await upcomingTab.getAttribute('id') ?? '',
+  );
+
+  await upcomingTab.focus();
+  await upcomingTab.press('ArrowRight');
+  await expect(progressTab).toBeFocused();
+  await expect(progressTab).toHaveAttribute('aria-selected', 'true');
+  await expect(tour.getByRole('tabpanel')).toContainText('Care is underway');
+
+  await progressTab.press('End');
+  await expect(reviewTab).toBeFocused();
+  await expect(reviewTab).toHaveAttribute('aria-selected', 'true');
+  await expect(tour.getByRole('tabpanel')).toContainText('Your care summary is ready');
+
+  await reviewTab.press('Home');
+  await expect(upcomingTab).toBeFocused();
+  await expect(upcomingTab).toHaveAttribute('aria-selected', 'true');
+});
+
 test('every product-tour step stays within the selected persona', async ({ page }) => {
   const personas = [
     {

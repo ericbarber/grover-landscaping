@@ -27,6 +27,11 @@ describe('PublicLandingPage', () => {
 
     expect(ownerMarkup).toContain('Create my private yard');
     expect(ownerMarkup).toContain('connect a provider you know');
+    expect(ownerMarkup).toContain('First, save a private property and yard brief.');
+    expect(ownerMarkup).toContain('Synthetic sample · not a customer claim');
+    expect(ownerMarkup).toContain('Sample completed visit');
+    expect(ownerMarkup).toContain('Review the west irrigation zone');
+    expect(ownerMarkup).toContain('Returning to a saved setup?');
     expect(ownerMarkup).not.toContain('From finding care');
     expect(managerMarkup).toContain('Discuss my portfolio');
     expect(managerMarkup).toContain('properties you are authorized to access');

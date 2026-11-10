@@ -436,6 +436,11 @@ export function PublicLandingPage({
               )}
               <a className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/60 bg-forest/40 px-5 py-3 text-sm font-extrabold text-white shadow-yardfolio-sm backdrop-blur-sm transition hover:border-white hover:bg-white/20" href="#tour" onClick={() => trackMarketingEvent('cta_clicked', entryMarketingPersona, 'hero_product_tour')}>See how it works</a>
             </div>
+            {entryPersona.id === 'owner' ? (
+              <p className="mt-4 max-w-2xl text-sm font-semibold leading-6 text-emerald-50/90">
+                First, save a private property and yard brief. After the brief is ready, you can review a limited invitation before connecting a company you know. Returning to a saved setup? <a className="rounded-sm font-black text-white underline decoration-emerald-300 underline-offset-4 focus:outline-none focus:ring-2 focus:ring-amber-300" href="/app">Sign in</a>.
+              </p>
+            ) : null}
           </div>
         </div>
       </section>
@@ -579,6 +584,38 @@ export function PublicLandingPage({
               </article>
             ))}
           </div>
+          {activePersona.id === 'owner' ? (
+            <article aria-labelledby="sample-visit-title" className="mt-8 overflow-hidden rounded-[1.75rem] border border-emerald-200 bg-white shadow-yardfolio-md">
+              <div className="grid lg:grid-cols-[0.72fr_1.28fr]">
+                <div className="bg-emerald-950 p-6 text-white sm:p-8">
+                  <p className="text-xs font-black uppercase tracking-[0.17em] text-amber-300">Synthetic sample · not a customer claim</p>
+                  <h3 className="mt-3 font-display text-3xl font-bold" id="sample-visit-title">Sample completed visit</h3>
+                  <p className="mt-3 text-sm leading-6 text-emerald-100">An illustrative owner report showing the kind of service record {APP_DISPLAY_NAME} is designed to deliver.</p>
+                  <dl className="mt-6 grid gap-4 text-sm">
+                    <div><dt className="font-bold text-emerald-300">Visit</dt><dd className="mt-1 text-white">Routine landscape care · Tuesday morning</dd></div>
+                    <div><dt className="font-bold text-emerald-300">Status</dt><dd className="mt-1 text-white">Reviewed and delivered</dd></div>
+                  </dl>
+                </div>
+                <div className="grid gap-5 p-6 sm:grid-cols-2 sm:p-8">
+                  <section aria-labelledby="sample-completed-title" className="rounded-2xl bg-emerald-50 p-5">
+                    <p className="text-xs font-black uppercase tracking-[0.15em] text-emerald-700">Completed work</p>
+                    <h4 className="mt-2 text-lg font-black text-slate-950" id="sample-completed-title">The visit in plain language</h4>
+                    <ul className="mt-4 grid gap-2 text-sm leading-6 text-slate-700">
+                      <li className="flex gap-2"><span aria-hidden="true" className="font-black text-emerald-700">✓</span><span>Front and back lawn mowed and edged</span></li>
+                      <li className="flex gap-2"><span aria-hidden="true" className="font-black text-emerald-700">✓</span><span>Walkways cleared after service</span></li>
+                      <li className="flex gap-2"><span aria-hidden="true" className="font-black text-emerald-700">✓</span><span>Irrigation zones checked for visible issues</span></li>
+                    </ul>
+                  </section>
+                  <section aria-labelledby="sample-recommendation-title" className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                    <p className="text-xs font-black uppercase tracking-[0.15em] text-amber-800">One recommendation</p>
+                    <h4 className="mt-2 text-lg font-black text-slate-950" id="sample-recommendation-title">Review the west irrigation zone</h4>
+                    <p className="mt-3 text-sm leading-6 text-slate-700">The crew observed uneven coverage near the west planter. This note records the observation; it does not approve repair work or diagnose the cause.</p>
+                    <p className="mt-4 text-sm font-black text-amber-950">Owner decision: review before any next action</p>
+                  </section>
+                </div>
+              </div>
+            </article>
+          ) : null}
           <div className="mt-6 rounded-[1.75rem] bg-emerald-50 p-6 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-8">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.17em] text-emerald-700">Our evidence standard</p>

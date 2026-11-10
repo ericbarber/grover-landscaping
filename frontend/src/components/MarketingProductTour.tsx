@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import type { MarketingPersonaId } from '../domain/marketingRoute';
 import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
 import type { MarketingPersona } from '../api/marketingLeadsClient';
@@ -294,10 +294,43 @@ const tourContentByPersona: Record<MarketingPersonaId, PersonaTourContent> = {
 
 export function MarketingProductTour({ persona }: { persona: MarketingPersonaId }) {
   const [activeStepId, setActiveStepId] = useState<TourStepId>('plan');
+  const idPrefix = useId();
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const content = tourContentByPersona[persona];
   const activeIndex = content.steps.findIndex((step) => step.id === activeStepId);
-  const activeStep = content.steps[activeIndex];
+  const resolvedActiveIndex = activeIndex >= 0 ? activeIndex : 0;
+  const activeStep = content.steps[resolvedActiveIndex];
   const analyticsPersona = marketingPersonaForTour(persona);
+
+  useEffect(() => {
+    if (activeIndex < 0) setActiveStepId(content.steps[0].id);
+  }, [activeIndex, content.steps]);
+
+  function selectStep(stepId: TourStepId) {
+    setActiveStepId(stepId);
+    trackMarketingEvent('tour_step_selected', analyticsPersona, stepId);
+  }
+
+  function moveStepFocus(event: KeyboardEvent<HTMLButtonElement>, currentIndex: number) {
+    let nextIndex: number | null = null;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % content.steps.length;
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = (currentIndex - 1 + content.steps.length) % content.steps.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = content.steps.length - 1;
+    }
+    if (nextIndex === null) return;
+
+    event.preventDefault();
+    selectStep(content.steps[nextIndex].id);
+    tabRefs.current[nextIndex]?.focus();
+  }
+
+  const tabId = (stepId: TourStepId) => `${idPrefix}-${persona}-${stepId}-tab`;
+  const panelId = (stepId: TourStepId) => `${idPrefix}-${persona}-${stepId}-panel`;
 
   return (
     <section className="bg-slate-950 px-4 py-20 text-white sm:px-6 lg:px-8" id="tour">
@@ -311,16 +344,18 @@ export function MarketingProductTour({ persona }: { persona: MarketingPersonaId 
         <div className="mt-10 grid overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 lg:grid-cols-[0.72fr_1.28fr]">
           <div className="border-b border-white/10 p-4 lg:border-b-0 lg:border-r sm:p-6">
             <div aria-label="Product tour steps" className="grid gap-2" role="tablist">
-              {content.steps.map((step) => (
+              {content.steps.map((step, index) => (
                 <button
+                  aria-controls={panelId(step.id)}
                   aria-selected={step.id === activeStepId}
-                  className={`rounded-2xl p-4 text-left transition sm:p-5 ${step.id === activeStepId ? 'bg-emerald-400 text-emerald-950' : 'text-slate-300 hover:bg-white/10 hover:text-white'}`}
+                  className={`rounded-2xl p-4 text-left transition focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-amber-300 sm:p-5 ${step.id === activeStepId ? 'bg-emerald-400 text-emerald-950' : 'text-slate-300 hover:bg-white/10 hover:text-white'}`}
+                  id={tabId(step.id)}
                   key={step.id}
-                  onClick={() => {
-                    setActiveStepId(step.id);
-                    trackMarketingEvent('tour_step_selected', analyticsPersona, step.id);
-                  }}
+                  onClick={() => selectStep(step.id)}
+                  onKeyDown={(event) => moveStepFocus(event, index)}
+                  ref={(element) => { tabRefs.current[index] = element; }}
                   role="tab"
+                  tabIndex={step.id === activeStepId ? 0 : -1}
                   type="button"
                 >
                   <span className="text-xs font-black uppercase tracking-[0.16em]">{step.label}</span>
@@ -330,14 +365,19 @@ export function MarketingProductTour({ persona }: { persona: MarketingPersonaId 
             </div>
           </div>
 
-          <div className="p-5 sm:p-8 lg:p-10" role="tabpanel">
+          <div
+            aria-labelledby={tabId(activeStep.id)}
+            className="p-5 sm:p-8 lg:p-10"
+            id={panelId(activeStep.id)}
+            role="tabpanel"
+          >
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">{content.eyebrow}</p>
                 <h3 className="mt-2 text-2xl font-black">{activeStep.title}</h3>
               </div>
               <span className="whitespace-nowrap rounded-full border border-white/15 px-3 py-1 text-xs font-black text-slate-300">
-                {activeIndex + 1} / {content.steps.length}
+                {resolvedActiveIndex + 1} / {content.steps.length}
               </span>
             </div>
 

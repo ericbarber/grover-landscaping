@@ -60,7 +60,11 @@ workflows are not product targets.
 - Shareable persona campaign paths with complete page narratives, calls to
   action, canonical metadata, and crawler controls
 - Interactive persona-aware Plan-Care-Proof product tour
+- ARIA-linked Plan-Care-Proof tour tabs with roving keyboard focus, arrow and
+  Home/End navigation, automatic activation, and visible focus treatment
 - Evidence standard and trust cards grounded in delivered offline, audit, access, evidence, reporting, and bid workflows
+- Clearly labeled synthetic Yard Owner sample-visit report with completed work,
+  a bounded recommendation, signup-handoff explanation, and returning-user path
 - First-party conversion events for visits, personas, tour steps, CTAs, form starts, submissions, and failures
 - Anonymous per-tab measurement with UTM attribution, an explicit event allowlist, and no third-party tracking
 - Company first-value onboarding with allowlisted campaign handoff, six
@@ -426,6 +430,13 @@ workflows are not product targets.
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens
+- Accessible four-step Yard Owner setup announcements with valid region labels,
+  predictable heading focus, focus-preserving progress refresh, and live loading/
+  failure outcomes
+- Self-service known-provider invitation review from Connect care with one empty-
+  state action, explicit limited-data preview and send, stable uncertain-response
+  retry identity, duplicate suppression, terminal recovery, coarse allowlisted
+  milestones, and compact later stages until provider response
 - Validated Yard Owner V2 working design with service-day confidence, contextual
   questions, delivered proof comparison and feedback, concern recovery,
   collaborative recommendation decisions, portal-wide property selection,

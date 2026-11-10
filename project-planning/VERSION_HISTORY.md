@@ -1,5 +1,18 @@
 # Version History
 
+- 2026-11-10: Implemented the professional UI review's repository-owned GL-01,
+  GL-03, GL-04, and GL-05 recommendations. Yard Owners now review and explicitly
+  send a privacy-limited known-provider invitation from Connect care with stable
+  uncertain-response retry, duplicate protection, outage distinction, terminal
+  recovery, and compact future stages. The public tour now follows the complete
+  linked/roving tabs pattern; all yard-setup steps have valid labels, predictable
+  focus, and focus-preserving refresh announcements. The owner landing path
+  explains signup and returning access and adds a labeled synthetic visit report.
+  Coarse setup events exclude recipient and property details. The full frontend
+  gate passes 171 files / 710 tests, TypeScript, production build, artifact
+  budgets, brand validation, and 17 focused Chromium-mobile journeys with one
+  intentional desktop-only skip. GL-02 remains R2/R3 external evidence and GL-06
+  remains controlled physical-device evidence.
 - 2026-10-28: Completed browser assurance across the I1 Job entry points by
   protecting the Manager Dispatch workload handoff. Selecting scheduled work
   from Workload opens the exact Job at Overview after navigating Schedule

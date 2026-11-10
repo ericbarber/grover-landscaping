@@ -200,6 +200,28 @@ Photo-preview recovery follows the same standard: managers see preview outcomes
 instead of worker terminology or raw processing errors, and closing a failed
 preview requires confirming that no new preview is needed.
 
+The November professional UI review follow-through is now repository-delivered
+for GL-01, GL-03, GL-04, and GL-05. Connect care uses the existing self-service
+known-provider contract: a ready yard with no active invitation has one primary
+action, an explicit recipient and limited-data review precedes send, a stable
+request key survives uncertain responses, and failed, expired, withdrawn, or
+declined connections retain a safe restart path. Exact addresses, photos,
+private contact details, and access notes remain withheld until a later
+category-by-category approval. Progress outages retain refresh and never render
+as confirmed empty; later assessment/proposal stages stay compact until they are
+relevant. The public tour now has linked tabs and panels, roving arrow/Home/End
+keyboard focus, and visible focus treatment. All four yard-setup steps have
+valid region labels, visible focus targets, and refresh announcements that keep
+the initiating control focused. The Yard Owner landing path explains the
+private-brief-to-invitation handoff, preserves returning-user sign-in, and shows
+a clearly synthetic sample completed-visit report with completed work and one
+bounded recommendation. Setup measurement uses only coarse allowlisted stage
+identifiers. The complete frontend gate passes 171 files / 710 tests,
+TypeScript, production build, artifact budgets, brand validation, and 17 focused
+Chromium-mobile journeys with one intentional desktop-only skip. GL-02 remains
+the existing external R2/R3 protected-hosting gate; GL-06 remains physical iOS/
+Android pilot-device evidence after that environment is available.
+
 ### Raspberry Pi development hosting
 
 - The repository has an opt-in `main` deployment job gated by all CI checks,

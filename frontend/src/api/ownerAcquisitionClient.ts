@@ -91,6 +91,26 @@ interface ApiOwnerProviderConnectionProgress {
   persisted: boolean;
 }
 
+interface ApiOwnerProviderInvitation {
+  invitation_id: string;
+  owner_user_id: string;
+  property_id: string;
+  brief_id: string;
+  brief_version: number;
+  provider_name: string;
+  recipient_business_email: string;
+  purpose: string;
+  owner_name_snapshot: string;
+  coarse_area_snapshot: string;
+  care_goals_snapshot: string[];
+  cadence_snapshot: string;
+  status: string;
+  expires_at_epoch_seconds: number;
+  delivery_status: string;
+  delivery_attempt_count: number;
+  persisted: boolean;
+}
+
 interface ApiOwnerProviderDisclosureReview {
   review_version: string;
   invitation_id: string;
@@ -377,6 +397,33 @@ export interface OwnerProviderConnectionProgress {
   persisted: boolean;
 }
 
+export interface CreateOwnerProviderInvitationInput {
+  providerName: string;
+  recipientBusinessEmail: string;
+  expiresInDays: 7 | 14 | 30;
+  idempotencyKey: string;
+}
+
+export interface OwnerProviderInvitation {
+  invitationId: string;
+  ownerUserId: string;
+  propertyId: string;
+  briefId: string;
+  briefVersion: number;
+  providerName: string;
+  recipientBusinessEmail: string;
+  purpose: string;
+  ownerNameSnapshot: string;
+  coarseAreaSnapshot: string;
+  careGoalsSnapshot: string[];
+  cadenceSnapshot: string;
+  status: string;
+  expiresAtEpochSeconds: number;
+  deliveryStatus: string;
+  deliveryAttemptCount: number;
+  persisted: boolean;
+}
+
 export type OwnerDisclosureCategory = 'exact_address' | 'yard_brief' | 'selected_yard_photos'
   | 'owner_contact' | 'access_considerations';
 
@@ -542,6 +589,30 @@ function mapProviderConnectionProgress(
     expiresAtEpochSeconds: progress.expires_at_epoch_seconds,
     respondedAtEpochSeconds: progress.responded_at_epoch_seconds ?? undefined,
     persisted: progress.persisted,
+  };
+}
+
+function mapOwnerProviderInvitation(
+  invitation: ApiOwnerProviderInvitation,
+): OwnerProviderInvitation {
+  return {
+    invitationId: invitation.invitation_id,
+    ownerUserId: invitation.owner_user_id,
+    propertyId: invitation.property_id,
+    briefId: invitation.brief_id,
+    briefVersion: invitation.brief_version,
+    providerName: invitation.provider_name,
+    recipientBusinessEmail: invitation.recipient_business_email,
+    purpose: invitation.purpose,
+    ownerNameSnapshot: invitation.owner_name_snapshot,
+    coarseAreaSnapshot: invitation.coarse_area_snapshot,
+    careGoalsSnapshot: invitation.care_goals_snapshot,
+    cadenceSnapshot: invitation.cadence_snapshot,
+    status: invitation.status,
+    expiresAtEpochSeconds: invitation.expires_at_epoch_seconds,
+    deliveryStatus: invitation.delivery_status,
+    deliveryAttemptCount: invitation.delivery_attempt_count,
+    persisted: invitation.persisted,
   };
 }
 
@@ -784,6 +855,26 @@ export async function fetchOwnerProviderConnectionProgress(
   );
   return ((await response.json()) as ApiOwnerProviderConnectionProgress[])
     .map(mapProviderConnectionProgress);
+}
+
+export async function createOwnerProviderInvitation(
+  propertyId: string,
+  input: CreateOwnerProviderInvitationInput,
+): Promise<OwnerProviderInvitation> {
+  const response = await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/provider-invitations`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        provider_name: input.providerName,
+        recipient_business_email: input.recipientBusinessEmail,
+        expires_in_days: input.expiresInDays,
+        idempotency_key: input.idempotencyKey,
+      }),
+    },
+  );
+  return mapOwnerProviderInvitation(await response.json() as ApiOwnerProviderInvitation);
 }
 
 export async function fetchOwnerProviderAssessments(
