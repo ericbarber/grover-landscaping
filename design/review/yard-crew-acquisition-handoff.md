@@ -60,7 +60,7 @@ update fail once.
   selection, route density, territory exclusivity, or availability.
 - Solo operators, multi-crew companies, and invited workers receive distinct
   explanations and account outcomes before account creation.
-- Marketing proof uses supported Grover capabilities—scope, field handoff,
+- Marketing proof uses supported Yardfolio capabilities—scope, field handoff,
   availability control, evidence, and recovery—not unverified testimonials or
   growth claims.
 

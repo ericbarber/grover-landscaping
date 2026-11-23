@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { marketingPathForPersona, marketingPersonaFromPath } from './marketingRoute';
+import {
+  marketingCanonicalPath,
+  marketingPathForPersona,
+  marketingPersonaFromPath,
+} from './marketingRoute';
 
 describe('marketing routes', () => {
   it('selects the audience from stable campaign paths', () => {
@@ -9,9 +13,9 @@ describe('marketing routes', () => {
     expect(marketingPersonaFromPath('/for-crew-leads')).toBe('crew');
   });
 
-  it('uses the company story as the broad homepage default', () => {
-    expect(marketingPersonaFromPath('/')).toBe('company');
-    expect(marketingPersonaFromPath('/unrecognized')).toBe('company');
+  it('uses the single-property Yard Owner story as the homepage default', () => {
+    expect(marketingPersonaFromPath('/')).toBe('owner');
+    expect(marketingPersonaFromPath('/unrecognized')).toBe('owner');
   });
 
   it('returns a shareable path for every audience', () => {
@@ -19,5 +23,12 @@ describe('marketing routes', () => {
     expect(marketingPathForPersona('property-manager')).toBe('/for-property-managers');
     expect(marketingPathForPersona('company')).toBe('/for-landscaping-companies');
     expect(marketingPathForPersona('crew')).toBe('/for-crew-leads');
+  });
+
+  it('keeps the Yard Owner homepage canonical at the root route', () => {
+    expect(marketingCanonicalPath('/', 'owner')).toBe('/');
+    expect(marketingCanonicalPath('/for-landscaping-companies', 'company'))
+      .toBe('/for-landscaping-companies');
+    expect(marketingCanonicalPath('/', 'company')).toBe('/for-landscaping-companies');
   });
 });

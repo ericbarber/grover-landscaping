@@ -4,19 +4,19 @@
 /// identifiers deliberately keep their existing namespace when this changes.
 pub const APP_DISPLAY_NAME: &str = "Grover";
 
-pub fn authentication_realm() -> String {
-    format!("Bearer realm=\"{APP_DISPLAY_NAME}\"")
+pub fn app_page_title(title: &str) -> String {
+    format!("{title} | {APP_DISPLAY_NAME}")
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{authentication_realm, APP_DISPLAY_NAME};
+    use super::{app_page_title, APP_DISPLAY_NAME};
 
     #[test]
-    fn composes_customer_visible_authentication_realm_from_display_name() {
+    fn composes_customer_visible_page_titles_from_the_display_name() {
         assert_eq!(
-            authentication_realm(),
-            format!("Bearer realm=\"{APP_DISPLAY_NAME}\"")
+            app_page_title("Residential property care"),
+            format!("Residential property care | {APP_DISPLAY_NAME}")
         );
     }
 }

@@ -8,7 +8,7 @@ without depending on the production application or a hosted design tool.
 
 The design should help a visitor answer, in order:
 
-1. What is Grover and why is it relevant to me?
+1. What is Yardfolio and why is it relevant to me?
 2. How does the product connect planning, field care, and customer proof?
 3. Which parts of the promise are supported by real product capabilities?
 4. What is the right next step for my role?

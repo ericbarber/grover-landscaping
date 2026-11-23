@@ -81,7 +81,7 @@ failures for recovery review.
 - Care and assessment filters update the visible result set and provide an honest
   no-result state without contacting a provider.
 - Trust labels name the specific represented fact and its freshness rather than
-  implying a general Grover endorsement.
+  implying a general Yardfolio endorsement.
 - The owner can inspect provider detail, shortlist a bounded number, and approve
   disclosure separately for each provider.
 - Exact address, photographs, and final disclosure confirmation are not

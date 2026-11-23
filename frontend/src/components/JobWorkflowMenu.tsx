@@ -1,4 +1,6 @@
-export type JobWorkflowSection = 'overview' | 'checklist' | 'photos' | 'addons' | 'report';
+import type { JobWorkflowSection } from '../workspaces/features/field/fieldWorkspace';
+
+export type { JobWorkflowSection } from '../workspaces/features/field/fieldWorkspace';
 
 export function jobWorkflowItems({
   checklistComplete,
@@ -19,7 +21,7 @@ export function jobWorkflowItems({
     { id: 'overview', label: 'Overview', context: 'At a glance' },
     {
       id: 'checklist',
-      label: 'Checklist',
+      label: 'Tasks',
       context: `${checklistComplete}/${checklistTotal}`,
     },
     { id: 'photos', label: 'Photos', context: `${photoCount}` },

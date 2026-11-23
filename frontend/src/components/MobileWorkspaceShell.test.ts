@@ -1,8 +1,9 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { workspacePersonasForRoles } from '../domain/workspacePersona';
+import { workspacePersonasForRoles } from '../workspaces/core/resolveWorkspace';
 import {
+  DesktopWorkspaceNavigation,
   MobileWorkspaceHeader,
   mobileWorkspaceContext,
   mobileWorkspaceScrollTop,
@@ -23,12 +24,16 @@ describe('mobileWorkspaceContext', () => {
       detail: 'Today’s route and field work',
     });
   });
-  it('keeps route sync and workload context visible', () => {
+  it('shows route context without assuming assigned jobs are current stops', () => {
     expect(mobileWorkspaceContext({ ...baseInput, view: 'route' })).toEqual({
-      eyebrow: 'Today',
+      eyebrow: 'Route',
       title: 'Crew route',
-      detail: '3 assigned jobs · Synced',
+      detail: 'Review the crew plan',
     });
+    expect(mobileWorkspaceContext({
+      ...baseInput, view: 'route',
+      routeOverview: { source: 'api', serviceDate: '2026-06-15', totalStops: 2, completedStops: 0 },
+    })).toMatchObject({ eyebrow: 'Past route', detail: expect.stringContaining('June 15, 2026') });
     expect(mobileWorkspaceContext({
       ...baseInput,
       view: 'route',
@@ -96,5 +101,48 @@ describe('mobileWorkspaceContext', () => {
     expect(markup).toContain('aria-label="Account menu"');
     expect(markup).toContain('Marcus Manager');
     expect(markup).toContain('Sign out');
+  });
+
+  it('groups multi-role workspaces with property customers first', () => {
+    const personas = workspacePersonasForRoles([
+      'Manager',
+      'CrewLead',
+      'PropertyManager',
+      'PropertyOwner',
+    ]);
+    const markup = renderToStaticMarkup(createElement(MobileWorkspaceHeader, {
+      ...baseInput,
+      activePersonaId: personas[0].id,
+      availablePersonas: personas,
+      onBackToJobs: () => undefined,
+      onPersonaChange: () => undefined,
+      onSignOut: () => undefined,
+      signedInName: 'Alex Owner',
+      view: 'home',
+    }));
+
+    expect(personas[0].id).toBe('yard-owner');
+    expect(markup).toContain('<optgroup label="Property customers">');
+    expect(markup).toContain('<optgroup label="Service teams">');
+    expect(markup.indexOf('value="yard-owner"')).toBeLessThan(
+      markup.indexOf('value="company-manager"'),
+    );
+
+    const desktopMarkup = renderToStaticMarkup(createElement(DesktopWorkspaceNavigation, {
+      activePersonaId: personas[0].id,
+      activeView: 'home',
+      availablePersonas: personas,
+      hasSelectedJob: false,
+      navigationItems: personas[0].navigation,
+      onChange: () => undefined,
+      onPersonaChange: () => undefined,
+      onSignOut: () => undefined,
+      personaLabel: personas[0].label,
+      signedInName: 'Alex Owner',
+    }));
+
+    expect(desktopMarkup).toContain('aria-label="Active desktop workspace persona"');
+    expect(desktopMarkup).toContain('<optgroup label="Property customers">');
+    expect(desktopMarkup).toContain('<optgroup label="Service teams">');
   });
 });

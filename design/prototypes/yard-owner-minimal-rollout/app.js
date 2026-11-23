@@ -44,7 +44,7 @@ const personas = {
     },
   },
   'company-owner': {
-    name: 'Yard-care Company Owner', identity: 'Avery — Company Owner', shortName: 'Avery', role: 'Company owner', identityAction: 'Organization', plan: `${sharedPlan}#yard-care-company-owner`, panel: 'generic', context: 'Grover Yard Care', heading: 'Start with company readiness.', confidence: 'Operational',
+    name: 'Yard-care Company Owner', identity: 'Avery — Company Owner', shortName: 'Avery', role: 'Company owner', identityAction: 'Organization', plan: `${sharedPlan}#yard-care-company-owner`, panel: 'generic', context: 'Yardfolio Yard Care', heading: 'Start with company readiness.', confidence: 'Operational',
     summary: 'Establish the company, run today’s work, add customer and team administration, then enable recovery.',
     primary: { eyebrow: 'Company readiness', title: '4 crews ready for today', copy: 'One invitation is pending. All published day plans have assigned crews.', facts: ['26 active customers', '4 published routes', '1 onboarding action'] },
     units: {
@@ -82,7 +82,7 @@ const personas = {
     primary: { eyebrow: 'Billing-readiness queue', title: '3 accounts need review', copy: 'Two completed visits need report confirmation. One account is missing a billing contact.', facts: ['26 active accounts', '23 records ready', 'No invoice or payment controls'] },
     units: {
       b1: { option: 'B1 · Account records — minimum launch', label: 'Minimum launch', title: 'Account records', copy: 'A read-only customer account view with explicit missing and unavailable states.', intro: 'Verify customer, contact, and account context.', nav: ['Home', 'Accounts'], active: 'Accounts', capabilities: ['Exact organization/account authorization', 'Customer account records', 'Customer-safe portal context', 'Missing and unavailable distinctions'] },
-      b2: { option: 'B2 · Completion readiness', label: 'Functional unit 2', title: 'Completion readiness', copy: 'Add immutable completion reports as billing input, not an invoice claim.', intro: 'Match delivered work to the correct account and visit.', nav: ['Home', 'Billing', 'Accounts'], active: 'Billing', capabilities: ['Everything in B1', 'Exact-visit completion reports', 'Pending versus delivered status', 'Correction handoff'], card: ['Ready for downstream billing', 'Completion is evidence for billing; Grover does not claim an invoice exists.'] },
+      b2: { option: 'B2 · Completion readiness', label: 'Functional unit 2', title: 'Completion readiness', copy: 'Add immutable completion reports as billing input, not an invoice claim.', intro: 'Match delivered work to the correct account and visit.', nav: ['Home', 'Billing', 'Accounts'], active: 'Billing', capabilities: ['Everything in B1', 'Exact-visit completion reports', 'Pending versus delivered status', 'Correction handoff'], card: ['Ready for downstream billing', 'Completion is evidence for billing; Yardfolio does not claim an invoice exists.'] },
       b3: { option: 'B3 · Account exception handoff', label: 'Functional unit 3', title: 'Account exception handoff', copy: 'Complete the current role boundary with traceable exceptions and no unsupported revenue tools.', intro: 'Resolve account and completion gaps with the owning operator.', nav: ['Home', 'Billing', 'Accounts'], active: 'Billing', capabilities: ['Everything in B2', 'Account-readiness queue', 'Named operational handoff', 'Audited resolution receipt'], card: ['Bounded role', 'Bids may be viewed in customer context; invoice, payment, refund, and ledger actions stay absent.'] },
     },
   },
@@ -169,15 +169,12 @@ function showOverview(announce = true) {
   document.querySelector('#rail-persona').textContent = 'Rollout map';
   document.querySelector('#rail-name').textContent = '10 personas';
   document.querySelector('#rail-role').textContent = 'Functional units';
-  document.querySelector('#brand-home').href = '#overview/map';
   document.querySelector('#rollout-plan-link').href = sharedPlan;
   const nav = navMarkup(['Home']);
   document.querySelector('#rail-nav').innerHTML = nav;
-  const mobileNav = document.querySelector('#mobile-nav');
-  mobileNav.innerHTML = nav;
-  mobileNav.setAttribute('aria-label', 'Rollout map mobile navigation');
+  document.querySelector('#mobile-nav').innerHTML = nav;
   if (location.hash !== '#overview/map') history.replaceState(null, '', '#overview/map');
-  document.title = 'All-persona functional rollout · Grover';
+  document.title = 'All-persona functional rollout · Yardfolio';
   if (announce) document.querySelector('#announcer').textContent = 'Showing the all-persona rollout map';
 }
 
@@ -199,7 +196,6 @@ function setUnit(personaKey, unitKey, announce = true) {
   document.querySelector('#rail-persona').textContent = persona.role;
   document.querySelector('#rail-name').textContent = persona.shortName;
   document.querySelector('#rail-role').textContent = persona.role;
-  document.querySelector('#brand-home').href = `#${resolvedKey}/${fallback}`;
   document.querySelector('#rollout-plan-link').href = persona.plan;
   document.querySelectorAll('[data-unit-label]').forEach((element) => { element.textContent = unit.label; });
   document.querySelectorAll('[data-unit-title]').forEach((element) => { element.textContent = unit.title; });
@@ -207,16 +203,14 @@ function setUnit(personaKey, unitKey, announce = true) {
   document.querySelectorAll('[data-unit-intro]').forEach((element) => { element.textContent = unit.intro; });
   const nav = navMarkup(unit.nav, unit.active);
   document.querySelector('#rail-nav').innerHTML = nav;
-  const mobileNav = document.querySelector('#mobile-nav');
-  mobileNav.innerHTML = nav;
-  mobileNav.setAttribute('aria-label', `${persona.name} mobile navigation`);
+  document.querySelector('#mobile-nav').innerHTML = nav;
   const innerNav = persona.panel === 'owner' ? '#portal-tabs' : persona.panel === 'crew' ? '#crew-tabs' : '#generic-tabs';
   document.querySelector(innerNav).innerHTML = nav;
   document.querySelectorAll('[data-capabilities]').forEach((element) => { element.innerHTML = unit.capabilities.map((capability) => `<span><b aria-hidden="true">✓</b>${capability}</span>`).join(''); });
   if (persona.panel === 'generic') renderGeneric(persona, key, unit);
   const hash = `#${resolvedKey}/${key}`;
   if (location.hash !== hash) history.replaceState(null, '', hash);
-  document.title = `${persona.name} ${unit.title} · Grover rollout`;
+  document.title = `${persona.name} ${unit.title} · Yardfolio rollout`;
   if (announce) document.querySelector('#announcer').textContent = `Showing ${persona.name}, ${unit.label}: ${unit.title}`;
 }
 

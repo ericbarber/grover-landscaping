@@ -14,7 +14,7 @@ The worker uses a versioned shell cache with these boundaries:
   cached.
 - Navigation URLs are not used as cache keys, preventing invitation, report, or
   bid tokens from being retained in cache metadata.
-- Activation removes older Grover shell cache versions.
+- Activation removes older application shell cache versions.
 - An installed update waits until the application announces it and the user
   chooses **Update and reload**. The active page reloads only after the new worker
   takes control.
@@ -23,7 +23,7 @@ The service worker improves shell recovery and repeat loading. It does not claim
 that mutations work offline. Offline data queues remain a separate planned phase
 and must preserve tenant, actor, ordering, and conflict semantics before launch.
 
-If a route render fails, **Reload application** removes only Grover Field shell
+If a route render fails, **Reload application** removes only application shell
 caches before reloading. IndexedDB mutation and photo queues are not cleared.
 
 When shell behavior changes incompatibly, increment `CACHE_NAME` in

@@ -1,7 +1,7 @@
 # Yard Owner Acquisition Working Design
 
 This dependency-free prototype demonstrates how a person can create a private
-yard in Grover before having a service provider, then connect an existing company
+yard in Yardfolio before having a service provider, then connect an existing company
 or request assessment from suitable provider organizations.
 
 Open [`index.html`](index.html) directly, from the design gallery, or from the

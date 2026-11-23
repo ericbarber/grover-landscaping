@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FIELD_APP_DISPLAY_NAME } from '../appIdentity';
 import {
   createDayPlanAmendment,
   fetchDayPlanAmendments,
 } from '../api/dayPlanAmendmentsClient';
 import { DayPlanRequestError, fetchCrewDayPlan } from '../api/dayPlansClient';
+import { FIELD_APP_DISPLAY_NAME } from '../appIdentity';
+import {
+  readMigratedStorageValue,
+  APP_STORAGE_NAMESPACE,
+} from '../domain/browserStorageNamespace';
 import { updateStopProgress } from '../api/stopProgressClient';
 import {
   classifyRouteDate,
@@ -12,6 +16,7 @@ import {
   getTotalEstimatedMinutes,
   seedDayPlan,
   type DayPlan,
+  type CrewRouteOverview,
 } from '../domain/dayPlans';
 import { isJobSelectionButtonText } from '../domain/jobSelection';
 import {
@@ -52,8 +57,8 @@ import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
 type DayPlanPanelProps = {
   actorId?: string | null;
   jobDetailsEnabled?: boolean;
-  onPendingChangeCountChange?: (count: number) => void;
   onSelectJob?: (jobId: string) => void;
+  onOverviewChange?: (overview: CrewRouteOverview) => void;
   refreshSignal?: number;
   routeChangesEnabled?: boolean;
   stopProgressEnabled?: boolean;
@@ -86,12 +91,16 @@ const crewExtraServiceCatalog: ServiceCatalogItem[] = [
 ];
 
 function storageKey(dayPlanId: string): string {
-  return `grover.dayPlan.${dayPlanId}.stopStates`;
+  return `${APP_STORAGE_NAMESPACE}.dayPlan.${dayPlanId}.stopStates`;
 }
 
 function loadStopStates(dayPlanId: string): StopStateMap {
   try {
-    const rawValue = window.localStorage.getItem(storageKey(dayPlanId));
+    const rawValue = readMigratedStorageValue(
+      window.localStorage,
+      storageKey(dayPlanId),
+      `.dayPlan.${dayPlanId}.stopStates`,
+    );
     return rawValue ? (JSON.parse(rawValue) as StopStateMap) : {};
   } catch {
     return {};
@@ -130,14 +139,14 @@ function queuedChangeStatusLabel(syncState: 'pending' | 'failed' | 'conflict'): 
 export function DayPlanPanel({
   actorId,
   jobDetailsEnabled = true,
-  onPendingChangeCountChange,
   onSelectJob,
+  onOverviewChange,
   refreshSignal = 0,
   routeChangesEnabled = true,
   stopProgressEnabled = true,
 }: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
-  const [source, setSource] = useState<'api' | 'local' | 'missing' | 'unavailable'>('local');
+  const [source, setSource] = useState<CrewRouteOverview['source']>('loading');
   const [syncStatus, setSyncStatus] = useState<RouteProgressSyncStatus>('local');
   const [stopStates, setStopStates] = useState<StopStateMap>(() => loadStopStates(seedDayPlan.id));
   const [amendmentRequests, setAmendmentRequests] = useState<DayPlanAmendmentRequest[]>([]);
@@ -169,17 +178,17 @@ export function DayPlanPanel({
       ? total
       : total + stop.estimatedDriveMinutes + stop.estimatedServiceMinutes
   ), 0);
+  const routeDate = classifyRouteDate(dayPlan.serviceDate);
   const nextStopIndex = dayPlan.stops.findIndex(
     (stop) => resolveStopStatus(stopStates[stop.id], stop.stopStatus) !== 'finished',
   );
-  const focusedStopStart = nextStopIndex >= 0
-    ? nextStopIndex
-    : Math.max(0, dayPlan.stops.length - 2);
+  const focusedStopStart = !routeDate.mutable ? 0
+    : nextStopIndex >= 0 ? nextStopIndex
+      : Math.max(0, dayPlan.stops.length - 2);
   const visibleStops = showAllStops
     ? dayPlan.stops
     : dayPlan.stops.slice(focusedStopStart, focusedStopStart + 2);
-  const routeDate = classifyRouteDate(dayPlan.serviceDate);
-  const routeIsMutable = routeDate.mutable && source !== 'missing' && source !== 'unavailable';
+  const routeIsMutable = routeDate.mutable && source !== 'loading' && source !== 'missing' && source !== 'unavailable';
   const routeProgressEnabled = stopProgressEnabled && routeIsMutable;
   const routeAmendmentsEnabled = routeChangesEnabled && routeIsMutable;
   const amendmentNeedsAttention = offlineAmendmentMutations.some(
@@ -195,17 +204,14 @@ export function DayPlanPanel({
           ? 'local'
           : 'synced';
 
-  function routeIsMutableNow(): boolean {
-    return source !== 'missing'
-      && source !== 'unavailable'
-      && classifyRouteDate(dayPlan.serviceDate).mutable;
-  }
-
   useEffect(() => {
-    onPendingChangeCountChange?.(
-      offlineMutations.length + offlineAmendmentMutations.length,
-    );
-  }, [offlineAmendmentMutations.length, offlineMutations.length, onPendingChangeCountChange]);
+    onOverviewChange?.({
+      source,
+      serviceDate: source === 'api' || source === 'local' ? dayPlan.serviceDate : undefined,
+      totalStops: source === 'api' || source === 'local' ? dayPlan.stops.length : 0,
+      completedStops: source === 'api' || source === 'local' ? completedStops : 0,
+    });
+  }, [completedStops, dayPlan.serviceDate, dayPlan.stops.length, onOverviewChange, source]);
 
   function clickMatchingJobCard(customerName: string) {
     const buttons = Array.from(document.querySelectorAll('article button'));
@@ -235,7 +241,8 @@ export function DayPlanPanel({
     stopId?: string,
     service?: ServiceCatalogItem,
   ) {
-    if (!routeChangesEnabled || !routeIsMutableNow()) return;
+    if (!routeAmendmentsEnabled) return;
+
     const request: DayPlanAmendmentRequest = {
       id: `local_amendment_${dayPlan.id}_${amendmentType}_${Date.now()}`,
       dayPlanId: dayPlan.id,
@@ -371,7 +378,8 @@ export function DayPlanPanel({
   }
 
   function advanceStop(stopId: string) {
-    if (!stopProgressEnabled || !routeIsMutableNow()) return;
+    if (!routeProgressEnabled) return;
+
     setStopStates((current) => {
       const persistedStatus = dayPlan.stops.find((stop) => stop.id === stopId)?.stopStatus;
       const nextState = getNextStopStatus(resolveStopStatus(current[stopId], persistedStatus));
@@ -382,7 +390,8 @@ export function DayPlanPanel({
   }
 
   function resetRouteProgress() {
-    if (!stopProgressEnabled || !routeIsMutableNow()) return;
+    if (!routeProgressEnabled) return;
+
     clearStopStates(dayPlan.id);
     setStopStates(resetStopStates());
     if (pendingMutationCount > 0) {
@@ -411,12 +420,7 @@ export function DayPlanPanel({
   }
 
   const replayOfflineMutations = useCallback(async () => {
-    if (
-      !stopProgressEnabled
-      || !actorId
-      || !navigator.onLine
-      || replayInProgress.current
-    ) return;
+    if (!actorId || !navigator.onLine || replayInProgress.current) return;
     replayInProgress.current = true;
     setIsReplayingMutations(true);
     try {
@@ -457,15 +461,10 @@ export function DayPlanPanel({
       replayInProgress.current = false;
       setIsReplayingMutations(false);
     }
-  }, [actorId, stopProgressEnabled]);
+  }, [actorId]);
 
   const replayOfflineAmendments = useCallback(async () => {
-    if (
-      !routeChangesEnabled
-      || !actorId
-      || !navigator.onLine
-      || amendmentReplayInProgress.current
-    ) return;
+    if (!actorId || !navigator.onLine || amendmentReplayInProgress.current) return;
     amendmentReplayInProgress.current = true;
     setIsReplayingAmendments(true);
     try {
@@ -521,7 +520,7 @@ export function DayPlanPanel({
       amendmentReplayInProgress.current = false;
       setIsReplayingAmendments(false);
     }
-  }, [actorId, routeChangesEnabled]);
+  }, [actorId]);
 
   async function discardReviewedConflict(mutation: StopProgressOfflineMutation) {
     try {
@@ -578,6 +577,8 @@ export function DayPlanPanel({
   useEffect(() => {
     let isMounted = true;
 
+    setSource('loading');
+
     fetchCrewDayPlan(seedDayPlan.crewId)
       .then((apiDayPlan) => {
         if (isMounted) {
@@ -609,7 +610,7 @@ export function DayPlanPanel({
   }, [refreshSignal]);
 
   useEffect(() => {
-    if (source === 'missing' || source === 'unavailable') return;
+    if (source === 'loading' || source === 'missing' || source === 'unavailable') return;
     let isMounted = true;
 
     fetchDayPlanAmendments(dayPlan.id)
@@ -668,8 +669,18 @@ export function DayPlanPanel({
     replayOfflineMutations,
   ]);
 
+  if (source === 'loading') {
+    return (
+      <WorkspaceStatusNotice
+        detail="Checking the published crew plan and its service date."
+        title="Loading crew route"
+        tone="neutral"
+      />
+    );
+  }
+
   return (
-    <section className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5">
+    <section className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="order-1 flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
@@ -725,11 +736,6 @@ export function DayPlanPanel({
                   {conflictMutationCount} {conflictMutationCount === 1 ? 'change needs' : 'changes need'} manager review before retrying.
                 </p>
               )}
-              {!stopProgressEnabled ? (
-                <p className="mt-1 font-medium">
-                  Saved progress stays on this phone until stop execution access returns.
-                </p>
-              ) : null}
               {conflictResolutionError && (
                 <p className="mt-1 font-medium text-red-900">
                   The reviewed conflict could not be removed from this phone. Try again.
@@ -799,18 +805,11 @@ export function DayPlanPanel({
               </details>
               <button
                 className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
-                disabled={
-                  !stopProgressEnabled
-                  || !navigator.onLine
-                  || isReplayingMutations
-                  || conflictMutationCount > 0
-                }
+                disabled={!navigator.onLine || isReplayingMutations || conflictMutationCount > 0}
                 onClick={() => void replayOfflineMutations()}
                 type="button"
               >
-                {!stopProgressEnabled
-                  ? 'Stop execution access needed'
-                  : isReplayingMutations
+                {isReplayingMutations
                   ? 'Syncing…'
                   : conflictMutationCount > 0
                     ? 'Manager review needed'
@@ -821,7 +820,7 @@ export function DayPlanPanel({
         </div>
       </div>
 
-      <section aria-label={`${routeDate.label} progress`} className="order-2 mt-5 rounded-2xl bg-forest p-5 text-white shadow-grover-md">
+      <section aria-label={`${routeDate.label} progress`} className="order-2 mt-5 rounded-2xl bg-forest p-5 text-white shadow-yardfolio-md">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.16em] text-sand">{routeDate.label}</p>
@@ -847,7 +846,7 @@ export function DayPlanPanel({
           <div className="h-full rounded-full bg-sand" style={{ width: `${completionPercent}%` }} />
         </div>
         <div className="mt-4 flex items-center justify-between gap-4 text-xs font-bold text-emerald-100">
-          <span>{remainingMinutes} min remaining</span>
+          <span>{routeDate.mutable ? `${remainingMinutes} min remaining` : `${dayPlan.stops.length} stops on plan`}</span>
           <span>{totalMinutes} min planned · {dayPlan.routeStatus}</span>
         </div>
       </section>
@@ -907,7 +906,7 @@ export function DayPlanPanel({
           </summary>
           <div className="mt-3 space-y-2">
             {amendmentRequests.map((request) => (
-              <article key={request.id} className="rounded-lg bg-white p-3 text-xs text-slate-600 shadow-xs">
+              <article key={request.id} className="rounded-lg bg-white p-3 text-xs text-slate-600 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-slate-900">{dayPlanAmendmentTypeLabel(request.amendmentType)}</p>
@@ -946,11 +945,6 @@ export function DayPlanPanel({
             {offlineAmendmentMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
             {offlineAmendmentMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
           </p>
-          {!routeChangesEnabled ? (
-            <p className="mt-1 font-medium">
-              Saved requests stay on this phone until route-change access returns.
-            </p>
-          ) : null}
           <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
             <summary className="min-h-11 cursor-pointer py-3 font-bold">
               Review queued route requests
@@ -1015,19 +1009,14 @@ export function DayPlanPanel({
           <button
             className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
             disabled={
-              !routeChangesEnabled
-              || !navigator.onLine
+              !navigator.onLine
               || isReplayingAmendments
               || offlineAmendmentMutations.some((mutation) => mutation.syncState === 'conflict')
             }
             onClick={() => void replayOfflineAmendments()}
             type="button"
           >
-            {!routeChangesEnabled
-              ? 'Route-change access needed'
-              : isReplayingAmendments
-                ? 'Sending requests…'
-                : 'Send queued requests'}
+            {isReplayingAmendments ? 'Sending requests…' : 'Send queued requests'}
           </button>
         </div>
       )}
@@ -1051,12 +1040,14 @@ export function DayPlanPanel({
           <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
             <div>
               <p className="text-sm font-bold text-emerald-950">
-                {showAllStops ? 'Full route' : 'Current route focus'}
+                {showAllStops ? 'Full route' : routeDate.mutable ? 'Current route focus' : 'Plan stops'}
               </p>
               <p className="text-xs text-emerald-800">
                 {showAllStops
                   ? `${dayPlan.stops.length} stops shown`
-                  : `Showing the next ${visibleStops.length} stops · ${completedStops} finished`}
+                  : routeDate.mutable
+                    ? `Showing the next ${visibleStops.length} stops · ${completedStops} finished`
+                    : `Showing ${visibleStops.length} of ${dayPlan.stops.length} stops`}
               </p>
             </div>
             <button
@@ -1064,7 +1055,7 @@ export function DayPlanPanel({
               onClick={() => setShowAllStops((current) => !current)}
               type="button"
             >
-              {showAllStops ? 'Focus current' : `Show all ${dayPlan.stops.length}`}
+              {showAllStops ? routeDate.mutable ? 'Focus current' : 'Show fewer' : `Show all ${dayPlan.stops.length}`}
             </button>
           </div>
         ) : null}
@@ -1100,12 +1091,12 @@ export function DayPlanPanel({
 
           return (
             <div key={stop.id}>
-              <h3 className="grover-type-operational mb-2 mt-5 text-xl font-black text-forest">
-                {index === 0
+              <h3 className="yardfolio-type-operational mb-2 mt-5 text-xl font-black text-forest">
+                {!routeDate.mutable ? `Stop ${stop.stopOrder}` : index === 0
                   ? completedStops >= dayPlan.stops.length ? 'Latest stop' : 'Current stop'
                   : index === 1 ? 'Up next' : `Stop ${stop.stopOrder}`}
               </h3>
-              <article className={`rounded-2xl border p-4 ${index === 0 ? 'border-emerald-300 bg-paper shadow-grover-sm' : 'border-slate-200 bg-slate-50'}`}>
+              <article className={`rounded-2xl border p-4 ${index === 0 ? 'border-emerald-300 bg-paper shadow-yardfolio-sm' : 'border-slate-200 bg-slate-50'}`}>
               {jobDetailsEnabled ? (
                 <button
                   aria-label={`Open job details for ${stop.customerName}`}

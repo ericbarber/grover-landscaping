@@ -23,6 +23,13 @@ export interface DayPlan {
   stops: DayPlanStop[];
 }
 
+export interface CrewRouteOverview {
+  source: 'loading' | 'api' | 'local' | 'missing' | 'unavailable';
+  serviceDate?: string;
+  totalStops: number;
+  completedStops: number;
+}
+
 export type RouteDateContext = {
   kind: 'past' | 'today' | 'upcoming' | 'unknown';
   label: 'Past route' | 'Today’s route' | 'Upcoming route' | 'Route date unavailable';

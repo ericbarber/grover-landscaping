@@ -1,4 +1,5 @@
-use grover_landscaping_api::{
+use sqlx::Row;
+use yardfolio_api::{
     access_control::AccessRole,
     db::JobRepository,
     organizations::{
@@ -7,7 +8,6 @@ use grover_landscaping_api::{
     },
     workspace_rollout::{UpdateWorkspaceRolloutEnrollmentRequest, WorkspaceRolloutMutationResult},
 };
-use sqlx::Row;
 mod common;
 
 #[tokio::test]
@@ -332,7 +332,7 @@ async fn membership_derived_rollout_mutations_are_retry_safe_and_versioned() {
     let enrollments = organizations
         .list_workspace_rollout_enrollments(organization_id)
         .await;
-    let grover_landscaping_api::organizations::OrganizationCollectionResult::Loaded(enrollments) =
+    let yardfolio_api::organizations::OrganizationCollectionResult::Loaded(enrollments) =
         enrollments
     else {
         panic!("rollout enrollment list should load");

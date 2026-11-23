@@ -1,4 +1,7 @@
-use grover_landscaping_api::{
+use sqlx::postgres::PgPoolOptions;
+use sqlx::Row;
+use std::time::Duration;
+use yardfolio_api::{
     db::{
         CustomerPhotoErasureResult, CustomerPrivacyExportResult, JobRepository,
         PhotoErasureDeletionHistoryFilter, PhotoErasureDeletionResolveResult,
@@ -9,9 +12,6 @@ use grover_landscaping_api::{
     photo_storage::PhotoStorageConfig,
     PhotoUploadMetadata, PhotoUploadRequest,
 };
-use sqlx::postgres::PgPoolOptions;
-use sqlx::Row;
-use std::time::Duration;
 mod common;
 
 static PHOTO_PERSISTENCE_TEST_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
@@ -38,7 +38,7 @@ async fn repository_distinguishes_unavailable_photo_recovery_writes() {
     let _test_guard = PHOTO_PERSISTENCE_TEST_LOCK.lock().await;
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
-        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
         .expect("unavailable test pool URL should be valid");
     let repository = JobRepository::from_pool(pool);
 
@@ -66,7 +66,7 @@ async fn repository_distinguishes_unavailable_photo_writes() {
     let _test_guard = PHOTO_PERSISTENCE_TEST_LOCK.lock().await;
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
-        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .connect_lazy("postgres://yardfolio:yardfolio@127.0.0.1:1/yardfolio")
         .expect("unavailable test pool URL should be valid");
     let repository = JobRepository::from_pool(pool);
 

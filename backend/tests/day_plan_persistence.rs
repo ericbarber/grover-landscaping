@@ -1,11 +1,11 @@
-use grover_landscaping_api::{
+use sqlx::postgres::PgPoolOptions;
+use yardfolio_api::{
     day_plans::{
         draft_day_plan_id, AssignDayPlanStopRequest, CreateDayPlanRequest, DayPlanRepository,
         PersistedMutationResult, TodayDayPlanResult,
     },
     db::JobRepository,
 };
-use sqlx::postgres::PgPoolOptions;
 mod common;
 
 #[tokio::test]
@@ -87,7 +87,7 @@ async fn day_plan_repository_reads_persisted_stop_status() {
             "integration_user",
         )
         .await,
-        grover_landscaping_api::db::StopProgressWriteResult::Persisted,
+        yardfolio_api::db::StopProgressWriteResult::Persisted,
     );
 
     let TodayDayPlanResult::Found(day_plan) = day_plans.today_for_crew(crew_id).await else {

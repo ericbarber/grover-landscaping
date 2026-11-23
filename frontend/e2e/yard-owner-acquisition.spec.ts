@@ -1,22 +1,21 @@
-import { expect, test, type Page } from '@playwright/test';
-import { workspaceRolloutFixture } from './workspace-rollout-fixture';
-
-async function openConnectCare(page: Page) {
-  const connectCare = page.getByRole('button', { name: 'Connect care', exact: true });
-  await expect(connectCare).toBeEnabled();
-  await expect.poll(async () => {
-    if (await connectCare.getAttribute('aria-current') !== 'step') await connectCare.click();
-    return connectCare.getAttribute('aria-current');
-  }, {
-    message: 'Connect care becomes the current Yard Owner step',
-    timeout: 5_000,
-  }).toBe('step');
-}
+import { expect, test } from '@playwright/test';
+import { APP_DISPLAY_NAME } from '../src/appIdentity';
 
 test('a verified owner creates a private profile and reconfirms a changed address', async ({ page }) => {
   let yardBriefVersion = 0;
   let mediaVersion = 0;
+  let connectionProgressRequests = 0;
+  let invitationPersisted = false;
+  const invitationRequestKeys: string[] = [];
+  let releaseInvitationRetry: (() => void) | undefined;
+  const invitationRetryGate = new Promise<void>((resolve) => {
+    releaseInvitationRetry = resolve;
+  });
   let mediaRecords: Array<Record<string, unknown>> = [];
+  await page.route('**/health/ready', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ status: 'ok' }),
+  }));
   await page.route('**/auth/config', (route) => route.fulfill({
     contentType: 'application/json',
     body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }),
@@ -28,7 +27,6 @@ test('a verified owner creates a private profile and reconfirms a changed addres
       username: 'Local Developer',
       verified_email: 'owner@example.com',
       claim_roles: [],
-      workspace_rollout: workspaceRolloutFixture(),
       memberships: [],
     }),
   }));
@@ -152,10 +150,68 @@ test('a verified owner creates a private profile and reconfirms a changed addres
       body: JSON.stringify({ media: record, upload_url: '/api/photo-placeholder' }),
     });
   });
-  await page.route('**/owner-properties/owner_property_1/provider-connection-progress', (route) => route.fulfill({
-    contentType: 'application/json',
-    body: '[]',
-  }));
+  await page.route('**/owner-properties/owner_property_1/provider-connection-progress', (route) => {
+    connectionProgressRequests += 1;
+    if (connectionProgressRequests === 2) {
+      return route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: 'owner_provider_connection_progress_unavailable',
+          message: 'Connection progress is temporarily unavailable.',
+        }),
+      });
+    }
+    return route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(invitationPersisted ? [{
+        invitation_id: 'owner_provider_invitation_1',
+        provider_name: 'Desert Bloom Yard Care',
+        invitation_status: 'pending_delivery',
+        delivery_status: 'pending',
+        progress_stage: 'sending',
+        status_label: 'Sending invitation',
+        owner_action_required: false,
+        next_action: 'wait',
+        latest_response_action: null,
+        response_label: null,
+        expires_at_epoch_seconds: 1_800_000_000,
+        responded_at_epoch_seconds: null,
+        persisted: true,
+      }] : []),
+    });
+  });
+  await page.route('**/owner-properties/owner_property_1/provider-invitations', async (route) => {
+    const request = route.request().postDataJSON();
+    invitationRequestKeys.push(request.idempotency_key);
+    invitationPersisted = true;
+    if (invitationRequestKeys.length === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: 'owner_provider_invitation_create_unavailable',
+          message: 'The invitation response was interrupted. Retry the reviewed request.',
+        }),
+      });
+      return;
+    }
+    await invitationRetryGate;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        invitation_id: 'owner_provider_invitation_1', owner_user_id: 'local-development-user',
+        property_id: 'owner_property_1', brief_id: `owner_brief_${yardBriefVersion}`,
+        brief_version: yardBriefVersion, provider_name: request.provider_name,
+        recipient_business_email: request.recipient_business_email, purpose: 'yard_assessment',
+        owner_name_snapshot: 'Morgan Reyes-Smith', coarse_area_snapshot: '',
+        care_goals_snapshot: ['Routine upkeep'], cadence_snapshot: 'every_two_weeks',
+        status: 'pending_delivery', expires_at_epoch_seconds: 1_800_000_000,
+        delivery_status: 'pending', delivery_attempt_count: 1, persisted: true,
+      }),
+    });
+  });
   await page.route('**/owner-properties/owner_property_1/provider-disclosure-receipts', (route) => route.fulfill({
     contentType: 'application/json',
     body: '[]',
@@ -203,12 +259,16 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   });
 
   await page.goto('/for-yard-owners');
-  await expect(page.getByRole('link', { name: 'Sign up your yard' })).toBeVisible();
-  await page.getByRole('link', { name: 'Sign up your yard' }).click();
+  const heroYardSignup = page.getByTestId('marketing-hero').getByRole('link', {
+    name: 'Create my private yard',
+  });
+  await expect(heroYardSignup).toBeVisible();
+  await heroYardSignup.click();
   await expect(page).toHaveURL(/\/app\/yard-owner$/);
   await expect(page.getByRole('heading', { name: 'Tell us about the yard. You choose who sees it.' })).toBeVisible();
   await page.getByLabel('Your name').fill('Morgan Reyes');
   await page.getByRole('button', { name: 'Save and add my property' }).click();
+  await expect(page.getByRole('heading', { name: 'Your properties' })).toBeFocused();
 
   await page.getByLabel('Street address').fill('123 Oak Street');
   await page.getByLabel('City').fill('Phoenix');
@@ -220,26 +280,21 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   await expect(addressConfirmation).not.toBeChecked();
   await addressConfirmation.check();
   await page.getByLabel('I am authorized to request yard care for this property.').check();
-  const savedProperty = page.waitForResponse((response) => (
-    response.request().method() === 'POST'
-    && response.url().endsWith('/owner-properties')
-    && response.status() === 201
-  ));
-  await Promise.all([
-    savedProperty,
-    page.getByRole('button', { name: 'Save private property' }).click(),
-  ]);
+  await page.getByRole('button', { name: 'Save private property' }).click();
 
   await expect(page.getByText('Home is saved privately. No provider can see it yet.')).toBeVisible();
   await expect(page.getByText('125 Oak Street')).toBeVisible();
   await expect(page.getByText('Private draft')).toBeVisible();
   await page.getByRole('button', { name: 'Your details, complete' }).click();
+  await expect(page.getByRole('heading', { name: 'Create your private profile' })).toBeFocused();
   await page.getByLabel('Your name').fill('Morgan Reyes-Smith');
   await page.getByRole('button', { name: 'Save changes and continue' }).click();
   await expect(page.getByRole('heading', { name: 'Your properties' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your properties' })).toBeFocused();
   await expect(page.getByText('Private to Morgan Reyes-Smith until a provider connection is approved.')).toBeVisible();
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
   await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeFocused();
   await expect(page.getByRole('heading', { name: 'Your properties' })).not.toBeVisible();
   await expect(page.getByRole('heading', { name: 'Provider connection progress' })).not.toBeVisible();
   await page.getByRole('button', { name: 'Property, complete' }).click();
@@ -259,9 +314,46 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   await expect(page.getByText('Version 2 · ready')).toBeVisible();
   await expect(page.getByText('This is your starting brief—not a measurement, diagnosis, price, work order, or provider instruction.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Add useful views without diagnosing the yard' })).toBeVisible();
-  await openConnectCare(page);
+  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Connect care' })).toBeFocused();
+  await expect(page.getByRole('region', { name: 'Connect care' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Provider connection progress' })).toBeVisible();
   await expect(page.getByText('No provider connection has started.')).toBeVisible();
+  const refreshProgress = page.getByRole('button', { name: 'Refresh progress' });
+  await refreshProgress.focus();
+  await refreshProgress.click();
+  await expect(page.getByRole('alert')).toContainText('Connection progress is unavailable.');
+  await expect(refreshProgress).toBeFocused();
+  await expect(page.getByText('No provider connection has started.')).not.toBeVisible();
+  await refreshProgress.click();
+  await expect(page.getByText('No provider connection has started.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Connect the yard to a company you already know' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'What happens after a company responds?' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Share only what a provider needs to assess this yard' })).not.toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Assessment progress' })).not.toBeVisible();
+  await page.getByRole('button', { name: 'Invite a company you know' }).click();
+  await page.getByLabel('Company name').fill('Desert Bloom Yard Care');
+  await page.getByLabel('Business email').fill('dispatch@desert-bloom.example');
+  await page.getByLabel('Invitation window').selectOption('14');
+  await page.getByRole('button', { name: 'Review invitation' }).click();
+  await expect(page.getByRole('heading', { name: 'Review before sending' })).toBeFocused();
+  await expect(page.getByText('dispatch@desert-bloom.example')).toBeVisible();
+  await expect(page.getByText(/Exact address, yard photos, your private contact details/)).toBeVisible();
+  await page.getByRole('button', { name: 'Send limited invitation' }).click();
+  await expect(page.getByRole('alert')).toContainText('The invitation response was interrupted.');
+  const retryInvitation = page.getByRole('button', { name: 'Retry reviewed invitation' });
+  const invitationAction = page.getByRole('heading', { name: 'Review before sending' })
+    .locator('..')
+    .getByRole('button')
+    .first();
+  const retryClick = retryInvitation.click();
+  await expect(invitationAction).toBeDisabled();
+  releaseInvitationRetry?.();
+  await retryClick;
+  await expect(page.getByText('Sending invitation', { exact: true })).toBeVisible();
+  expect(invitationRequestKeys).toHaveLength(2);
+  expect(invitationRequestKeys[1]).toBe(invitationRequestKeys[0]);
+  await expect(page.getByRole('heading', { name: 'Connect the yard to a company you already know' })).not.toBeVisible();
   await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).not.toBeVisible();
   await page.getByRole('button', { name: 'Yard brief, complete' }).click();
   await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
@@ -355,25 +447,13 @@ test('an owner safely retries approval and reconciles a stale revocation after l
     latest_event_kind: accessState === 'revoked' ? 'revoked' : 'granted',
     latest_reason_code: accessState === 'revoked' ? 'assessment_complete' : null,
   });
-  let resolveApprovalAbort!: () => void;
-  const approvalAbort = new Promise<void>((resolve) => {
-    resolveApprovalAbort = resolve;
-  });
-  let resolveRevokeAbort!: () => void;
-  const revokeAbort = new Promise<void>((resolve) => {
-    resolveRevokeAbort = resolve;
-  });
-  let resolveRevokeConflict!: () => void;
-  const revokeConflict = new Promise<void>((resolve) => {
-    resolveRevokeConflict = resolve;
-  });
 
   await page.route('**/auth/config', (route) => route.fulfill({
     contentType: 'application/json', body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }),
   }));
   await page.route('**/me/access', (route) => route.fulfill({
     contentType: 'application/json', body: JSON.stringify({
-      user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], workspace_rollout: workspaceRolloutFixture(), memberships: [],
+      user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], memberships: [],
     }),
   }));
   await page.route('**/owner-workspace', (route) => route.fulfill({
@@ -412,7 +492,6 @@ test('an owner safely retries approval and reconciles a stale revocation after l
     receipts = [activeReceipt()];
     if (approvalKeys.length === 1) {
       await route.abort('failed');
-      resolveApprovalAbort();
       return;
     }
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(activeReceipt()) });
@@ -423,7 +502,6 @@ test('an owner safely retries approval and reconciles a stale revocation after l
     expect(request).toMatchObject({ expected_version: 1, reason_code: 'assessment_complete', owner_confirmed: true });
     if (revokeKeys.length === 1) {
       await route.abort('failed');
-      resolveRevokeAbort();
       return;
     }
     accessState = 'revoked';
@@ -436,13 +514,12 @@ test('an owner safely retries approval and reconciles a stale revocation after l
         message: 'Assessment access changed before this request was applied.',
       }),
     });
-    resolveRevokeConflict();
   });
 
   await page.goto('/app/yard-owner');
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
   await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
-  await openConnectCare(page);
+  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
   await expect(page.getByText('Nothing new is shared yet.')).toBeVisible();
   await page.getByRole('button', { name: 'Review access for Desert Green Care' }).click();
   await expect(page.getByRole('heading', { name: 'Review access for Desert Green Care' })).toBeFocused();
@@ -453,10 +530,7 @@ test('an owner safely retries approval and reconciles a stale revocation after l
   await page.getByLabel('front-yard.jpg').check();
   await expect(page.getByText('Yard care brief, Owner contact, Access considerations')).toBeVisible();
   await page.getByLabel('I approve only the selected items for Desert Green Care to assess this yard.').check();
-  await Promise.all([
-    approvalAbort,
-    page.getByRole('button', { name: 'Approve selected assessment access' }).click(),
-  ]);
+  await page.getByRole('button', { name: 'Approve selected assessment access' }).click();
   await expect(page.getByRole('alert')).toBeVisible();
   await expect(page.getByLabel('Exact service address')).toBeChecked();
   await expect(page.getByLabel('Selected yard photographs')).toBeChecked();
@@ -470,16 +544,10 @@ test('an owner safely retries approval and reconciles a stale revocation after l
   await page.getByRole('button', { name: 'End future assessment access' }).click();
   await expect(page.getByRole('heading', { name: 'End future access for Desert Green Care?' })).toBeFocused();
   await page.getByLabel('Reason').selectOption('assessment_complete');
-  await Promise.all([
-    revokeAbort,
-    page.getByRole('button', { name: 'Confirm and end future access' }).click(),
-  ]);
+  await page.getByRole('button', { name: 'Confirm and end future access' }).click();
   await expect(page.getByRole('alert')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'End future access for Desert Green Care?' })).toBeVisible();
-  await Promise.all([
-    revokeConflict,
-    page.getByRole('button', { name: 'Confirm and end future access' }).click(),
-  ]);
+  await page.getByRole('button', { name: 'Confirm and end future access' }).click();
   expect(revokeKeys).toHaveLength(2);
   expect(revokeKeys[1]).toBe(revokeKeys[0]);
   await expect(page.getByText('Assessment access changed in another tab. Current access was reloaded; review its status before trying again.')).toBeVisible();
@@ -520,7 +588,7 @@ test('an owner confirms an assessment window and uses only the shared conversati
   }));
   await page.route('**/me/access', (route) => route.fulfill({
     contentType: 'application/json', body: JSON.stringify({
-      user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], workspace_rollout: workspaceRolloutFixture(), memberships: [],
+      user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], memberships: [],
     }),
   }));
   await page.route('**/owner-workspace', (route) => route.fulfill({
@@ -576,22 +644,14 @@ test('an owner confirms an assessment window and uses only the shared conversati
   await page.goto('/app/yard-owner');
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
   await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
-  await openConnectCare(page);
+  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Review the yard before agreeing on care' })).toBeVisible();
   await expect(page.getByText('Assessment time needs your review')).toBeVisible();
   await expect(page.getByText(/America\/Phoenix/)).toBeVisible();
   await expect(page.getByText('Please make sure an adult can provide gate access.')).toBeVisible();
   await expect(page.getByText(/does not accept pricing, create a customer account, assign a crew/)).toBeVisible();
 
-  const confirmedWindow = page.waitForResponse((response) => (
-    response.request().method() === 'POST'
-    && response.url().endsWith('/provider-assessments/assessment_3/window-decision')
-    && response.ok()
-  ));
-  await Promise.all([
-    confirmedWindow,
-    page.getByRole('button', { name: 'Confirm assessment time' }).click(),
-  ]);
+  await page.getByRole('button', { name: 'Confirm assessment time' }).click();
   await expect(page.getByText('Assessment time confirmed. This did not accept service or schedule recurring care.')).toBeVisible();
   await expect(page.getByText('Assessment time confirmed', { exact: true })).toBeVisible();
 
@@ -634,7 +694,7 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
   };
 
   await page.route('**/auth/config', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }) }));
-  await page.route('**/me/access', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], workspace_rollout: workspaceRolloutFixture(), memberships: [] }) }));
+  await page.route('**/me/access', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], memberships: [] }) }));
   await page.route('**/owner-workspace', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ owner_user_id: 'local-development-user', verified_email: 'owner@example.com', display_name: 'Morgan Reyes', status: 'active', persisted: true }) }));
   await page.route('**/owner-properties', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify([property]) }));
   await page.route('**/owner-properties/owner_property_4/yard-brief', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ brief_id: 'brief_4', owner_user_id: 'local-development-user', property_id: 'owner_property_4', version: 2, status: 'ready', yard_areas: ['Front yard', 'Back yard'], care_goals: ['Routine upkeep'], cadence_preference: 'every_two_weeks', considerations: '', author_source: 'yard_owner', persisted: true }) }));
@@ -728,11 +788,44 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
     };
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(firstVisit) });
   });
+  let managerInvitations: Array<Record<string, unknown>> = [];
+  const managerInvitationPath = '**/owner-properties/owner_property_4/provider-relationships/activation_4/manager-invitations';
+  await page.route(managerInvitationPath, async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify(managerInvitations) });
+      return;
+    }
+    const body = route.request().postDataJSON();
+    expect(body).toMatchObject({ recipient_email: 'manager@example.com' });
+    expect(String(body.idempotency_key)).toMatch(/^customer-property-manager-/);
+    const invitation = {
+      invitation_id: 'manager_invitation_4', activation_id: 'activation_4',
+      owner_property_id: 'owner_property_4', organization_id: 'organization_4',
+      account_id: 'account_4', property_id: 'customer_property_4',
+      owner_user_id: 'local-development-user', recipient_email: body.recipient_email,
+      status: 'pending', accepted_user_id: null,
+      created_at_epoch_seconds: Math.floor(Date.now() / 1000),
+      expires_at_epoch_seconds: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+      accepted_at_epoch_seconds: null, revoked_at_epoch_seconds: null, persisted: true,
+    };
+    managerInvitations = [invitation];
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(invitation) });
+  });
+  await page.route(
+    '**/owner-properties/owner_property_4/provider-relationships/activation_4/manager-invitations/manager_invitation_4/revoke',
+    async (route) => {
+      const revoked = {
+        ...managerInvitations[0], status: 'revoked',
+        revoked_at_epoch_seconds: Math.floor(Date.now() / 1000),
+      };
+      managerInvitations = [revoked];
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify(revoked) });
+    },
+  );
 
   await page.goto('/app/yard-owner');
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
-  await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
-  await openConnectCare(page);
+  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Compare the exact offer before deciding' })).toBeVisible();
   await expect(page.getByText('$120.00 per visit')).toBeVisible();
   await expect(page.getByText('Tree work above eight feet')).toBeVisible();
@@ -750,7 +843,9 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
   await expect(page.getByText(/Proposal accepted for provider setup. No visit was scheduled/)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Create the provider relationship' })).toBeVisible();
   await page.getByRole('button', { name: 'Review provider setup' }).click();
-  const activationAffirmation = page.getByLabel(/I want Grover to create this provider relationship/);
+  const activationAffirmation = page.getByLabel(
+    new RegExp(`I want ${APP_DISPLAY_NAME} to create this provider relationship`),
+  );
   await expect(page.getByRole('button', { name: 'Activate provider setup' })).toBeDisabled();
   await activationAffirmation.check();
   await page.getByRole('button', { name: 'Activate provider setup' }).click();
@@ -758,6 +853,14 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
   await expect(page.getByRole('heading', { name: 'Provider setup is underway' })).toBeVisible();
   await expect(page.getByText(/1 other open request was closed for this yard/)).toBeVisible();
   await expect(page.getByText(/No payment, recurring schedule, route, work order, or crew assignment exists yet/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Share this yard with a property manager' })).toBeVisible();
+  await page.getByLabel('Property manager’s verified email').fill('manager@example.com');
+  await page.getByRole('button', { name: 'Invite to this yard' }).click();
+  await expect(page.getByText(/Invitation ready for manager@example.com/)).toBeVisible();
+  await expect(page.getByText(/Pending acceptance/)).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel invitation' }).click();
+  await expect(page.getByText('Access for manager@example.com is revoked for this yard.')).toBeVisible();
+  await expect(page.getByText('Access revoked')).toBeVisible();
   await expect(page.getByText('First-visit proposal · version 1')).toBeVisible();
   await page.getByRole('button', { name: 'Review and confirm window' }).click();
   const firstVisitAffirmation = page.getByLabel(/I confirm this exact first-visit arrival window/);

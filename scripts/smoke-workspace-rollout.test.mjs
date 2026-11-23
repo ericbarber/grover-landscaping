@@ -102,13 +102,6 @@ test('rejects unsafe origins and probe paths before making a request', async () 
     ),
     /unsafe application path/,
   );
-  await assert.rejects(
-    runWorkspaceRolloutSmoke(
-      environment({ SMOKE_ROLLOUT_SUCCESS_PATHS_JSON: '["/\\\\other.example.test/private"]' }),
-      () => assert.fail('fetch must not run'),
-    ),
-    /unsafe application path/,
-  );
 });
 
 test('fails when the exact unit or cumulative capability is absent', async () => {

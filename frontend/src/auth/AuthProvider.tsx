@@ -19,7 +19,7 @@ import { configureApiAuthentication } from '../api/authenticatedFetch';
 type AuthMode = 'disabled' | 'local_review' | 'cognito';
 export type AccessVerificationStatus = 'idle' | 'loading' | 'ready' | 'unavailable';
 export const LOCAL_DEVELOPMENT_USER_ID = 'local-development-user';
-export const LOCAL_REVIEWER_STORAGE_KEY = 'grover.local-reviewer-id';
+export const LOCAL_REVIEWER_STORAGE_KEY = 'yardfolio.local-reviewer-id';
 
 export interface LocalReviewerProfile {
   reviewer_id: string;
@@ -203,7 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           configureApiAuthentication(
             false,
             async () => null,
-            async () => ({ 'x-grover-local-reviewer': reviewer.reviewer_id }),
+            async () => ({ 'x-yardfolio-local-reviewer': reviewer.reviewer_id }),
           );
           setLocalReviewers(reviewers);
           setActiveLocalReviewerId(reviewer.reviewer_id);

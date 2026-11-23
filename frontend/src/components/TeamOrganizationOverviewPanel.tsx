@@ -167,11 +167,11 @@ export function TeamOrganizationOverviewPanel({
 
   return (
     <section aria-labelledby="team-organization-heading" className="space-y-5" id="team-organization-overview">
-      <div className="overflow-hidden rounded-2xl bg-forest px-5 py-6 text-white shadow-grover-md sm:px-7">
+      <div className="overflow-hidden rounded-2xl bg-forest px-5 py-6 text-white shadow-yardfolio-md sm:px-7">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-gold">Organization operations</p>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="grover-type-operational text-3xl font-black" id="team-organization-heading">Team and access</h2>
+            <h2 className="yardfolio-type-operational text-3xl font-black" id="team-organization-heading">Team and access</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200">
               Build the operating team, keep every territory staffed, and trace material access changes.
             </p>
@@ -202,7 +202,7 @@ export function TeamOrganizationOverviewPanel({
         {metrics.map((metric, index) => (
           <article
             aria-label={`${metric.label} team summary`}
-            className={`grover-card p-4 ${index === 2 ? 'bg-gold/20' : ''}`}
+            className={`yardfolio-card p-4 ${index === 2 ? 'bg-gold/20' : ''}`}
             key={metric.label}
           >
             <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">{metric.label}</p>
@@ -250,7 +250,7 @@ export function TeamOrganizationOverviewPanel({
 
       <div className="grid gap-3 md:grid-cols-2">
         {actions.map((item, index) => (
-          <article className="grover-card flex min-h-48 flex-col p-5" key={item.title}>
+          <article className="yardfolio-card flex min-h-48 flex-col p-5" key={item.title}>
             <div className="flex items-center gap-3">
               <span className="grid size-9 shrink-0 place-items-center rounded-full bg-sage text-forest">
                 <WorkspaceIcon className="size-5" name={item.icon} />

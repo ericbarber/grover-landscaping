@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
-import { APP_DISPLAY_NAME } from '../appIdentity';
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { ApiRequestError, isApiErrorCode } from '../api/apiError';
 import {
   completeOwnerIntakeMediaUpload,
@@ -23,10 +22,13 @@ import {
   type SaveOwnerYardBriefInput,
 } from '../api/ownerAcquisitionClient';
 import { useAuth } from '../auth/AuthProvider';
-import { ownerCareSetupResumeDestination } from '../domain/ownerAcquisitionRoute';
 import { OwnerProviderAssessmentPanel } from './OwnerProviderAssessmentPanel';
 import { OwnerProviderDisclosurePanel } from './OwnerProviderDisclosurePanel';
+import { OwnerProviderInvitationPanel } from './OwnerProviderInvitationPanel';
 import { ProductBrand } from './ProductBrand';
+import { APP_DISPLAY_NAME } from '../appIdentity';
+import { ownerCareSetupResumeDestination } from '../domain/ownerAcquisitionRoute';
+import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
 
 type PropertyDraft = Omit<CreateOwnerPropertyInput, 'addressConfirmed' | 'authorityAttested'>;
 type YardBriefDraft = Omit<SaveOwnerYardBriefInput, 'status'>;
@@ -93,7 +95,7 @@ function Field({
       {hint ? <span className="mt-0.5 block text-xs leading-5 text-slate-500">{hint}</span> : null}
       <input
         autoComplete={autoComplete}
-        className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-base text-slate-950 shadow-xs outline-hidden transition placeholder:text-slate-400 focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100"
+        className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-base text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100"
         id={id}
         onChange={(event) => onChange(event.target.value)}
         required={required}
@@ -187,14 +189,14 @@ function ConnectionProgress({
   onRefresh: () => void;
 }) {
   return (
-    <section aria-labelledby="provider-connection-title" className="mt-7 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+    <div aria-busy={loading} className="mt-7 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-800">Step 4 of 4</p>
-          <h4 className="mt-2 text-xl font-black text-slate-950" id="provider-connection-title">Provider connection progress</h4>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-800">Connection status</p>
+          <h3 className="mt-2 text-xl font-black text-slate-950">Provider connection progress</h3>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-700">Track invitations without exposing your exact address, photographs, contact details, or access notes.</p>
         </div>
-        <button className="min-h-11 rounded-lg border border-emerald-700 bg-white px-4 text-sm font-bold text-emerald-900 hover:bg-emerald-100 disabled:opacity-60" disabled={loading} onClick={onRefresh} type="button">
+        <button aria-disabled={loading} className="min-h-11 rounded-lg border border-emerald-700 bg-white px-4 text-sm font-bold text-emerald-900 hover:bg-emerald-100 aria-disabled:cursor-wait aria-disabled:opacity-60" onClick={() => { if (!loading) onRefresh(); }} type="button">
           {loading ? 'Refreshing…' : 'Refresh progress'}
         </button>
       </div>
@@ -208,12 +210,12 @@ function ConnectionProgress({
       ) : entries.length === 0 ? (
         <div className="mt-4 rounded-xl border border-dashed border-emerald-300 bg-white/70 p-4">
           <strong className="text-slate-900">No provider connection has started.</strong>
-          <p className="mt-1 text-sm leading-6 text-slate-600">Your ready brief and photographs remain private. A future invitation will require a separate review before anything is shared.</p>
+          <p className="mt-1 text-sm leading-6 text-slate-600">Your ready brief and photographs remain private. Use the invitation action below when you are ready to connect a company you know.</p>
         </div>
       ) : (
         <ol aria-label="Provider connections" className="mt-5 grid gap-3">
           {entries.map((entry) => (
-            <li className={`rounded-xl border bg-white p-4 ${entry.ownerActionRequired ? 'border-amber-400 shadow-xs' : 'border-emerald-200'}`} key={entry.invitationId}>
+            <li className={`rounded-xl border bg-white p-4 ${entry.ownerActionRequired ? 'border-amber-400 shadow-sm' : 'border-emerald-200'}`} key={entry.invitationId}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <strong className="text-base text-slate-950">{entry.providerName}</strong>
@@ -233,13 +235,18 @@ function ConnectionProgress({
           ))}
         </ol>
       )}
-    </section>
+      <p aria-live="polite" className="sr-only" role="status">
+        {loading ? 'Refreshing provider connection progress.' : error ? 'Provider connection progress could not be refreshed.' : 'Provider connection progress is current.'}
+      </p>
+    </div>
   );
 }
 
 export function YardOwnerAcquisitionPage() {
   const auth = useAuth();
   const prefix = useId();
+  const stepHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  const pendingStepFocus = useRef(false);
   const [activeStep, setActiveStep] = useState<OwnerSetupStep>(0);
   const [workspace, setWorkspace] = useState<OwnerWorkspace | null>(null);
   const [properties, setProperties] = useState<OwnerProperty[]>([]);
@@ -345,6 +352,23 @@ export function YardOwnerAcquisitionPage() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!pendingStepFocus.current || loading || briefLoading) return;
+    stepHeadingRef.current?.focus();
+    pendingStepFocus.current = false;
+  }, [activeStep, briefLoading, loading]);
+
+  useEffect(() => {
+    if (loading || !auth.verifiedEmail) return;
+    const stages = ['profile', 'property', 'yard_brief', 'connect_care'] as const;
+    trackMarketingEvent('setup_stage_viewed', 'yard_owner', stages[activeStep]);
+  }, [activeStep, auth.verifiedEmail, loading]);
+
+  function selectStep(step: OwnerSetupStep) {
+    pendingStepFocus.current = true;
+    setActiveStep(step);
+  }
+
   async function submitWorkspace(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (profileName.trim().length < 2) {
@@ -358,8 +382,9 @@ export function YardOwnerAcquisitionPage() {
       const saved = await saveOwnerWorkspace(profileName.trim());
       setWorkspace(saved);
       setShowPropertyForm(properties.length === 0);
-      setActiveStep(1);
+      selectStep(1);
       setNotice('Your private profile is saved. Add the yard you want cared for.');
+      trackMarketingEvent('setup_stage_completed', 'yard_owner', 'profile');
     } catch (saveError) {
       setError(errorMessage(saveError, 'Your private profile could not be saved.'));
     } finally {
@@ -403,6 +428,7 @@ export function YardOwnerAcquisitionPage() {
       setIntakeMedia([]);
       setConnectionProgress([]);
       setNotice(`${saved.displayName} is saved privately. No provider can see it yet.`);
+      trackMarketingEvent('setup_stage_completed', 'yard_owner', 'property');
     } catch (saveError) {
       setError(errorMessage(saveError, 'Your property could not be saved.'));
     } finally {
@@ -413,19 +439,19 @@ export function YardOwnerAcquisitionPage() {
   async function openYardBrief(propertyId: string) {
     setShowPropertyForm(false);
     setNotice(null);
-    setActiveStep(2);
+    selectStep(2);
     await loadSelectedProperty(propertyId);
   }
 
   function navigateToStep(step: OwnerSetupStep) {
     if (step === 0) {
-      setActiveStep(0);
+      selectStep(0);
       setNotice(null);
       setError(null);
       return;
     }
     if (step === 1 && workspace) {
-      setActiveStep(1);
+      selectStep(1);
       setNotice(null);
       setError(null);
       return;
@@ -433,7 +459,7 @@ export function YardOwnerAcquisitionPage() {
     if ((step === 2 || step === 3) && properties.length > 0) {
       const propertyId = selectedPropertyId ?? properties[0].propertyId;
       if (step === 3 && yardBrief?.status !== 'ready') return;
-      setActiveStep(step);
+      selectStep(step);
       setShowPropertyForm(false);
       setNotice(null);
       setError(null);
@@ -480,6 +506,9 @@ export function YardOwnerAcquisitionPage() {
       setNotice(status === 'ready'
         ? `Yard brief version ${saved.version} is ready and still private.`
         : `Private draft version ${saved.version} is saved.`);
+      if (status === 'ready') {
+        trackMarketingEvent('setup_stage_completed', 'yard_owner', 'yard_brief_ready');
+      }
     } catch (saveError) {
       setError(errorMessage(saveError, 'Your private yard brief could not be saved.'));
     } finally {
@@ -567,13 +596,26 @@ export function YardOwnerAcquisitionPage() {
   }
 
   const inputId = (name: string) => `${prefix}-${name}`;
+  const stepHeadingId = inputId(`step-${activeStep}-title`);
+  const selectedProperty = properties.find((item) => item.propertyId === selectedPropertyId);
+  const disclosureRelevant = connectionProgress.some((entry) => [
+    'disclosure_decision',
+    'assessment_access_approved',
+    'assessment_access_ended',
+    'relationship_activated',
+  ].includes(entry.progressStage));
+  const assessmentRelevant = connectionProgress.some((entry) => [
+    'assessment_access_approved',
+    'assessment_access_ended',
+    'relationship_activated',
+  ].includes(entry.progressStage));
 
   return (
     <main className="min-h-[calc(100vh-2.6rem)] bg-bone text-slate-950">
       <header className="relative overflow-hidden bg-emerald-950 text-white">
         <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_80%_10%,#fbbf24,transparent_35%)]" />
         <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <a aria-label={`${APP_DISPLAY_NAME} home`} className="rounded-lg text-sand focus:outline-hidden focus:ring-2 focus:ring-sky" href="/">
+          <a aria-label={`${APP_DISPLAY_NAME} home`} className="rounded-lg text-sand focus:outline-none focus:ring-2 focus:ring-sky" href="/">
             <ProductBrand />
           </a>
           <a className="rounded-lg px-3 py-2 text-sm font-bold text-emerald-100 hover:bg-white/10 hover:text-white" href="/app">
@@ -592,7 +634,7 @@ export function YardOwnerAcquisitionPage() {
       </header>
 
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:px-8">
-        <section className="min-w-0 rounded-2xl border border-slate-200 bg-paper p-5 shadow-grover-md sm:p-8" aria-labelledby="yard-setup-title">
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-paper p-5 shadow-yardfolio-md sm:p-8" aria-labelledby={stepHeadingId}>
           <Progress
             activeStep={activeStep}
             briefReady={yardBrief?.status === 'ready'}
@@ -617,12 +659,13 @@ export function YardOwnerAcquisitionPage() {
 
           {loading ? (
             <div className="grid min-h-64 place-items-center" role="status">
+              <h2 className="sr-only" id={stepHeadingId}>Loading yard setup</h2>
               <p className="font-bold text-slate-600">Loading your private yard setup…</p>
             </div>
           ) : !auth.verifiedEmail ? (
-            <div className="py-8" id="yard-setup-title">
+            <div className="py-8">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-700">Email verification needed</p>
-              <h2 className="mt-3 text-2xl font-black">Verify your email before adding a property.</h2>
+              <h2 className="mt-3 text-2xl font-black outline-none" id={stepHeadingId} ref={stepHeadingRef} tabIndex={-1}>Verify your email before adding a property.</h2>
               <p className="mt-3 max-w-xl leading-7 text-slate-600">
                 We use a verified email to protect your private address and return you to this setup safely. Verify through your sign-in account, then refresh access here.
               </p>
@@ -633,7 +676,7 @@ export function YardOwnerAcquisitionPage() {
           ) : activeStep === 0 ? (
             <form className="mt-7" onSubmit={(event) => void submitWorkspace(event)}>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">Step 1 of 4</p>
-              <h2 className="mt-2 text-2xl font-black" id="yard-setup-title">Create your private profile</h2>
+              <h2 className="mt-2 text-2xl font-black outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" id={stepHeadingId} ref={stepHeadingRef} tabIndex={-1}>Create your private profile</h2>
               <p className="mt-2 max-w-2xl leading-7 text-slate-600">
                 Your email is verified as <strong className="text-slate-800">{auth.verifiedEmail}</strong>. A provider will see your name only after you approve a connection.
               </p>
@@ -647,7 +690,7 @@ export function YardOwnerAcquisitionPage() {
                 value={profileName}
               />
               <div className="mt-6 flex flex-wrap gap-3">
-                <button className="min-h-12 rounded-xl bg-emerald-800 px-6 font-black text-white shadow-xs hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60" disabled={saving} type="submit">
+                <button className="min-h-12 rounded-xl bg-emerald-800 px-6 font-black text-white shadow-sm hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60" disabled={saving} type="submit">
                   {saving ? 'Saving…' : workspace ? 'Save changes and continue' : 'Save and add my property'}
                 </button>
                 {workspace ? <button className="min-h-12 rounded-xl px-5 font-bold text-slate-700 hover:bg-slate-100" onClick={() => navigateToStep(1)} type="button">Cancel</button> : null}
@@ -658,7 +701,7 @@ export function YardOwnerAcquisitionPage() {
               {activeStep === 1 ? <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">Step 2 of 4</p>
-                  <h2 className="mt-2 text-2xl font-black" id="yard-setup-title">Your properties</h2>
+                  <h2 className="mt-2 text-2xl font-black outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" id={stepHeadingId} ref={stepHeadingRef} tabIndex={-1}>Your properties</h2>
                   <p className="mt-2 text-sm text-slate-600">Private to {workspace?.displayName ?? 'you'} until a provider connection is approved.</p>
                 </div>
                 {properties.length > 0 && !showPropertyForm ? (
@@ -721,16 +764,19 @@ export function YardOwnerAcquisitionPage() {
                   </div>
                 </form>
               ) : (activeStep === 2 || activeStep === 3) && selectedPropertyId ? (
-                <section className="mt-7" aria-labelledby={activeStep === 2 ? inputId('yard-brief-title') : 'provider-connection-title'}>
+                <div className="mt-7">
                   {briefLoading ? (
-                    <p className="py-8 font-bold text-slate-600" role="status">Loading your private yard brief…</p>
+                    <div className="py-8" role="status">
+                      <h2 className="sr-only" id={stepHeadingId}>Loading {activeStep === 2 ? 'yard brief' : 'provider connection'}</h2>
+                      <p className="font-bold text-slate-600">Loading your private yard brief…</p>
+                    </div>
                   ) : (
                     <>
                       {activeStep === 2 ? <>
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
                           <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">Step 3 of 4</p>
-                          <h3 className="mt-2 text-2xl font-black" id={inputId('yard-brief-title')}>Describe the yard and the care you want</h3>
+                          <h2 className="mt-2 text-2xl font-black outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" id={stepHeadingId} ref={stepHeadingRef} tabIndex={-1}>Describe the yard and the care you want</h2>
                           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">This is your starting brief—not a measurement, diagnosis, price, work order, or provider instruction.</p>
                         </div>
                         {yardBrief ? <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-emerald-800">Version {yardBrief.version} · {yardBrief.status}</span> : null}
@@ -749,8 +795,8 @@ export function YardOwnerAcquisitionPage() {
                         </div>
                       </fieldset>
                       <div className="mt-6 grid gap-5">
-                        <label className="block" htmlFor={inputId('cadence')}><span className="text-sm font-bold text-slate-800">Preferred care cadence</span><select className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-base focus:border-emerald-700 focus:outline-hidden focus:ring-4 focus:ring-emerald-100" id={inputId('cadence')} onChange={(event) => setYardBriefDraft((current) => ({ ...current, cadencePreference: event.target.value as OwnerYardBrief['cadencePreference'] }))} value={yardBriefDraft.cadencePreference}><option value="provider_recommendation">I’d like a provider recommendation</option><option value="one_time">One-time care</option><option value="weekly">Weekly</option><option value="every_two_weeks">Every two weeks</option><option value="monthly">Monthly</option></select></label>
-                        <label className="block" htmlFor={inputId('considerations')}><span className="text-sm font-bold text-slate-800">Access, pets, concerns, or priorities</span><span className="mt-0.5 block text-xs leading-5 text-slate-500">Optional. Do not include alarm codes or other secrets.</span><textarea className="mt-2 min-h-32 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-base focus:border-emerald-700 focus:outline-hidden focus:ring-4 focus:ring-emerald-100" id={inputId('considerations')} maxLength={1500} onChange={(event) => setYardBriefDraft((current) => ({ ...current, considerations: event.target.value }))} value={yardBriefDraft.considerations} /></label>
+                        <label className="block" htmlFor={inputId('cadence')}><span className="text-sm font-bold text-slate-800">Preferred care cadence</span><select className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-base focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100" id={inputId('cadence')} onChange={(event) => setYardBriefDraft((current) => ({ ...current, cadencePreference: event.target.value as OwnerYardBrief['cadencePreference'] }))} value={yardBriefDraft.cadencePreference}><option value="provider_recommendation">I’d like a provider recommendation</option><option value="one_time">One-time care</option><option value="weekly">Weekly</option><option value="every_two_weeks">Every two weeks</option><option value="monthly">Monthly</option></select></label>
+                        <label className="block" htmlFor={inputId('considerations')}><span className="text-sm font-bold text-slate-800">Access, pets, concerns, or priorities</span><span className="mt-0.5 block text-xs leading-5 text-slate-500">Optional. Do not include alarm codes or other secrets.</span><textarea className="mt-2 min-h-32 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-base focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100" id={inputId('considerations')} maxLength={1500} onChange={(event) => setYardBriefDraft((current) => ({ ...current, considerations: event.target.value }))} value={yardBriefDraft.considerations} /></label>
                       </div>
                       <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-950"><strong className="block">Private until you approve a provider</strong>The exact address and this brief remain in your owner workspace. Saving does not request service or share anything.</div>
                       <div className="mt-6 flex flex-wrap gap-3">
@@ -944,7 +990,7 @@ export function YardOwnerAcquisitionPage() {
                               className="min-h-12 rounded-xl px-4 font-bold text-slate-700 hover:bg-white"
                               onClick={() => {
                                 setNotice('Private intake is complete. No provider connection or sharing has started.');
-                                setActiveStep(3);
+                                selectStep(3);
                               }}
                               type="button"
                             >
@@ -955,16 +1001,39 @@ export function YardOwnerAcquisitionPage() {
                         </section>
                       ) : null}
                       </> : <>
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">Step 4 of 4</p>
+                      <h2 className="mt-2 text-2xl font-black outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" id={stepHeadingId} ref={stepHeadingRef} tabIndex={-1}>Connect care</h2>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Invite a yard-care company you know, then follow each owner-controlled stage here.</p>
                       <button className="min-h-11 rounded-xl px-4 text-sm font-bold text-slate-700 hover:bg-slate-100" onClick={() => navigateToStep(2)} type="button">
                         ← Back to yard brief
                       </button>
                       <ConnectionProgress entries={connectionProgress} error={connectionError} loading={connectionLoading} onRefresh={() => void refreshConnectionProgress()} />
-                      {selectedPropertyId ? <OwnerProviderDisclosurePanel connections={connectionProgress} onChanged={refreshConnectionProgress} propertyId={selectedPropertyId} /> : null}
-                      {selectedPropertyId ? <OwnerProviderAssessmentPanel connections={connectionProgress} propertyId={selectedPropertyId} /> : null}
+                      {!connectionError && !connectionLoading && selectedProperty && workspace && yardBrief?.status === 'ready' ? (
+                        <OwnerProviderInvitationPanel
+                          brief={yardBrief}
+                          connections={connectionProgress}
+                          onChanged={refreshConnectionProgress}
+                          property={selectedProperty}
+                          workspace={workspace}
+                        />
+                      ) : null}
+                      {!connectionError && !disclosureRelevant ? (
+                        <section aria-labelledby={inputId('later-stages-title')} className="mt-7 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Later stages</p>
+                          <h3 className="mt-2 text-lg font-black text-slate-900" id={inputId('later-stages-title')}>What happens after a company responds?</h3>
+                          <ol className="mt-4 grid gap-3 text-sm leading-6 text-slate-600 sm:grid-cols-3">
+                            <li><strong className="block text-slate-900">1. Review interest</strong>The company first sees only the limited invitation.</li>
+                            <li><strong className="block text-slate-900">2. Approve assessment details</strong>You separately choose whether to share an address, brief details, contact route, access notes, or selected photos.</li>
+                            <li><strong className="block text-slate-900">3. Decide on service</strong>A proposal and first service window still require your review.</li>
+                          </ol>
+                        </section>
+                      ) : null}
+                      {selectedPropertyId && disclosureRelevant ? <OwnerProviderDisclosurePanel connections={connectionProgress} onChanged={refreshConnectionProgress} propertyId={selectedPropertyId} /> : null}
+                      {selectedPropertyId && assessmentRelevant ? <OwnerProviderAssessmentPanel connections={connectionProgress} propertyId={selectedPropertyId} /> : null}
                       </>}
                     </>
                   )}
-                </section>
+                </div>
               ) : properties.length > 0 ? (
                 <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
                   <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-800">Next step</p>

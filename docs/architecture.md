@@ -1,6 +1,7 @@
 # Architecture
 
-Grover Landscaping is currently a modular-monolith web application with a React
+The application, currently presented as Grover, is a modular-monolith web
+application with a React
 client, Rust/Axum API, and PostgreSQL persistence. Local development runs through
 Docker Compose; the protected-pilot deployment contract packages the frontend and
 API into one Render web service. AWS remains a demand-driven growth path, not a
@@ -40,6 +41,13 @@ before the server accepts traffic.
 - Customer-safe completion reports and project-bid decisions
 - Private Yard Owner acquisition outside provider organization tenants, including
   provider connection, disclosure, assessment, and initial proposal contracts
+
+The authenticated React application uses capability-driven workspace
+composition. Roles and exact resource scopes remain backend security concepts;
+persona manifests define presentation and ordering only. The workspace resolver
+combines each manifest with the server-derived `/me/access` capability
+projection before rendering navigation, home language, field controls, or
+manager tools. See [`workspace-architecture.md`](workspace-architecture.md).
 
 Customer-safe projections, provider-private notes, general audit, and restricted
 support evidence are deliberately separate stores or response shapes. Cognito

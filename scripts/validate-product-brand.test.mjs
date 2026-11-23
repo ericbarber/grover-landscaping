@@ -11,6 +11,7 @@ const validSources = {
   indexSource: '<meta content="Grover"><meta content="Grover Field"><meta content="Grover connects care"><meta content="Grover | Care"><title>Grover | Care</title>',
   manifestSource: JSON.stringify({ name: 'Grover Field Work', short_name: 'Grover Field' }),
   iconSource: '<title id="title">Grover</title>',
+  publicSiteSource: 'let page_title = app_page_title(metadata.title);',
   runtimeSources: [['components/ProductBrand.tsx', 'export function ProductBrand() {}']],
 };
 
@@ -19,10 +20,11 @@ test('accepts the repository product-brand boundary', async () => {
 });
 
 test('rejects customer-visible hard-coded runtime copy', () => {
-  assert.deepEqual(validateProductBrandSources({
+  const errors = validateProductBrandSources({
     ...validSources,
     runtimeSources: [['components/Example.tsx', '<p>Return to Grover</p>']],
-  }), [
+  });
+  assert.deepEqual(errors, [
     'customer-visible application name must come from appIdentity.ts: components/Example.tsx',
   ]);
 });
@@ -36,16 +38,18 @@ test('rejects the former display name in runtime source', () => {
   ]);
 });
 
-test('rejects stale metadata, manifest, and icon identity', () => {
+test('rejects stale metadata, manifest, icon, and server titles', () => {
   const errors = validateProductBrandSources({
     ...validSources,
     indexSource: validSources.indexSource.replaceAll('Grover', 'OldName'),
     manifestSource: JSON.stringify({ name: 'OldName Field Work', short_name: 'OldName Field' }),
-    iconSource: '<title>OldName</title>',
+    iconSource: '<title>OldName Landscaping</title>',
+    publicSiteSource: 'title: "Page | OldName"',
   });
-  assert.equal(errors.length, 8);
+  assert.equal(errors.length, 9);
   assert.ok(errors.some((error) => error.includes('web manifest name')));
   assert.ok(errors.some((error) => error.includes('app icon accessible title')));
+  assert.ok(errors.some((error) => error.includes('server-rendered public route titles')));
 });
 
 test('rejects a backend display-name mismatch', () => {

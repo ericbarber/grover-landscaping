@@ -35,7 +35,7 @@ local_review_api_ready() {
 }
 
 if frontend_ready && local_review_api_ready; then
-  echo "Grover Landscaping mobile review is already running."
+  echo "Application mobile review is already running."
   echo "App URL:   ${frontend_url}/app"
   echo "Landing:   ${frontend_url}/"
   echo "Design URL: ${frontend_url}/design/"
@@ -45,7 +45,7 @@ if frontend_ready && local_review_api_ready; then
 fi
 
 if frontend_ready || local_review_api_ready; then
-  echo "Only part of the Grover Landscaping mobile review environment is available."
+  echo "Only part of the application mobile review environment is available."
   echo "Stop the process using port 5173 or 8080, then run this command again."
   exit 1
 fi
@@ -74,7 +74,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-echo "Starting Grover Landscaping mobile review..."
+echo "Starting application mobile review..."
 echo "App URL:   ${frontend_url}/app"
 echo "Landing:   ${frontend_url}/"
 echo "Design URL: ${frontend_url}/design/"
@@ -90,7 +90,7 @@ echo
     CORS_ALLOWED_ORIGIN="$frontend_url" \
     PUBLIC_APP_URL="$frontend_url" \
     PORT=8080 \
-    cargo run
+    cargo run --bin yardfolio-api
 ) &
 backend_pid=$!
 

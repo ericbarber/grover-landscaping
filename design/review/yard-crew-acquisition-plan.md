@@ -3,7 +3,7 @@
 ## Goal
 
 Design a credible, accessible path for landscape service professionals to
-discover Grover, establish the correct provider organization, qualify to review
+discover Yardfolio, establish the correct provider organization, qualify to review
 owner-authorized service opportunities, complete a site assessment, issue a
 defined proposal, and mobilize approved scope into operational work orders.
 
@@ -30,7 +30,7 @@ matching.
 
 People arriving through Yard Crew marketing may be:
 
-1. **Owner-operators** who perform the work and run a business alone. Grover can
+1. **Owner-operators** who perform the work and run a business alone. Yardfolio can
    create a provider organization of one, with that person holding owner and
    field permissions.
 2. **Established provider owners or operations leads** who represent a business
@@ -51,7 +51,7 @@ service delivery.
 
 ### Owner-operator
 
-- Understand whether Grover fits a small business without enterprise language.
+- Understand whether Yardfolio fits a small business without enterprise language.
 - Build a credible service profile without overstating unverified qualifications.
 - Declare services, territory, languages, assessment methods, and availability.
 - Review suitable owner requests without seeing exact private details too early.
@@ -79,7 +79,7 @@ service delivery.
 
 > Find work that fits. Assess the property clearly. Deliver a clear scope.
 
-The promise is intentionally operational rather than financial. Grover may help
+The promise is intentionally operational rather than financial. Yardfolio may help
 eligible providers receive and respond to opportunities, but the design must not
 guarantee referral volume, contract award, revenue, route density, territory
 exclusivity, or a particular response rate.
@@ -94,7 +94,7 @@ site assessment, proposal, mobilization, work-order, and support terminology.
 
 The public experience should answer four questions before asking for an account:
 
-1. Is Grover for a solo operator, a multi-crew company, or both?
+1. Is Yardfolio for a solo operator, a multi-crew company, or both?
 2. How does an owner request become assessed and agreed work?
 3. What information does the provider need to supply?
 4. What is not promised or automated?
@@ -162,7 +162,7 @@ equipment inventories for public matching.
 Separate four concepts that are often collapsed into a misleading badge:
 
 1. **Identity supplied** — the provider submitted a business identity.
-2. **Identity checked** — Grover or a named vendor checked a specific source on a
+2. **Identity checked** — Yardfolio or a named vendor checked a specific source on a
    specific date.
 3. **Document supplied** — insurance, license, certification, or other document
    was uploaded but may not be independently verified.

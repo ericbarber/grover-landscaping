@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { API_DISPLAY_NAME, APP_TECHNICAL_NAMESPACE, FIELD_APP_DISPLAY_NAME } from '../appIdentity';
 import { API_BASE_URL } from '../api/baseUrl';
 import { buildDiagnosticsReport } from '../domain/diagnosticsReport';
+import { FIELD_APP_DISPLAY_NAME, API_DISPLAY_NAME } from '../appIdentity';
 
 type ApiCheck = 'checking' | 'ready' | 'unavailable';
 
@@ -146,7 +146,7 @@ export function MobileDiagnosticsPage() {
     const blobUrl = URL.createObjectURL(new Blob([supportDetails()], { type: 'text/plain' }));
     const link = document.createElement('a');
     link.href = blobUrl;
-    link.download = `${APP_TECHNICAL_NAMESPACE}-field-diagnostics-${new Date().toISOString().slice(0, 10)}.txt`;
+    link.download = `yardfolio-field-diagnostics-${new Date().toISOString().slice(0, 10)}.txt`;
     link.hidden = true;
     document.body.appendChild(link);
     link.click();
@@ -163,7 +163,7 @@ export function MobileDiagnosticsPage() {
           Use these checks when the app will not load, sync, or install correctly on this phone.
         </p>
 
-        <dl className="mt-6 rounded-2xl bg-white px-5 shadow-xs">
+        <dl className="mt-6 rounded-2xl bg-white px-5 shadow-sm">
           <DiagnosticRow
             healthy={online}
             guidance="Reconnect Wi-Fi or cellular data, then confirm Tailscale is connected."

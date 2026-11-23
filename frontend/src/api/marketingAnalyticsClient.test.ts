@@ -37,4 +37,33 @@ describe('marketing analytics', () => {
     expect(marketingSessionId()).toBe('ms_00000001000000020000000300000004');
     vi.unstubAllGlobals();
   });
+
+  it('records only a bounded setup stage while preserving campaign attribution', async () => {
+    vi.resetModules();
+    const fetchMock = vi.fn((_input: RequestInfo | URL, _request?: RequestInit) => (
+      Promise.resolve({ ok: true })
+    ));
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('window', {
+      sessionStorage: { getItem: () => null, setItem: () => undefined },
+      crypto: { randomUUID: () => 'setup-session' },
+      location: {
+        pathname: '/app',
+        search: '?provider-entry=company-owner&utm_source=search&utm_campaign=phoenix',
+      },
+    });
+    const { trackMarketingEvent } = await import('./marketingAnalyticsClient');
+    trackMarketingEvent('setup_stage_completed', 'landscaping_company', 'first_route');
+
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const [, request] = fetchMock.mock.calls[0];
+    expect(JSON.parse(String(request?.body))).toEqual(expect.objectContaining({
+      event_name: 'setup_stage_completed',
+      persona: 'landscaping_company',
+      detail: 'first_route',
+      source: 'search',
+      campaign: 'phoenix',
+    }));
+    vi.unstubAllGlobals();
+  });
 });

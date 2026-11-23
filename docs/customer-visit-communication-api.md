@@ -21,7 +21,8 @@ POST /customer-portal/visits/{customer_visit_reference}/messages
 The POST body contains only `expected_thread_version`, an allowlisted `topic`,
 `customer_safe_body`, and a stable `idempotency_key`. It returns `201` when the
 question is created and `200` for an exact replay. Missing access is `403`, an
-inconsistent active grant is `409`, an unknown or ended visit is `404`, stale or
+inconsistent active grant, including one whose provider relationship ended, is
+`409`; an unknown visit under otherwise valid access is `404`. Stale or
 changed content is `409`, and unconfirmed storage is `503` with instructions to
 retain the retry key and reload.
 

@@ -6,7 +6,7 @@ sunrise image is used by the public-homepage and Yard Crew design prototypes; th
 production React landing page currently uses code-native composition instead of
 shipping this image.
 
-## `grover-southwest-sunrise-hero.png`
+## `yardfolio-southwest-sunrise-hero.png`
 
 - Mode: built-in image generation
 - Use case: `photorealistic-natural`

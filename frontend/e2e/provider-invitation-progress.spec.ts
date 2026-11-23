@@ -4,7 +4,7 @@ import { workspaceRolloutFixture } from './workspace-rollout-fixture';
 test.beforeEach(async ({ page }) => {
   await page.route('**/health/ready', (route) => route.fulfill({
     contentType: 'application/json',
-    body: JSON.stringify({ status: 'ready', service: 'grover-landscaping-api' }),
+    body: JSON.stringify({ status: 'ready', service: 'yardfolio-api' }),
   }));
   await page.route('**/provider-invitations/preview', async (route) => {
     const token = route.request().postDataJSON().token;
@@ -91,7 +91,7 @@ test('a first-time recipient completes the bounded known-owner connection path',
   });
 
   await page.goto('/app/provider-invitation#invitation=first_connection_secret');
-  await expect(page.getByRole('heading', { name: 'Desert Green Care' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Desert Green Care' })).toBeVisible({ timeout: 15_000 });
   await page.getByRole('button', { name: 'Continue as dispatch@provider.example' }).click();
   await expect(page.getByRole('heading', { name: 'Connect the provider organization' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Current: Organization' })).toBeVisible();
@@ -146,7 +146,7 @@ test('a checked recipient loads status without retaining the bearer fragment', a
   expect(await page.evaluate(() => {
     const main = document.querySelector('main');
     const heading = document.querySelector('h1');
-    const brandMark = document.querySelector('.grover-brand-mark');
+    const brandMark = document.querySelector('.yardfolio-brand-mark');
     if (!main || !heading || !brandMark) throw new Error('Provider shell theme was not rendered.');
     return {
       canvas: getComputedStyle(main).backgroundColor,

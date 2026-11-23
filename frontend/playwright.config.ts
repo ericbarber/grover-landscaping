@@ -9,7 +9,7 @@ const acquisitionBrowserTests = /(?:browser-accessibility|local-role-workspaces|
 
 export default defineConfig({
   testDir: './e2e',
-  outputDir: '/tmp/grover-playwright-results',
+  outputDir: '/tmp/yardfolio-playwright-results',
   fullyParallel: false,
   retries: 0,
   reporter: 'line',

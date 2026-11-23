@@ -54,8 +54,8 @@ wholesale onto the new OS.
 2. Create a runtime file on the Pi. Use the Pi's actual tailnet DNS name:
 
    ```bash
-   mkdir -p ~/grover-landscaping
-   cd ~/grover-landscaping
+   mkdir -p ~/yardfolio
+   cd ~/yardfolio
    umask 077
    password="$(openssl rand -hex 32)"
    printf 'POSTGRES_PASSWORD=%s\nPUBLIC_APP_URL=https://%s\n' \
@@ -150,11 +150,11 @@ this tailnet policy before enabling CI deployment.
 The Tailscale action creates an ephemeral CI node and waits for the Pi to
 become reachable. The Pi itself must remain a persistent tailnet node.
 
-`PI_DEPLOY_ENABLED` is set to `true`. Each passing push to `main` builds and
-deploys its exact tested commit; pull requests never deploy. A maintainer can
-also manually run the **CI** workflow against `main` to redeploy the current
-commit through every quality gate. Set the variable to `false` before pausing
-automatic deployment or performing host maintenance.
+After the Pi, tailnet policy, SSH key, and GitHub environment are ready, set
+the repository variable `PI_DEPLOY_ENABLED` to `true`. Until then, the deploy
+job is skipped. Each passing push to `main` then builds and deploys the exact
+commit checked by CI. Pull requests never deploy. The workflow does not deploy
+from this local checkout; publication still requires a deliberate push.
 
 The GitHub `pi-development` environment has been created with a `main`-only
 branch policy and `PI_SSH_PRIVATE_KEY` set to a dedicated CI key. Its public
@@ -163,29 +163,28 @@ Tailscale. The Compose and deployment files are present on the Pi with matching
 checksums. The SSH host key was verified against the Pi's local key and stored
 as `PI_SSH_KNOWN_HOSTS`; `PI_TAILSCALE_HOST` names
 `grover-dev-pi.tailf6631b.ts.net`. A private `.env` exists on the Pi, and
-PostgreSQL is healthy with a named data volume. Tailscale Serve routes the
-tailnet-only `https://grover-dev-pi.tailf6631b.ts.net/` endpoint to
-`127.0.0.1:10000`. The owner applied the narrower grants above and removed the
-default allow-all grant.
-
-The first GitHub Actions baseline deployment completed on 2026-09-18 for
-commit `1bd623731b308994d2136da89ad6ca9013b0755b`. That run exercised the
-Tailscale OIDC credential, `tag:grover-ci` grant, pinned SSH connection, ARM64
-image transfer, Compose activation, and readiness checks. Independent checks
-from a tailnet workstation confirmed valid TLS, HTTP 200 at the root,
-PostgreSQL-backed readiness, `local_review` authentication configuration, and
-the expected ARM64 image on the Pi. The deployment run is recorded in
-[GitHub Actions](https://github.com/ericbarber/grover-landscaping/actions/runs/35411774285).
+PostgreSQL is healthy with a named data volume. The repository variable
+`PI_DEPLOY_ENABLED` is still `false`; Tailscale Serve was approved in the
+tailnet and configured on the Pi to route
+`https://grover-dev-pi.tailf6631b.ts.net/` to `127.0.0.1:10000`. TLS validation
+from a tailnet workstation succeeds; the route currently returns HTTP 502
+because no application container has been deployed. The Tailscale OIDC Client
+ID and Audience were added to the GitHub environment as `TS_OAUTH_CLIENT_ID`
+and `TS_AUDIENCE`. The federation credential and tailnet grants have not yet
+been exercised by a GitHub runner. The owner applied the narrower grants above
+and removed the default allow-all grant. Workstation Tailscale ping, SSH, and
+HTTPS still reached the Pi afterward; access from `tag:grover-ci` remains to be
+validated by the first GitHub Actions deployment run.
 
 ## Operating the site
 
-On the Pi, `~/grover-landscaping` holds the runtime `.env`, current
+On the Pi, `~/yardfolio` holds the runtime `.env`, current
 `.release.env`, Compose file, and deploy script. The image is named
-`grover-landscaping:<full-commit-sha>`. GitHub's deployment job reports the
+`yardfolio:<full-commit-sha>`. GitHub's deployment job reports the
 deployed SHA after readiness succeeds. Check local service status with:
 
 ```bash
-cd ~/grover-landscaping
+cd ~/yardfolio
 docker compose --env-file .env --env-file .release.env -f compose.yml ps
 docker compose --env-file .env --env-file .release.env -f compose.yml logs --tail=100 app
 curl --fail http://127.0.0.1:10000/health/ready
@@ -196,9 +195,9 @@ on the Pi while that image remains loaded. Back up the PostgreSQL volume
 before significant data or migration changes. For example, from the Pi:
 
 ```bash
-cd ~/grover-landscaping
+cd ~/yardfolio
 docker compose --env-file .env --env-file .release.env -f compose.yml \
-  exec -T postgres pg_dump -U grover grover_landscaping > "grover-$(date +%F).sql"
+  exec -T postgres pg_dump -U yardfolio yardfolio > "yardfolio-$(date +%F).sql"
 ```
 
 Keep backup files outside the web server and test restoration on a separate

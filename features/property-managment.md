@@ -1,10 +1,13 @@
-# Multi-Vendor Property Yard Care Management Platform
+# Multi-Vendor Residential Property Service Management Platform
 
-## Product Requirements for Property Management Organizations Coordinating Multiple Yard Care Providers
+## Product Requirements for Residential Property Managers Coordinating Multiple Service Providers
 
 ## 1. Product Vision
 
-The application should help a property management organization coordinate yard care across a distributed property portfolio serviced by multiple independent yard care companies.
+The application should help a residential property management organization
+coordinate recurring and one-time property care across a distributed portfolio
+serviced by multiple independent service companies. Yard care is the initial
+service model, not the category boundary.
 
 The platform should create a consistent service experience even when:
 
@@ -19,7 +22,7 @@ The platform should create a consistent service experience even when:
 
 The application should answer the following questions:
 
-1. Which properties require yard service?
+1. Which properties require service?
 2. Which provider is responsible for each property?
 3. Is every property covered by an active agreement?
 4. Was the required service completed?
@@ -40,7 +43,7 @@ The application should function as a multi-vendor service governance, evidence, 
 
 Responsible for:
 
-* Yard care across the entire property portfolio.
+* Residential property care across the entire portfolio.
 * Coverage.
 * Vendor performance.
 * Service standards.
@@ -92,7 +95,7 @@ Responsible for:
 * Approval routing.
 * Payment readiness.
 
-## 2.6 Yard Care Provider
+## 2.6 Residential Service Provider
 
 The provider is responsible for:
 
@@ -125,7 +128,7 @@ Property Management Organization
        └── Portfolio
             └── Region
                  └── Property
-                      └── Yard Zone
+                      └── Service Area
 ```
 
 Vendor relationships should be modeled separately:
@@ -191,12 +194,9 @@ The platform should support:
 * Multi-family housing.
 * Apartment complex.
 * HOA common area.
-* Commercial property.
-* Office location.
-* Retail property.
-* Vacant property.
-* Government property.
-* Institutional property.
+* Duplex or townhome.
+* Condominium community.
+* Vacant residential property.
 
 ---
 

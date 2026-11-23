@@ -126,11 +126,11 @@ export function ManagerDayPlanPanel({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl bg-forest p-5 text-white shadow-grover-sm sm:p-6">
+      <section className="rounded-2xl bg-forest p-5 text-white shadow-yardfolio-sm sm:p-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Manager scheduling</p>
-            <h2 className="grover-type-operational mt-2 text-3xl font-black">Today’s operation</h2>
+            <h2 className="yardfolio-type-operational mt-2 text-3xl font-black">Today’s operation</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-mist">
               Balance crew readiness, route capacity, and work that still needs an owner before publishing.
             </p>
@@ -153,7 +153,7 @@ export function ManagerDayPlanPanel({
           ['Unassigned', `${operationsSummary.unassignedWork}`, operationsSummary.unassignedWork > 0 ? 'Needs a crew owner' : 'All work has an owner'],
           ['Crew risks', `${operationsSummary.crewsMissingLead}`, operationsSummary.crewsMissingLead > 0 ? 'Active crew missing lead' : 'No lead gaps'],
         ].map(([label, value, detail]) => (
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs" key={label}>
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" key={label}>
             <p className="text-xs font-black uppercase tracking-wide text-slate-500">{label}</p>
             <p className="mt-2 text-3xl font-black text-forest">{value}</p>
             <p className="mt-1 text-xs font-semibold text-slate-500">{detail}</p>
@@ -161,7 +161,7 @@ export function ManagerDayPlanPanel({
         ))}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div>
           <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Plan target</p>
           <h3 className="mt-1 text-xl font-black text-slate-950">Create day plan</h3>
@@ -232,7 +232,7 @@ export function ManagerDayPlanPanel({
 
       {draftPlan ? (
         <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
-          <section aria-labelledby="crew-schedule-heading" className="min-w-0 rounded-2xl border border-slate-200 bg-paper p-4 shadow-xs sm:p-5">
+          <section aria-labelledby="crew-schedule-heading" className="min-w-0 rounded-2xl border border-slate-200 bg-paper p-4 shadow-sm sm:p-5">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Crew schedule</p>
@@ -259,7 +259,7 @@ export function ManagerDayPlanPanel({
             )}
           </section>
 
-          <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5" aria-labelledby="planning-inspector-heading">
+          <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="planning-inspector-heading">
             <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Selected route</p>
             <h3 className="mt-1 text-xl font-black text-slate-950" id="planning-inspector-heading">Planning inspector</h3>
             <dl className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-paper p-3 text-sm">
@@ -273,7 +273,7 @@ export function ManagerDayPlanPanel({
               </div>
               <div className="col-span-2">
                 <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Planning timezone</dt>
-                <dd className="mt-1 wrap-break-word font-semibold text-slate-900">{draftPlan.timeZone}</dd>
+                <dd className="mt-1 break-words font-semibold text-slate-900">{draftPlan.timeZone}</dd>
               </div>
             </dl>
             <div className="mt-4">

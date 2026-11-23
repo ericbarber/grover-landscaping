@@ -32,7 +32,7 @@ decision.
 1. Set the final production origin for Terraform:
 
 ```bash
-export TF_VAR_application_url=https://grover-landscaping.onrender.com
+export TF_VAR_application_url=https://yardfolio.onrender.com
 ```
 
 Use the final HTTPS Render URL or custom domain. The example variables file
@@ -106,14 +106,14 @@ authorizes memberships by token `sub`.
 After Render restarts with Cognito configuration:
 
 ```bash
-BASE_URL=https://grover-landscaping.onrender.com \
+BASE_URL=https://yardfolio.onrender.com \
 bash scripts/validate-cognito-hosted-pilot.sh
 ```
 
 Sign in as the first owner, complete the required temporary-password and MFA setup, then capture a current access token from the browser session for the smoke test:
 
 ```bash
-BASE_URL=https://grover-landscaping.onrender.com \
+BASE_URL=https://yardfolio.onrender.com \
 ACCESS_TOKEN='<current Cognito access token>' \
 SMOKE_JOB_ID=job_1001 \
 SMOKE_OTHER_TENANT_JOB_ID=job_other_tenant_1001 \
@@ -144,7 +144,7 @@ controlled authorized and other-tenant records that match the persona’s real
 scope:
 
 ```bash
-BASE_URL=https://grover-landscaping.onrender.com \
+BASE_URL=https://yardfolio.onrender.com \
 ACCESS_TOKEN='<current cohort Cognito access token>' \
 SMOKE_ROLLOUT_PERSONA=crew-member \
 SMOKE_ROLLOUT_UNIT=cm3 \
@@ -187,7 +187,7 @@ Before enabling provider-backed delivery, validate the webhook gateway configura
 
 ```bash
 NOTIFICATION_DISPATCH_MODE=webhook \
-PUBLIC_APP_URL=https://grover-landscaping.onrender.com \
+PUBLIC_APP_URL=https://yardfolio.onrender.com \
 NOTIFICATION_WEBHOOK_URL='<provider delivery URL>' \
 NOTIFICATION_WEBHOOK_BEARER_TOKEN='<provider gateway token>' \
 bash scripts/validate-notification-webhook.sh

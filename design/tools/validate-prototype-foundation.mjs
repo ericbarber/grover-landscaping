@@ -16,6 +16,9 @@ const prototypes = [
   { name: 'Current frontend review', path: 'prototypes/current-frontend-review/index.html', hash: '#company-home', nav: '.workspace-rail' },
   { name: 'Frontend truth and recovery', path: 'prototypes/frontend-truth-recovery/index.html', hash: '#crew/synced', nav: '.app-rail' },
   { name: 'Functional-unit rollout', path: 'prototypes/yard-owner-minimal-rollout/index.html', hash: '#overview/map', nav: '.desktop-rail' },
+  { name: 'Minimalist persona experiences', path: 'prototypes/minimalist-personas/index.html', hash: '#owner/attention/today', nav: '.desktop-rail' },
+  { name: 'Simplified service thread', path: 'prototypes/simplified-service-thread/index.html', hash: '#manager/field', nav: '.desktop-rail' },
+  { name: 'Yardfolio Study website', path: 'prototypes/yardfolio-study/index.html', hash: '#workspace/manager', nav: '.workspace-rail' },
 ];
 
 const expectedTokens = {
@@ -42,7 +45,7 @@ try {
     await page.waitForTimeout(120);
 
     const foundationHref = await page.locator('link[rel="stylesheet"]').last().getAttribute('href');
-    check(foundationHref === '../shared/grover-foundation.css', `${prototype.name}: shared foundation is not the final stylesheet`);
+    check(foundationHref === '../shared/yardfolio-foundation.css', `${prototype.name}: shared foundation is not the final stylesheet`);
 
     const tokens = await page.evaluate((names) => {
       const style = getComputedStyle(document.documentElement);

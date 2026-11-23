@@ -1,4 +1,4 @@
-use grover_landscaping_api::db::{JobRepository, StopProgressWriteResult};
+use yardfolio_api::db::{JobRepository, StopProgressWriteResult};
 mod common;
 
 #[tokio::test]
