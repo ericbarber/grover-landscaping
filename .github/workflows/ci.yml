@@ -28,6 +28,11 @@ jobs:
         with:
           node-version: 22
 
+      - name: Install repository check dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ripgrep
+
       - name: Validate expected project layout
         run: |
           test -f README.md
