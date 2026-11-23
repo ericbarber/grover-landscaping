@@ -12,6 +12,7 @@ export default defineConfig({
   outputDir: '/tmp/yardfolio-playwright-results',
   fullyParallel: false,
   retries: 0,
+  workers: process.env.CI ? 1 : undefined,
   reporter: 'line',
   timeout: 60_000,
   use: {

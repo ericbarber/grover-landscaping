@@ -402,7 +402,7 @@ export function PublicLandingPage({
       </header>
 
       <main className="min-h-screen overflow-x-hidden bg-bone text-ink" id="main-content">
-      <section className="relative isolate flex min-h-[calc(100svh-5rem)] items-center overflow-hidden bg-forest" data-testid="marketing-hero">
+      <section className="relative isolate flex min-h-[calc(100svh-5.125rem)] items-center overflow-hidden bg-forest" data-testid="marketing-hero">
         <div className="absolute inset-0" data-testid="hero-visual">
           <img alt="" aria-hidden="true" className="h-full w-full object-cover object-[68%_center]" decoding="async" {...{ fetchpriority: 'high' }} height="688" src="/brand/yardfolio-landscape-home-hero.webp" width="1440" />
           <span className="absolute inset-0 bg-gradient-to-r from-forest/95 via-forest/80 to-forest/40" />
