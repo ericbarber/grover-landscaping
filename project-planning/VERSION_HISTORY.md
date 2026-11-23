@@ -19,6 +19,8 @@
   layout footprint and compact content clearance. CI runs cross-browser lab
   budgets on one worker, and the interaction gate measures the tab's DOM
   response without conflating it with headless display-server frame scheduling.
+  WebKit acquisition journeys synchronize on the mocked assessment and proposal
+  responses before asserting their async panels.
 - 2026-11-10: Implemented the professional UI review's repository-owned GL-01,
   GL-03, GL-04, and GL-05 recommendations. Yard Owners now review and explicitly
   send a privacy-limited known-provider invitation from Connect care with stable
