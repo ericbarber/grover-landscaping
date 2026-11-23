@@ -715,7 +715,7 @@ async fn app_from_env() -> Result<Router, DynError> {
 
 #[cfg(test)]
 fn app_with_state(state: Arc<AppState>, persistence: &'static str) -> Router {
-    let frontend_dist = PathBuf::from("../frontend/dist");
+    let frontend_dist = test_frontend_dist();
     let public_site = PublicSite::new(frontend_dist.clone(), "http://localhost:5173", false)
         .expect("test public-site configuration should be valid");
     app_with_runtime(
@@ -728,6 +728,33 @@ fn app_with_state(state: Arc<AppState>, persistence: &'static str) -> Router {
         public_site,
         false,
     )
+}
+
+#[cfg(test)]
+fn test_frontend_dist() -> PathBuf {
+    static FRONTEND_DIST: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+
+    FRONTEND_DIST
+        .get_or_init(|| {
+            let directory = std::env::temp_dir().join(format!(
+                "yardfolio-router-test-frontend-{}",
+                std::process::id()
+            ));
+            std::fs::create_dir_all(&directory)
+                .expect("test frontend directory should be created");
+            std::fs::write(
+                directory.join("index.html"),
+                "<!doctype html><html><head><title>Fallback</title><meta name=\"description\" content=\"Fallback\" /><meta property=\"og:title\" content=\"Fallback\" /><meta property=\"og:description\" content=\"Fallback\" /><meta property=\"og:image\" content=\"/image.webp\" /><meta name=\"twitter:title\" content=\"Fallback\" /><meta name=\"twitter:description\" content=\"Fallback\" /><meta name=\"twitter:image\" content=\"/image.webp\" /></head><body><div id=\"root\"></div></body></html>",
+            )
+            .expect("test frontend index should be written");
+            std::fs::write(
+                directory.join("robots.txt"),
+                "User-agent: *\nAllow: /\n",
+            )
+            .expect("test robots policy should be written");
+            directory
+        })
+        .clone()
 }
 
 #[allow(clippy::too_many_arguments)]

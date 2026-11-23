@@ -9,7 +9,10 @@
   strict Clippy, and 438 backend tests pass in the clean integration worktree.
   The focused browser suite could not launch on the host because Playwright's
   `libnspr4.so` dependency is unavailable; protected `main` CI remains the
-  required browser gate.
+  required browser gate. The first protected run then made repository checks
+  self-contained by installing ripgrep, removed backend router tests' hidden
+  dependency on a prebuilt frontend, and compacted the desktop hero for
+  720-pixel-tall viewports after 88 of 92 cross-browser journeys passed.
 - 2026-11-10: Implemented the professional UI review's repository-owned GL-01,
   GL-03, GL-04, and GL-05 recommendations. Yard Owners now review and explicitly
   send a privacy-limited known-provider invitation from Connect care with stable
