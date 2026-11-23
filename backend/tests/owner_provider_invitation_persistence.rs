@@ -3853,7 +3853,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     sqlx::query(
         "UPDATE customer_portal_access_grants
          SET scope_type = 'property', scope_id = property_id
-         WHERE activation_id = $1",
+         WHERE activation_id = $1 AND access_role = 'property_owner'",
     )
     .bind(&activation.activation_id)
     .execute(&pool)
@@ -3884,7 +3884,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     sqlx::query(
         "UPDATE customer_portal_access_grants
          SET scope_type = 'customer_account', scope_id = account_id
-         WHERE activation_id = $1",
+         WHERE activation_id = $1 AND access_role = 'property_owner'",
     )
     .bind(&activation.activation_id)
     .execute(&pool)
