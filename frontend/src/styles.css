@@ -86,8 +86,8 @@ html {
 
 @media (min-width: 768px) and (max-height: 760px) {
   .marketing-hero-content {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+    padding-top: 1.75rem;
+    padding-bottom: 1.75rem;
   }
 
   .marketing-hero-title {

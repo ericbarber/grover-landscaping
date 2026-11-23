@@ -74,7 +74,9 @@ hosted CI or another allowed browser runner remains the evidence source.
 Timing and layout measurements must be reported separately for mobile and
 desktop. Do not loosen a threshold to hide a flaky environment: first identify
 whether the regression is application work, runner variance, or unavailable
-infrastructure.
+infrastructure. The interaction-response budget measures the elapsed time from
+the synthetic tab activation to the corresponding DOM update; headless paint
+frame scheduling is excluded because it varies with the CI display server.
 
 ## API, worker, and offline indicators
 

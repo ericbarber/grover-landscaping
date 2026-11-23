@@ -51,9 +51,34 @@ test('the public route meets the versioned lab interaction, stability, and reflo
 
   const interactionResponseMs = await page.getByRole('tab', { name: 'Property manager' })
     .evaluate(async (element) => {
+      const expectedHeading = 'Move from your portfolio to the exact service record.';
       const startedAt = performance.now();
-      (element as HTMLButtonElement).click();
-      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      await new Promise<void>((resolve, reject) => {
+        const panel = document.querySelector('[data-testid="persona-review-panel"]');
+        const observer = new MutationObserver(() => {
+          if (panel?.textContent?.includes(expectedHeading)) {
+            window.clearTimeout(timeoutId);
+            observer.disconnect();
+            resolve();
+          }
+        });
+        const timeoutId = window.setTimeout(() => {
+          observer.disconnect();
+          reject(new Error('The persona review panel did not respond within 5 seconds.'));
+        }, 5_000);
+
+        observer.observe(panel ?? document.body, {
+          childList: true,
+          characterData: true,
+          subtree: true,
+        });
+        (element as HTMLButtonElement).click();
+        if (panel?.textContent?.includes(expectedHeading)) {
+          window.clearTimeout(timeoutId);
+          observer.disconnect();
+          resolve();
+        }
+      });
       return performance.now() - startedAt;
     });
   await expect(page.getByRole('heading', { level: 1, name: 'Plan the day. Guide the crew. Prove the work.' })).toBeVisible();
